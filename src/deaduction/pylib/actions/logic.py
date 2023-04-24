@@ -4,16 +4,14 @@
 # translate actions into lean code                         #
 ############################################################
     
-Every function action_* takes the following arguments:
-- proof_step: the current proof_step, of class ProofStep, that contains
-various informations about the current proof state
-- selected_objects: a list of MathObject previously selected by the user
-- target_selected: a boolean that indicates if target is selected.
+Every function action_* takes exactly one argument, proof_step, 
+which contains all the needed pieces of information. In particular, 
+- proof_step.selected_objects: a list of MathObject previously selected by the
+user
+- proof_step.target_selected: a boolean that indicates if target is selected.
 If target_selected is False, (and the setting target_selected_by_default is
 not on) then selected_objects must be non-empty.
-
-Some of these functions take an optional argument:
-- user_input, an object reflecting a choice made by the user inside a
+- proof_step.user_input, an object reflecting a choice made by the user inside a
 previous call of the same function.
 
 Most of these functions are just switches that call other more
@@ -22,8 +20,7 @@ selected_objects. All these auxiliary functions occurs immediately before the
 function action_* in the present file.
 
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
-Maintainer(s) : - Marguerite Bin <bin.marguerite@gmail.com>
-                - Frédéric Le Roux <frederic.le-rxou@imj-prg.fr>
+Maintainer(s) : - Frédéric Le Roux <frederic.le-roux@imj-prg.fr>
 Created       : July 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
@@ -61,6 +58,7 @@ from deaduction.pylib.actions     import (action,
                                           MissingParametersError,
                                           WrongUserInput,
                                           test_selection,
+                                          test_demo_use,
                                           CodeForLean)
 
 from deaduction.pylib.mathobj     import  MathObject
@@ -643,27 +641,82 @@ def implies_hyp(proof_step):
 
 
 @action()
-def action_implies(proof_step) -> CodeForLean:
+def action_forall_demo(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_forall_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_exists_demo(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_exists_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_implies_demo(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_implies_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_and_demo(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_and_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_or_demo(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_or_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
     """
     Three cases:
-    (1) No property selected:
+    (1) No property selected, demo=True:
         If the target is of the form P ⇒ Q: introduce the hypothesis P in
         the properties and transform the target into Q.
+    When at least one property are selected and use=False, 
+    a WrongDemoModeInput is raised.
+    If use=True: 
     (2) A single selected property, of the form P ⇒ Q, and the target is
     selected: if the target was Q, it is replaced by P. If the target is not
     selected, then usr is asked to prove the premise (new sub-goal).
     (3) Exactly two selected property, on of which is an implication P ⇒ Q
     and the other is P: Add Q to the context
     """
-
+        
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
+    # user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
 
-    if len(selected_objects) == 0:
+    test_demo_use(selected_objects, demo=demo, use=use)
+
+    if len(selected_objects) == 0 and demo:
         # Try to prove an implication
         if not goal.target.is_implication(implicit=True):
             raise WrongUserInput(
@@ -673,7 +726,7 @@ def action_implies(proof_step) -> CodeForLean:
 
     # From now on, at least 1 selected object.
     # TODO: add iff case for one selected object
-    if len(selected_objects) == 1:
+    if len(selected_objects) == 1 and use:
         # Try to apply an implication, but no other prop selected
         if not selected_objects[0].can_be_used_for_implication(implicit=True,
            include_iff=False):
@@ -682,7 +735,7 @@ def action_implies(proof_step) -> CodeForLean:
         else:
             return implies_hyp(proof_step)
 
-    elif len(selected_objects) == 2:
+    elif len(selected_objects) == 2 and use:
         # Try to apply P ⇒ Q on P
         code0 = CodeForLean.empty_code()
         code1 = CodeForLean.empty_code()

@@ -31,6 +31,9 @@ from typing import List, Dict, Any, Optional
 import logging
 
 import deaduction.pylib.config.vars             as cvars
+from deaduction.pylib.text                  import (logic_buttons_line_1,
+                                                    logic_buttons_line_2)
+
 from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils     import (find_suffix,
@@ -386,7 +389,7 @@ class Theorem(Statement):
 @dataclass
 class Exercise(Theorem):
     """
-    The class for storing exercises's info.
+    The class for storing exercises' info.
     On top of the parent class info, the attributes stores
     - the lists of buttons that will be available for this specific exercise
         (in each three categories, resp. logic, proof and magic buttons)
@@ -461,7 +464,7 @@ class Exercise(Theorem):
         ###########################
         data['available_statements'] = extract_available_statements(data,
                                                                     statements)
-        names = [st.pretty_name for st in data['available_statements']]
+        # names = [st.pretty_name for st in data['available_statements']]
         # log.debug(f"Available statements: {names}")
 
         ########################
@@ -548,18 +551,68 @@ class Exercise(Theorem):
 
     @property
     def available_logic_1(self):
-        action_names = ["and", "or", "not", "implies", "iff"]
-        actions = [action for action in self.available_logic
-                   if action.name in action_names]
+        """
+        List of actions in self.available_logic whose name are in
+        logic_buttons_line_1. The order is that of logic_buttons_line_1.
+        """
+        # action_names = ["and", "or", "not", "implies", "iff"]
+        action_names = logic_buttons_line_1
+        actions = []
+        for name in action_names:
+            for action in self.available_logic:
+                if action.name in (name, name + '_demo', name + '_use'):
+                    actions.append(action)
+        return actions
+
+    @property
+    def available_logic_demo(self):
+        """
+        return the list of demo actions whose names are names of actions in
+        self.available_logic.
+        """
+        actions = [action for action in LOGIC_BUTTONS.values()
+                   if (action.name.endswith('_demo')
+                       and action.name[:-5] in
+                       [action.name for action in self.available_logic_1])]
+        return actions
+
+    @property
+    def available_logic_use(self):
+        """
+        return the list of demo actions whose names are names of actions in
+        self.available_logic.
+        """
+        actions = [action for action in LOGIC_BUTTONS.values()
+                   if (action.name.endswith('_use')
+                       and action.name[:-4] in
+                       [action.name for action in self.available_logic_1])]
         return actions
 
     @property
     def available_logic_2(self):
-        action_names = ["forall", "exists", "equal", "map"]
-        actions = [action for action in self.available_logic
-                   if action.name in action_names]
+        # action_names = ["forall", "exists", "equal", "map"]
+        """
+        List of actions in self.available_logic whose name are in
+        logic_buttons_line_2. The order is that of logic_buttons_line_2.
+        """
+        # action_names = ["and", "or", "not", "implies", "iff"]
+        action_names = logic_buttons_line_2
+        actions = []
+        for name in action_names:
+            for action in self.available_logic:
+                if action.name == name:
+                    actions.append(action)
         return actions
 
+    def demo_use_mode_set_by_exercise(self):
+        """
+        Test if the list of logic buttons determined by self's metadata
+        contains a use or demo button; in this case the ui should display
+        exactly those buttons, and ignore settings.
+        """
+        tests = (action.name.endswith('_use') or action.name.endswith('_demo')
+                 for action in self.available_logic_1)
+        return any(tests)
 
 #############
 # utilities #
@@ -690,7 +743,9 @@ def make_action_callable(prefix) -> callable:
         if name in ['NONE', '$NONE']:
             return []
         if name in ['ALL', '$ALL']:
-            return dictionary.values()
+            return [action for action in dictionary.values()
+                    if not action.name.endswith('demo') and not
+                    action.name.endswith('use')]
         if not name.startswith("action_"):
             name = "action_" + name
         action = None

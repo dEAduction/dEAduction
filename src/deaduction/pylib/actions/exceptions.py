@@ -61,6 +61,30 @@ class WrongUserInput(Exception):
         self.message = error
 
 
+class WrongDemoModeInput(WrongUserInput):
+    def __init__(self, error=""):
+        super().__init__(f"Wrong 'demo' user input with error: {error}")
+        if not error:
+            if cvars.get("logic.button_use_demo_mode") == "radio_button":
+                error = _("Go into 'use mode' to make use of a property of "
+                          "the context")
+            else:
+                error = _("Press the 'use' button to make use of a property of "
+                          "the context")
+        self.message = error
+
+
+class WrongUseModeInput(WrongUserInput):
+    def __init__(self, error=""):
+        super().__init__(f"Wrong 'use' user input with error: {error}")
+        if not error:
+            if cvars.get("logic.button_use_demo_mode") == "radio_button":
+                error = _("Go into 'demo mode' to prove the goal")
+            else:
+                error = _("Press the 'demo' button to prove the goal")
+        self.message = error
+
+
 def test_selection(items_selected: [],
                    selected_target: bool,
                    exclusive=False):
@@ -78,3 +102,18 @@ def test_selection(items_selected: [],
     if exclusive and items_selected and selected_target:
         error = _("I do not know what to do with this selection")
         raise WrongUserInput(error)
+
+
+def test_demo_use(selected_objects, demo, use):
+    """
+    Raise an exception if nb of selected_objects does not fit use/demo mode.
+    @param selected_objects:
+    @param demo: True iff demo mode is on
+    @param use: True iff use mode is on
+    """
+    if not selected_objects and not demo:
+        raise WrongUseModeInput
+    elif selected_objects and not use:
+        raise WrongDemoModeInput
+
+

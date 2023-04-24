@@ -67,7 +67,7 @@ __tooltips = {
         _("Use property 'P OR Q' by splitting cases")],
     'not':
         [_("""Try to simplify the property 'NOT P'""")],
-    'implies_prove':
+    'implies_demo':
         [_("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""")],
     'implies_use': [_("""From 'P' and 'P ⇒ Q' get 'Q'""")],
     'iff':
@@ -176,7 +176,12 @@ def __compute_buttons_symbols_dict():
         logic_button_symbols[2] = "NOT"
 
     for key, value in zip(logic_buttons, logic_button_symbols):
-        __buttons_symbols[key.lower()] = value
+        key = key.lower()
+        __buttons_symbols[key] = value
+        # Add demo and use buttons
+        if key in logic_buttons_line_1:
+            __buttons_symbols[key + '_demo'] = value + ' ' + _('demo')
+            __buttons_symbols[key + '_use'] = value + ' ' + _('use')
 
 
 def button_symbol(name):
@@ -210,7 +215,7 @@ def button_tool_tip(name: str) -> [str]:
     pretty_name = pretty_name.replace('_', ' ')
 
     # (2) Get tooltip
-    demo_name = name + '_prove'
+    demo_name = name + '_demo'
     if demo_name in __tooltips:
         use_name = name + '_use'
         tooltip = __tooltips.get(demo_name) + __tooltips.get(use_name)
@@ -220,7 +225,8 @@ def button_tool_tip(name: str) -> [str]:
     #     tooltip = [tooltip]
 
     # (3) Insert pretty name as a title
-    if tooltip[0] != pretty_name:
-        tooltip.insert(0, pretty_name)
-    return tooltip
+    if tooltip:
+        if tooltip[0] != pretty_name:
+            tooltip.insert(0, pretty_name)
+        return tooltip
 

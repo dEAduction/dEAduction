@@ -46,17 +46,25 @@ from trio import sleep
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor, QDrag, QPixmap,
-                                QHelpEvent)
+                                QCursor,
+                                QPainter,
+                                QBrush,
+                                QPen)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
                                 QModelIndex, QMimeData,
-                                QTimer)
+                                QTimer,
+                                QRect)
 from PySide2.QtWidgets import ( QHBoxLayout,
+                                QVBoxLayout,
                                 QPushButton,
                                 QWidget,
-                                QAbstractItemView)
+                                QAbstractItemView,
+                                QLabel,
+                                QRadioButton,
+                                QToolBar,
+                                QSizePolicy)
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip)
@@ -118,7 +126,7 @@ class ActionButton(QPushButton):
     from_name: dict = {}  # name -> ActionButton
     # ! Must be updated to avoid pointing to deleted items !
 
-    def __init__(self, action: Action):
+    def __init__(self, action: Action, in_demo_or_use_line=False):
         """
         Init self with an instance of the class Action. Set text,
         tooltip and keep the given action as an attribute. When self is
@@ -141,6 +149,7 @@ class ActionButton(QPushButton):
             self.setPalette(palette)
 
         self.action = action
+        self.in_demo_or_use_line = in_demo_or_use_line
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
@@ -155,7 +164,11 @@ class ActionButton(QPushButton):
         NB: translation is done here.
         """
         name = self.action.name
-        symbol = _(button_symbol(name))
+        symbol = button_symbol(name)
+        if self.in_demo_or_use_line:
+            # Remove ugly suffix
+            symbol = symbol[:-4] if symbol.endswith('use') else symbol[:-5]
+        symbol = _(symbol)  # Translate, finally!
         self.setText(symbol)
 
         tool_tip = button_tool_tip(name)
@@ -186,13 +199,14 @@ class ActionButton(QPushButton):
     @property
     def symbol(self):
         """
-        Actual text displayed on self (may be changed by usr).
+        Actual text displayed on self (can be changed by usr).
         """
-        return self.action.symbol
+        return self.text()
+        # return self.action.symbol
 
     def is_symbol(self):
         """
-        Should be true iff self is a mth symbol, e.g. '⇒' or '='.
+        Should be true iff self is a math symbol, e.g. '⇒' or '='.
         The test is only that length = 1...
         The other option could be to provide a list.
         """
@@ -242,6 +256,101 @@ class ActionButton(QPushButton):
 # outside of the class definition, as followed.
 ActionButton.action_triggered = Signal(ActionButton)
 
+#
+# class DemoUseModeSetter(QWidget):
+#     clicked = Signal()
+#
+#     def __init__(self):
+#         super().__init__()
+#         self.demo_button = QRadioButton(text=_('Demo'))
+#         self.use_button = QRadioButton(text=_('Use'))
+#         self.lyt = QVBoxLayout()
+#         self.lyt.addWidget(self.demo_button)
+#         self.lyt.addWidget(self.use_button)
+#         self.setLayout(self.lyt)
+#
+#         self.demo_button.clicked.connect(self.clicked)
+#         self.use_button.clicked.connect(self.clicked)
+#         self.demo_button.setChecked(True)
+#
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#     @property
+#     def radio_mode(self):
+#         if self.demo_button.isChecked():
+#             return "demo"
+#         elif self.use_button.isChecked():
+#             return "use"
+
+
+class Switch(QPushButton):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        print('init')
+        self.setCheckable(True)
+        # self.setMinimumWidth(66)
+        # self.setMinimumHeight(22)
+
+    def paintEvent(self, event):
+        # label = _("DEMO") if self.isChecked() else _("USE")
+        bg_color = Qt.green
+        label = ""
+        radius = 5
+        width = 20
+        factor = 1.5
+        center = self.rect().center()
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.translate(center)
+        painter.setBrush(QColor(0, 0, 0))
+
+        pen = QPen(Qt.black)
+        pen.setWidth(2)
+        painter.setPen(pen)
+
+        painter.drawRoundedRect(QRect(-width, -radius, 2*width,
+                                            2*radius),
+                                radius, radius)
+        painter.setBrush(QBrush(bg_color))
+        # sw_rect = QRect(-radius, -radius, width + radius, 2*radius)
+        btn_radius = int(radius*factor)
+        sw_rect = QRect(-btn_radius, -btn_radius, 2*btn_radius,
+                        2*btn_radius)
+        if not self.isChecked():
+            sw_rect.moveLeft(-width)
+        else:
+            sw_rect.moveRight(width)
+        painter.drawEllipse(sw_rect)
+        # painter.drawText(sw_rect, Qt.AlignCenter, label)
+
+
+class DemoUseModeSetter(QWidget):
+    clicked = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.switch = Switch()
+        demo_lbl = QLabel(_("Demo mode"))
+        use_lbl = QLabel(_("Use mode"))
+
+        lyt = QHBoxLayout()
+        lyt.setContentsMargins(0, 0, 0, 0)
+
+        lyt.addStretch()
+        lyt.addWidget(demo_lbl)
+        lyt.addWidget(self.switch)
+        lyt.addWidget(use_lbl)
+        self.setLayout(lyt)
+
+        self.switch.clicked.connect(self.clicked)
+
+    @property
+    def radio_mode(self):
+        if self.switch.isChecked():
+            return "use"
+        else:
+            return "demo"
+
 
 class ActionButtonsWidget(QWidget):
     """
@@ -254,9 +363,29 @@ class ActionButtonsWidget(QWidget):
     :param buttons [ActionButton]: The list of instances of the class
         ActionButton created and displayed in self.__init__. This
         attribute makes accessing them painless.
+    self.demo_line is True iff all buttons are demo buttons.
     """
 
-    def __init__(self, actions: [Action]):
+    init = False
+
+    @classmethod
+    def set_lbl_size(cls):
+        if cls.init:  # Size already set
+            return
+
+        cls.init = True
+        # Determine fixed width
+        demo_lbl = QLabel(_('Demo:'))
+        use_lbl = QLabel(_('Use:'))
+        demo_lbl.show()
+        use_lbl.show()
+        cls.__lbl_width = max(demo_lbl.width(), use_lbl.width())
+        cls.__lbl_height = demo_lbl.height()
+        # print(lbl_height, lbl_width)
+        demo_lbl.deleteLater()
+        use_lbl.deleteLater()
+
+    def __init__(self, actions: [Action], show_label=False):
         """
         Init self with an ordered list of instances of the class Action.
 
@@ -265,19 +394,40 @@ class ActionButtonsWidget(QWidget):
         """
 
         super().__init__()
+
+        self.set_lbl_size()
+
+        self.demo_line = all((action.name.endswith('_demo')
+                              for action in actions))
+        self.use_line = all((action.name.endswith('_use')
+                             for action in actions))
+        demo_or_use_line = self.demo_line or self.use_line
+
         self.buttons = []
 
-        main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        # (1) Populate h_layout with ActionButtons
+        h_layout = QHBoxLayout()
+        h_layout.setContentsMargins(0, 0, 0, 0)
+
+        if show_label:
+            if self.demo_line:
+                demo_lbl = QLabel(_('Demo:'))
+                h_layout.addWidget(demo_lbl)
+                demo_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
+            elif self.use_line:
+                use_lbl = QLabel(_('Use:'))
+                use_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
+                h_layout.addWidget(use_lbl)
 
         for action in actions:
-            action_button = ActionButton(action)
-            main_layout.addWidget(action_button)
+            action_button = ActionButton(action,
+                                         in_demo_or_use_line=demo_or_use_line)
+            h_layout.addWidget(action_button)
             self.buttons.append(action_button)
 
-        main_layout.addStretch()
+        h_layout.addStretch()
 
-        self.setLayout(main_layout)
+        self.setLayout(h_layout)
 
     def update(self):
         """
@@ -289,6 +439,7 @@ class ActionButtonsWidget(QWidget):
 
     def names(self):
         return [button.name for button in self.buttons]
+
 
 ##############################
 # Statements widgets classes #

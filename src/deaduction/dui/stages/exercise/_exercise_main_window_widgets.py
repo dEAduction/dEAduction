@@ -35,6 +35,8 @@ This file is part of d∃∀duction.
 
 import                          logging
 
+from typing import Optional
+
 from PySide2.QtCore import    ( Slot,
                                 QTimer,
                                 Qt)
@@ -54,10 +56,12 @@ from PySide2.QtWidgets import ( QAction,
                                 QSplitter,
                                 QSizePolicy,
                                 QAbstractItemView,
-                                QPushButton)
+                                QPushButton,
+                                QFrame)
 
 from deaduction.dui.utils               import   replace_widget_layout
 from deaduction.dui.elements            import ( ActionButton,
+                                                 DemoUseModeSetter,
                                                  ActionButtonsWidget,
                                                  StatementsTreeWidget,
                                                  StatementsTreeWidgetItem,
@@ -160,6 +164,9 @@ class ExerciseCentralWidget(QWidget):
         context_title = _('Context (objects and properties)')
         self.__actions_gb = QGroupBox(action_title)
         self.__context_gb = QGroupBox(context_title)
+        self.__demo_use_mode_setter: Optional[DemoUseModeSetter] = None
+        self.__demo_use_logic_buttons: Optional[ActionButtonsWidget] = \
+            None
 
         # ──────────────── Init Actions area ─────────────── #
         ActionButton.from_name = dict()
@@ -230,35 +237,94 @@ class ExerciseCentralWidget(QWidget):
 
         self.__context_gb.setTitle(_('Context (objects and properties)'))
 
-    def init_action_layout(self):
+    def first_logic_buttons_lines(self) -> [[ActionButton]]:
+        """
+        Return the list of ActionButtons corresponding to
+        forall, exists, implies, and, or. Buttons may be unified (act for
+        both demo and use) or just for demo or just for use.
+        """
+        mode = cvars.get('logic.button_use_demo_mode')
+        exercise = self.exercise
+        first_lines = []
+
+        if exercise.demo_use_mode_set_by_exercise() or mode == 'unified':
+            first_lines = [exercise.available_logic_1]
+        elif mode == 'both':
+            first_lines = [exercise.available_logic_demo,
+                           exercise.available_logic_use]
+        elif mode == 'radio_button':
+            radio_mode = self.__demo_use_mode_setter.radio_mode
+            if radio_mode == 'demo':
+                first_lines = [exercise.available_logic_demo]
+            elif radio_mode == 'use':
+                first_lines = [exercise.available_logic_use]
+        return first_lines
+
+    def update_logic_buttons(self):
+        """
+        This method will be called when the logic buttons must be updated,
+        e.g. when user click on the demo_use_mode_setter.
+        """
+
+        btns_wdg = self.__demo_use_logic_buttons
+        [new_first_line] = self.first_logic_buttons_lines()
+        new_btns_wdg = ActionButtonsWidget(new_first_line)
+        wdg: QWidget = self.__action_btns_lyt.replaceWidget(btns_wdg,
+                                                            new_btns_wdg)
+        if wdg:
+            # log.debug("Logic buttons replaced")
+            # btns_wdg.hide()
+            btns_wdg.deleteLater()
+            self.__demo_use_logic_buttons = new_btns_wdg
+        else:
+            log.warning("Logic buttons replacement failed")
+
+    def init_action_button_lyt(self):
+        # FIXME: if use to update, clear layout from old wdgts
         exercise = self.exercise
 
         # Mode selector
         mode = cvars.get('logic.button_use_demo_mode')
         if mode == 'radio_button':
-            # Create radio_button
-            pass
-        elif mode == 'both':
-            pass
+            if not self.__demo_use_mode_setter:
+                self.__demo_use_mode_setter = DemoUseModeSetter()
+            self.__demo_use_mode_setter.clicked.connect(self.update_logic_buttons)
+            self.__action_btns_lyt.addWidget(self.__demo_use_mode_setter)
+            self.__action_btns_lyt.setAlignment(self.__demo_use_mode_setter,
+                                                Qt.AlignHCenter)
 
         # ───────────── Action buttons ───────────── #
         short = cvars.get("display.short_buttons_line", True)
-        if short:
-            action_lines = [exercise.available_logic_1,
-                            exercise.available_logic_2,
-                            exercise.available_magic + exercise.available_proof]
-        else:
-            action_lines = [exercise.available_logic,
-                            exercise.available_proof,
-                            exercise.available_magic]
+        first_lines = self.first_logic_buttons_lines()
+
+        # Try to gather logic buttons on one line if short
+        action_lines = ([first_lines[0] + exercise.available_logic_2]
+                        if not short and len(first_lines) == 1
+                        else first_lines + [exercise.available_logic_2])
+        action_lines.extend([exercise.available_proof
+                             + exercise.available_magic])
         self.action_btns_wdgs = []
+
+        btns_wdg = None
         for line in action_lines:
             if line:
-                btns_wdg = ActionButtonsWidget(line)
+                if not btns_wdg and mode == 'radio_button':
+                    btns_wdg = ActionButtonsWidget(line)
+                    self.__demo_use_logic_buttons = btns_wdg
+                    self.__action_btns_lyt.addWidget(btns_wdg)
+                    self.__action_btns_lyt.setAlignment(btns_wdg,
+                                                        Qt.AlignHCenter)
+                    self.__action_btns_lyt.addSpacing(10)
+                else:
+                    btns_wdg = ActionButtonsWidget(line)
+                    self.__action_btns_lyt.addSpacing(5)
+                    self.__action_btns_lyt.addWidget(btns_wdg)
+
                 self.action_btns_wdgs.append(btns_wdg)
-                self.__action_btns_lyt.addSpacing(5)
-                self.__action_btns_lyt.addWidget(btns_wdg)
-                inner = True
+
+    def init_action_layout(self):
+        exercise = self.exercise
+        self.init_action_button_lyt()
         # ───────────── Statements ───────────── #
         statements = exercise.available_statements
         outline = exercise.course.outline
@@ -446,7 +512,8 @@ class ExerciseCentralWidget(QWidget):
                      # self.logic_btns,
                      # self.proof_btns,
                      # self.magic_btns,
-                     self.statements_tree]
+                     self.statements_tree,
+                     self.__demo_use_mode_setter]
         to_freeze += self.action_btns_wdgs
         for widget in to_freeze:
             widget.setEnabled(not yes)
