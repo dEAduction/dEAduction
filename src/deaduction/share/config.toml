@@ -50,8 +50,8 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 math_font_file = ""
 
 [logic]
-# "unified", "both", "radio_button"
-button_use_demo_mode = "radio_button"
+# "display_unified", "display_both", "display_switch"
+button_use_or_prove_mode = "display_switch"
 # use_demo_mode_affect_line_1 = true
 # use_demo_mode_affect_line_2 = false
 do_not_name_dummy_vars_as_global_vars = true

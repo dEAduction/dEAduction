@@ -29,6 +29,7 @@ from .actions_widgets_classes import (
     ActionButton,
     DemoUseModeSetter,
     ActionButtonsWidget,
+    ActionButtonsLyt,
     StatementsTreeWidgetNode,
     StatementsTreeWidgetItem,
     StatementsTreeWidget)

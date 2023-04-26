@@ -62,12 +62,13 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QWidget,
                                 QAbstractItemView,
                                 QLabel,
-                                QRadioButton,
-                                QToolBar,
-                                QSizePolicy)
+                                QGroupBox,
+                                QStackedLayout)
+
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
-                                QToolTip)
+                                QToolTip,
+                                QSizePolicy)
 
 from deaduction.pylib.text        import ( button_symbol,
                                            button_tool_tip)
@@ -275,7 +276,7 @@ ActionButton.action_triggered = Signal(ActionButton)
 #
 #         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 #     @property
-#     def radio_mode(self):
+#     def switch_mode(self):
 #         if self.demo_button.isChecked():
 #             return "demo"
 #         elif self.use_button.isChecked():
@@ -330,26 +331,27 @@ class DemoUseModeSetter(QWidget):
     def __init__(self):
         super().__init__()
         self.switch = Switch()
-        demo_lbl = QLabel(_("Demo mode"))
+        self.switch.setChecked(True)
+        demo_lbl = QLabel(_("Proof mode"))
         use_lbl = QLabel(_("Use mode"))
 
         lyt = QHBoxLayout()
         lyt.setContentsMargins(0, 0, 0, 0)
 
         lyt.addStretch()
-        lyt.addWidget(demo_lbl)
-        lyt.addWidget(self.switch)
         lyt.addWidget(use_lbl)
+        lyt.addWidget(self.switch)
+        lyt.addWidget(demo_lbl)
         self.setLayout(lyt)
 
         self.switch.clicked.connect(self.clicked)
 
     @property
-    def radio_mode(self):
+    def switch_mode(self):
         if self.switch.isChecked():
-            return "use"
+            return "prove"
         else:
-            return "demo"
+            return "use"
 
 
 class ActionButtonsWidget(QWidget):
@@ -385,7 +387,7 @@ class ActionButtonsWidget(QWidget):
         demo_lbl.deleteLater()
         use_lbl.deleteLater()
 
-    def __init__(self, actions: [Action], show_label=False):
+    def __init__(self, actions: [Action], show_label=True):
         """
         Init self with an ordered list of instances of the class Action.
 
@@ -397,7 +399,7 @@ class ActionButtonsWidget(QWidget):
 
         self.set_lbl_size()
 
-        self.demo_line = all((action.name.endswith('_demo')
+        self.demo_line = all((action.name.endswith('_prove')
                               for action in actions))
         self.use_line = all((action.name.endswith('_use')
                              for action in actions))
@@ -408,10 +410,11 @@ class ActionButtonsWidget(QWidget):
         # (1) Populate h_layout with ActionButtons
         h_layout = QHBoxLayout()
         h_layout.setContentsMargins(0, 0, 0, 0)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
         if show_label:
             if self.demo_line:
-                demo_lbl = QLabel(_('Demo:'))
+                demo_lbl = QLabel(_('Prove:'))
                 h_layout.addWidget(demo_lbl)
                 demo_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
             elif self.use_line:
@@ -439,6 +442,96 @@ class ActionButtonsWidget(QWidget):
 
     def names(self):
         return [button.name for button in self.buttons]
+
+
+class ProveUseSwitcherButtonGroupBox(QGroupBox):
+    """
+    This class is a QGrouBox with two lines of buttons. If switcher is True
+    then a button allow usr to switch between lines, otherwise both lines are
+    displayed.
+    """
+    def __init__(self, prove_wdgs, use_wdgs, switcher=True):
+        super().__init__()
+        self.prove_wdgs = prove_wdgs
+        self.use_wdgs = use_wdgs
+        self.lyt = QVBoxLayout()
+
+        if not switcher:  # Just the two buttons lines
+            self.prove_use_mode_setter = None
+            self.stacked_lyt = None
+            self.lyt.addWidget(prove_wdgs)
+            self.lyt.addWidget(use_wdgs)
+
+        else:
+            # Switcher
+            self.prove_use_mode_setter = DemoUseModeSetter()
+            self.prove_use_mode_setter.clicked.connect(
+                self.update_switch)
+            self.lyt.addWidget(self.prove_use_mode_setter)
+            self.lyt.setAlignment(self.prove_use_mode_setter, Qt.AlignHCenter)
+
+            # Stacked_lyt with prove and use wdgs
+            self.stacked_lyt = QStackedLayout()
+            self.stacked_lyt.addWidget(prove_wdgs)
+            self.stacked_lyt.addWidget(use_wdgs)
+            self.stacked_lyt.setCurrentIndex(0)
+            self.lyt.addLayout(self.stacked_lyt)
+            self.setLayout(self.lyt)
+
+    def update_switch(self):
+        if self.prove_use_mode_setter:
+            switch_mode = self.prove_use_mode_setter.switch_mode
+            if switch_mode == "prove":
+                self.stacked_lyt.setCurrentIndex(0)
+            elif switch_mode == "use":
+                self.stacked_lyt.setCurrentIndex(1)
+
+
+class ActionButtonsLyt(QVBoxLayout):
+    """
+    This class provides a QVBoxLayout which contains all action buttons.
+    There are two cases:
+    - either prove_wdgs and use_wdgs are provided, then these are used to
+    build a ProveUseSwitcherButtonGroupBox, and the other line wdgs are put
+    in another QGroupBox;
+    - or all the line wdgs are directly put into self.
+    """
+
+    def __init__(self,
+                 other_line_wdgs: [ActionButtonsWidget],
+                 prove_wdgs: ActionButtonsWidget = None,
+                 use_wdgs: ActionButtonsWidget = None,
+                 switcher=True):
+
+        super().__init__()
+
+        other_lyt = QVBoxLayout() if prove_wdgs else self
+
+        # Populate other_lyt, in the simple case that's enough
+        # first = True
+        for wdg in other_line_wdgs:
+            # if not first:
+            #     pass
+            #     # other_lyt.addSpacing(5)
+            # else:
+            #     first = False
+            other_lyt.addWidget(wdg)
+
+        # In the complicated case, populate self with two QGroupBoxes
+        if prove_wdgs:
+            prove_use_box = ProveUseSwitcherButtonGroupBox(prove_wdgs,
+                                                           use_wdgs,
+                                                           switcher=switcher)
+            other_box = QGroupBox()
+            other_box.setLayout(other_lyt)
+
+            prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
+            other_box.layout().setContentsMargins(5, 5, 5, 5)
+            prove_use_box.layout().setSpacing(5)
+            other_box.layout().setSpacing(5)
+
+            self.addWidget(prove_use_box)
+            self.addWidget(other_box)
 
 
 ##############################

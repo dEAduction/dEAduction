@@ -59,10 +59,11 @@ from PySide2.QtWidgets import ( QAction,
                                 QPushButton,
                                 QFrame)
 
-from deaduction.dui.utils               import   replace_widget_layout
+from deaduction.dui.utils               import   clear_layout
 from deaduction.dui.elements            import ( ActionButton,
                                                  DemoUseModeSetter,
                                                  ActionButtonsWidget,
+                                                 ActionButtonsLyt,
                                                  StatementsTreeWidget,
                                                  StatementsTreeWidgetItem,
                                                  MathObjectWidget,
@@ -164,13 +165,12 @@ class ExerciseCentralWidget(QWidget):
         context_title = _('Context (objects and properties)')
         self.__actions_gb = QGroupBox(action_title)
         self.__context_gb = QGroupBox(context_title)
-        self.__demo_use_mode_setter: Optional[DemoUseModeSetter] = None
-        self.__demo_use_logic_buttons: Optional[ActionButtonsWidget] = \
-            None
+        # self.__button_use_or_prove_mode = cvars.get(
+        #     'logic.button_use_or_prove_mode')
 
         # ──────────────── Init Actions area ─────────────── #
         ActionButton.from_name = dict()
-        self.action_btns_wdgs = []
+        self.__action_btns_wdgs = []  # Used to freeze buttons
 
         statements           = exercise.available_statements
         outline              = exercise.course.outline
@@ -237,94 +237,61 @@ class ExerciseCentralWidget(QWidget):
 
         self.__context_gb.setTitle(_('Context (objects and properties)'))
 
-    def first_logic_buttons_lines(self) -> [[ActionButton]]:
+    def init_action_layout(self):
         """
-        Return the list of ActionButtons corresponding to
-        forall, exists, implies, and, or. Buttons may be unified (act for
-        both demo and use) or just for demo or just for use.
+        This method populates self.__action_btns_lyt. The basic bricks are
+        ActionButtonsWidgets, which are lines of ActionButtons. There are two
+        cases:
+        - In the simplest case, we just populate directly with
+        ActionButtonsWidgets.
+        - The more complicated case is when one or two buttons lines are
+        prove or use lines. Then the layout is split into two QGroupBoxes,
+        the first one will contain the prove/use buttons lines, maybe with a
+        switcher, and the second one contains the other buttons.
+
+        This method is called by __init__, but also when updating after the
+        settings are changed from one case to the other one.
         """
-        mode = cvars.get('logic.button_use_demo_mode')
         exercise = self.exercise
-        first_lines = []
-
-        if exercise.demo_use_mode_set_by_exercise() or mode == 'unified':
-            first_lines = [exercise.available_logic_1]
-        elif mode == 'both':
-            first_lines = [exercise.available_logic_demo,
-                           exercise.available_logic_use]
-        elif mode == 'radio_button':
-            radio_mode = self.__demo_use_mode_setter.radio_mode
-            if radio_mode == 'demo':
-                first_lines = [exercise.available_logic_demo]
-            elif radio_mode == 'use':
-                first_lines = [exercise.available_logic_use]
-        return first_lines
-
-    def update_logic_buttons(self):
-        """
-        This method will be called when the logic buttons must be updated,
-        e.g. when user click on the demo_use_mode_setter.
-        """
-
-        btns_wdg = self.__demo_use_logic_buttons
-        [new_first_line] = self.first_logic_buttons_lines()
-        new_btns_wdg = ActionButtonsWidget(new_first_line)
-        wdg: QWidget = self.__action_btns_lyt.replaceWidget(btns_wdg,
-                                                            new_btns_wdg)
-        if wdg:
-            # log.debug("Logic buttons replaced")
-            # btns_wdg.hide()
-            btns_wdg.deleteLater()
-            self.__demo_use_logic_buttons = new_btns_wdg
-        else:
-            log.warning("Logic buttons replacement failed")
-
-    def init_action_button_lyt(self):
-        # FIXME: if use to update, clear layout from old wdgts
-        exercise = self.exercise
-
-        # Mode selector
-        mode = cvars.get('logic.button_use_demo_mode')
-        if mode == 'radio_button':
-            if not self.__demo_use_mode_setter:
-                self.__demo_use_mode_setter = DemoUseModeSetter()
-            self.__demo_use_mode_setter.clicked.connect(self.update_logic_buttons)
-            self.__action_btns_lyt.addWidget(self.__demo_use_mode_setter)
-            self.__action_btns_lyt.setAlignment(self.__demo_use_mode_setter,
-                                                Qt.AlignHCenter)
 
         # ───────────── Action buttons ───────────── #
-        short = cvars.get("display.short_buttons_line", True)
-        first_lines = self.first_logic_buttons_lines()
+        mode = cvars.get('logic.button_use_or_prove_mode')
 
-        # Try to gather logic buttons on one line if short
-        action_lines = ([first_lines[0] + exercise.available_logic_2]
-                        if not short and len(first_lines) == 1
-                        else first_lines + [exercise.available_logic_2])
-        action_lines.extend([exercise.available_proof
-                             + exercise.available_magic])
-        self.action_btns_wdgs = []
+        if exercise.prove_use_mode_set_by_exercise():
+            # TODO!!
+            prove_line = []
+            use_line = []
+            other_lines = []
+        elif mode == 'display_unified':
+            prove_line = []
+            use_line = []
+            other_lines = [exercise.available_logic_1]
+        else:  # mode == "display_both" or "display_switch"
+            prove_line = exercise.available_logic_prove
+            use_line = exercise.available_logic_use
+            other_lines = []
 
-        btns_wdg = None
-        for line in action_lines:
-            if line:
-                if not btns_wdg and mode == 'radio_button':
-                    btns_wdg = ActionButtonsWidget(line)
-                    self.__demo_use_logic_buttons = btns_wdg
-                    self.__action_btns_lyt.addWidget(btns_wdg)
-                    self.__action_btns_lyt.setAlignment(btns_wdg,
-                                                        Qt.AlignHCenter)
-                    self.__action_btns_lyt.addSpacing(10)
-                else:
-                    btns_wdg = ActionButtonsWidget(line)
-                    self.__action_btns_lyt.addSpacing(5)
-                    self.__action_btns_lyt.addWidget(btns_wdg)
+        other_lines += [exercise.available_logic_2,
+                        exercise.available_proof,
+                        exercise.available_magic]
 
-                self.action_btns_wdgs.append(btns_wdg)
+        switcher = (mode == 'display_switch')
 
-    def init_action_layout(self):
-        exercise = self.exercise
-        self.init_action_button_lyt()
+        # TODO:
+        #  update ecw in new_settings in case mode changed
+        #  fonts!?
+        #  set by user
+        #  test...
+        #  adapt help msgs
+        prove_wdg = ActionButtonsWidget(prove_line)
+        use_wdg = ActionButtonsWidget(use_line)
+        other_line_wdgs = [ActionButtonsWidget(line) for line in other_lines]
+        self.__action_btns_lyt = ActionButtonsLyt(other_line_wdgs,
+                                                  prove_wdg,
+                                                  use_wdg,
+                                                  switcher=switcher)
+        self.__action_btns_wdgs = [prove_wdg, use_wdg] + other_line_wdgs
+
         # ───────────── Statements ───────────── #
         statements = exercise.available_statements
         outline = exercise.course.outline
@@ -333,6 +300,8 @@ class ExerciseCentralWidget(QWidget):
         # Put action buttons and statement tree in lyt
         self.__actions_lyt.addLayout(self.__action_btns_lyt)
         self.__actions_lyt.addWidget(self.statements_tree)
+        self.__actions_lyt.setStretch(0, 0)
+        self.__actions_lyt.setStretch(1, 10)
 
     def set_drag_and_drop_config(self):
         # (1) Drags statements:
@@ -419,7 +388,7 @@ class ExerciseCentralWidget(QWidget):
 
         # Modify font for symbol buttons
         symbol_size = self.deaduction_fonts.symbol_button_font_size
-        for btns_wdg in self.action_btns_wdgs:
+        for btns_wdg in self.__action_btns_wdgs:
             for btn in btns_wdg.buttons:
                 btn.update()
                 if btn.is_symbol():
@@ -478,7 +447,7 @@ class ExerciseCentralWidget(QWidget):
         buttons (instances of the class ActionButton).
         """
         btns = []
-        for line in self.action_btns_wdgs:
+        for line in self.__action_btns_wdgs:
             btns.extend(line.buttons)
         return btns
         # return self.logic_btns.buttons \
@@ -512,11 +481,12 @@ class ExerciseCentralWidget(QWidget):
                      # self.logic_btns,
                      # self.proof_btns,
                      # self.magic_btns,
-                     self.statements_tree,
-                     self.__demo_use_mode_setter]
-        to_freeze += self.action_btns_wdgs
+                     self.statements_tree]
+                     # self.prove_use_mode_setter]
+        to_freeze += self.__action_btns_wdgs
         for widget in to_freeze:
-            widget.setEnabled(not yes)
+            if widget:
+                widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
                     pending_goals):

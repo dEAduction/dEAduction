@@ -95,7 +95,7 @@ CONFIGS["Display"] = {
     'display.use_symbols_for_logic_button': (None, True, ""),
     'display.font_size_for_symbol_buttons': (None, True, ""),
     'display.dubious_characters': (None, True, ""),
-    'display.short_buttons_line': (None, True, ""),
+    'display.short_buttons_line': (None, False, ""),
     'display.color_for_selection': (None, True, "")
     # ('display.use_system_fonts', None, True),
     # ('display.use_system_fonts_for_maths', None, True),
@@ -112,6 +112,8 @@ CONFIGS["Display"] = {
 
 CONFIGS["Logic"] = {
     "display.display_success_messages": (None, True, ""),
+    "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
+                                        'display_unified'], True, ""),
     "logic.use_color_for_variables": (None, True,
         _("The variables of the context are displayed in color")),
     "logic.use_color_for_dummy_variables": (None, True,

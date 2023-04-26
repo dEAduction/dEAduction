@@ -61,27 +61,31 @@ class WrongUserInput(Exception):
         self.message = error
 
 
-class WrongDemoModeInput(WrongUserInput):
-    def __init__(self, error=""):
-        super().__init__(f"Wrong 'demo' user input with error: {error}")
+class WrongProveModeInput(WrongUserInput):
+    def __init__(self, error="", prop=None):
+        super().__init__(f"Wrong 'prove' user input with error: {error}")
+        if not prop:
+            prop = _("a property")
         if not error:
-            if cvars.get("logic.button_use_demo_mode") == "radio_button":
-                error = _("Go into 'use mode' to make use of a property of "
-                          "the context")
+            if cvars.get("logic.button_use_or_prove_mode") == "display_switch":
+                error = _("Go into 'use mode' to make use of {} of "
+                          "the context").format(prop)
             else:
-                error = _("Press the 'use' button to make use of a property of "
-                          "the context")
+                error = _("Press the 'use' button to make use of {} of "
+                          "the context").format(prop)
         self.message = error
 
 
 class WrongUseModeInput(WrongUserInput):
-    def __init__(self, error=""):
+    def __init__(self, error="", prop=None):
         super().__init__(f"Wrong 'use' user input with error: {error}")
+        if not prop:
+            prop = _("the goal")
         if not error:
-            if cvars.get("logic.button_use_demo_mode") == "radio_button":
-                error = _("Go into 'demo mode' to prove the goal")
+            if cvars.get("logic.button_use_or_prove_mode") == "display_switch":
+                error = _("Go into 'prove mode' to prove {}").format(prop)
             else:
-                error = _("Press the 'demo' button to prove the goal")
+                error = _("Press the 'prove' button to prove {}").format(prop)
         self.message = error
 
 
@@ -91,7 +95,7 @@ def test_selection(items_selected: [],
     """
     Test that at least one of items_selected or selected_target is not empty.
     If exclusive is True, then also test that both are not simultaneously
-    non empty.
+    nonempty.
     """
     implicit_target = cvars.get("functionality.target_selected_by_default")
 
@@ -104,16 +108,17 @@ def test_selection(items_selected: [],
         raise WrongUserInput(error)
 
 
-def test_demo_use(selected_objects, demo, use):
+def test_prove_use(selected_objects, demo, use, prop):
     """
     Raise an exception if nb of selected_objects does not fit use/demo mode.
     @param selected_objects:
     @param demo: True iff demo mode is on
     @param use: True iff use mode is on
+    @param prop: the type of property
     """
     if not selected_objects and not demo:
-        raise WrongUseModeInput
+        raise WrongUseModeInput(prop=prop)
     elif selected_objects and not use:
-        raise WrongDemoModeInput
+        raise WrongProveModeInput(prop=prop)
 
 

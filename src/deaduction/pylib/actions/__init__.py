@@ -29,11 +29,13 @@ This file is part of dEAduction.
 from .actiondef import (    Action,
                             action)
 
-from .exceptions import (   InputType,
-                            MissingParametersError,
-                            WrongUserInput,
-                            test_selection,
-                            test_demo_use)
+from .exceptions import (InputType,
+                         MissingParametersError,
+                         WrongUserInput,
+                         WrongProveModeInput,
+                         WrongUseModeInput,
+                         test_selection,
+                         test_prove_use)
 
 from .code_for_lean import (LeanCombinator,
                             CodeForLean,

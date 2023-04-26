@@ -59,26 +59,31 @@ def _(msg):
 # A list of lines for the tooltip of each button, with key = action name
 # Modify tooltips here, add an entry for a new button
 __tooltips = {
-    'and':
-        [_("Split a property 'P AND Q' into the two properties 'P', 'Q'"),
-        _("Conversely, assemble 'P' and 'Q' to get 'P AND Q'")],
-    'or':
-        [_("Prove 'P OR Q' by proving either 'P' or 'Q'"),
-        _("Use property 'P OR Q' by splitting cases")],
+    'forall_prove':
+        [_("""Prove '∀ x, P(x)' by introducing 'x'""")],
+    'forall_use':
+        [_("""From some 'x' and '∀ x, P(x)' get 'P(x)'""")],
+    'exists_prove':
+        [_("""Prove '∃ x, P(x)' by specifying some 'x'""")],
+    'exists_use':
+        [_("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
+    'implies_prove':
+        [_("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""")],
+    'implies_use':
+        [_("""From 'P' and 'P ⇒ Q' get 'Q'""")],
+    'and_prove':
+        [_("Prove the property 'P AND Q' by proving separately 'P' and 'Q'")],
+    'and_use':
+        [_("From the property 'P AND Q', get 'P' and 'Q'")],
+    'or_prove':
+        [_("Prove 'P OR Q' by choosing to prove either 'P' or 'Q'")],
+    'or_use':
+        [_("Use property 'P OR Q' by splitting cases")],
     'not':
         [_("""Try to simplify the property 'NOT P'""")],
-    'implies_demo':
-        [_("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""")],
-    'implies_use': [_("""From 'P' and 'P ⇒ Q' get 'Q'""")],
     'iff':
         [_("Split 'P ⇔ Q' into two implications"),
         _("From 'P ⇒ Q' and 'Q ⇒ P' get 'P ⇔ Q'")],
-    'forall':
-        [_("""Prove '∀ x, P(x)' by introducing 'x'"""),
-        _("""From some 'x' and '∀ x, P(x)' get 'P(x)'""")],
-    'exists':
-        [_("""Prove '∃ x, P(x)' by specifying some 'x'"""),
-        _("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
     'equal':
         [_("""Use an equality to substitute one term with the other""")],
     "map":
@@ -180,7 +185,7 @@ def __compute_buttons_symbols_dict():
         __buttons_symbols[key] = value
         # Add demo and use buttons
         if key in logic_buttons_line_1:
-            __buttons_symbols[key + '_demo'] = value + ' ' + _('demo')
+            __buttons_symbols[key + '_prove'] = value + ' ' + _('prove')
             __buttons_symbols[key + '_use'] = value + ' ' + _('use')
 
 
@@ -215,7 +220,7 @@ def button_tool_tip(name: str) -> [str]:
     pretty_name = pretty_name.replace('_', ' ')
 
     # (2) Get tooltip
-    demo_name = name + '_demo'
+    demo_name = name + '_proof'
     if demo_name in __tooltips:
         use_name = name + '_use'
         tooltip = __tooltips.get(demo_name) + __tooltips.get(use_name)

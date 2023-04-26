@@ -560,19 +560,19 @@ class Exercise(Theorem):
         actions = []
         for name in action_names:
             for action in self.available_logic:
-                if action.name in (name, name + '_demo', name + '_use'):
+                if action.name in (name, name + '_prove', name + '_use'):
                     actions.append(action)
         return actions
 
     @property
-    def available_logic_demo(self):
+    def available_logic_prove(self):
         """
         return the list of demo actions whose names are names of actions in
         self.available_logic.
         """
         actions = [action for action in LOGIC_BUTTONS.values()
-                   if (action.name.endswith('_demo')
-                       and action.name[:-5] in
+                   if (action.name.endswith('_prove')
+                       and action.name[:-6] in
                        [action.name for action in self.available_logic_1])]
         return actions
 
@@ -604,7 +604,7 @@ class Exercise(Theorem):
                     actions.append(action)
         return actions
 
-    def demo_use_mode_set_by_exercise(self):
+    def prove_use_mode_set_by_exercise(self):
         """
         Test if the list of logic buttons determined by self's metadata
         contains a use or demo button; in this case the ui should display
@@ -613,6 +613,7 @@ class Exercise(Theorem):
         tests = (action.name.endswith('_use') or action.name.endswith('_demo')
                  for action in self.available_logic_1)
         return any(tests)
+
 
 #############
 # utilities #

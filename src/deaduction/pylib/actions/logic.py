@@ -57,8 +57,10 @@ from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
                                           WrongUserInput,
+                                          WrongProveModeInput,
+                                          WrongUseModeInput,
                                           test_selection,
-                                          test_demo_use,
+                                          test_prove_use,
                                           CodeForLean)
 
 from deaduction.pylib.mathobj     import  MathObject
@@ -70,6 +72,12 @@ log = logging.getLogger("logic")
 global _
 
 
+###########
+###########
+# Helpers #
+###########
+###########
+
 def rw_with_defi(definition, object=None):
     defi = definition.lean_name
     if object:
@@ -80,919 +88,11 @@ def rw_with_defi(definition, object=None):
     return code
 
 
-#######
-# AND #
-#######
-
-def construct_and(proof_step, user_input: [str]) -> CodeForLean:
-    """
-    Split the target 'P AND Q' into two sub-goals.
-    Handle the case of an implicit "and", and the case of IFF.
-    """
-    target = proof_step.goal.target.math_type
-    if target.is_iff(is_math_type=True):
-        return construct_iff(proof_step, user_input)
-
-    implicit_definition = None
-    if not target.is_and(is_math_type=True, implicit=True):
-        raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
-
-    if not target.is_and(is_math_type=True):
-        # Implicit "and"
-        implicit_definition = MathObject.last_used_implicit_definition
-        target              = MathObject.last_rw_object
-
-    children = target.children
-
-    left = children[0]
-    right = children[1]
-    if not user_input:
-        # User choice
-        choices = [(_("Left"), left.to_display(format_="utf8")),
-                   (_("Right"), right.to_display(format_="utf8"))]
-        raise MissingParametersError(
-            InputType.Choice,
-            choices,
-            title=_("Choose sub-goal"),
-            output=_("Which property to prove first?"))
-    else:
-        if implicit_definition:
-            code = rw_with_defi(implicit_definition)
-        else:
-            code = CodeForLean.empty_code()
-        if user_input[0] == 1:
-            # Prove second property first
-            if target.node == "PROP_∃":
-                # In this case, first rw target as a conjunction
-                code = code.and_then("rw exists_prop")
-            code = code.and_then("rw and.comm")
-            left, right = right, left
-
-        code = code.and_then("split")
-        code.add_success_msg(_('Target split'))
-        code.add_conjunction(target, left, right)
-    return code
-
-
-def apply_and(proof_step, selected_objects) -> CodeForLean:
-    """
-    Destruct a property 'P and Q'.
-    Here selected_objects is assumed to contain exactly one conjunction
-    property.
-    """
-
-    selected_hypo = selected_objects[0].info["name"]
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
-    code = CodeForLean.from_string(f'cases {selected_hypo} with {h1} {h2}')
-    code.add_success_msg(_("Split property {} into {} and {}").
-                         format(selected_hypo, h1, h2))
-    return code
-
-
-def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
-                      -> CodeForLean:
-    """
-    Construct 'P AND Q' from properties P and Q.
-    Here selected_objects is assumed to contain exactly two properties.
-    """
-
-    h1 = selected_objects[0].info["name"]
-    h2 = selected_objects[1].info["name"]
-    new_hypo_name = get_new_hyp(proof_step)
-    code = f'have {new_hypo_name} := and.intro {h1} {h2}'
-    code = CodeForLean.from_string(code)
-    code = code.and_then(f"clear {h1}")
-    code = code.and_then(f"clear {h2}")
-    code.add_success_msg(_("Conjunction {} added to the context").
-                         format(new_hypo_name))
-    return code
-
-
-@action()
-def action_and(proof_step) -> CodeForLean:
-    """
-    Translate into string of lean code corresponding to the action
-
-If the target is of the form P AND Q:
-    transform the current goal into two subgoals, P, then Q.
-If a hypothesis of the form P AND Q has been previously selected:
-    creates two new hypothesis P, and Q.
-If two hypothesis P, then Q, have been previously selected:
-    add the new hypothesis P AND Q to the properties.
-    """
-
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
-
-    test_selection(selected_objects, target_selected)
-    # goal = proof_step.goal
-
-    if len(selected_objects) == 0:
-        return construct_and(proof_step, user_input)
-    if len(selected_objects) == 1:
-        if not selected_objects[0].is_and(implicit=True):
-            raise WrongUserInput(error=_("Selected property is not "
-                                         "a conjunction 'P AND Q'"))
-        else:
-            return apply_and(proof_step, selected_objects)
-    if len(selected_objects) == 2:
-        if not (selected_objects[0].math_type.is_prop and
-                selected_objects[1].math_type.is_prop):
-            raise WrongUserInput(error=_("Selected items are not properties"))
-        else:
-            return construct_and_hyp(proof_step, selected_objects)
-    raise WrongUserInput(error=_("Does not apply to more than two properties"))
-
-
-######
-# OR #
-######
-
-def construct_or(proof_step, user_input: [str]) -> CodeForLean:
-    """
-    Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
-    Handle the case of an implicit "or".
-    """
-    target = proof_step.goal.target.math_type
-
-    # Implicit definition ?
-    if not target.is_or(is_math_type=True):
-        # Implicit "or"
-        # implicit_definition = MathObject.last_used_implicit_definition
-        target = MathObject.last_rw_object
-
-    children = target.children
-
-    left = children[0].to_display(format_="utf8")
-    right = children[1].to_display(format_="utf8")
-    choices = [(_("Left"), left), (_("Right"), right)]
-
-    if not user_input:
-        raise MissingParametersError(InputType.Choice,
-                                     choices,
-                                     title=_("Choose new goal"),
-                                     output=_("Which property will you "
-                                              "prove?"))
-    code = None
-    if len(user_input) == 1:
-        i = user_input[0]
-        if i == 0:
-            code = CodeForLean.from_string("left")
-            code.add_success_msg(_("Target replaced by the left alternative"))
-        else:
-            code = CodeForLean.from_string("right")
-            code.add_success_msg(_("Target replaced by the right alternative"))
-
-    return code
-
-
-def apply_or(proof_step,
-             selected_objects: [MathObject],
-             user_input: [str]) -> CodeForLean:
-    """
-    Assuming selected_objects is one disjunction 'P OR Q',
-    engage in a proof by cases.
-    Handle the case of an implicit "or".
-    """
-
-    selected_hypo = selected_objects[0]
-    math_type = selected_hypo.math_type
-    code = CodeForLean.empty_code()
-
-    # Implicit definition ?
-    implicit_definition = None
-    if not selected_hypo.is_or(is_math_type=False):
-        # Implicit "or"
-        implicit_definition = MathObject.last_used_implicit_definition
-        math_type = MathObject.last_rw_object
-
-    children = math_type.children
-
-    left = children[0]
-    right = children[1]
-    if not user_input:
-        choices = [(_("Left"), left.to_display(format_="utf8")),
-                   (_("Right"), right.to_display(format_="utf8"))]
-        raise MissingParametersError(InputType.Choice,
-                                     choices=choices,
-                                     title=_("Choose case"),
-                                     output=_("Which case to assume first?"))
-    else:  # len(user_input) == 1
-        if user_input[0] == 1:
-            # If user wants the second property first, then first permute
-            code_str = f'rw or.comm at {selected_hypo.info["name"]}'
-            if implicit_definition:
-                code = rw_with_defi(implicit_definition, selected_hypo)
-                code = code.and_then(code_str)
-            else:
-                code = CodeForLean.from_string(code_str)
-            left, right = right, left
-
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
-    # Destruct the disjunction
-    code = code.and_then(f'cases {selected_hypo.info["name"]} with {h1} {h2}')
-    code.add_success_msg(_("Proof by cases"))
-    code.add_disjunction(selected_hypo, left, right)
-
-    return code
-
-
-def construct_or_on_hyp(proof_step,
-                        selected_property: [MathObject],
-                        user_input: [str] = None) -> CodeForLean:
-    """
-    Construct a property 'P or Q' from property 'P' or property 'Q'.
-    Here we assume selected_object contains 1 or 2 items.
-    """
-    if not user_input:
-        user_input = []
-    possible_codes = []
-    first_hypo_name = selected_property[0].info["name"]
-    # hypo = selected_property[0].math_type.to_display()
-
-    if len(selected_property) == 2:
-        if not (selected_property[0].math_type.is_prop()
-                and selected_property[1].math_type.is_prop()):
-            error = _("Selected items are not properties")
-            raise WrongUserInput(error)
-        else:
-            second_selected_property = selected_property[1]
-            second_name = second_selected_property.info["name"]
-            second_lean_code = \
-                second_selected_property.math_type.to_display(format_='lean')
-    elif len(selected_property) == 1:
-        if not selected_property[0].math_type.is_prop():
-            error = _("Selected item is not a property")
-            raise WrongUserInput(error)
-        if not user_input:  # User has to choose 2nd property
-            raise MissingParametersError(
-                InputType.Text,
-                title=_("Obtain 'P OR Q'"),
-                output=_("Enter the property you want to use:"))
-        else:
-            second_name = user_input[0]
-            second_lean_code = second_name
-            user_input = user_input[1:]
-        
-    if not user_input:  # Usr still has to choose side
-        raise MissingParametersError(
-            InputType.Choice,
-            [(_("Left"),
-              f'({first_hypo_name}) OR ({second_name})'),
-             (_('Right'),
-              f'({second_name}) OR ({first_hypo_name})')],
-            title=_("Choose side"),
-            output=_(f'On which side do you want') + f' {first_hypo_name} ?')
-    
-    new_hypo_name = get_new_hyp(proof_step)
-    # Mind Lean syntax: @or.inl P Q HP ; @or.inr P Q HQ
-    if user_input[0] == 0:
-        possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inl _ ({second_lean_code}) '
-                              f'({first_hypo_name})')
-    elif user_input[0] == 1:
-        possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inr ({second_lean_code}) _ '
-                              f'({first_hypo_name})')
-    else:
-        raise WrongUserInput("Unexpected error")
-    code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_msg(_('Property {} added to the context').
-                         format(new_hypo_name))
-    return code
-            
-
-@action()
-def action_or(proof_step) -> CodeForLean:
-    """
-    If the target is of the form P OR Q:
-        transform the target in P (or Q) according to the user's choice.
-    If a hypothesis of the form P OR Q has been previously selected:
-        transform the current goal into two subgoals,
-            one with P as a hypothesis,
-            and another with Q as a hypothesis.
-    """
-
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
-
-    test_selection(selected_objects, target_selected)
-    goal = proof_step.goal
-
-    if len(selected_objects) == 0:
-        if not goal.target.is_or(implicit=True):
-            raise WrongUserInput(
-                error=_("Target is not a disjunction 'P OR Q'"))
-        else:
-            return construct_or(proof_step, user_input)
-    elif len(selected_objects) == 1:
-        if selected_objects[0].is_or(implicit=True):
-            return apply_or(proof_step, selected_objects, user_input)
-        else:
-            return construct_or_on_hyp(proof_step, selected_objects, user_input)
-    elif len(selected_objects) == 2:
-        return construct_or_on_hyp(proof_step, selected_objects, user_input)
-    else:  # More than 2 selected objects
-        raise WrongUserInput(error=_("Does not apply to more than two "
-                                     "properties"))
-
-
-#######
-# NOT #
-#######
-@action()
-def action_not(proof_step) -> CodeForLean:
-    """
-    Translate into string of lean code corresponding to the action
-    
-    If no hypothesis has been previously selected:
-        transform the target in an equivalent one with its negations 'pushed'.
-    If a hypothesis has been previously selected:
-        do the same to the hypothesis.
-    """
-
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-    # user_input = proof_step.user_input
-
-    test_selection(selected_objects, target_selected)
-    goal = proof_step.goal
-
-    # (1) Push neg once on target
-    if len(selected_objects) == 0:
-        if not goal.target.first_pushable_body_of_neg():
-            raise WrongUserInput(error=_("Negation cannot be pushed in target"))
-        code = CodeForLean.from_string('push_neg_once')
-        code.add_success_msg(_("Negation pushed on target"))
-        # Add try_norm_num. This changes A≠B into ¬ (A=B)
-        # which makes it possible, e.g., to unfold 'double inclusion'
-        code = code.and_try_simp_only(lemmas='ne.def')
-
-    # (2) Push neg once on one hypo
-    elif len(selected_objects) == 1:
-        if not selected_objects[0].first_pushable_body_of_neg():
-            error = _("Negation cannot be pushed in selected property")
-            raise WrongUserInput(error)
-        selected_hypo = selected_objects[0].info["name"]
-        code = CodeForLean.from_string(f'push_neg_once at {selected_hypo}')
-        code.add_success_msg(_("Negation pushed on property {}").format(
-            selected_hypo))
-        code = code.and_try_simp_only(lemmas='ne.def',
-                                      location=selected_hypo)
-
-    else:
-        raise WrongUserInput(error=_('Only one property at a time'))
-    return code
-
-
-###############
-# IMPLICATION #
-###############
-def construct_implies(proof_step) -> CodeForLean:
-    """
-    Here the target is assumed to be an implication P ⇒ Q, P is added to the
-    context, and the target becomes Q.
-    """
-    if not proof_step.goal.target.is_implication(implicit=True):
-        raise WrongUserInput(error=_("Target is not an implication 'P ⇒ Q'"))
-    else:
-        new_hypo_name = get_new_hyp(proof_step)
-        code = CodeForLean.from_string(f'intro {new_hypo_name}')
-        code.add_success_msg(_("Property {} added to the context").
-                             format(new_hypo_name))
-        return code
-
-
-def apply_implies(implication: [MathObject]) -> CodeForLean:
-    """
-    Here selected_object contains a single property which is an implication
-    P ⇒ Q; if the target is Q then it will be replaced by P.
-    """
-
-    selected_name = implication.info["name"]
-    code = CodeForLean.from_string(f'apply_with {selected_name} '
-                                   '{md:=reducible}')
-    code.add_success_msg(_("Target modified using implication {}").
-                         format(selected_name))
-
-    code.add_used_properties(implication)
-    code.outcome_operator = implication
-
-    return code
-
-
-def have_new_property(arrow: MathObject,
-                      variable_names: [str],
-                      new_hypo_name: str,
-                      success_msg=None,
-                      iff_direction='') -> CodeForLean:
-    """
-    Compute Lean code to apply an implication or a universal property to a
-    property or a variable.
-
-    :param arrow:           a MathObject which is either an implication or a
-                            universal property
-    :param variable_names:  a list of names of variables (or properties) to
-                            which "arrow" will be applied
-    :param new_hypo_name:   a fresh name for the new property
-
-    :param success_msg:     A success msg, if None then the standard one will be
-                            used.
-
-    :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
-                            implication, 'mpr' for reverse direction,
-                            '' if arrow is an implication.
-    return:                 Lean Code to produce the wanted new property,
-                            taking into account implicit parameters
-    """
-
-    # TODO: add smart guess for placeholders, by matching math types
-    #  May even try to guess parameters from the context
-    #  (e.g. if we need a function and there is only one in the context)
-
-    # try with up to 4 implicit parameters
-    # implicit_codes = [command + ' ' + arguments,
-    #                   command + ' _ ' + arguments,
-    #                   command + ' _ _ ' + arguments,
-    #                   command + ' _ _ _ ' + arguments,
-    #                   command + ' _ _ _ _ ' + arguments]
-    #
-    # explicit_codes = [command_explicit + ' ' + arguments,
-    #                   command_explicit + ' _ ' + arguments,
-    #                   command_explicit + ' _ _ ' + arguments,
-    #                   command_explicit + ' _ _ _ ' + arguments,
-    #                   command_explicit + ' _ _ _ _ ' + arguments]
-
-    # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
-    # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
-    # = "mp")
-    selected_hypo = arrow.info["name"]
-    have = f'have {new_hypo_name} := '
-    arguments = ' '.join(variable_names)
-    implicit_codes = []
-    explicit_codes = []
-    for nb in range(6):
-        imp_code = f'{selected_hypo} ' + '_ '*nb
-        exp_code = f'@{selected_hypo} ' + '_ '*nb
-        if iff_direction:
-            if nb > 0:
-                imp_code = '(' + imp_code + ')'
-                exp_code = '(' + exp_code + ')'
-            imp_code = imp_code + '.' + iff_direction + ' '
-            exp_code = exp_code + '.' + iff_direction + ' '
-        implicit_codes.append(have + imp_code + arguments)
-        explicit_codes.append(have + exp_code + arguments)
-
-    code = CodeForLean.or_else_from_list(implicit_codes + explicit_codes)
-    if success_msg is None:
-        success_msg = _("Property {} added to the context").format(new_hypo_name)
-    if success_msg:
-        code.add_success_msg(success_msg)
-
-    code.operator = arrow
-    return code
-
-
-def apply_implies_to_hyp(proof_step,
-                         selected_objects: [MathObject]) -> CodeForLean:
-    """
-    Try to apply last selected property on the other ones.
-    The last property should be an implication or a universal implication,
-    or equivalent to such after unfolding definitions,
-    or an iff or a universal iff.
-    """
-
-    implication = selected_objects[-1]
-    new_hypo_name = get_new_hyp(proof_step)
-    variable_names = [variable.info['name'] for variable in
-                      selected_objects[:-1]]
-    if implication.can_be_used_for_implication(implicit=True,
-                                               include_iff=False):
-        code = have_new_property(implication, variable_names, new_hypo_name)
-    else:  # implication is an iff or a universal iff
-        code1 = have_new_property(implication, variable_names, new_hypo_name,
-                                  iff_direction='mp')
-        code2 = have_new_property(implication, variable_names, new_hypo_name,
-                                  iff_direction='mpr')
-        code = code1.or_else(code2)
-
-    code.add_used_properties(selected_objects)
-    return code
-
-
-def implies_hyp(proof_step):
-    """
-    This method is called when user press implies with exactly one selected
-    hypothesis, which is an implication or a universal implication.
-    """
-
-    implication = proof_step.selection[0]
-    # (0) Determine is implication is a universal implication, or a True
-    #     implication (maybe implicit)
-    universal_implication = False
-    if not implication.is_implication(is_math_type=False, implicit=True):
-        universal_implication = True
-    else:
-        # Implicit definition ?
-        if not implication.is_implication(is_math_type=False):
-            # Implicit implication
-            implication = MathObject.last_rw_object
-
-    target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
-    goal = proof_step.goal
-
-    # (1) 'It suffices to prove'?
-    if target_selected:
-        return apply_implies(implication)
-
-    premise = implication.premise()
-    # (2) Premise in context (but not selected)?
-    #  or inaccessible premise (e.g. universal implication)
-    if universal_implication \
-            or not isinstance(premise, MathObject) \
-            or premise in ([p.math_type for p in goal.context_props]
-                           + [goal.target.math_type]):
-        raise WrongUserInput(error=_("You need to select another property"
-                                     "in order to apply this implication"))
-    # (3) Ask to add premise as a new sub_goal
-    # TODO: add case of an iff: ask for direction, then proceed as for =>
-    elif not user_input:
-        assert isinstance(premise, MathObject)
-        raw_msg = _('To apply this property, you need the premise \"{}\". '
-                    'Do you want to prove it?')
-        msg = _(raw_msg).format(premise.to_display(format_='utf8'))
-        raise MissingParametersError(
-            InputType.YesNo,
-            choices=[],
-            title=_("Introduce new sub-goal?"),
-            output=msg)
-    # (4) Add premise as a new sub-goal
-    elif user_input[0] == 0:  # Should always be the case here
-        if premise and isinstance(premise, MathObject):
-            return introduce_new_subgoal(proof_step, premise)
-        else:
-            error_msg = _("I do not know what to do")
-            raise WrongUserInput(error_msg)
-
-
-@action()
-def action_forall_demo(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
-
-
-@action()
-def action_forall_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
-
-
-@action()
-def action_exists_demo(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
-
-
-@action()
-def action_exists_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
-
-
-@action()
-def action_implies_demo(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
-
-
-@action()
-def action_implies_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
-
-
-@action()
-def action_and_demo(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
-
-
-@action()
-def action_and_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
-
-
-@action()
-def action_or_demo(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
-
-
-@action()
-def action_or_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
-
-
-@action()
-def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
-    """
-    Three cases:
-    (1) No property selected, demo=True:
-        If the target is of the form P ⇒ Q: introduce the hypothesis P in
-        the properties and transform the target into Q.
-    When at least one property are selected and use=False, 
-    a WrongDemoModeInput is raised.
-    If use=True: 
-    (2) A single selected property, of the form P ⇒ Q, and the target is
-    selected: if the target was Q, it is replaced by P. If the target is not
-    selected, then usr is asked to prove the premise (new sub-goal).
-    (3) Exactly two selected property, on of which is an implication P ⇒ Q
-    and the other is P: Add Q to the context
-    """
-        
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-    # user_input = proof_step.user_input
-
-    test_selection(selected_objects, target_selected)
-    goal = proof_step.goal
-
-    test_demo_use(selected_objects, demo=demo, use=use)
-
-    if len(selected_objects) == 0 and demo:
-        # Try to prove an implication
-        if not goal.target.is_implication(implicit=True):
-            raise WrongUserInput(
-                error=_("Target is not an implication 'P ⇒ Q'"))
-        else:
-            return construct_implies(proof_step)
-
-    # From now on, at least 1 selected object.
-    # TODO: add iff case for one selected object
-    if len(selected_objects) == 1 and use:
-        # Try to apply an implication, but no other prop selected
-        if not selected_objects[0].can_be_used_for_implication(implicit=True,
-           include_iff=False):
-            raise WrongUserInput(
-                error=_("Selected property is not an implication 'P ⇒ Q'"))
-        else:
-            return implies_hyp(proof_step)
-
-    elif len(selected_objects) == 2 and use:
-        # Try to apply P ⇒ Q on P
-        code0 = CodeForLean.empty_code()
-        code1 = CodeForLean.empty_code()
-        is_implication = [obj.can_be_used_for_implication(implicit=True,
-                                                          include_iff=True)
-                          for obj in selected_objects]
-        if not is_implication[0] and not is_implication[1]:
-            raise WrongUserInput(error=_("Selected properties are not "
-                                         "implications 'P ⇒ Q'"))
-        if is_implication[1]:
-            code1 = apply_implies_to_hyp(proof_step, selected_objects)
-        if is_implication[0]:
-            selected_objects.reverse()
-            code0 = apply_implies_to_hyp(proof_step, selected_objects)
-        code = (code1.or_else(code0) if (is_implication[0] and
-                                         is_implication[1])
-                else code0 if is_implication[0] else code1)
-
-        return code
-    # TODO: treat the case of more properties, including the possibility of
-    #  P, Q and 'P and Q ⇒ R'
-    else:
-        raise WrongUserInput(error=_("Does not apply to more than two "
-                                     "properties"))
-
-
-#######
-# IFF #
-#######
-
-def choose_substitution(equality0: MathObject, equality1: MathObject):
-    """
-    Ask usr to choose between using equality0 to substitute in equality1 or
-    the converse. equality0, equality1 are assumed to be (universal)
-    equalities or iff.
-    """
-    eq0 = equality0.to_display(format_="utf8")
-    eq1 = equality1.to_display(format_="utf8")
-    choice = _("Use for substitution in {}")
-    choices = [(eq0, choice.format(eq1)),
-               (eq1, choice.format(eq0))]
-    raise MissingParametersError(
-        InputType.Choice,
-        choices,
-        title=_("Precision of substitution"),
-        output=_("Choose which equality to use for substitution"))
-
-
-def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
-    """
-    Assuming target is an iff, split into two implications.
-    """
-
-    target = proof_step.goal.target.math_type
-    code = CodeForLean.empty_code()
-
-    left = target.children[0]
-    right = target.children[1]
-    left_display = left.to_display(format_="utf8")
-    right_display = right.to_display(format_="utf8")
-    if not user_input:
-        choices = [("⇒", f'({left_display}) ⇒ ({right_display})'),
-                   ("⇐", f'({right_display}) ⇒ ({left_display})')]
-        raise MissingParametersError(
-            InputType.Choice,
-            choices,
-            title=_("Choose sub-goal"),
-            output=_("Which implication to prove first?"))
-
-    elif len(user_input) == 1:
-        if user_input[0] == 1:
-            code = CodeForLean.from_string("rw iff.comm")
-            left, right = right, left
-        code = code.and_then("split")
-    else:
-        raise WrongUserInput(error=_("Undocumented error"))
-    code.add_success_msg(_("Iff split in two implications"))
-    impl1 = MathObject(info={},
-                       node="PROP_IMPLIES",
-                       children = [left, right],
-                       math_type=MathObject.PROP)
-    impl2 = MathObject(info={},
-                       node="PROP_IMPLIES",
-                       children = [right, left],
-                       math_type=MathObject.PROP)
-    code.add_conjunction(target, impl1, impl2)
-    return code
-
-
-def destruct_iff(proof_step) -> CodeForLean:
-    """
-    Check if target is a conjunction of two implications (but not if these
-    implications are logical inverses). If so, return code that builds the
-    equivalent iff statement. If not, return None.
-    """
-
-    goal = proof_step.goal
-    # code = None
-    target = goal.target
-    if target.is_and():
-        left = target.math_type.children[0]
-        right = target.math_type.children[1]
-        if left.is_implication(is_math_type=True) \
-                and right.is_implication(is_math_type=True):
-            code = CodeForLean.from_string("apply iff_def.mp")
-            code.add_success_msg(_("Target replaced by iff property"))
-            error_msg = _("The first implication is not the converse of the "
-                          "second one")
-            code.add_error_msg(error_msg)
-            return code
-        else:
-            error_msg = _("I do not know what to do")
-            raise WrongUserInput(error_msg)
-
-
-def destruct_iff_on_hyp(proof_step,
-                        selected_objects: [MathObject]) -> CodeForLean:
-    """
-    Split a property 'P iff Q' into two implications.
-    len(selected_objects) should be 1.
-    """
-    possible_codes = []
-    hypo_name = selected_objects[0].info["name"]
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
-    possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
-    code = CodeForLean.or_else_from_list(possible_codes)
-    code.add_success_msg(_("Property {} split into {} and {}").
-                             format(hypo_name, h1, h2))
-    return code
-
-
-def construct_iff_on_hyp(proof_step,
-                         selected_objects: [MathObject]) -> CodeForLean:
-    """
-    Construct property 'P iff Q' from both implications.
-    len(selected_objects) should be 2.
-    """
-
-    new_hypo_name = get_new_hyp(proof_step)
-    h1 = selected_objects[0].info["name"]
-    h2 = selected_objects[1].info["name"]
-    code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
-    code = CodeForLean.from_string(code_string)
-    code.add_success_msg(_("Logical equivalence {} added to the context").
-                             format(new_hypo_name))
-    error_msg = _("The first implication is not the converse of the "
-                  "second one")
-    code.add_error_msg(error_msg)
-    code.add_used_properties(selected_objects)
-    return code
-
-
-def rw_with_iff(rw_hyp: MathObject,
-                on_hyp: Optional[MathObject] = None) -> CodeForLean:
-    """
-    Try to use rw_hyp, assumed to be a (universal) iff,
-    to rewrite either on_hyp if any, or target.
-    """
-
-    # FIXME: rw target should appear on ProofTree when on_hyp is None.
-    code1 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
-                                  on_hyp=on_hyp)
-    code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
-                                  on_hyp=on_hyp, reverse=True)
-
-    code = code1.or_else(code2)
-    code.add_used_properties(rw_hyp)
-    code.rw_item = rw_hyp
-    return code
-
-
-@action()
-def action_iff(proof_step) -> CodeForLean:
-    """
-    Three cases:
-    (1) No selected property:
-        If the target is of the form P ⇔ Q:
-            introduce two subgoals, P⇒Q, and Q⇒P.
-        If target is of the form (P → Q) ∧ (Q → P):
-            replace by P ↔ Q
-    (2) 1 selected property
-        - if an iff, and target not selected, split it
-        - elif a universal iff, try to rw target,
-    (3) 2 properties:
-        - if one is a universal iff, try to rw the other,
-        - if none is an iff but both are implications, try to obtain P ⇔ Q.
-    """
-    # TODO: a good part could be merged with action_equal,
-    #  in particular add testing of direction of substitution for a
-    #  non-universal iff.
-
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
-
-    if user_input is None:
-        user_input = []
-
-    test_selection(selected_objects, target_selected)
-    goal = proof_step.goal
-    code = CodeForLean.empty_code()
-    test_subst = [item.can_be_used_for_substitution()
-                  for item in selected_objects]
-
-    if len(selected_objects) == 0:
-        if goal.target.math_type.node == "PROP_IFF":
-            return construct_iff(proof_step, user_input)
-        else:
-            code = destruct_iff(proof_step)
-            if code:
-                return code
-            else:
-                error_msg = _("Target is not an iff property 'P ⇔ Q'")
-                raise WrongUserInput(error=error_msg)
-
-    if len(selected_objects) == 1:
-        if selected_objects[0].is_iff() and not target_selected:
-            more_code = destruct_iff_on_hyp(proof_step, selected_objects)
-            code = code.or_else(more_code)
-        else:
-            [(test, eq)] = test_subst
-            if test:  # 1st selected object can be used for substitution
-                code = rw_with_iff(selected_objects[0])
-            elif not selected_objects[0].is_iff():
-                error = _("Selected property is not an iff property 'P ⇔ Q'")
-                raise WrongUserInput(error)
-        return code
-
-    if len(selected_objects) == 2:
-        [(test0, equality0), (test1, equality1)] = test_subst
-        if test0 and test1:
-            # Two iff: which one to use?
-            if not user_input:
-                choose_substitution(equality0, equality1)
-            elif user_input[0] == 0:
-                return rw_with_iff(selected_objects[0],
-                                   on_hyp=selected_objects[1])
-            else:
-                return rw_with_iff(selected_objects[1],
-                                   on_hyp=selected_objects[0])
-        elif test0:
-            return rw_with_iff(selected_objects[0],
-                               on_hyp= selected_objects[1])
-        elif test1:
-            return rw_with_iff(selected_objects[1],
-                               on_hyp= selected_objects[0])
-
-        elif not (selected_objects[0].is_implication()
-                  and selected_objects[1].is_implication()):
-            error = _("Selected items should both be implications")
-            raise WrongUserInput(error)
-        else:
-            return construct_iff_on_hyp(proof_step, selected_objects)
-
-    raise WrongUserInput(error=_("Does not apply to more than two properties"))
-
+####################################
+####################################
+# FORALL, EXISTS, IMPLIES, AND, OR #
+####################################
+####################################
 
 ###########
 # FOR ALL #
@@ -1392,7 +492,17 @@ def apply_forall(proof_step, selected_objects: [MathObject]) \
 
 
 @action()
-def action_forall(proof_step) -> CodeForLean:
+def action_forall_prove(proof_step) -> CodeForLean:
+    return action_forall(proof_step, demo=True, use=False)
+
+
+@action()
+def action_forall_use(proof_step) -> CodeForLean:
+    return action_forall(proof_step, demo=False, use=True)
+
+
+@action()
+def action_forall(proof_step, demo=True, use=True) -> CodeForLean:
     """
     (1) If no selection and target is of the form ∀ x, P(x):
         introduce x and transform the target into P(x)
@@ -1405,21 +515,22 @@ def action_forall(proof_step) -> CodeForLean:
 
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
+    test_prove_use(selected_objects, demo=demo, use=use, prop=_('a universal '
+                                                                'property'))
+
+    user_input = proof_step.user_input
     goal = proof_step.goal
 
-    # selection_object_added = False
-
-    if len(selected_objects) == 0:
+    if len(selected_objects) == 0 and demo:
         if not goal.target.is_for_all(implicit=True):
             error = _("Target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
         else:
             return construct_forall(proof_step)
 
-    elif len(selected_objects) == 1:  # Ask user for item
+    elif len(selected_objects) == 1 and use:  # Ask user for item
         if not selected_objects[0].is_for_all(implicit=True):
             error = _("Selected property is not a universal property '∀x, "
                       "P(x)'")
@@ -1445,6 +556,7 @@ def action_forall(proof_step) -> CodeForLean:
 
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
+    assert use
     selected_objects.reverse()
     for item in selected_objects:
         if item.is_for_all(implicit=True):
@@ -1554,7 +666,17 @@ def construct_exists_on_hyp(proof_step,
 
 
 @action()
-def action_exists(proof_step) -> CodeForLean:
+def action_exists_prove(proof_step) -> CodeForLean:
+    return action_exists(proof_step, demo=True, use=False)
+
+
+@action()
+def action_exists_use(proof_step) -> CodeForLean:
+    return action_exists(proof_step, demo=False, use=True)
+
+
+@action()
+def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
     """
     Three cases:
     (1) If target is of form ∃ x, P(x):
@@ -1569,13 +691,17 @@ def action_exists(proof_step) -> CodeForLean:
 
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
-    user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
+    # TODO: test_prove_use, mais il y a construct_on_hyp!
+
+    user_input = proof_step.user_input
     goal = proof_step.goal
 
     if len(selected_objects) == 0:
-        if not goal.target.is_exists(implicit=True):
+        if not demo:
+            raise WrongProveModeInput(prop="an existential property")
+        elif not goal.target.is_exists(implicit=True):
             error = _("Target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
         else:
@@ -1584,20 +710,930 @@ def action_exists(proof_step) -> CodeForLean:
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
             # Try to apply property "exists x, P(x)" to get a new MathObject x
-            if not selected_hypo.is_exists(implicit=True):
+            if not use:
+                raise WrongUseModeInput(prop="an existential property")
+            elif not selected_hypo.is_exists(implicit=True):
                 error = _("Selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             else:
                 return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
+            if not demo:
+                raise WrongProveModeInput(prop="an existential property")
+            object_name = selected_objects[0].info["name"]
             if not goal.target.is_exists(implicit=True):
-                error = _("Target is not existential property '∃x, P(x)'")
+                # error = _("Target is not existential property '∃x, P(x)'")
+                error = _("Select a property on {} to get an existential "
+                          "property").format(object_name)
                 raise WrongUserInput(error)
             else:
-                object_name = selected_objects[0].info["name"]
                 return construct_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
-        return construct_exists_on_hyp(proof_step, selected_objects)
+        if not demo:
+            raise WrongProveModeInput(prop="an existential property")
+        else:
+            return construct_exists_on_hyp(proof_step, selected_objects)
+    raise WrongUserInput(error=_("I do not know what to do"))
+
+
+###############
+# IMPLICATION #
+###############
+def construct_implies(proof_step) -> CodeForLean:
+    """
+    Here the target is assumed to be an implication P ⇒ Q, P is added to the
+    context, and the target becomes Q.
+    """
+    if not proof_step.goal.target.is_implication(implicit=True):
+        raise WrongUserInput(error=_("Target is not an implication 'P ⇒ Q'"))
+    else:
+        new_hypo_name = get_new_hyp(proof_step)
+        code = CodeForLean.from_string(f'intro {new_hypo_name}')
+        code.add_success_msg(_("Property {} added to the context").
+                             format(new_hypo_name))
+        return code
+
+
+def apply_implies(implication: [MathObject]) -> CodeForLean:
+    """
+    Here selected_object contains a single property which is an implication
+    P ⇒ Q; if the target is Q then it will be replaced by P.
+    """
+
+    selected_name = implication.info["name"]
+    code = CodeForLean.from_string(f'apply_with {selected_name} '
+                                   '{md:=reducible}')
+    code.add_success_msg(_("Target modified using implication {}").
+                         format(selected_name))
+
+    code.add_used_properties(implication)
+    code.outcome_operator = implication
+
+    return code
+
+
+def have_new_property(arrow: MathObject,
+                      variable_names: [str],
+                      new_hypo_name: str,
+                      success_msg=None,
+                      iff_direction='') -> CodeForLean:
+    """
+    Compute Lean code to apply an implication or a universal property to a
+    property or a variable.
+
+    :param arrow:           a MathObject which is either an implication or a
+                            universal property
+    :param variable_names:  a list of names of variables (or properties) to
+                            which "arrow" will be applied
+    :param new_hypo_name:   a fresh name for the new property
+
+    :param success_msg:     A success msg, if None then the standard one will be
+                            used.
+
+    :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
+                            implication, 'mpr' for reverse direction,
+                            '' if arrow is an implication.
+    return:                 Lean Code to produce the wanted new property,
+                            taking into account implicit parameters
+    """
+
+    # TODO: add smart guess for placeholders, by matching math types
+    #  May even try to guess parameters from the context
+    #  (e.g. if we need a function and there is only one in the context)
+
+    # try with up to 4 implicit parameters
+    # implicit_codes = [command + ' ' + arguments,
+    #                   command + ' _ ' + arguments,
+    #                   command + ' _ _ ' + arguments,
+    #                   command + ' _ _ _ ' + arguments,
+    #                   command + ' _ _ _ _ ' + arguments]
+    #
+    # explicit_codes = [command_explicit + ' ' + arguments,
+    #                   command_explicit + ' _ ' + arguments,
+    #                   command_explicit + ' _ _ ' + arguments,
+    #                   command_explicit + ' _ _ _ ' + arguments,
+    #                   command_explicit + ' _ _ _ _ ' + arguments]
+
+    # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
+    # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
+    # = "mp")
+    selected_hypo = arrow.info["name"]
+    have = f'have {new_hypo_name} := '
+    arguments = ' '.join(variable_names)
+    implicit_codes = []
+    explicit_codes = []
+    for nb in range(6):
+        imp_code = f'{selected_hypo} ' + '_ '*nb
+        exp_code = f'@{selected_hypo} ' + '_ '*nb
+        if iff_direction:
+            if nb > 0:
+                imp_code = '(' + imp_code + ')'
+                exp_code = '(' + exp_code + ')'
+            imp_code = imp_code + '.' + iff_direction + ' '
+            exp_code = exp_code + '.' + iff_direction + ' '
+        implicit_codes.append(have + imp_code + arguments)
+        explicit_codes.append(have + exp_code + arguments)
+
+    code = CodeForLean.or_else_from_list(implicit_codes + explicit_codes)
+    if success_msg is None:
+        success_msg = _("Property {} added to the context").format(new_hypo_name)
+    if success_msg:
+        code.add_success_msg(success_msg)
+
+    code.operator = arrow
+    return code
+
+
+def apply_implies_to_hyp(proof_step,
+                         selected_objects: [MathObject]) -> CodeForLean:
+    """
+    Try to apply last selected property on the other ones.
+    The last property should be an implication or a universal implication,
+    or equivalent to such after unfolding definitions,
+    or an iff or a universal iff.
+    """
+
+    implication = selected_objects[-1]
+    new_hypo_name = get_new_hyp(proof_step)
+    variable_names = [variable.info['name'] for variable in
+                      selected_objects[:-1]]
+    if implication.can_be_used_for_implication(implicit=True,
+                                               include_iff=False):
+        code = have_new_property(implication, variable_names, new_hypo_name)
+    else:  # implication is an iff or a universal iff
+        code1 = have_new_property(implication, variable_names, new_hypo_name,
+                                  iff_direction='mp')
+        code2 = have_new_property(implication, variable_names, new_hypo_name,
+                                  iff_direction='mpr')
+        code = code1.or_else(code2)
+
+    code.add_used_properties(selected_objects)
+    return code
+
+
+def implies_hyp(proof_step):
+    """
+    This method is called when user press implies with exactly one selected
+    hypothesis, which is an implication or a universal implication.
+    """
+
+    implication = proof_step.selection[0]
+    # (0) Determine is implication is a universal implication, or a True
+    #     implication (maybe implicit)
+    universal_implication = False
+    if not implication.is_implication(is_math_type=False, implicit=True):
+        universal_implication = True
+    else:
+        # Implicit definition ?
+        if not implication.is_implication(is_math_type=False):
+            # Implicit implication
+            implication = MathObject.last_rw_object
+
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+    goal = proof_step.goal
+
+    # (1) 'It suffices to prove'?
+    if target_selected:
+        return apply_implies(implication)
+
+    premise = implication.premise()
+    # (2) Premise in context (but not selected)?
+    #  or inaccessible premise (e.g. universal implication)
+    if universal_implication \
+            or not isinstance(premise, MathObject) \
+            or premise in ([p.math_type for p in goal.context_props]
+                           + [goal.target.math_type]):
+        raise WrongUserInput(error=_("You need to select another property"
+                                     "in order to apply this implication"))
+    # (3) Ask to add premise as a new sub_goal
+    # TODO: add case of an iff: ask for direction, then proceed as for =>
+    elif not user_input:
+        assert isinstance(premise, MathObject)
+        raw_msg = _('To apply this property, you need the premise \"{}\". '
+                    'Do you want to prove it?')
+        msg = _(raw_msg).format(premise.to_display(format_='utf8'))
+        raise MissingParametersError(
+            InputType.YesNo,
+            choices=[],
+            title=_("Introduce new sub-goal?"),
+            output=msg)
+    # (4) Add premise as a new sub-goal
+    elif user_input[0] == 0:  # Should always be the case here
+        if premise and isinstance(premise, MathObject):
+            return introduce_new_subgoal(proof_step, premise)
+        else:
+            error_msg = _("I do not know what to do")
+            raise WrongUserInput(error_msg)
+
+
+@action()
+def action_implies_prove(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=True, use=False)
+
+
+@action()
+def action_implies_use(proof_step) -> CodeForLean:
+    return action_implies(proof_step, demo=False, use=True)
+
+
+@action()
+def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
+    """
+    Three cases:
+    (1) No property selected, demo=True:
+        If the target is of the form P ⇒ Q: introduce the hypothesis P in
+        the properties and transform the target into Q.
+    When at least one property are selected and use=False, 
+    a WrongProveModeInput is raised.
+    If use=True: 
+    (2) A single selected property, of the form P ⇒ Q, and the target is
+    selected: if the target was Q, it is replaced by P. If the target is not
+    selected, then usr is asked to prove the premise (new sub-goal).
+    (3) Exactly two selected property, on of which is an implication P ⇒ Q
+    and the other is P: Add Q to the context
+    """
+        
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    # user_input = proof_step.user_input
+
+    test_selection(selected_objects, target_selected)
+    test_prove_use(selected_objects, demo=demo, use=use,
+                   prop=_('an implication'))
+
+    goal = proof_step.goal
+
+    if len(selected_objects) == 0 and demo:
+        # Try to prove an implication
+        if not goal.target.is_implication(implicit=True):
+            raise WrongUserInput(
+                error=_("Target is not an implication 'P ⇒ Q'"))
+        else:
+            return construct_implies(proof_step)
+
+    # From now on, at least 1 selected object.
+    # TODO: add iff case for one selected object
+    if len(selected_objects) == 1 and use:
+        # Try to apply an implication, but no other prop selected
+        if not selected_objects[0].can_be_used_for_implication(implicit=True,
+           include_iff=False):
+            raise WrongUserInput(
+                error=_("Selected property is not an implication 'P ⇒ Q'"))
+        else:
+            return implies_hyp(proof_step)
+
+    elif len(selected_objects) == 2 and use:
+        # Try to apply P ⇒ Q on P
+        code0 = CodeForLean.empty_code()
+        code1 = CodeForLean.empty_code()
+        is_implication = [obj.can_be_used_for_implication(implicit=True,
+                                                          include_iff=True)
+                          for obj in selected_objects]
+        if not is_implication[0] and not is_implication[1]:
+            raise WrongUserInput(error=_("Selected properties are not "
+                                         "implications 'P ⇒ Q'"))
+        if is_implication[1]:
+            code1 = apply_implies_to_hyp(proof_step, selected_objects)
+        if is_implication[0]:
+            selected_objects.reverse()
+            code0 = apply_implies_to_hyp(proof_step, selected_objects)
+        code = (code1.or_else(code0) if (is_implication[0] and
+                                         is_implication[1])
+                else code0 if is_implication[0] else code1)
+
+        return code
+    # TODO: treat the case of more properties, including the possibility of
+    #  P, Q and 'P and Q ⇒ R'
+    else:
+        raise WrongUserInput(error=_("Does not apply to more than two "
+                                     "properties"))
+
+
+#######
+# AND #
+#######
+
+def construct_and(proof_step, user_input: [str]) -> CodeForLean:
+    """
+    Split the target 'P AND Q' into two sub-goals.
+    Handle the case of an implicit "and", and the case of IFF.
+    """
+    target = proof_step.goal.target.math_type
+    if target.is_iff(is_math_type=True):
+        return construct_iff(proof_step, user_input)
+
+    implicit_definition = None
+    if not target.is_and(is_math_type=True, implicit=True):
+        raise WrongUserInput(error=_("Target is not a conjunction 'P AND Q'"))
+
+    if not target.is_and(is_math_type=True):
+        # Implicit "and"
+        implicit_definition = MathObject.last_used_implicit_definition
+        target = MathObject.last_rw_object
+
+    children = target.children
+
+    left = children[0]
+    right = children[1]
+    if not user_input:
+        # User choice
+        choices = [(_("Left"), left.to_display(format_="utf8")),
+                   (_("Right"), right.to_display(format_="utf8"))]
+        raise MissingParametersError(
+            InputType.Choice,
+            choices,
+            title=_("Choose sub-goal"),
+            output=_("Which property to prove first?"))
+    else:
+        if implicit_definition:
+            code = rw_with_defi(implicit_definition)
+        else:
+            code = CodeForLean.empty_code()
+        if user_input[0] == 1:
+            # Prove second property first
+            if target.node == "PROP_∃":
+                # In this case, first rw target as a conjunction
+                code = code.and_then("rw exists_prop")
+            code = code.and_then("rw and.comm")
+            left, right = right, left
+
+        code = code.and_then("split")
+        code.add_success_msg(_('Target split'))
+        code.add_conjunction(target, left, right)
+    return code
+
+
+def apply_and(proof_step, selected_objects) -> CodeForLean:
+    """
+    Destruct a property 'P and Q'.
+    Here selected_objects is assumed to contain exactly one conjunction
+    property.
+    """
+
+    selected_hypo = selected_objects[0].info["name"]
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
+    code = CodeForLean.from_string(f'cases {selected_hypo} with {h1} {h2}')
+    code.add_success_msg(_("Split property {} into {} and {}").
+                         format(selected_hypo, h1, h2))
+    return code
+
+
+def construct_and_hyp(proof_step, selected_objects: [MathObject]) \
+        -> CodeForLean:
+    """
+    Construct 'P AND Q' from properties P and Q.
+    Here selected_objects is assumed to contain exactly two properties.
+    """
+
+    h1 = selected_objects[0].info["name"]
+    h2 = selected_objects[1].info["name"]
+    new_hypo_name = get_new_hyp(proof_step)
+    code = f'have {new_hypo_name} := and.intro {h1} {h2}'
+    code = CodeForLean.from_string(code)
+    code = code.and_then(f"clear {h1}")
+    code = code.and_then(f"clear {h2}")
+    code.add_success_msg(_("Conjunction {} added to the context").
+                         format(new_hypo_name))
+    return code
+
+
+@action()
+def action_and_prove(proof_step) -> CodeForLean:
+    return action_and(proof_step, demo=True, use=False)
+
+
+@action()
+def action_and_use(proof_step) -> CodeForLean:
+    return action_and(proof_step, demo=False, use=True)
+
+
+@action()
+def action_and(proof_step, demo=True, use=True) -> CodeForLean:
+    """
+    Translate into string of lean code corresponding to the action
+
+If the target is of the form P AND Q:
+    transform the current goal into two subgoals, P, then Q.
+If a hypothesis of the form P AND Q has been previously selected:
+    creates two new hypothesis P, and Q.
+If two hypothesis P, then Q, have been previously selected:
+    add the new hypothesis P AND Q to the properties.
+    """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+
+    test_selection(selected_objects, target_selected)
+    # goal = proof_step.goal
+
+    if len(selected_objects) == 0:
+        return construct_and(proof_step, user_input)
+    if len(selected_objects) == 1:
+        if not selected_objects[0].is_and(implicit=True):
+            raise WrongUserInput(error=_("Selected property is not "
+                                         "a conjunction 'P AND Q'"))
+        else:
+            return apply_and(proof_step, selected_objects)
+    if len(selected_objects) == 2:
+        if not (selected_objects[0].math_type.is_prop and
+                selected_objects[1].math_type.is_prop):
+            raise WrongUserInput(error=_("Selected items are not properties"))
+        else:
+            return construct_and_hyp(proof_step, selected_objects)
+    raise WrongUserInput(error=_("Does not apply to more than two properties"))
+
+
+######
+# OR #
+######
+
+def construct_or(proof_step, user_input: [str]) -> CodeForLean:
+    """
+    Assuming target is a disjunction 'P OR Q', choose to prove either P or Q.
+    Handle the case of an implicit "or".
+    """
+    target = proof_step.goal.target.math_type
+
+    # Implicit definition ?
+    if not target.is_or(is_math_type=True):
+        # Implicit "or"
+        # implicit_definition = MathObject.last_used_implicit_definition
+        target = MathObject.last_rw_object
+
+    children = target.children
+
+    left = children[0].to_display(format_="utf8")
+    right = children[1].to_display(format_="utf8")
+    choices = [(_("Left"), left), (_("Right"), right)]
+
+    if not user_input:
+        raise MissingParametersError(InputType.Choice,
+                                     choices,
+                                     title=_("Choose new goal"),
+                                     output=_("Which property will you "
+                                              "prove?"))
+    code = None
+    if len(user_input) == 1:
+        i = user_input[0]
+        if i == 0:
+            code = CodeForLean.from_string("left")
+            code.add_success_msg(_("Target replaced by the left alternative"))
+        else:
+            code = CodeForLean.from_string("right")
+            code.add_success_msg(_("Target replaced by the right alternative"))
+
+    return code
+
+
+def apply_or(proof_step,
+             selected_objects: [MathObject],
+             user_input: [str]) -> CodeForLean:
+    """
+    Assuming selected_objects is one disjunction 'P OR Q',
+    engage in a proof by cases.
+    Handle the case of an implicit "or".
+    """
+
+    selected_hypo = selected_objects[0]
+    math_type = selected_hypo.math_type
+    code = CodeForLean.empty_code()
+
+    # Implicit definition ?
+    implicit_definition = None
+    if not selected_hypo.is_or(is_math_type=False):
+        # Implicit "or"
+        implicit_definition = MathObject.last_used_implicit_definition
+        math_type = MathObject.last_rw_object
+
+    children = math_type.children
+
+    left = children[0]
+    right = children[1]
+    if not user_input:
+        choices = [(_("Left"), left.to_display(format_="utf8")),
+                   (_("Right"), right.to_display(format_="utf8"))]
+        raise MissingParametersError(InputType.Choice,
+                                     choices=choices,
+                                     title=_("Choose case"),
+                                     output=_("Which case to assume first?"))
+    else:  # len(user_input) == 1
+        if user_input[0] == 1:
+            # If user wants the second property first, then first permute
+            code_str = f'rw or.comm at {selected_hypo.info["name"]}'
+            if implicit_definition:
+                code = rw_with_defi(implicit_definition, selected_hypo)
+                code = code.and_then(code_str)
+            else:
+                code = CodeForLean.from_string(code_str)
+            left, right = right, left
+
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
+    # Destruct the disjunction
+    code = code.and_then(f'cases {selected_hypo.info["name"]} with {h1} {h2}')
+    code.add_success_msg(_("Proof by cases"))
+    code.add_disjunction(selected_hypo, left, right)
+
+    return code
+
+
+def construct_or_on_hyp(proof_step,
+                        selected_property: [MathObject],
+                        user_input: [str] = None) -> CodeForLean:
+    """
+    Construct a property 'P or Q' from property 'P' or property 'Q'.
+    Here we assume selected_object contains 1 or 2 items.
+    """
+    if not user_input:
+        user_input = []
+    possible_codes = []
+    first_hypo_name = selected_property[0].info["name"]
+    # hypo = selected_property[0].math_type.to_display()
+
+    if len(selected_property) == 2:
+        if not (selected_property[0].math_type.is_prop()
+                and selected_property[1].math_type.is_prop()):
+            error = _("Selected items are not properties")
+            raise WrongUserInput(error)
+        else:
+            second_selected_property = selected_property[1]
+            second_name = second_selected_property.info["name"]
+            second_lean_code = \
+                second_selected_property.math_type.to_display(format_='lean')
+    elif len(selected_property) == 1:
+        if not selected_property[0].math_type.is_prop():
+            error = _("Selected item is not a property")
+            raise WrongUserInput(error)
+        if not user_input:  # User has to choose 2nd property
+            raise MissingParametersError(
+                InputType.Text,
+                title=_("Obtain 'P OR Q'"),
+                output=_("Enter the property you want to use:"))
+        else:
+            second_name = user_input[0]
+            second_lean_code = second_name
+            user_input = user_input[1:]
+
+    if not user_input:  # Usr still has to choose side
+        raise MissingParametersError(
+            InputType.Choice,
+            [(_("Left"),
+              f'({first_hypo_name}) OR ({second_name})'),
+             (_('Right'),
+              f'({second_name}) OR ({first_hypo_name})')],
+            title=_("Choose side"),
+            output=_(f'On which side do you want') + f' {first_hypo_name} ?')
+
+    new_hypo_name = get_new_hyp(proof_step)
+    # Mind Lean syntax: @or.inl P Q HP ; @or.inr P Q HQ
+    if user_input[0] == 0:
+        possible_codes.append(f'have {new_hypo_name} := '
+                              f'@or.inl _ ({second_lean_code}) '
+                              f'({first_hypo_name})')
+    elif user_input[0] == 1:
+        possible_codes.append(f'have {new_hypo_name} := '
+                              f'@or.inr ({second_lean_code}) _ '
+                              f'({first_hypo_name})')
+    else:
+        raise WrongUserInput("Unexpected error")
+    code = CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_msg(_('Property {} added to the context').
+                         format(new_hypo_name))
+    return code
+
+
+@action()
+def action_or_prove(proof_step) -> CodeForLean:
+    return action_or(proof_step, demo=True, use=False)
+
+
+@action()
+def action_or_use(proof_step) -> CodeForLean:
+    return action_or(proof_step, demo=False, use=True)
+
+
+@action()
+def action_or(proof_step, demo=True, use=True) -> CodeForLean:
+    """
+    If the target is of the form P OR Q:
+        transform the target in P (or Q) according to the user's choice.
+    If a hypothesis of the form P OR Q has been previously selected:
+        transform the current goal into two subgoals,
+            one with P as a hypothesis,
+            and another with Q as a hypothesis.
+    """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+
+    test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
+
+    if len(selected_objects) == 0:
+        if not goal.target.is_or(implicit=True):
+            raise WrongUserInput(
+                error=_("Target is not a disjunction 'P OR Q'"))
+        else:
+            return construct_or(proof_step, user_input)
+    elif len(selected_objects) == 1:
+        if selected_objects[0].is_or(implicit=True):
+            return apply_or(proof_step, selected_objects, user_input)
+        else:
+            return construct_or_on_hyp(proof_step, selected_objects, user_input)
+    elif len(selected_objects) == 2:
+        return construct_or_on_hyp(proof_step, selected_objects, user_input)
+    else:  # More than 2 selected objects
+        raise WrongUserInput(error=_("Does not apply to more than two "
+                                     "properties"))
+
+
+###########################
+###########################
+# NOT, IFF, EQUAL, MAPSTO #
+###########################
+###########################
+
+#######
+# NOT #
+#######
+@action()
+def action_not(proof_step) -> CodeForLean:
+    """
+    Translate into string of lean code corresponding to the action
+
+    If no hypothesis has been previously selected:
+        transform the target in an equivalent one with its negations 'pushed'.
+    If a hypothesis has been previously selected:
+        do the same to the hypothesis.
+    """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    # user_input = proof_step.user_input
+
+    test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
+
+    # (1) Push neg once on target
+    if len(selected_objects) == 0:
+        if not goal.target.first_pushable_body_of_neg():
+            raise WrongUserInput(error=_("Negation cannot be pushed in target"))
+        code = CodeForLean.from_string('push_neg_once')
+        code.add_success_msg(_("Negation pushed on target"))
+        # Add try_norm_num. This changes A≠B into ¬ (A=B)
+        # which makes it possible, e.g., to unfold 'double inclusion'
+        code = code.and_try_simp_only(lemmas='ne.def')
+
+    # (2) Push neg once on one hypo
+    elif len(selected_objects) == 1:
+        if not selected_objects[0].first_pushable_body_of_neg():
+            error = _("Negation cannot be pushed in selected property")
+            raise WrongUserInput(error)
+        selected_hypo = selected_objects[0].info["name"]
+        code = CodeForLean.from_string(f'push_neg_once at {selected_hypo}')
+        code.add_success_msg(_("Negation pushed on property {}").format(
+            selected_hypo))
+        code = code.and_try_simp_only(lemmas='ne.def',
+                                      location=selected_hypo)
+
+    else:
+        raise WrongUserInput(error=_('Only one property at a time'))
+    return code
+
+
+#######
+# IFF #
+#######
+
+def choose_substitution(equality0: MathObject, equality1: MathObject):
+    """
+    Ask usr to choose between using equality0 to substitute in equality1 or
+    the converse. equality0, equality1 are assumed to be (universal)
+    equalities or iff.
+    """
+    eq0 = equality0.to_display(format_="utf8")
+    eq1 = equality1.to_display(format_="utf8")
+    choice = _("Use for substitution in {}")
+    choices = [(eq0, choice.format(eq1)),
+               (eq1, choice.format(eq0))]
+    raise MissingParametersError(
+        InputType.Choice,
+        choices,
+        title=_("Precision of substitution"),
+        output=_("Choose which equality to use for substitution"))
+
+
+def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
+    """
+    Assuming target is an iff, split into two implications.
+    """
+
+    target = proof_step.goal.target.math_type
+    code = CodeForLean.empty_code()
+
+    left = target.children[0]
+    right = target.children[1]
+    left_display = left.to_display(format_="utf8")
+    right_display = right.to_display(format_="utf8")
+    if not user_input:
+        choices = [("⇒", f'({left_display}) ⇒ ({right_display})'),
+                   ("⇐", f'({right_display}) ⇒ ({left_display})')]
+        raise MissingParametersError(
+            InputType.Choice,
+            choices,
+            title=_("Choose sub-goal"),
+            output=_("Which implication to prove first?"))
+
+    elif len(user_input) == 1:
+        if user_input[0] == 1:
+            code = CodeForLean.from_string("rw iff.comm")
+            left, right = right, left
+        code = code.and_then("split")
+    else:
+        raise WrongUserInput(error=_("Undocumented error"))
+    code.add_success_msg(_("Iff split in two implications"))
+    impl1 = MathObject(info={},
+                       node="PROP_IMPLIES",
+                       children = [left, right],
+                       math_type=MathObject.PROP)
+    impl2 = MathObject(info={},
+                       node="PROP_IMPLIES",
+                       children = [right, left],
+                       math_type=MathObject.PROP)
+    code.add_conjunction(target, impl1, impl2)
+    return code
+
+
+def destruct_iff(proof_step) -> CodeForLean:
+    """
+    Check if target is a conjunction of two implications (but not if these
+    implications are logical inverses). If so, return code that builds the
+    equivalent iff statement. If not, return None.
+    """
+
+    goal = proof_step.goal
+    # code = None
+    target = goal.target
+    if target.is_and():
+        left = target.math_type.children[0]
+        right = target.math_type.children[1]
+        if left.is_implication(is_math_type=True) \
+                and right.is_implication(is_math_type=True):
+            code = CodeForLean.from_string("apply iff_def.mp")
+            code.add_success_msg(_("Target replaced by iff property"))
+            error_msg = _("The first implication is not the converse of the "
+                          "second one")
+            code.add_error_msg(error_msg)
+            return code
+        else:
+            error_msg = _("I do not know what to do")
+            raise WrongUserInput(error_msg)
+
+
+def destruct_iff_on_hyp(proof_step,
+                        selected_objects: [MathObject]) -> CodeForLean:
+    """
+    Split a property 'P iff Q' into two implications.
+    len(selected_objects) should be 1.
+    """
+    possible_codes = []
+    hypo_name = selected_objects[0].info["name"]
+    h1 = get_new_hyp(proof_step)
+    h2 = get_new_hyp(proof_step)
+    possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
+    code = CodeForLean.or_else_from_list(possible_codes)
+    code.add_success_msg(_("Property {} split into {} and {}").
+                             format(hypo_name, h1, h2))
+    return code
+
+
+def construct_iff_on_hyp(proof_step,
+                         selected_objects: [MathObject]) -> CodeForLean:
+    """
+    Construct property 'P iff Q' from both implications.
+    len(selected_objects) should be 2.
+    """
+
+    new_hypo_name = get_new_hyp(proof_step)
+    h1 = selected_objects[0].info["name"]
+    h2 = selected_objects[1].info["name"]
+    code_string = f'have {new_hypo_name} := iff.intro {h1} {h2}'
+    code = CodeForLean.from_string(code_string)
+    code.add_success_msg(_("Logical equivalence {} added to the context").
+                             format(new_hypo_name))
+    error_msg = _("The first implication is not the converse of the "
+                  "second one")
+    code.add_error_msg(error_msg)
+    code.add_used_properties(selected_objects)
+    return code
+
+
+def rw_with_iff(rw_hyp: MathObject,
+                on_hyp: Optional[MathObject] = None) -> CodeForLean:
+    """
+    Try to use rw_hyp, assumed to be a (universal) iff,
+    to rewrite either on_hyp if any, or target.
+    """
+
+    # FIXME: rw target should appear on ProofTree when on_hyp is None.
+    code1 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
+                                  on_hyp=on_hyp)
+    code2 = code_for_substitution(rw_hyp, old_term=None, new_term=None,
+                                  on_hyp=on_hyp, reverse=True)
+
+    code = code1.or_else(code2)
+    code.add_used_properties(rw_hyp)
+    code.rw_item = rw_hyp
+    return code
+
+
+@action()
+def action_iff(proof_step) -> CodeForLean:
+    """
+    Three cases:
+    (1) No selected property:
+        If the target is of the form P ⇔ Q:
+            introduce two subgoals, P⇒Q, and Q⇒P.
+        If target is of the form (P → Q) ∧ (Q → P):
+            replace by P ↔ Q
+    (2) 1 selected property
+        - if an iff, and target not selected, split it
+        - elif a universal iff, try to rw target,
+    (3) 2 properties:
+        - if one is a universal iff, try to rw the other,
+        - if none is an iff but both are implications, try to obtain P ⇔ Q.
+    """
+    # TODO: a good part could be merged with action_equal,
+    #  in particular add testing of direction of substitution for a
+    #  non-universal iff.
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+    user_input = proof_step.user_input
+
+    if user_input is None:
+        user_input = []
+
+    test_selection(selected_objects, target_selected)
+    goal = proof_step.goal
+    code = CodeForLean.empty_code()
+    test_subst = [item.can_be_used_for_substitution()
+                  for item in selected_objects]
+
+    if len(selected_objects) == 0:
+        if goal.target.math_type.node == "PROP_IFF":
+            return construct_iff(proof_step, user_input)
+        else:
+            code = destruct_iff(proof_step)
+            if code:
+                return code
+            else:
+                error_msg = _("Target is not an iff property 'P ⇔ Q'")
+                raise WrongUserInput(error=error_msg)
+
+    if len(selected_objects) == 1:
+        if selected_objects[0].is_iff() and not target_selected:
+            more_code = destruct_iff_on_hyp(proof_step, selected_objects)
+            code = code.or_else(more_code)
+        else:
+            [(test, eq)] = test_subst
+            if test:  # 1st selected object can be used for substitution
+                code = rw_with_iff(selected_objects[0])
+            elif not selected_objects[0].is_iff():
+                error = _("Selected property is not an iff property 'P ⇔ Q'")
+                raise WrongUserInput(error)
+        return code
+
+    if len(selected_objects) == 2:
+        [(test0, equality0), (test1, equality1)] = test_subst
+        if test0 and test1:
+            # Two iff: which one to use?
+            if not user_input:
+                choose_substitution(equality0, equality1)
+            elif user_input[0] == 0:
+                return rw_with_iff(selected_objects[0],
+                                   on_hyp=selected_objects[1])
+            else:
+                return rw_with_iff(selected_objects[1],
+                                   on_hyp=selected_objects[0])
+        elif test0:
+            return rw_with_iff(selected_objects[0],
+                               on_hyp= selected_objects[1])
+        elif test1:
+            return rw_with_iff(selected_objects[1],
+                               on_hyp= selected_objects[0])
+
+        elif not (selected_objects[0].is_implication()
+                  and selected_objects[1].is_implication()):
+            error = _("Selected items should both be implications")
+            raise WrongUserInput(error)
+        else:
+            return construct_iff_on_hyp(proof_step, selected_objects)
+
     raise WrongUserInput(error=_("Does not apply to more than two properties"))
 
 
