@@ -60,15 +60,15 @@ from PySide2.QtWidgets import ( QAction,
                                 QFrame)
 
 from deaduction.dui.utils               import   clear_layout
-from deaduction.dui.elements            import ( ActionButton,
-                                                 DemoUseModeSetter,
-                                                 ActionButtonsWidget,
-                                                 ActionButtonsLyt,
-                                                 StatementsTreeWidget,
-                                                 StatementsTreeWidgetItem,
-                                                 MathObjectWidget,
-                                                 MathObjectWidgetItem,
-                                                 TargetWidget)
+from deaduction.dui.elements            import (ActionButton,
+                                                ProveUseModeSetter,
+                                                ActionButtonsWidget,
+                                                ActionButtonsLyt,
+                                                StatementsTreeWidget,
+                                                StatementsTreeWidgetItem,
+                                                MathObjectWidget,
+                                                MathObjectWidgetItem,
+                                                TargetWidget)
 from deaduction.dui.primitives          import deaduction_fonts
 
 from deaduction.pylib.coursedata        import   Exercise
@@ -157,17 +157,13 @@ class ExerciseCentralWidget(QWidget):
         self.__context_lyt  = QVBoxLayout()
         self.__context_actions_lyt = QHBoxLayout()
         self.__actions_lyt         = QVBoxLayout()
-        self.__action_btns_lyt     = QVBoxLayout()
+        self.__action_btns_lyt     = None  # init by init_action_layout
 
-        # self.__actions_lyt.setSpacing(0)
-        self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        # self.__action_btns_lyt.setSpacing(2)
+        # self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         action_title = _('Actions (logical rules and statements)')
         context_title = _('Context (objects and properties)')
         self.__actions_gb = QGroupBox(action_title)
         self.__context_gb = QGroupBox(context_title)
-        # self.__button_use_or_prove_mode = cvars.get(
-        #     'logic.button_use_or_prove_mode')
 
         # ──────────────── Init Actions area ─────────────── #
         ActionButton.from_name = dict()
@@ -238,6 +234,17 @@ class ExerciseCentralWidget(QWidget):
 
         self.__context_gb.setTitle(_('Context (objects and properties)'))
 
+    @property
+    def set_switch_mode(self):
+        return self.__action_btns_lyt.set_switch_mode
+
+    @property
+    def switch_mode(self) -> str:
+        """
+        Return either 'prove' or 'use' or None.
+        """
+        return self.__action_btns_lyt.switch_mode
+
     def init_action_layout(self):
         """
         This method populates self.__action_btns_lyt. The basic bricks are
@@ -304,6 +311,7 @@ class ExerciseCentralWidget(QWidget):
                                                   use_wdg,
                                                   display_prove_use=dpu,
                                                   switcher=switcher)
+
         self.__action_btns_wdgs = ([prove_wdg, use_wdg]
                                    + other_line_wdgs
                                    + virtual_line_wdgs)

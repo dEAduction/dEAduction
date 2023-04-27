@@ -938,7 +938,7 @@ class Coordinator(QObject):
             for prop in goal.context_props:
                 if prop.is_exists() and prop.allow_auto_action:
                     user_action = UserAction(selection=[prop],
-                                             button_name="exists")
+                                             button_name="exists_use")
                     # Turn off auto_action for this prop:
                     prop.turn_off_auto_action()
                     return user_action
@@ -963,7 +963,7 @@ class Coordinator(QObject):
                     index = context_types.index(premise)
                     context_premise = goal.context_props[index]
                     user_action = UserAction(selection=[context_premise, prop],
-                                             button_name="implies")
+                                             button_name="implies_use")
                     return user_action
                 elif ask_auto_premises:
                     prop.turn_off_auto_action()  # No more asking for this one
@@ -977,7 +977,7 @@ class Coordinator(QObject):
                     if msg_box.clickedButton() != no_button:
                         user_action = UserAction(selection=[prop],
                                                  user_input=[0],
-                                                 button_name="implies")
+                                                 button_name="implies_use")
                     return user_action
 
         # (3) Check automatic intro of variables and hypotheses
@@ -985,11 +985,11 @@ class Coordinator(QObject):
                                  "_variables_and_hypotheses", False)
         if auto_for_all and target.allow_auto_action:
             if target.is_for_all():
-                user_action = UserAction.simple_action("forall")
+                user_action = UserAction.simple_action("forall_prove")
                 target.turn_off_auto_action()
                 return user_action
             elif target.is_implication():
-                user_action = UserAction.simple_action("implies")
+                user_action = UserAction.simple_action("implies_prove")
                 target.turn_off_auto_action()
                 return user_action
 

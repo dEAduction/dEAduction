@@ -41,7 +41,7 @@ from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
-
+import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import (MathObject,
                                                 ProofStep)
@@ -820,6 +820,28 @@ class ExerciseMainWindow(QMainWindow):
         # self.help_window.set_math_object(item, target=True)
         # self.help_window.toggle(True)
 
+    def harmonize_buttons_and_user_action(self, user_action):
+        """
+        Adapt user_action and buttons so that process_automatic_action will
+        be able to make button blink. This may involve changing action to
+        unified version, or switch mode to prove or use mode.
+        """
+        name: str = user_action.button_name
+        if not name:  # Nothing to do
+            return
+
+        mode = cvars.get('logic.button_use_or_prove_mode')
+        if mode == 'display_switch':
+            switch_mode = self.ecw.switch_mode
+            prove_mode = (switch_mode == "prove")
+            OK = ((name.endswith('_use') and not prove_mode) or
+                  (name.endswith('_prove') and prove_mode))
+            if not OK:
+                self.ecw.set_switch_mode(to_prove=not prove_mode)
+        elif mode == 'display_unified':
+            user_action.button_name = name.replace('_use', '')
+            user_action.button_name = name.replace('_prove', '')
+
     def simulate_selection(self,
                            selection:
                            [Union[MathObject, MathObjectWidgetItem]],
@@ -859,6 +881,10 @@ class ExerciseMainWindow(QMainWindow):
         when history_redo is executed, to keep all the following history.
         """
         log.debug("Simulating user action...")
+
+        # Adapt to prove/use current mode
+        self.harmonize_buttons_and_user_action(user_action)
+
         msg = ""
         msg += f"    -> selection = {user_action.selection}"
         selection = self.contextualised_selection(user_action.selection)

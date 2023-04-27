@@ -258,7 +258,7 @@ class ActionButton(QPushButton):
 ActionButton.action_triggered = Signal(ActionButton)
 
 #
-# class DemoUseModeSetter(QWidget):
+# class ProveUseModeSetter(QWidget):
 #     clicked = Signal()
 #
 #     def __init__(self):
@@ -325,7 +325,7 @@ class Switch(QPushButton):
         # painter.drawText(sw_rect, Qt.AlignCenter, label)
 
 
-class DemoUseModeSetter(QWidget):
+class ProveUseModeSetter(QWidget):
     """
     A switch (QPush button displaying two positions) to switch between proof
     mode and use mode.
@@ -356,6 +356,9 @@ class DemoUseModeSetter(QWidget):
             return "prove"
         else:
             return "use"
+
+    def click(self):
+        self.switch.click()
 
 
 class ActionButtonsWidget(QWidget):
@@ -460,6 +463,7 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
         self.prove_wdgs = prove_wdgs
         self.use_wdgs = use_wdgs
         self.lyt = QVBoxLayout()
+        self.prove_use_mode_setter = None
 
         if not switcher:  # Just the two buttons lines
             self.prove_use_mode_setter = None
@@ -469,7 +473,7 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
 
         else:
             # Switcher
-            self.prove_use_mode_setter = DemoUseModeSetter()
+            self.prove_use_mode_setter = ProveUseModeSetter()
             self.prove_use_mode_setter.clicked.connect(
                 self.update_switch)
             self.lyt.addWidget(self.prove_use_mode_setter)
@@ -493,6 +497,19 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
             elif switch_mode == "use":
                 self.stacked_lyt.setCurrentIndex(1)
 
+    @property
+    def switch_mode(self):
+        if self.prove_use_mode_setter:
+            return self.prove_use_mode_setter.switch_mode
+
+    def set_switch_mode(self, to_prove=True):
+        if self.prove_use_mode_setter:
+
+            change = ((to_prove and self.switch_mode == "use")
+                      or (not to_prove) and self.switch_mode == "prove")
+            if change:
+                self.prove_use_mode_setter.click()
+
 
 class ActionButtonsLyt(QVBoxLayout):
     """
@@ -512,7 +529,7 @@ class ActionButtonsLyt(QVBoxLayout):
                  switcher=True):
 
         super().__init__()
-
+        self.prove_use_box = None
         other_lyt = QVBoxLayout() if display_prove_use else self
 
         # Populate other_lyt, in the simple case that's enough
@@ -527,19 +544,29 @@ class ActionButtonsLyt(QVBoxLayout):
 
         # In the complicated case, populate self with two QGroupBoxes
         if display_prove_use:
-            prove_use_box = ProveUseSwitcherButtonGroupBox(prove_wdgs,
-                                                           use_wdgs,
-                                                           switcher=switcher)
+            self.prove_use_box = \
+                ProveUseSwitcherButtonGroupBox(prove_wdgs, use_wdgs,
+                                               switcher=switcher)
             other_box = QGroupBox()
             other_box.setLayout(other_lyt)
 
-            prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
-            prove_use_box.layout().setSpacing(5)
+            self.prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
+            self.prove_use_box.layout().setSpacing(5)
             other_box.layout().setContentsMargins(5, 5, 5, 5)
             other_box.layout().setSpacing(5)
 
-            self.addWidget(prove_use_box)
+            self.addWidget(self.prove_use_box)
             self.addWidget(other_box)
+
+    @property
+    def set_switch_mode(self):
+        if self.prove_use_box:
+            return self.prove_use_box.set_switch_mode
+
+    @property
+    def switch_mode(self) -> str:
+        if self.prove_use_box:
+            return self.prove_use_box.switch_mode
 
 
 ##############################
