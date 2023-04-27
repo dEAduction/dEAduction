@@ -59,7 +59,8 @@ from PySide2.QtWidgets import ( QApplication,
                                 QPushButton,
                                 QFileDialog,
                                 QMessageBox,
-                                QLabel)
+                                QLabel,
+                                QSizePolicy)
 
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
@@ -535,6 +536,7 @@ class ConfigWindow(QDialog):
                 widget = QPushButton(_("Browse directories"), self)
                 widget.clicked.connect(self.browse_dir)
                 widget.setting = setting
+                widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
             # ───────── Case of choice into a list: combo box ─────────
             elif setting_list:
@@ -553,6 +555,7 @@ class ConfigWindow(QDialog):
                             setting_initial_value)
                         widget.setCurrentIndex(initial_index)
                 widget.currentIndexChanged.connect(self.combo_box_changed)
+                widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                 # widget.has_been_initialised = False
 
             # ───────── Case of bool: check box ─────────

@@ -714,13 +714,13 @@ def extract_available_buttons(data: dict):
         string = substitute_macros(data[field_name], data)
         # This is still a string with macro names that should either
         # be '$ALL' or in data.keys() with values in Action
-        action_callable = make_action_callable(action_type)
+        action_callable = make_action_from_name(action_type)
         # This is the function that computes Actions from names.
         # We can now compute the available_actions:
         data[field_name] = extract_list(string, data, action_callable)
 
 
-def make_action_callable(prefix) -> callable:
+def make_action_from_name(prefix) -> callable:
     """
     Construct the function corresponding to prefix
     :param prefix: one of logic, proof, magic
@@ -733,28 +733,27 @@ def make_action_callable(prefix) -> callable:
     elif prefix == 'magic':
         dictionary = MAGIC_BUTTONS
 
-    def action_callable(name: str) -> [Action]:
+    def action_from_name(name: str) -> [Action]:
         """
-        Return list of actions corresponding to name, as given by the
-        LOGIC_BUTTON dict
+        Return list of actions corresponding to name, and to prefix
+        ('logic', 'proof', 'magic'). name can also be $ALL, $NONE.
         e.g. 'and' -> [ LOGIC_BUTTONS['action_and'] ]
         '$ALL' -> LOGIC_BUTTONS
+        Does not include prove and use versions of actions.
         """
         # log.debug(f"searching Action {name}")
         if name in ['NONE', '$NONE']:
             return []
         if name in ['ALL', '$ALL']:
             return [action for action in dictionary.values()
-                    if not action.name.endswith('demo') and not
+                    if not action.name.endswith('prove') and not
                     action.name.endswith('use')]
         if not name.startswith("action_"):
             name = "action_" + name
-        action = None
-        if name in dictionary:
-            action = [dictionary[name]]
+        action = [dictionary[name]] if name in dictionary else None
         return action
 
-    return action_callable
+    return action_from_name
 
 
 def make_statement_callable(prefix: str, statements) -> callable:

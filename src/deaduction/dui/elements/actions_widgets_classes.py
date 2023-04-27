@@ -167,8 +167,8 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = button_symbol(name)
         if self.in_demo_or_use_line:
-            # Remove ugly suffix
-            symbol = symbol[:-4] if symbol.endswith('use') else symbol[:-5]
+            # Remove ugly suffix, '_use' or '_prove'
+            symbol = symbol[0]
         symbol = _(symbol)  # Translate, finally!
         self.setText(symbol)
 
@@ -476,7 +476,8 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
             self.stacked_lyt.addWidget(use_wdgs)
             self.stacked_lyt.setCurrentIndex(0)
             self.lyt.addLayout(self.stacked_lyt)
-            self.setLayout(self.lyt)
+
+        self.setLayout(self.lyt)
 
     def update_switch(self):
         if self.prove_use_mode_setter:
@@ -501,11 +502,12 @@ class ActionButtonsLyt(QVBoxLayout):
                  other_line_wdgs: [ActionButtonsWidget],
                  prove_wdgs: ActionButtonsWidget = None,
                  use_wdgs: ActionButtonsWidget = None,
+                 display_prove_use=False,
                  switcher=True):
 
         super().__init__()
 
-        other_lyt = QVBoxLayout() if prove_wdgs else self
+        other_lyt = QVBoxLayout() if display_prove_use else self
 
         # Populate other_lyt, in the simple case that's enough
         # first = True
@@ -518,7 +520,7 @@ class ActionButtonsLyt(QVBoxLayout):
             other_lyt.addWidget(wdg)
 
         # In the complicated case, populate self with two QGroupBoxes
-        if prove_wdgs:
+        if display_prove_use:
             prove_use_box = ProveUseSwitcherButtonGroupBox(prove_wdgs,
                                                            use_wdgs,
                                                            switcher=switcher)
@@ -526,8 +528,8 @@ class ActionButtonsLyt(QVBoxLayout):
             other_box.setLayout(other_lyt)
 
             prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
-            other_box.layout().setContentsMargins(5, 5, 5, 5)
             prove_use_box.layout().setSpacing(5)
+            other_box.layout().setContentsMargins(5, 5, 5, 5)
             other_box.layout().setSpacing(5)
 
             self.addWidget(prove_use_box)

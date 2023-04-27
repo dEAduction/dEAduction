@@ -159,8 +159,9 @@ class ExerciseCentralWidget(QWidget):
         self.__actions_lyt         = QVBoxLayout()
         self.__action_btns_lyt     = QVBoxLayout()
 
+        # self.__actions_lyt.setSpacing(0)
         self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        self.__action_btns_lyt.setSpacing(0)
+        # self.__action_btns_lyt.setSpacing(2)
         action_title = _('Actions (logical rules and statements)')
         context_title = _('Context (objects and properties)')
         self.__actions_gb = QGroupBox(action_title)
@@ -259,17 +260,24 @@ class ExerciseCentralWidget(QWidget):
 
         if exercise.prove_use_mode_set_by_exercise():
             # TODO!!
+            dpu = False
             prove_line = []
             use_line = []
             other_lines = []
+            virtual_lines = []
         elif mode == 'display_unified':
+            dpu = False
             prove_line = []
             use_line = []
             other_lines = [exercise.available_logic_1]
+            virtual_lines = [exercise.available_logic_prove,
+                             exercise.available_logic_use]
         else:  # mode == "display_both" or "display_switch"
+            dpu = True
             prove_line = exercise.available_logic_prove
             use_line = exercise.available_logic_use
             other_lines = []
+            virtual_lines = [exercise.available_logic_1]
 
         other_lines += [exercise.available_logic_2,
                         exercise.available_proof,
@@ -279,18 +287,28 @@ class ExerciseCentralWidget(QWidget):
 
         # TODO:
         #  update ecw in new_settings in case mode changed
-        #  fonts!?
+        #  fonts!? bad font for prove
         #  set by user
-        #  test...
         #  adapt help msgs
+        #  config_window taille des menus (addstretch)
+        #  automatic actions: define buttons and connect signals even if
+        #   buttons are not displayed (self.actions_buttons)
+        #   --> Ca clignote pas !!!
+        #  and_use et and_prove non discriminants
+        #  exists_use avec 'x' --> mauvais msg d'erreur
+        #  option and/or unified
         prove_wdg = ActionButtonsWidget(prove_line)
         use_wdg = ActionButtonsWidget(use_line)
         other_line_wdgs = [ActionButtonsWidget(line) for line in other_lines]
+        virtual_line_wdgs = [ActionButtonsWidget(line) for line in virtual_lines]
         self.__action_btns_lyt = ActionButtonsLyt(other_line_wdgs,
                                                   prove_wdg,
                                                   use_wdg,
+                                                  display_prove_use=dpu,
                                                   switcher=switcher)
-        self.__action_btns_wdgs = [prove_wdg, use_wdg] + other_line_wdgs
+        self.__action_btns_wdgs = ([prove_wdg, use_wdg]
+                                   + other_line_wdgs
+                                   + virtual_line_wdgs)
 
         # ───────────── Statements ───────────── #
         statements = exercise.available_statements
@@ -299,7 +317,10 @@ class ExerciseCentralWidget(QWidget):
 
         # Put action buttons and statement tree in lyt
         self.__actions_lyt.addLayout(self.__action_btns_lyt)
+        self.__action_btns_lyt.setSpacing(2)
         self.__actions_lyt.addWidget(self.statements_tree)
+
+        # Expand statements but not buttons:
         self.__actions_lyt.setStretch(0, 0)
         self.__actions_lyt.setStretch(1, 10)
 
@@ -389,10 +410,11 @@ class ExerciseCentralWidget(QWidget):
         # Modify font for symbol buttons
         symbol_size = self.deaduction_fonts.symbol_button_font_size
         for btns_wdg in self.__action_btns_wdgs:
-            for btn in btns_wdg.buttons:
-                btn.update()
-                if btn.is_symbol():
-                    btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+            if btns_wdg:
+                for btn in btns_wdg.buttons:
+                    btn.update()
+                    if btn.is_symbol():
+                        btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
 
     def organise_main_layout(self):
         """
