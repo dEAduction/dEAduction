@@ -17,7 +17,7 @@ target_font_size = "20pt"
 statements_font_size = "13pt"
 tooltips_font_size = "12pt"
 proof_tree_font_size = "14pt"
-font_size_for_symbol_buttons = "12pt"
+font_size_for_symbol_buttons = "14pt"
 
 math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 

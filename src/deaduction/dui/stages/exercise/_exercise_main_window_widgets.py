@@ -280,8 +280,7 @@ class ExerciseCentralWidget(QWidget):
             virtual_lines = [exercise.available_logic_1]
 
         other_lines += [exercise.available_logic_2,
-                        exercise.available_proof,
-                        exercise.available_magic]
+                        exercise.available_magic + exercise.available_proof]
 
         switcher = (mode == 'display_switch')
 
@@ -290,7 +289,6 @@ class ExerciseCentralWidget(QWidget):
         #  fonts!? bad font for prove
         #  set by user
         #  adapt help msgs
-        #  config_window taille des menus (addstretch)
         #  automatic actions: define buttons and connect signals even if
         #   buttons are not displayed (self.actions_buttons)
         #   --> Ca clignote pas !!!
@@ -415,6 +413,7 @@ class ExerciseCentralWidget(QWidget):
                     btn.update()
                     if btn.is_symbol():
                         btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+                        # btn.setFont(deaduction_fonts.math_fonts(size=20))
 
     def organise_main_layout(self):
         """

@@ -326,6 +326,10 @@ class Switch(QPushButton):
 
 
 class DemoUseModeSetter(QWidget):
+    """
+    A switch (QPush button displaying two positions) to switch between proof
+    mode and use mode.
+    """
     clicked = Signal()
 
     def __init__(self):
@@ -390,9 +394,10 @@ class ActionButtonsWidget(QWidget):
     def __init__(self, actions: [Action], show_label=True):
         """
         Init self with an ordered list of instances of the class Action.
-
         :param actions: The list of instances of the class Action one
             wants to create buttons from.
+        demo_line is True iff all buttons are 'prove' buttons. In this case,
+        a QLabel display 'Prove :'. Likewise for use_line.
         """
 
         super().__init__()
@@ -478,6 +483,7 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
             self.lyt.addLayout(self.stacked_lyt)
 
         self.setLayout(self.lyt)
+        self.update_switch()
 
     def update_switch(self):
         if self.prove_use_mode_setter:

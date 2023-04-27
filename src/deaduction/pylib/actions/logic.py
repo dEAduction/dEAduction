@@ -517,8 +517,9 @@ def action_forall(proof_step, demo=True, use=True) -> CodeForLean:
     target_selected = proof_step.target_selected
 
     test_selection(selected_objects, target_selected)
-    test_prove_use(selected_objects, demo=demo, use=use, prop=_('a universal '
-                                                                'property'))
+    test_prove_use(selected_objects,
+                   demo=demo, use=use,
+                   prop=_("a universal property '∀x, P(x)'"))
 
     user_input = proof_step.user_input
     goal = proof_step.goal
@@ -697,10 +698,11 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
 
     user_input = proof_step.user_input
     goal = proof_step.goal
+    prop_type = "an existential property '∃x, P(x)'"
 
     if len(selected_objects) == 0:
         if not demo:
-            raise WrongProveModeInput(prop="an existential property")
+            raise WrongProveModeInput(prop=prop_type)
         elif not goal.target.is_exists(implicit=True):
             error = _("Target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
@@ -711,7 +713,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
         if selected_hypo.math_type.is_prop():
             # Try to apply property "exists x, P(x)" to get a new MathObject x
             if not use:
-                raise WrongUseModeInput(prop="an existential property")
+                raise WrongUseModeInput(prop=prop_type)
             elif not selected_hypo.is_exists(implicit=True):
                 error = _("Selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
@@ -719,7 +721,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
                 return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
             if not demo:
-                raise WrongProveModeInput(prop="an existential property")
+                raise WrongProveModeInput(prop=prop_type)
             object_name = selected_objects[0].info["name"]
             if not goal.target.is_exists(implicit=True):
                 # error = _("Target is not existential property '∃x, P(x)'")
@@ -730,7 +732,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
                 return construct_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
         if not demo:
-            raise WrongProveModeInput(prop="an existential property")
+            raise WrongProveModeInput(prop=prop_type)
         else:
             return construct_exists_on_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("I do not know what to do"))
@@ -960,7 +962,7 @@ def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
 
     test_selection(selected_objects, target_selected)
     test_prove_use(selected_objects, demo=demo, use=use,
-                   prop=_('an implication'))
+                   prop=_("an implication 'P ⇒ Q'"))
 
     goal = proof_step.goal
 
@@ -1129,15 +1131,23 @@ If two hypothesis P, then Q, have been previously selected:
     test_selection(selected_objects, target_selected)
     # goal = proof_step.goal
 
+    prop_type = "a conjunction 'P AND Q'"
+
     if len(selected_objects) == 0:
+        if not demo:
+            raise WrongUseModeInput(prop=prop_type)
         return construct_and(proof_step, user_input)
     if len(selected_objects) == 1:
+        if not use:
+            raise WrongProveModeInput(prop=prop_type)
         if not selected_objects[0].is_and(implicit=True):
             raise WrongUserInput(error=_("Selected property is not "
                                          "a conjunction 'P AND Q'"))
         else:
             return apply_and(proof_step, selected_objects)
     if len(selected_objects) == 2:
+        if not demo:
+            raise WrongUseModeInput(prop=prop_type)
         if not (selected_objects[0].math_type.is_prop and
                 selected_objects[1].math_type.is_prop):
             raise WrongUserInput(error=_("Selected items are not properties"))
@@ -1332,8 +1342,10 @@ def action_or(proof_step, demo=True, use=True) -> CodeForLean:
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
-
+    prop_type = "a disjunction 'P OR Q'"
     if len(selected_objects) == 0:
+        if not demo:
+            raise WrongUseModeInput(prop=prop_type)
         if not goal.target.is_or(implicit=True):
             raise WrongUserInput(
                 error=_("Target is not a disjunction 'P OR Q'"))
@@ -1341,10 +1353,16 @@ def action_or(proof_step, demo=True, use=True) -> CodeForLean:
             return construct_or(proof_step, user_input)
     elif len(selected_objects) == 1:
         if selected_objects[0].is_or(implicit=True):
+            if not use:
+                raise WrongProveModeInput(prop=prop_type)
             return apply_or(proof_step, selected_objects, user_input)
         else:
+            if not demo:
+                raise WrongUseModeInput(prop=prop_type)
             return construct_or_on_hyp(proof_step, selected_objects, user_input)
     elif len(selected_objects) == 2:
+        if not demo:
+            raise WrongUseModeInput(prop=prop_type)
         return construct_or_on_hyp(proof_step, selected_objects, user_input)
     else:  # More than 2 selected objects
         raise WrongUserInput(error=_("Does not apply to more than two "
