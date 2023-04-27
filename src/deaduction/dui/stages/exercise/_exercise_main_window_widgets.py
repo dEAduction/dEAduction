@@ -289,11 +289,11 @@ class ExerciseCentralWidget(QWidget):
         #  fonts!? bad font for prove
         #  set by user
         #  adapt help msgs
-        #  automatic actions: define buttons and connect signals even if
+        #  automatic actions: (OK) define buttons and connect signals even if
         #   buttons are not displayed (self.actions_buttons)
         #   --> Ca clignote pas !!!
-        #  and_use et and_prove non discriminants
-        #  exists_use avec 'x' --> mauvais msg d'erreur
+        #  (OK?) and_use et and_prove non discriminants
+        #  (OK?) exists_use avec 'x' --> mauvais msg d'erreur
         #  option and/or unified
         prove_wdg = ActionButtonsWidget(prove_line)
         use_wdg = ActionButtonsWidget(use_line)

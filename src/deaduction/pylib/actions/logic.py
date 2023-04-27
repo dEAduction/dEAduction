@@ -713,7 +713,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
         if selected_hypo.math_type.is_prop():
             # Try to apply property "exists x, P(x)" to get a new MathObject x
             if not use:
-                raise WrongUseModeInput(prop=prop_type)
+                raise WrongProveModeInput(prop=prop_type)
             elif not selected_hypo.is_exists(implicit=True):
                 error = _("Selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
@@ -721,7 +721,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
                 return apply_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
             if not demo:
-                raise WrongProveModeInput(prop=prop_type)
+                raise WrongUseModeInput(prop=prop_type)
             object_name = selected_objects[0].info["name"]
             if not goal.target.is_exists(implicit=True):
                 # error = _("Target is not existential property '∃x, P(x)'")
@@ -732,7 +732,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
                 return construct_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
         if not demo:
-            raise WrongProveModeInput(prop=prop_type)
+            raise WrongUseModeInput(prop=prop_type)
         else:
             return construct_exists_on_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("I do not know what to do"))
