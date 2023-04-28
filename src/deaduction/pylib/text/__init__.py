@@ -29,4 +29,4 @@ from .tooltips import (button_symbol,
                        logic_buttons_line_1,
                        logic_buttons_line_2)
 
-from .help_msgs import use, prove
+from .help_msgs import use, prove, current_button_name

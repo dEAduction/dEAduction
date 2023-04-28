@@ -270,6 +270,13 @@ class ContextMathObject(MathObject):
                             "or_drag_premise": ""})
         format_dic.update(no_drag)
 
+        # Name of action buttons according to current prove/use mode
+        cbn = help_msgs.current_button_name
+        prove_use_dic = {key+'_button': cbn(key)
+                         for key in
+                         ('forall', 'exists', 'implies', 'and', 'or')}
+        format_dic.update(prove_use_dic)
+
         # Translate values
         translated_format_dic = {key: help_msgs.conc_n_trans(val) if val
                                  else val for key, val in format_dic.items()}

@@ -336,7 +336,7 @@ class ProveUseModeSetter(QWidget):
         super().__init__()
         self.switch = Switch()
         self.switch.setChecked(True)
-        demo_lbl = QLabel(_("Proof mode"))
+        demo_lbl = QLabel(_("Prove mode"))
         use_lbl = QLabel(_("Use mode"))
 
         lyt = QHBoxLayout()
