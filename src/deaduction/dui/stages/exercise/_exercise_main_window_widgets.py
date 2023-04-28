@@ -166,13 +166,13 @@ class ExerciseCentralWidget(QWidget):
 
         # ──────────────── Init Actions area ─────────────── #
         # Action buttons
+        ActionButton.from_name = dict()
         self.__prove_btns = ActionButtonsWidget(exercise.available_logic_prove)
         self.__use_btns = ActionButtonsWidget(exercise.available_logic_use)
         self.__logic_1_btns = ActionButtonsWidget(exercise.available_logic_1)
         self.__logic_2_btns = ActionButtonsWidget(exercise.available_logic_2)
         self.__magic_proof_btns = ActionButtonsWidget(exercise.available_magic +
                                                       exercise.available_proof)
-        ActionButton.from_name = dict()
         # self.__action_btns_wdgs = []  # Used to freeze buttons
         # self.init_action_buttons_widgets_dict()
         self.init_action_btns_layout()
@@ -261,7 +261,6 @@ class ExerciseCentralWidget(QWidget):
     #     self.__action_buttons_widgets_dict = dic
 
     # def action_btn_wdgs(self):
-    #     # TODO: btns from above dict, individual or lines ??
     #     pass
 
     @property
@@ -319,8 +318,9 @@ class ExerciseCentralWidget(QWidget):
         switcher = (mode == 'display_switch')
 
         # TODO:
-        #  DnD ??
-        #  Automatic actions ??
+        #  Automatic actions: le switcher ne switche pas...
+        #  Freeze étrange. DnD --> automatic action ?
+        #   (suppose d'intégrer UserAction à ProofStep)
         #  adapt help msgs
         #  doc!
         #  (bof) set by user. Plutôt : n'importe quelle config peut être mise
@@ -571,9 +571,9 @@ class ExerciseCentralWidget(QWidget):
         :param yes: See above.
         """
 
-        to_freeze = [self.__context_gb,
-                     # self.objects_wgt,
-                     # self.props_wgt,
+        to_freeze = [# self.__context_gb,
+                     self.objects_wgt,
+                     self.props_wgt,
                      self.__actions_gb]
         for widget in to_freeze:
             if widget:

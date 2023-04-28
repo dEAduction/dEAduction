@@ -173,12 +173,12 @@ class ContextMathObject(MathObject):
 
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):
-                actions.append("implies")
+                actions.append("implies_use")
             yes, subs = operator.can_be_used_for_substitution()
             if yes:
                 actions.append("equal")
         if operator.is_for_all(implicit=implicit):
-            actions.append("forall")
+            actions.append("forall_use")
 
         if button_names:
             actions = [action for action in actions if action in button_names]

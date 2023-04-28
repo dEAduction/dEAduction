@@ -168,19 +168,6 @@ class UserAction:
               f"target selected = {self.target_selected}"
         return msg
 
-    # def adapt_to_prove_use_mode(self, unified=False):
-    #     """
-    #     transform self.button_name to fit current mode.
-    #     """
-    #
-        # name: str = self.button_name
-        # if not name:  # Nothing to do
-        #     return
-        #
-        # if unified:
-        #     self.button_name = name.replace('_use', '')
-        #     self.button_name = name.replace('_prove', '')
-
 
 class AutoStep(UserAction):
     """

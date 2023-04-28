@@ -699,6 +699,7 @@ class Coordinator(QObject):
                                 self.proof_step.button_name = name
                                 await action_btn.simulate(duration=0.5)
                                 self.__server_call_action(action_btn)
+                                break
                         # No button found: this should not happen
 
     ###################
