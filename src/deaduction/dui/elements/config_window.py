@@ -5,7 +5,8 @@ To add a parameter for config:
 - add an entry to the relevant CONFIG sub-dictionary,
 - add an entry in config_window_text.PRETTY_NAMES for translation,
 - if relevant, add an entry in SETTINGS_AFFECTING_UI so that UI is updated
-when the value of the parameter is modified
+when the value of the parameter is modified. These modified settings are sent to
+the ExerciseMainWindow.apply_new_settings() method.
 - make sure that the parameter's value is taken into account on the spot
 when UI is updated.
 
@@ -243,7 +244,8 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # 'logic.use_color_for_applied_properties',
                          # 'functionality.allow_proof_by_sorry',
                          "i18n.select_language",
-                         "logic.use_bounded_quantification_notation"
+                         "logic.use_bounded_quantification_notation",
+                         "logic.button_use_or_prove_mode"
                          ]
 
 

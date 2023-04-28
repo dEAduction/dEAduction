@@ -265,7 +265,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.debug("EMW: connect signals")
         # Actions area
-        for action_button in self.ecw.actions_buttons:
+        for action_button in self.ecw.action_buttons:
             action_button.action_triggered.connect(self.action_triggered)
         self.ecw.statements_tree.itemClicked.connect(
                                             self.statement_triggered_filter)
@@ -398,7 +398,9 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def apply_new_settings(self, modified_settings):
         """
-        This is where UI is updated when preferences are modified.
+        This is where UI is updated when preferences are modified. Note that
+        only pertinent modified settings are transmitted, i.e. those
+        affecting UI.
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
@@ -429,6 +431,9 @@ class ExerciseMainWindow(QMainWindow):
                 self.ecw.set_font()
             elif setting == 'functionality.allow_implicit_use_of_definitions':
                 self.ecw.statements_tree.update_tooltips()
+            # elif setting == 'logic.button_use_or_prove_mode':
+            #     self.ecw.init_action_btns_layout()
+            #     self.ecw.set_action_gb()
             elif setting == "logic.use_bounded_quantification_notation":
                 pattern_init()
                 update_ecw_display = True
