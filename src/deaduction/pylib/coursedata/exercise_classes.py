@@ -39,6 +39,7 @@ import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils     import (find_suffix,
                                                    substitute_macros,
                                                    extract_list)
+from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
@@ -511,7 +512,23 @@ class Exercise(Theorem):
         #########################################
         # Finally construct the Exercise object #
         #########################################
-        return cls(**extract_data)
+        exercise = cls(**extract_data)
+        return exercise
+
+    def update_cvars_from_metadata(self) -> dict:
+        """
+        Update cvars with entries in metadata['settings'], and return a
+        dictionary with the values that have been replaced.
+        """
+        metadata_settings = self.info.get('settings')
+        if metadata_settings:
+            more_vars = vars_from_metadata(metadata_settings)
+            if more_vars:
+                old_vars = {key: cvars.get(key)
+                            for key in more_vars
+                            if cvars.get(key) != more_vars.get(key)}
+                cvars.update(more_vars)
+                return old_vars
 
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")

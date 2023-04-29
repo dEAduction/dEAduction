@@ -51,7 +51,7 @@ math_font_file = ""
 
 [logic]
 # "display_unified", "display_both", "display_switch"
-button_use_or_prove_mode = "display_switch"
+button_use_or_prove_mode = "display_unified"
 # use_demo_mode_affect_line_1 = true
 # use_demo_mode_affect_line_2 = false
 do_not_name_dummy_vars_as_global_vars = true

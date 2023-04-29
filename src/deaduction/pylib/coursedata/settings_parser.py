@@ -1,17 +1,19 @@
 """
 #####################
-# display_parser.py #
+# settings_parser.py #
 #####################
 
 This parser is used to parse some metadata of the lean files, e.g.
-Display
-    divise --> (-2, " divise ", -1)
-    pair --> (-1, " est pair")
+Settings
+    logic.button_use_or_prove_mode --> "display_switch"
+    logic.force_indices_for_dummy_vars --> false
+    display.depth_of_unfold_statements --> 1
 
 Note that end of lines are changed to spaces by the course parser.
-This parser creates a dictionary that will be used to update
-latex_from_constant_name from app_pattern_data. This update will be called
-when user selects the course (in start_coex).
+This parser creates a dictionary that will be used to update the config.vars
+dictionary. This update will be called when user selects the course
+(in course.py). These entries can also be set individually in the
+metadata of each exercise, another update will be occur at exercise init.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -42,20 +44,19 @@ from parsimonious.nodes import NodeVisitor
 from parsimonious import ParseError
 
 
-display = """
+settings = """
 rules = rule more_rules
 more_rules = (more_rule)*
 more_rule = rule
-rule = constant_name space+ "-->" space+ pattern space*
-constant_name = any_char_but_space+
-pattern = "(" (space)* item (space)* more_items ")"
-item = number / encapsulated_string
-more_items = (more_item)*
-more_item = "," (space)* item (space)*
-number = "-"? digits+
-encapsulated_string = ('"' string1 '"') / ("`" string2 "`") 
+rule = field_name space+ "-->" space+ field_value space*
+
+field_name = any_char_but_space+
+field_value = string_with_quotes / number / bool
+
+string_with_quotes = ('"' string1 '"')
 string1 = (!'"' any_char)*
-string2 = (!"`" any_char)*
+number = "-"? digits+
+bool = 'true' / 'false'
 """
 
 
@@ -66,15 +67,10 @@ digits = ~r"[0-9']"
 space = ~r"\s"
 """
 
-display_rules = display + basic_rules
+settings_rules = settings + basic_rules
 
 
-class Item:
-    def __init__(self, data: Union[int, str]):
-        self.data = data
-
-
-class DisplayPatternVisitor(NodeVisitor):
+class SettingsVisitor(NodeVisitor):
 
     def visit_rules(self, node, visited_children) -> dict:
         rule, more_rules = visited_children
@@ -82,9 +78,9 @@ class DisplayPatternVisitor(NodeVisitor):
         return more_rules
 
     def visit_rule(self, node, visited_children) -> dict:
-        key = visited_children[0]
-        pattern = tuple(visited_children[4])
-        rule = {key: pattern}
+        field_name = visited_children[0]
+        field_value = visited_children[4]
+        rule = {field_name: field_value}
         return rule
 
     def visit_more_rules(self, node, visited_children) -> dict:
@@ -96,51 +92,49 @@ class DisplayPatternVisitor(NodeVisitor):
     def visit_more_rule(self, node, visited_children):
         return visited_children[1]
 
-    def visit_constant_name(self, node, visited_children) -> str:
+    def visit_field_name(self, node, visited_children):
         return node.text
 
-    def visit_pattern(self, node, visited_children) -> []:
-        item = visited_children[2]
-        more_items = visited_children[4]
-        items = [item.data for item in ([item] + more_items)]
-        return items
+    def visit_field_value(self, node, visited_children):
+        return visited_children[0]
 
-    def visit_item(self, node, visited_children) -> Item:
-        item = Item(visited_children[0])
-        return item
+    def visit_string_with_quotes(self, node, visited_children):
+        """
+        Return the string without quotes.
+        """
+        return node.text[1:-1]
 
-    def visit_more_items(self, node, visited_children) -> [Item]:
-        # more_items = Item(visited_children[0])
-        return visited_children
+    # def visit_string1(self, node, visited_children):
+    #     return node.text
 
-    def visit_more_item(self, node, visited_children) -> Item:
-        more_item = visited_children[2]
-        return more_item
-
-    def visit_number(self, node, visited_children) -> int:
+    def visit_number(self, node, visited_children):
         return int(node.text)
 
-    def visit_encapsulated_string(self, node, visited_children) -> str:
-        """
-        Return the string without quotation marks.
-        """
-        s = node.text[1:-1]
-        return s
+    def visit_bool(self, node, visited_children):
+        return True if node.text == "true" else False
 
     def generic_visit(self, node, visited_children):
         # items = list(filter(lambda it: isinstance(it, Item), visited_children))
         return None
 
 
-display_grammar = Grammar(display_rules)
+settings_grammar = Grammar(settings_rules)
+
+
+def vars_from_metadata(metadata_settings):
+    if metadata_settings:
+        tree = settings_grammar.parse(metadata_settings)
+        vars_from_metadata = SettingsVisitor().visit(tree)
+        return vars_from_metadata
 
 
 if __name__ == "__main__":
-    essai = """divise --> (-2, " divise ", -1)"""
-    essai2 = """divise  --> ( -2 ,  " divise " ,   -1  )  """
-    essai3 = r"""majorant --> (-1, `\text_is`, " majorant de ", -2)"""
-    essai4 = """pair --> (-1, "est paire")"""
-    tree = display_grammar.parse(essai + " " + essai3 + " " + essai4)
-    dic = DisplayPatternVisitor().visit(tree)
+    essai = """logic --> "toto" """
+    essai2 = """divise  --> true  """
+    essai3 = r"""majorant --> false"""
+    essai4 = """pair --> 14"""
+    tree = settings_grammar.parse(essai + " " + essai2 + " " + essai3 + " " +
+                                                         essai4)
+    dic = SettingsVisitor.visit(tree)
     print(dic)
 

@@ -131,6 +131,14 @@ def restore(initial_cvars):
     __dict_user = initial_cvars
 
 
+def update(new_settings: dict):
+    if new_settings:
+        for (key, value) in new_settings.items():
+            set(key, value)
+
+
+
+
 # Add os name; so this can be overridden in (user's) config.toml
 # Otherwise, vars.get("others.os") --> "linux", "darwin" or "windows"
 os_name = ""  # For first time, do not remove otherwise 'get' method crashes!

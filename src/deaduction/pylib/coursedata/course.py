@@ -44,10 +44,12 @@ from sys import version_info
 #     import pickle
 
 import deaduction.pylib.config.dirs as      cdirs
+import deaduction.pylib.config.vars as      cvars
 import deaduction.pylib.logger as           logger
 from deaduction.pylib.utils import (        load_object, save_object)
 
 from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,
@@ -178,6 +180,13 @@ class Course:
             nice_dict[alt_key] = alt_value
 
         return nice_dict
+
+    # def update_cvars_from_metadata(self):
+    #     metadata_settings = self.metadata.get('settings')
+    #     if metadata_settings:
+    #         more_vars = vars_from_metadata(metadata_settings)
+    #         if more_vars:
+    #             cvars.update(more_vars)
 
     @classmethod
     def from_file(cls, course_path: Path):

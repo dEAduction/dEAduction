@@ -128,6 +128,7 @@ class Coordinator(QObject):
 
     def __init__(self, exercise, servint):
         super().__init__()
+        self.cvars_to_be_restored = exercise.update_cvars_from_metadata()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
         self.last_servint_task = None
@@ -389,6 +390,8 @@ class Coordinator(QObject):
         # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
+        if self.cvars_to_be_restored:
+            cvars.update(self.cvars_to_be_restored)
         # self.deleteLater()  FIXME: needed ??
 
     ##############

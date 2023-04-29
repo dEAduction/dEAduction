@@ -111,16 +111,16 @@ def set_logger():
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
-                       'HighLevelServerRequest',
+                       # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
-                       'deaduction.dui',
+                       # 'deaduction.dui',
                        # 'deaduction.pylib',
-                       'logic',
-                       'magic',
+                       # 'logic',
+                       # 'magic',
                        'coursedata',
-                       'deaduction.pylib',
-                       'patterns'
+                       # 'deaduction.pylib',
+                       # 'patterns'
                        # 'math_object'
                        ]
         # log_domains = ["ServerInterface", "HighLevelServerRequest",

@@ -321,10 +321,10 @@ class ExerciseCentralWidget(QWidget):
         #  Automatic actions: le switcher ne switche pas...
         #  Freeze étrange. DnD --> automatic action ?
         #   (suppose d'intégrer UserAction à ProofStep)
-        #  adapt help msgs
         #  doc!
         #  (bof) set by user. Plutôt : n'importe quelle config peut être mise
         #  par user.
+        #  (OK?) adapt help msgs
         #  (bof) option and/or unified
         #  (OK...) update ecw in new_settings in case mode changed
         #  fonts!? bad font for prove

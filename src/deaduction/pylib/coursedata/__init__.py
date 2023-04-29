@@ -28,3 +28,4 @@ from .exercise_classes import Statement, Definition, Theorem, Exercise
 from .course import           Course
 from .auto_steps import       UserAction, AutoStep
 from .course_metadata_translations import metadata_nice_text
+from .settings_parser import vars_from_metadata
