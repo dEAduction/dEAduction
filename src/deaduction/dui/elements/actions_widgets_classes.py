@@ -384,7 +384,7 @@ class ActionButtonsWidget(QWidget):
 
         cls.init = True
         # Determine fixed width
-        demo_lbl = QLabel(_('Demo:'))
+        demo_lbl = QLabel(_('Prove:'))
         use_lbl = QLabel(_('Use:'))
         demo_lbl.show()
         use_lbl.show()

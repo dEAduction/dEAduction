@@ -272,9 +272,9 @@ class ContextMathObject(MathObject):
 
         # Name of action buttons according to current prove/use mode
         cbn = help_msgs.current_button_name
-        prove_use_dic = {key+'_button': cbn(key)
-                         for key in
-                         ('forall', 'exists', 'implies', 'and', 'or')}
+        prove_use_dic = {key+suffix: cbn(key+suffix)
+                         for key in ('forall', 'exists', 'implies', 'and', 'or')
+                         for suffix in ('_prove', '_use')}
         format_dic.update(prove_use_dic)
 
         # Translate values

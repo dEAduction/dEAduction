@@ -868,6 +868,6 @@ class GlobalToolbar(QToolBar):
     def update(self):
         self.change_exercise_action.setText(_('Change exercise'))
         self.settings_action.setText(_("Settings"))
-        self.cancel_server.setText(_("Stop computations"))
+        self.stop.setText(_('Stop me from thinking!'))
 
 
