@@ -284,7 +284,7 @@ ActionButton.action_triggered = Signal(ActionButton)
 
 
 class Switch(QPushButton):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         print('init')
         self.setCheckable(True)
@@ -358,7 +358,8 @@ class ProveUseModeSetter(QWidget):
             return "use"
 
     def click(self):
-        self.switch.click()
+        self.switch.setChecked(not self.switch.isChecked())
+        self.clicked.emit()
 
 
 class ActionButtonsWidget(QWidget):
@@ -558,10 +559,9 @@ class ActionButtonsLyt(QVBoxLayout):
             self.addWidget(self.prove_use_box)
             self.addWidget(other_box)
 
-    @property
-    def set_switch_mode(self):
+    def set_switch_mode(self, to_prove=True):
         if self.prove_use_box:
-            return self.prove_use_box.set_switch_mode
+            return self.prove_use_box.set_switch_mode(to_prove)
 
     @property
     def switch_mode(self) -> str:

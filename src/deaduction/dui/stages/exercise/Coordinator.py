@@ -606,7 +606,7 @@ class Coordinator(QObject):
                     self.proof_step.button_name = 'history_redo'
                     proof_step = self.lean_file.next_proof_step
                     if proof_step:
-                        await self.emw.simulate(proof_step)
+                        await self.emw.simulate_proof_step(proof_step)
                     self.history_redo()
 
                 elif emission.is_from(self.toolbar.undo_action.triggered):
@@ -673,37 +673,44 @@ class Coordinator(QObject):
                     # and call __server_call_action
 
                     log.debug("Math object dropped!")
-                    s = [item.math_object.to_display(format_="utf8")
-                         for item in self.emw.current_selection]
-                    log.debug(f"Selection: {s}")
+                    # s = [item.math_object.to_display(format_="utf8")
+                    #      for item in self.emw.current_selection]
+                    # log.debug(f"Selection: {s}")
                     premise_item = emission.args[0]  # MathWidgetItem
                     op_item = emission.args[1]  # Optional[MathWidgetItem]
+                    await self.__server_call_d_n_n(premise_item, op_item)
                     # Operator is None if dropping did not occur on a property.
                     # Then WrongUI exception will be raised by drag_n_drop().
 
-                    # selection = self.current_selection_as_mathobjects
-                    operator = op_item.math_object if op_item else None
-                    premise = premise_item.math_object if premise_item else None
-                    #     selection.remove(operator)
-
-                    self.proof_step.drag_n_drop = DragNDrop(premise, operator)
-                    try:
-                        names = drag_n_drop(premise, operator,
-                                            self.action_button_names)
-                    except WrongUserInput as error:
-                        self.proof_step.user_input = self.emw.user_input
-                        self.process_wrong_user_input(error)
-
-                    else:
-                        # Only first name is tried
-                        for name in names:
-                            action_btn = ActionButton.from_name.get(name)
-                            if action_btn:
-                                self.proof_step.button_name = name
-                                await action_btn.simulate(duration=0.5)
-                                self.__server_call_action(action_btn)
-                                break
-                        # No button found: this should not happen
+                    # # selection = self.current_selection_as_mathobjects
+                    # operator = op_item.math_object if op_item else None
+                    # premise = premise_item.math_object if premise_item else None
+                    # #     selection.remove(operator)
+                    #
+                    # self.proof_step.drag_n_drop = DragNDrop(premise, operator)
+                    # try:
+                    #     names = drag_n_drop(premise, operator,
+                    #                         self.action_button_names)
+                    # except WrongUserInput as error:
+                    #     self.proof_step.user_input = self.emw.user_input
+                    #     self.process_wrong_user_input(error)
+                    #
+                    # else:
+                    #     # Only first name is tried
+                    #     for name in names:
+                    #         action_btn = ActionButton.from_name.get(name)
+                    #         if action_btn:
+                    #             self.proof_step.button_name = name
+                    #             # Fixme: ne marche pas
+                    #             selection = self.current_selection_as_mathobjects
+                    #             self.proof_step.selection = selection
+                    #             self.proof_step.target_selected = self.emw.target_selected
+                    #             await self.emw.simulate(self.proof_step,
+                    #                                     duration=0.5)
+                    #             # await action_btn.simulate(duration=0.5)
+                    #             # self.__server_call_action(action_btn)
+                    #             break
+                    #     # No button found: this should not happen
 
     ###################
     # History actions #
@@ -776,6 +783,41 @@ class Coordinator(QObject):
     ################################################
     # Actions that send code to Lean (via servint) #
     ################################################
+
+    async def __server_call_d_n_n(self, premise_item, op_item):
+        # selection = self.current_selection_as_mathobjects
+        operator = op_item.math_object if op_item else None
+        premise = premise_item.math_object if premise_item else None
+        #     selection.remove(operator)
+
+        self.proof_step.drag_n_drop = DragNDrop(premise, operator)
+        try:
+            names = drag_n_drop(premise, operator,
+                                self.action_button_names)
+        except WrongUserInput as error:
+            self.proof_step.user_input = self.emw.user_input
+            self.process_wrong_user_input(error)
+            return
+
+        # Only first name is tried
+        for name in names:
+            action_btn = ActionButton.from_name.get(name)
+            if action_btn:
+                self.proof_step.button_name = name
+                selection = self.current_selection_as_mathobjects
+                self.proof_step.selection = selection
+                self.proof_step.target_selected = self.emw.target_selected
+                user_action = UserAction.from_proof_step(self.proof_step)
+                # log.info("Simulating proof_step with:")
+                # print(user_action)
+                await self.emw.simulate_user_action(user_action,
+                                                    duration=0.5,
+                                                    execute_action=True)
+
+                # await action_btn.simulate(duration=0.5)
+                # self.__server_call_action(action_btn)
+                break
+        # No button found: this should not happen
 
     def __server_call_action(self, action_btn):
         """

@@ -588,35 +588,35 @@ class ExerciseMainWindow(QMainWindow):
 
     # ─────────────────── Conversion methods ─────────────────── #
 
-    def button_from_string(self, string: str):
-        """
-        Search a button widget that match string.
-        Search successively in
-        - ActionButton,
-        - history buttons
-
-        :return: ActionButton or None
-        """
-        # FIXME: obsolete
-        # TODO: add search in context widgets.
-        button = self.ecw.action_button(string)
-        if button:
-            return button
-        history_buttons = {'undo': self.exercise_toolbar.undo_action,
-                           'redo': self.exercise_toolbar.redo_action,
-                           'rewind': self.exercise_toolbar.rewind,
-                           'go_to_end': self.exercise_toolbar.go_to_end}
-        if string.find('undo') != -1:
-            string = 'undo'
-        elif string.find('redo') != -1:
-            string = 'redo'
-        elif string.find('rewind') != -1:
-            string = 'rewind'
-        elif string.find('end') != -1:
-            string = 'go_to_end'
-        if string in history_buttons:
-            return history_buttons[string]
-        log.warning(f"No button found from {string}")
+    # def button_from_string(self, string: str):
+    #     """
+    #     Search a button widget that match string.
+    #     Search successively in
+    #     - ActionButton,
+    #     - history buttons
+    #
+    #     :return: ActionButton or None
+    #     """
+    #     # FIXME: obsolete
+    #     # TODO: add search in context widgets.
+    #     button = self.ecw.action_button(string)
+    #     if button:
+    #         return button
+    #     history_buttons = {'undo': self.exercise_toolbar.undo_action,
+    #                        'redo': self.exercise_toolbar.redo_action,
+    #                        'rewind': self.exercise_toolbar.rewind,
+    #                        'go_to_end': self.exercise_toolbar.go_to_end}
+    #     if string.find('undo') != -1:
+    #         string = 'undo'
+    #     elif string.find('redo') != -1:
+    #         string = 'redo'
+    #     elif string.find('rewind') != -1:
+    #         string = 'rewind'
+    #     elif string.find('end') != -1:
+    #         string = 'go_to_end'
+    #     if string in history_buttons:
+    #         return history_buttons[string]
+    #     log.warning(f"No button found from {string}")
 
     def context_item_from_math_object(self, math_object) -> \
             MathObjectWidgetItem:
@@ -825,7 +825,7 @@ class ExerciseMainWindow(QMainWindow):
         # self.help_window.set_math_object(item, target=True)
         # self.help_window.toggle(True)
 
-    def harmonize_buttons_and_user_action(self, user_action):
+    def harmonize_buttons_and_user_action(self, user_action: UserAction):
         """
         Adapt user_action and buttons so that process_automatic_action will
         be able to make button blink. This may involve changing action to
@@ -839,12 +839,13 @@ class ExerciseMainWindow(QMainWindow):
         if mode == 'display_switch':
             switch_mode = self.ecw.switch_mode
             prove_mode = (switch_mode == "prove")
-            OK = ((name.endswith('_use') and not prove_mode) or
-                  (name.endswith('_prove') and prove_mode))
-            if not OK:
-                self.ecw.set_switch_mode(to_prove=not prove_mode)
+            if name.endswith("_use") or name.endswith("_prove"):
+                OK = ((name.endswith('_use') and not prove_mode) or
+                      (name.endswith('_prove') and prove_mode))
+                if not OK:
+                    self.ecw.set_switch_mode(to_prove=not prove_mode)
         elif mode == 'display_unified':
-            user_action.button_name = name.replace('_use', '')
+            name = name.replace('_use', '')
             user_action.button_name = name.replace('_prove', '')
 
     def simulate_selection(self,
@@ -940,7 +941,7 @@ class ExerciseMainWindow(QMainWindow):
         msg += "    ->(No button nor statement found)"
         return False, msg
 
-    async def simulate(self, proof_step: ProofStep, duration=0.4):
+    async def simulate_proof_step(self, proof_step: ProofStep, duration=0.4):
         """
         Simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called

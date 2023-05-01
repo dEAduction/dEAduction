@@ -263,9 +263,8 @@ class ExerciseCentralWidget(QWidget):
     # def action_btn_wdgs(self):
     #     pass
 
-    @property
-    def set_switch_mode(self):
-        return self.__action_btns_lyt.set_switch_mode
+    def set_switch_mode(self, to_prove=True):
+        return self.__action_btns_lyt.set_switch_mode(to_prove)
 
     @property
     def switch_mode(self) -> str:
@@ -318,7 +317,9 @@ class ExerciseCentralWidget(QWidget):
         switcher = (mode == 'display_switch')
 
         # TODO:
+        #
         #  Automatic actions: le switcher ne switche pas...
+        #  Idem history_redo
         #  Freeze étrange. DnD --> automatic action ?
         #   (suppose d'intégrer UserAction à ProofStep)
         #  doc!
