@@ -70,6 +70,10 @@ PRETTY_NAMES = {
     'display.display_success_messages': _("Display success messages"),
     'display.color_for_selection': _("Color for selection"),
     'display.math_font_file': _("Maths fonts"),
+    'logic.button_use_or_prove_mode': _('Prove / use mode for action buttons'),
+    'display_switch': _('Display switcher'),
+    'display_both': _('Display both buttons'),
+    'display_unified': _('Display unified buttons'),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
     'logic.use_color_for_applied_properties': _("Use color for applied "
