@@ -4,15 +4,22 @@
 # translate actions into lean code                         #
 ############################################################
     
-Every function action_* takes exactly one argument, proof_step, 
+Every function action_* takes one argument, proof_step,
 which contains all the needed pieces of information. In particular, 
-- proof_step.selected_objects: a list of MathObject previously selected by the
+- proof_step.selection: a list of MathObject previously selected by the
 user
 - proof_step.target_selected: a boolean that indicates if target is selected.
 If target_selected is False, (and the setting target_selected_by_default is
 not on) then selected_objects must be non-empty.
 - proof_step.user_input, an object reflecting a choice made by the user inside a
 previous call of the same function.
+
+The five first actions,
+forall, exists, implies, and, or
+take two other boolean arguments, prove and use. These arguments tells if
+usr is trying to prove or/and use the corresponding property.
+To these five actions also correspond methods that try only either to prove
+xor use the property, which are named e.g. forall_prove and forall_use.
 
 Most of these functions are just switches that call other more
 specialised functions, according to the number and nature of
@@ -283,16 +290,16 @@ def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
 @action()
 def action_forall_prove(proof_step) -> CodeForLean:
-    return action_forall(proof_step, demo=True, use=False)
+    return action_forall(proof_step, prove=True, use=False)
 
 
 @action()
 def action_forall_use(proof_step) -> CodeForLean:
-    return action_forall(proof_step, demo=False, use=True)
+    return action_forall(proof_step, prove=False, use=True)
 
 
 @action()
-def action_forall(proof_step, demo=True, use=True) -> CodeForLean:
+def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
     """
     (1) If no selection and target is of the form ∀ x, P(x):
         introduce x and transform the target into P(x)
@@ -308,13 +315,13 @@ def action_forall(proof_step, demo=True, use=True) -> CodeForLean:
 
     test_selection(selected_objects, target_selected)
     test_prove_use(selected_objects,
-                   demo=demo, use=use,
+                   demo=prove, use=use,
                    prop=_("a universal property '∀x, P(x)'"))
 
     user_input = proof_step.user_input
     goal = proof_step.goal
 
-    if len(selected_objects) == 0 and demo:
+    if len(selected_objects) == 0 and prove:
         if not goal.target.is_for_all(implicit=True):
             error = _("Target is not a universal property '∀x, P(x)'")
             raise WrongUserInput(error)
@@ -465,16 +472,16 @@ def prove_exists_on_hyp(proof_step,
 
 @action()
 def action_exists_prove(proof_step) -> CodeForLean:
-    return action_exists(proof_step, demo=True, use=False)
+    return action_exists(proof_step, prove=True, use=False)
 
 
 @action()
 def action_exists_use(proof_step) -> CodeForLean:
-    return action_exists(proof_step, demo=False, use=True)
+    return action_exists(proof_step, prove=False, use=True)
 
 
 @action()
-def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
+def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
     """
     Three cases:
     (1) If target is of form ∃ x, P(x):
@@ -491,14 +498,13 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
     target_selected = proof_step.target_selected
 
     test_selection(selected_objects, target_selected)
-    # TODO: test_prove_use, mais il y a construct_on_hyp!
 
     user_input = proof_step.user_input
     goal = proof_step.goal
     prop_type = "an existential property '∃x, P(x)'"
 
     if len(selected_objects) == 0:
-        if not demo:
+        if not prove:
             raise WrongProveModeInput(prop=prop_type)
         elif not goal.target.is_exists(implicit=True):
             error = _("Target is not existential property '∃x, P(x)'")
@@ -517,7 +523,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
             else:
                 return use_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            if not demo:
+            if not prove:
                 raise WrongUseModeInput(prop=prop_type)
             object_name = selected_objects[0].info["name"]
             if not goal.target.is_exists(implicit=True):
@@ -528,7 +534,7 @@ def action_exists(proof_step, demo=True, use=True) -> CodeForLean:
             else:
                 return prove_exists(proof_step, [object_name])
     elif len(selected_objects) == 2:
-        if not demo:
+        if not prove:
             raise WrongUseModeInput(prop=prop_type)
         else:
             return prove_exists_on_hyp(proof_step, selected_objects)
@@ -739,16 +745,16 @@ def implies_hyp(proof_step):
 
 @action()
 def action_implies_prove(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=True, use=False)
+    return action_implies(proof_step, prove=True, use=False)
 
 
 @action()
 def action_implies_use(proof_step) -> CodeForLean:
-    return action_implies(proof_step, demo=False, use=True)
+    return action_implies(proof_step, prove=False, use=True)
 
 
 @action()
-def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
+def action_implies(proof_step, prove=True, use=True) -> CodeForLean:
     """
     Three cases:
     (1) No property selected, demo=True:
@@ -769,12 +775,12 @@ def action_implies(proof_step, demo=True, use=True) -> CodeForLean:
     # user_input = proof_step.user_input
 
     test_selection(selected_objects, target_selected)
-    test_prove_use(selected_objects, demo=demo, use=use,
+    test_prove_use(selected_objects, demo=prove, use=use,
                    prop=_("an implication 'P ⇒ Q'"))
 
     goal = proof_step.goal
 
-    if len(selected_objects) == 0 and demo:
+    if len(selected_objects) == 0 and prove:
         # Try to prove an implication
         if not goal.target.is_implication(implicit=True):
             raise WrongUserInput(
@@ -834,7 +840,7 @@ def prove_and(proof_step, user_input: [str]) -> CodeForLean:
 
     target = proof_step.goal.target.math_type
     if target.is_iff(is_math_type=True):
-        return construct_iff(proof_step, user_input)
+        return prove_iff(proof_step, user_input)
 
     implicit_definition = None
     if not target.is_and(is_math_type=True, implicit=True):
@@ -918,16 +924,16 @@ def prove_and_hyp(proof_step, selected_objects: [MathObject]) \
 
 @action()
 def action_and_prove(proof_step) -> CodeForLean:
-    return action_and(proof_step, demo=True, use=False)
+    return action_and(proof_step, prove=True, use=False)
 
 
 @action()
 def action_and_use(proof_step) -> CodeForLean:
-    return action_and(proof_step, demo=False, use=True)
+    return action_and(proof_step, prove=False, use=True)
 
 
 @action()
-def action_and(proof_step, demo=True, use=True) -> CodeForLean:
+def action_and(proof_step, prove=True, use=True) -> CodeForLean:
     """
     Translate into string of lean code corresponding to the action
 
@@ -949,7 +955,7 @@ If two hypothesis P, then Q, have been previously selected:
     prop_type = "a conjunction 'P AND Q'"
 
     if len(selected_objects) == 0:
-        if not demo:
+        if not prove:
             raise WrongUseModeInput(prop=prop_type)
         return prove_and(proof_step, user_input)
     if len(selected_objects) == 1:
@@ -961,7 +967,7 @@ If two hypothesis P, then Q, have been previously selected:
         else:
             return use_and(proof_step, selected_objects)
     if len(selected_objects) == 2:
-        if not demo:
+        if not prove:
             raise WrongUseModeInput(prop=prop_type)
         if not (selected_objects[0].math_type.is_prop and
                 selected_objects[1].math_type.is_prop):
@@ -1140,16 +1146,16 @@ def prove_or_on_hyp(proof_step,
 
 @action()
 def action_or_prove(proof_step) -> CodeForLean:
-    return action_or(proof_step, demo=True, use=False)
+    return action_or(proof_step, prove=True, use=False)
 
 
 @action()
 def action_or_use(proof_step) -> CodeForLean:
-    return action_or(proof_step, demo=False, use=True)
+    return action_or(proof_step, prove=False, use=True)
 
 
 @action()
-def action_or(proof_step, demo=True, use=True) -> CodeForLean:
+def action_or(proof_step, prove=True, use=True) -> CodeForLean:
     """
     If the target is of the form P OR Q:
         transform the target in P (or Q) according to the user's choice.
@@ -1167,7 +1173,7 @@ def action_or(proof_step, demo=True, use=True) -> CodeForLean:
     goal = proof_step.goal
     prop_type = "a disjunction 'P OR Q'"
     if len(selected_objects) == 0:
-        if not demo:
+        if not prove:
             raise WrongUseModeInput(prop=prop_type)
         if not goal.target.is_or(implicit=True):
             raise WrongUserInput(
@@ -1180,11 +1186,11 @@ def action_or(proof_step, demo=True, use=True) -> CodeForLean:
                 raise WrongProveModeInput(prop=prop_type)
             return use_or(proof_step, selected_objects, user_input)
         else:
-            if not demo:
+            if not prove:
                 raise WrongUseModeInput(prop=prop_type)
             return prove_or_on_hyp(proof_step, selected_objects, user_input)
     elif len(selected_objects) == 2:
-        if not demo:
+        if not prove:
             raise WrongUseModeInput(prop=prop_type)
         return prove_or_on_hyp(proof_step, selected_objects, user_input)
     else:  # More than 2 selected objects
@@ -1268,7 +1274,7 @@ def choose_substitution(equality0: MathObject, equality1: MathObject):
         output=_("Choose which equality to use for substitution"))
 
 
-def construct_iff(proof_step, user_input: [str]) -> CodeForLean:
+def prove_iff(proof_step, user_input: [str]) -> CodeForLean:
     """
     Assuming target is an iff, split into two implications.
     """
@@ -1335,8 +1341,7 @@ def destruct_iff(proof_step) -> CodeForLean:
             raise WrongUserInput(error_msg)
 
 
-def destruct_iff_on_hyp(proof_step,
-                        selected_objects: [MathObject]) -> CodeForLean:
+def use_iff(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     Split a property 'P iff Q' into two implications.
     len(selected_objects) should be 1.
@@ -1352,8 +1357,8 @@ def destruct_iff_on_hyp(proof_step,
     return code
 
 
-def construct_iff_on_hyp(proof_step,
-                         selected_objects: [MathObject]) -> CodeForLean:
+def prove_iff_on_hyp(proof_step,
+                     selected_objects: [MathObject]) -> CodeForLean:
     """
     Construct property 'P iff Q' from both implications.
     len(selected_objects) should be 2.
@@ -1427,7 +1432,7 @@ def action_iff(proof_step) -> CodeForLean:
 
     if len(selected_objects) == 0:
         if goal.target.math_type.node == "PROP_IFF":
-            return construct_iff(proof_step, user_input)
+            return prove_iff(proof_step, user_input)
         else:
             code = destruct_iff(proof_step)
             if code:
@@ -1438,7 +1443,7 @@ def action_iff(proof_step) -> CodeForLean:
 
     if len(selected_objects) == 1:
         if selected_objects[0].is_iff() and not target_selected:
-            more_code = destruct_iff_on_hyp(proof_step, selected_objects)
+            more_code = use_iff(proof_step, selected_objects)
             code = code.or_else(more_code)
         else:
             [(test, eq)] = test_subst
@@ -1473,7 +1478,7 @@ def action_iff(proof_step) -> CodeForLean:
             error = _("Selected items should both be implications")
             raise WrongUserInput(error)
         else:
-            return construct_iff_on_hyp(proof_step, selected_objects)
+            return prove_iff_on_hyp(proof_step, selected_objects)
 
     raise WrongUserInput(error=_("Does not apply to more than two properties"))
 

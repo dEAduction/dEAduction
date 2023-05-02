@@ -621,15 +621,15 @@ class Exercise(Theorem):
                     actions.append(action)
         return actions
 
-    def prove_use_mode_set_by_exercise(self):
-        """
-        Test if the list of logic buttons determined by self's metadata
-        contains a use or demo button; in this case the ui should display
-        exactly those buttons, and ignore settings.
-        """
-        tests = (action.name.endswith('_use') or action.name.endswith('_demo')
-                 for action in self.available_logic_1)
-        return any(tests)
+    # def prove_use_mode_set_by_exercise(self):
+    #     """
+    #     Test if the list of logic buttons determined by self's metadata
+    #     contains a use or demo button; in this case the ui should display
+    #     exactly those buttons, and ignore settings.
+    #     """
+    #     tests = (action.name.endswith('_use') or action.name.endswith('_prove')
+    #              for action in self.available_logic_1)
+    #     return any(tests)
 
 
 #############
