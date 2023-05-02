@@ -827,26 +827,30 @@ class ExerciseMainWindow(QMainWindow):
 
     def harmonize_buttons_and_user_action(self, user_action: UserAction):
         """
-        Adapt user_action and buttons so that process_automatic_action will
-        be able to make button blink. This may involve changing action to
-        unified version, or switch mode to prove or use mode.
+        Switch mode to prove or use mode according to user_action so that
+        the pertinent button is displayed.
         """
-        name: str = user_action.button_name
+
+        name: str = user_action.button_name_adapted_to_mode()
         if not name:  # Nothing to do
             return
 
-        mode = cvars.get('logic.button_use_or_prove_mode')
-        if mode == 'display_switch':
+        # if mode == 'display_switch':
+        #     switch_mode = self.ecw.switch_mode
+        #     prove_mode = (switch_mode == "prove")
+        #     if name.endswith("_use") or name.endswith("_prove"):
+        #         OK = ((name.endswith('_use') and not prove_mode) or
+        #               (name.endswith('_prove') and prove_mode))
+        #         if not OK:
+        #             self.ecw.set_switch_mode(to_prove=not prove_mode)
+        # elif mode == 'display_unified':
+        #     name = name.replace('_use', '')
+        #     user_action.button_name = name.replace('_prove', '')
+        if cvars.get('logic.button_use_or_prove_mode') == 'display_switch':
             switch_mode = self.ecw.switch_mode
             prove_mode = (switch_mode == "prove")
-            if name.endswith("_use") or name.endswith("_prove"):
-                OK = ((name.endswith('_use') and not prove_mode) or
-                      (name.endswith('_prove') and prove_mode))
-                if not OK:
-                    self.ecw.set_switch_mode(to_prove=not prove_mode)
-        elif mode == 'display_unified':
-            name = name.replace('_use', '')
-            user_action.button_name = name.replace('_prove', '')
+            if not name.endswith(switch_mode):
+                self.ecw.set_switch_mode(to_prove=not prove_mode)
 
     def simulate_selection(self,
                            selection:
@@ -912,7 +916,7 @@ class ExerciseMainWindow(QMainWindow):
         self.simulate_selection(selection, target_selected)
         self.user_input = user_action.user_input
 
-        button = user_action.button_name
+        button = user_action.button_name_adapted_to_mode()
         statement_name = user_action.statement_name
         if button:
             msg += f"    -> click on button {button}"
@@ -955,8 +959,8 @@ class ExerciseMainWindow(QMainWindow):
         user_action = UserAction.from_proof_step(proof_step)
         # log.info("Simulating proof_step with:")
         # print(user_action)
-        success, msg = await self.simulate_user_action(user_action, duration,
-                                                       execute_action=False)
+        await self.simulate_user_action(user_action, duration,
+                                        execute_action=False)
     ##################
     ##################
     # Update methods #

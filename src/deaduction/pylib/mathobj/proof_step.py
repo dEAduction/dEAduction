@@ -38,6 +38,7 @@ import logging
 import deaduction.pylib.logger as logger
 
 from deaduction.pylib.text.tooltips import button_symbol
+from deaduction.pylib.coursedata.auto_steps import UserAction
 from deaduction.pylib.mathobj import MathObject
 
 log = logging.getLogger(__name__)
@@ -197,11 +198,12 @@ class ProofStep:
     history_nb: int          = None
 
     # ──────────────── Input ─────────────── #
-    selection      = None  # [MathObject]
-    target_selected= False
-    user_input     = None  # [str]
-    button_name    = None  # str, e.g. "exists" or "history_undo".
-    statement      = None  # Statement
+    # selection      = None  # [MathObject]
+    # target_selected= False
+    # user_input     = None  # [str]
+    # button_name    = None  # str, e.g. "exists" or "history_undo".
+    # statement      = None  # Statement
+    user_action: UserAction = None
     lean_code      = None  # CodeForLean
     is_automatic   = False
     drag_n_drop    = None  # DragNDrop
@@ -241,10 +243,13 @@ class ProofStep:
         else:
             self.parent = self.initial_proof_node
 
+        self.user_action = UserAction()
+
         self.proof_state = proof_state
-        self.selection = []
-        self.target_selected = False
-        self.user_input = []
+        # self.selection = []
+        # self.target_selected = False
+        # self.user_input = []
+
         self.imminent_new_node = None
         self.history_nb = history_nb
         # Creation of first proof node if none is provided
@@ -338,6 +343,54 @@ class ProofStep:
     ##############
     # Properties #
     ##############
+
+    @property
+    def selection(self):
+        return self.user_action.selection
+
+    @selection.setter
+    def selection(self, selection):
+        self.user_action.selection = selection
+
+    @property
+    def target_selected(self):
+        return self.user_action.target_selected
+
+    @target_selected.setter
+    def target_selected(self, target_selected):
+        self.user_action.target_selected = target_selected
+
+    @property
+    def button_name(self):
+        return self.user_action.button_name
+
+    @button_name.setter
+    def button_name(self, button_name):
+        self.user_action.button_name = button_name
+
+    @property
+    def statement(self):
+        return self.user_action.statement
+
+    @statement.setter
+    def statement(self, statement):
+        self.user_action.statement = statement
+
+    @property
+    def user_input(self):
+        return self.user_action.user_input
+
+    @user_input.setter
+    def user_input(self, user_input):
+        self.user_action.user_input = user_input
+
+    @property
+    def prove_or_use(self):
+        return self.user_action.prove_or_use
+
+    @prove_or_use.setter
+    def prove_or_use(self, prove_or_use):
+        self.user_action.prove_or_use = prove_or_use
 
     @property
     def has_solved_one_goal(self):

@@ -42,62 +42,20 @@ global _
 ##############################################
 # Lists of all instances of the Action class #
 ##############################################
-LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
-PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
-MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
-# e.g. key = action_and, value = corresponding instance of the class Action
-
-LOGIC_BUTTONS_SYMBOLS = [LOGIC_BUTTONS[key].symbol for key in LOGIC_BUTTONS]
-PROOF_BUTTONS_SYMBOLS = [PROOF_BUTTONS[key].symbol for key in PROOF_BUTTONS]
-MAGIC_BUTTONS_SYMBOLS = [MAGIC_BUTTONS[key].symbol for key in MAGIC_BUTTONS]
-
-
-# Tentative grammar
-# auto_steps = """
-# steps = step ("," step)*
+# LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
+# PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
+# MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+# # e.g. key = action_and, value = corresponding instance of the class Action
 #
-# step = (selections "/")* button_symbol ("/" user_inputs)*
-#
-# selections = spaces* (selection spaces*)+
-# selection = any_char_not_space*
-#
-# button_symbol = spaces* button_symbol_ spaces*
-#
-# user_inputs = spaces* (user_input spaces*)+
-# user_input = any_char*
-#
-# any_char_not_space = !"/" !spaces
-# spaces = (" " / end_of_line)*
-# end_of_line = "\\n"
-# """
-# auto_steps_grammar= Grammar(auto_steps)
-#
-# class AutoStepVisitor(NodeVisitor):
-#     def visit_auto_steps(self,
-#                         node: str,
-#                         visited_children: []):
-#         pass
-#
-#
-#     def visit_step(self, node, visited_children):
-#         return None
-#
-#
-#     def visit_selections(self, node, visited_children):
-#         return None
-#
-#     def visit_selection(self, node, visited_children):
-#         return node.txt
-#
-#
-#
-#     def generic_visit(self, node, visited_children):
-#         return None
+# LOGIC_BUTTONS_SYMBOLS = [LOGIC_BUTTONS[key].symbol for key in LOGIC_BUTTONS]
+# PROOF_BUTTONS_SYMBOLS = [PROOF_BUTTONS[key].symbol for key in PROOF_BUTTONS]
+# MAGIC_BUTTONS_SYMBOLS = [MAGIC_BUTTONS[key].symbol for key in MAGIC_BUTTONS]
 
 
-BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
-                  + MAGIC_BUTTONS_SYMBOLS \
-                  + PROOF_BUTTONS_SYMBOLS
+
+# BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
+#                   + MAGIC_BUTTONS_SYMBOLS \
+#                   + PROOF_BUTTONS_SYMBOLS
 
 
 button_dict = {'→': "implies",
@@ -127,14 +85,17 @@ class UserAction:
         so that lean_name.endswith(statement_name) is True.
     """
     selection = None  # [ContextMathObject] or [str]
-    button_name = None  # str
-    statement_name = None  # str
-    user_input = None  # Union[int, str]
     target_selected = None
+    button_name = ""  # str
+    statement = None  # Optional[Statement]
+    _statement_name = ""  # str
+    user_input = None  # Union[int, str]
+    prove_or_use = ""  # "" / "prove" / "use"
 
     def __init__(self,
                  selection=None,
                  button_name=None,
+                 statement=None,
                  statement_name=None,
                  user_input=None,
                  target_selected=False):
@@ -144,7 +105,8 @@ class UserAction:
             user_input = []
         self.selection = selection
         self.button_name = button_name
-        self.statement_name = statement_name
+        self.statement = statement
+        self._statement_name = statement_name
         self.user_input = user_input
         self.target_selected = target_selected
 
@@ -155,11 +117,12 @@ class UserAction:
 
     @classmethod
     def from_proof_step(cls, proof_step):
-        return cls(selection=proof_step.selection,
-                   button_name=proof_step.button_name,
-                   statement_name=proof_step.statement_lean_name,
-                   user_input=proof_step.user_input,
-                   target_selected=proof_step.target_selected)
+        return proof_step.user_action
+        # return cls(selection=proof_step.selection,
+        #            button_name=proof_step.button_name,
+        #            statement_name=proof_step.statement_lean_name,
+        #            user_input=proof_step.user_input,
+        #            target_selected=proof_step.target_selected)
 
     def __repr__(self) -> str:
         msg = f"UserAction with {len(self.selection)} selected objects, " \
@@ -167,6 +130,39 @@ class UserAction:
               f"{self.statement_name}, user input = {self.user_input}," \
               f"target selected = {self.target_selected}"
         return msg
+
+    @property
+    def statement_name(self):
+        if self.statement:
+            return self.statement.lean_name
+        else:
+            return self._statement_name
+
+    def button_name_adapted_to_mode(self, mode=None):
+        """
+        Return the button name that corresponds to self.button_name adapted
+        to mode : without suffix '_prove' / '_use' if the unified buttons are
+        displayed, with suffix in the opposite case. Note that the returned
+        name may not be adapted if self.prove_or_use is None.
+        """
+
+        name = self.button_name
+        if not name:
+            return ""
+
+        if not mode:
+            mode = cvars.get('logic.button_use_or_prove_mode')
+
+        adapted_name = name
+        if mode in ('display_switch', 'display_both'):
+            if self.prove_or_use and not (adapted_name.endswith("_use")
+                                          or adapted_name.endswith("_prove")):
+                adapted_name = name + '_' + self.prove_or_use
+        elif mode == 'display_unified':
+            adapted_name = name.replace('_use', '')
+            adapted_name = adapted_name.replace('_prove', '')
+
+        return adapted_name
 
 
 class AutoStep(UserAction):
@@ -397,7 +393,8 @@ class AutoStep(UserAction):
 
 
 if __name__ == '__main__':
-    print(BUTTONS_SYMBOLS)
+    pass
+    # print(BUTTONS_SYMBOLS)
     # french result :
     # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'Calculer', 'CQFD', 'Méthodes De
     # Preuve', 'Nouvel Objet', 'Appliquer']
