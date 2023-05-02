@@ -43,8 +43,8 @@ from PySide2.QtWidgets import (QMainWindow,
                                QAction)
 import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
-from deaduction.pylib.mathobj           import (MathObject,
-                                                ProofStep)
+from deaduction.pylib.mathobj           import MathObject
+from deaduction.pylib.proof_step        import ProofStep
 from deaduction.pylib.math_display.pattern_init import pattern_init
 
 from deaduction.dui.primitives          import deaduction_fonts

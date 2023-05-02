@@ -24,4 +24,3 @@ This file is part of d∃∀duction.
 
 from .proof_tree import (ProofTree, GoalNode, RootGoalNode,
                          VirtualBrotherAuxGoalNode)
-from .lean_response import LeanResponse

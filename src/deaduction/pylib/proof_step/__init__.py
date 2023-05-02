@@ -1,23 +1,21 @@
 """
-# __init__.py : <#ShortDescription> #
-    
-    <#optionalLongDescription>
+# __init__.py #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
-Created       : 10 2021 (creation)
+Created       : 07 2020 (creation)
 Repo          : https://github.com/dEAduction/dEAduction
 
-Copyright (c) 2020 the d∃∀duction team
+Copyright (c) 2020 the dEAduction team
 
-This file is part of d∃∀duction.
+This file is part of dEAduction.
 
-    d∃∀duction is free software: you can redistribute it and/or modify it under
+    dEAduction is free software: you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
     Software Foundation, either version 3 of the License, or (at your option)
     any later version.
 
-    d∃∀duction is distributed in the hope that it will be useful, but WITHOUT
+    dEAduction is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
     more details.
@@ -25,5 +23,6 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from .proof_state import Goal, ProofState
-from .lean_response import LeanResponse
+
+from .proof_step import          (ProofStep,
+                                  NewGoal)

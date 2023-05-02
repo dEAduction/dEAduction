@@ -30,12 +30,13 @@ This file is part of dEAduction.
 from deaduction.pylib.actions import CodeForLean
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
 
-from deaduction.pylib.proof_state import Goal
+# from deaduction.pylib.proof_state import Goal
 
 global _
 
 
-def rw_using_statement(goal: Goal, selected_objects, statement) -> CodeForLean:
+def rw_using_statement(goal,  # Goal,
+                       selected_objects, statement) -> CodeForLean:
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by
@@ -144,7 +145,7 @@ def action_theorem(proof_step) -> CodeForLean:
         return codes
 
     ips = theorem.initial_proof_state
-    theorem_goal: Goal = ips.goals[0] if ips else None
+    theorem_goal = ips.goals[0] if ips else None  # Goal
     substitution, equality = (theorem_goal.target.can_be_used_for_substitution()
                               if theorem_goal else True, None)
     # If no ips available, then try anyway!

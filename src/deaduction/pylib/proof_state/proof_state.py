@@ -999,8 +999,6 @@ class Goal:
         ∀x, ∀y, (P and Q ) ==> target.
         This is not a recursive method since we do not want to create new goals
         (to avoid creating new ContextMathObjects).
-
-        FIXME: en fait si ??
         """
 
         # (1) Compute body of universal prop:

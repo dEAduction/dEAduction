@@ -66,20 +66,17 @@ from deaduction.pylib.coursedata import        (Exercise,
 
 from deaduction.pylib.mathobj import           (MathObject,
                                                 DragNDrop,
-                                                ProofStep,
                                                 ContextMathObject)
-from deaduction.pylib.proof_state import       (Goal,
-                                                ProofState)
-from deaduction.pylib.proof_tree import        (ProofTree,
-                                                LeanResponse)
+from deaduction.pylib.proof_state import       Goal  # LeanResponse
+from deaduction.pylib.proof_step import        ProofStep
+from deaduction.pylib.proof_tree import        ProofTree
 
 from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
                                                 MissingParametersError,
                                                 WrongUserInput,
-                                                drag_n_drop,
-                                                context_obj_solving_target)
+                                                drag_n_drop)
 
 # Import AFTER coursedata and mathobj, beware circular imports!
 from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
@@ -1206,7 +1203,7 @@ class Coordinator(QObject):
         # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
-    def check_response_coherence(self, lean_response: LeanResponse):
+    def check_response_coherence(self, lean_response):
         """
         Check if lean_response concerns current proof step.
         """
@@ -1228,7 +1225,7 @@ class Coordinator(QObject):
         self.lean_code_sent = None
 
     @Slot()
-    def process_lean_response(self, lean_response: LeanResponse):
+    def process_lean_response(self, lean_response):
         """
         This method processes Lean response after a request, and is a slot
         of a signal emitted by self.servint when all info have been received.

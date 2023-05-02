@@ -35,11 +35,10 @@ from typing import Optional, Union
 from copy import copy
 import logging
 
-import deaduction.pylib.logger as logger
-
 from deaduction.pylib.text.tooltips import button_symbol
-from deaduction.pylib.coursedata.auto_steps import UserAction
 from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.coursedata.auto_steps import UserAction
+# from deaduction.pylib.proof_state import LeanResponse
 
 log = logging.getLogger(__name__)
 global _

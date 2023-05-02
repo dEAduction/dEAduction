@@ -44,7 +44,7 @@ from deaduction.pylib.lean.server import LeanServer
 from deaduction.pylib.lean.installation import LeanEnvironment
 from deaduction.pylib.actions import CodeForLean
 from deaduction.pylib.coursedata import Course
-from deaduction.pylib.proof_tree import LeanResponse
+from deaduction.pylib.proof_state import LeanResponse
 
 import deaduction.pylib.config.site_installation as inst
 import deaduction.pylib.config.vars as cvars

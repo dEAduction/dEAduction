@@ -38,7 +38,7 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
-from deaduction.pylib.mathobj.proof_step import ProofNode, ProofStep
+from deaduction.pylib.proof_step.proof_step import ProofNode, ProofStep
 
 log = logging.getLogger(__name__)
 global _

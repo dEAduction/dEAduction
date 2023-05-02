@@ -30,8 +30,9 @@ from copy import deepcopy
 from typing import Optional
 import logging
 
-from deaduction.pylib.proof_state import Goal, ProofState
-from deaduction.pylib.mathobj import ProofStep, MathObject
+from deaduction.pylib.proof_state import Goal
+from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.proof_step import ProofStep
 log = logging.getLogger(__name__)
 global _
 

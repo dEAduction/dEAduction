@@ -50,7 +50,7 @@ import deaduction.pylib.config.vars as        cvars
 import deaduction.pylib.config.dirs as        cdirs
 from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import          ProofStep
+from deaduction.pylib.proof_step import          ProofStep
 
 log = logging.getLogger(__name__)
 
