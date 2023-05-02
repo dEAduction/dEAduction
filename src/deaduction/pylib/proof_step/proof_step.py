@@ -203,9 +203,10 @@ class ProofStep:
     # button_name    = None  # str, e.g. "exists" or "history_undo".
     # statement      = None  # Statement
     user_action: UserAction = None
-    lean_code      = None  # CodeForLean
     is_automatic   = False
     drag_n_drop    = None  # DragNDrop
+
+    lean_code      = None  # CodeForLean
 
     # ──────────────── Output ─────────────── #
     effective_code            = None  # CodeForLean that proved effective

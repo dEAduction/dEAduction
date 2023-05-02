@@ -45,8 +45,8 @@ class LeanResponse:
     # 6 = file unchanged, 7 = cancelled, 10 = unknown:
     error_type: int = 0
     error_list: Optional[List]
-    _error_msg: str = ''
-    _success_msg: str = ''
+    # _error_msg: str = ''
+    # _success_msg: str = ''
 
     def __init__(self, proof_step=None, analyses: tuple = None,
                  error_type=0, error_list=None,

@@ -43,21 +43,14 @@ from .code_for_lean import (LeanCombinator,
 
 from .generic import action_definition
 
-from .logic import (action_not,
+from .logic import (action_forall,
+                    action_exists,
                     action_implies,
                     action_and,
                     action_or,
-                    action_forall,
-                    action_exists,
+                    action_not,
                     action_equal,
-                    action_map,
-                    apply_exists,
-                    apply_and,
-                    apply_or,
-                    apply_implies,
-                    apply_implies_to_hyp,
-                    have_new_property,
-                    apply_substitute)
+                    action_map)
 
 from .proofs import action_proof_methods, introduce_new_subgoal
 from .magic import action_assumption, context_obj_solving_target

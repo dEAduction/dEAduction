@@ -39,8 +39,8 @@ from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       WrongUserInput,
                                       action,
-                                      CodeForLean,
-                                      apply_or)
+                                      CodeForLean)
+from deaduction.pylib.actions.logic import use_or
 
 from deaduction.pylib.mathobj import  MathObject
 from deaduction.pylib.give_name import get_new_hyp
@@ -126,7 +126,7 @@ def method_cbr(proof_step,
             error = _("Selected property is not a disjunction")
             raise WrongUserInput(error)
         else:
-            code = apply_or(proof_step, selected_objects, user_input)
+            code = use_or(proof_step, selected_objects, user_input)
 
     return code
 
