@@ -219,16 +219,11 @@ class AutoStep(UserAction):
                  7: 'Action cancelled',
                  10: 'unknown error'}
 
-    def __init__(self, selection, button_name, statement, user_input,
-                 target_selected,
-                 raw_string, error_type, error_msg, success_msg):
+    def __init__(self, selection, button_name, statement_name, user_input,
+                 target_selected, raw_string, error_type, error_msg, success_msg):
 
-        UserAction.__init__(self, selection, button_name,
-                            statement, user_input, target_selected)
-        # self.selection = selection
-        # self.button_name = button_name
-        # self.statement = statement
-        # self.user_input = user_input
+        UserAction.__init__(self, selection, button_name, None,
+                            statement_name, user_input, target_selected)
         self.raw_string = raw_string
         self.error_type = error_type
         self.error_msg = error_msg
@@ -254,7 +249,7 @@ class AutoStep(UserAction):
 
         string.replace("\\n", " ")
         button = None
-        statement = None
+        statement_name = None
         button_or_statement_rank = None
         error_type = 0
         error_msg = ""
@@ -266,7 +261,7 @@ class AutoStep(UserAction):
         for item in items:
             if item.startswith('definition') \
                     or item.startswith('theorem'):
-                statement = item
+                statement_name = item
                 button_or_statement_rank = items.index(item)
             # elif item in BUTTONS_SYMBOLS:
             #     button = item
@@ -298,7 +293,7 @@ class AutoStep(UserAction):
             elif item.startswith('target') or item.startswith(_('target')):
                 target_selected = True
 
-        if not button and not statement:
+        if not button and not statement_name:
             return None
 
         selection = items[:button_or_statement_rank]
@@ -311,8 +306,8 @@ class AutoStep(UserAction):
         user_input = [item for item in items[button_or_statement_rank+1:]
                       if item]  # Remove if item = ''
 
-        return cls(selection, button, statement, user_input, target_selected,
-                   string, error_type, error_msg, success_msg)
+        return cls(selection, button, statement_name, user_input,
+                   target_selected, string, error_type, error_msg, success_msg)
 
     @classmethod
     def from_proof_step(cls, proof_step, emw):
