@@ -804,7 +804,7 @@ class Coordinator(QObject):
                 selection = self.current_selection_as_mathobjects
                 self.proof_step.selection = selection
                 self.proof_step.target_selected = self.emw.target_selected
-                user_action = UserAction.from_proof_step(self.proof_step)
+                user_action = self.proof_step.user_action
                 # log.info("Simulating proof_step with:")
                 # print(user_action)
                 await self.emw.simulate_user_action(user_action,

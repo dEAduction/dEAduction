@@ -956,10 +956,7 @@ class ExerciseMainWindow(QMainWindow):
         The method is asynchronous because we wait for the button blinking.
         """
 
-        user_action = UserAction.from_proof_step(proof_step)
-        # log.info("Simulating proof_step with:")
-        # print(user_action)
-        await self.simulate_user_action(user_action, duration,
+        await self.simulate_user_action(proof_step.user_action, duration,
                                         execute_action=False)
     ##################
     ##################
