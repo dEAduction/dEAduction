@@ -173,6 +173,8 @@ class ExerciseCentralWidget(QWidget):
         self.__logic_2_btns = ActionButtonsWidget(exercise.available_logic_2)
         self.__magic_proof_btns = ActionButtonsWidget(exercise.available_magic +
                                                       exercise.available_proof)
+
+        self.set_font_for_action_buttons()
         # self.__action_btns_wdgs = []  # Used to freeze buttons
         # self.init_action_buttons_widgets_dict()
         self.init_action_btns_layout()
@@ -441,6 +443,23 @@ class ExerciseCentralWidget(QWidget):
                     self.__action_buttons_widgets], [])
         return btns
 
+    def set_font_for_action_buttons(self):
+        # Modify font for symbol buttons
+        symbol_size = deaduction_fonts.symbol_button_font_size
+        # for btns_wdg in self.__action_btns_wdgs:
+        #     if btns_wdg:
+        #         for btn in btns_wdg.buttons:
+        #             btn.update()
+        #             if btn.is_symbol():
+        #                 btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+                        # btn.setFont(deaduction_fonts.math_fonts(size=20))
+        # for btns_wdg in self.__action_btns_wdgs:
+        #     if btns_wdg:
+        for btn in self.action_buttons:
+            btn.update()
+            if btn.is_symbol():
+                btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+
     def set_font(self):
         """
         OBSOLETE doc:
@@ -474,22 +493,7 @@ class ExerciseCentralWidget(QWidget):
             palette.setBrush(palette.Inactive, palette.Highlight, color)
             wdg.setPalette(palette)
 
-        # Modify font for symbol buttons
-        symbol_size = self.deaduction_fonts.symbol_button_font_size
-        # for btns_wdg in self.__action_btns_wdgs:
-        #     if btns_wdg:
-        #         for btn in btns_wdg.buttons:
-        #             btn.update()
-        #             if btn.is_symbol():
-        #                 btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
-                        # btn.setFont(deaduction_fonts.math_fonts(size=20))
-        # for btns_wdg in self.__action_btns_wdgs:
-        #     if btns_wdg:
-        for btn in self.action_buttons:
-            btn.update()
-            if btn.is_symbol():
-                btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
-
+        self.set_font_for_action_buttons()
     def organise_main_layout(self):
         """
         Organize main layout, namely putting target on top or not according
