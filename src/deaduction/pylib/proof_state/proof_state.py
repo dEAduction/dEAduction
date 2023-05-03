@@ -1074,8 +1074,7 @@ class Goal:
                      format_="utf8",
                      to_prove=True,
                      text_mode=True,
-                     open_problem=False,
-                     by_type=True) -> str:
+                     open_problem=False) -> str:
         """
         Compute a displayable version of the goal as the statement of an
         exercise.
@@ -1085,9 +1084,7 @@ class Goal:
             If True, the goal will be formulated as "Prove that..."
             If False, the goal will be formulated as "Then..." (useful if
             the goal comes from a Theorem or Definition)
-        :param text_depth:  int
-            A higher value entail a more verbose formulation (more symbols will
-            be replaced by words).
+        :param text_mode:  boolean.
         :param open_problem: if True, then display as "True or False?"
 
         :return: a text version of the goal
@@ -1172,8 +1169,7 @@ class Goal:
             # Little issue: if sentence starts with a lower case
             # variable. This should never happen though...
         if open_problem:
-            text = _("True or False?") + text_cr + text
-
+            text = _("True or False:") + text_cr + text
         text += target_text + "."
         return text
 

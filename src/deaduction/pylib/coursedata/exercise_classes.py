@@ -530,6 +530,10 @@ class Exercise(Theorem):
                 cvars.update(more_vars)
                 return old_vars
 
+    @property
+    def is_open_question(self):
+        return self.info.get('open_question', False)
+
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
         return current_name_space

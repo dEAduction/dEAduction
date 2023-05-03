@@ -561,16 +561,6 @@ class ExerciseChooser(AbstractCoExChooser):
         exercise = self.__exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
-        # goal.name_bound_vars(to_prove=False)
-
-        # BOF: keep standard size here.
-        # main_font_size = cvars.get('display.main_font_size')
-        # tooltips_font_size = cvars.get('display.tooltips_font_size',
-        #                                "14pt")
-        # style = f'QTextEdit {{font-size: {main_font_size};}}' \
-        #         f'QListView {{font-size: {main_font_size};}}' \
-        #         f'QToolTip {{font-size: {tooltips_font_size};}}'
-        # self.setStyleSheet(style)
 
         # ────────────────────── Rest ────────────────────── #
         if self.__text_mode_checkbox.isChecked():
@@ -579,15 +569,12 @@ class ExerciseChooser(AbstractCoExChooser):
             ###############
             # The goal is presented in a single widget.
             self.__text_wgt = MathTextWidget()
-            # self.__text_wgt.setObjectName("math_widget")
-            # print(f"Coex Font: {self.__text_wgt.font().defaultFamily()}")
-            # height = self.__text_wgt.sizeHint().height()
-            # print(f"Height: {height}")
-            # self.__text_wgt.setMaximumHeight(height)
 
             self.__text_wgt.setReadOnly(True)
             # self.__text_wgt.setFont(self.math_fonts)
-            text = goal.goal_to_text(format_="html")
+            text = goal.goal_to_text(format_="html",
+                                     text_mode=True,
+                                     open_problem=exercise.is_open_question)
             self.__text_wgt.setHtml(text)
             widget = self.__text_wgt
         else:
@@ -1058,11 +1045,10 @@ def check_negate_statement(exercise) -> bool:
 
     ok = True  # default value
     open_question = exercise.info.setdefault('open_question', False)
-    if ('negate_statement' in exercise.info
-            and exercise.info['negate_statement']):
+    if exercise.info.get('negate_statement', False):
         exercise.negate_statement = True
     elif open_question:
-        # exercise is an open question and the user has to choose her way
+        # exercise is an open question and user has to choose her way
         if exercise.lean_variables:
             log.warning("Exercise is an open question but has variables:"
                         "negation will not be correct!!")

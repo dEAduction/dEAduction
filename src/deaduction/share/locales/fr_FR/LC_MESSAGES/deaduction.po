@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-05-02 21:03+0200\n"
-"PO-Revision-Date: 2023-05-02 21:05+0200\n"
+"POT-Creation-Date: 2023-05-03 22:48+0200\n"
+"PO-Revision-Date: 2023-05-03 22:48+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -532,73 +532,73 @@ msgid "Global proof view"
 msgstr "Aperçu global de la preuve"
 
 #: dui/primitives/buttons_dialog.py:86 dui/primitives/yes_no_dialog.py:73
-#: dui/stages/exercise/Coordinator.py:1017
+#: dui/stages/exercise/Coordinator.py:1016
 msgid "Yes"
 msgstr "Oui"
 
 #: dui/primitives/buttons_dialog.py:87 dui/primitives/yes_no_dialog.py:74
-#: dui/stages/exercise/Coordinator.py:1018
+#: dui/stages/exercise/Coordinator.py:1017
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/exercise/Coordinator.py:529
+#: dui/stages/exercise/Coordinator.py:528
 msgid "Server restarted"
 msgstr "Redémarrage du serveur"
 
-#: dui/stages/exercise/Coordinator.py:533
+#: dui/stages/exercise/Coordinator.py:532
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1014
+#: dui/stages/exercise/Coordinator.py:1013
 msgid "Do you want to prove the premise \"{}\" as a new sub-goal?"
 msgstr "Voulez-vous démontrer la prémisse {}  ?"
 
-#: dui/stages/exercise/Coordinator.py:1097 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1096 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1113
+#: dui/stages/exercise/Coordinator.py:1112
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1116
+#: dui/stages/exercise/Coordinator.py:1115
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1123
+#: dui/stages/exercise/Coordinator.py:1122
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1126
+#: dui/stages/exercise/Coordinator.py:1125
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1128
+#: dui/stages/exercise/Coordinator.py:1127
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1130 pylib/actions/logic.py:1304
+#: dui/stages/exercise/Coordinator.py:1129 pylib/actions/logic.py:1304
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1152
+#: dui/stages/exercise/Coordinator.py:1151
 #: pylib/proof_state/lean_response.py:112
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1169
+#: dui/stages/exercise/Coordinator.py:1168
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1170
+#: dui/stages/exercise/Coordinator.py:1169
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1174
+#: dui/stages/exercise/Coordinator.py:1173
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1176
+#: dui/stages/exercise/Coordinator.py:1175
 #: dui/stages/exercise/_exercise_main_window_widgets.py:794
 #: dui/stages/exercise/_exercise_main_window_widgets.py:805
 msgid "Change exercise"
@@ -717,7 +717,7 @@ msgid "Installing — d∃∀duction"
 msgstr "Installation — d∃∀duction"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:138
-#: dui/stages/start_coex/start_coex_widgets.py:770
+#: dui/stages/start_coex/start_coex_widgets.py:757
 msgid "Quit"
 msgstr "Quitter"
 
@@ -761,52 +761,52 @@ msgstr "Mode texte"
 msgid "Preview not available (be patient...)"
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:616
+#: dui/stages/start_coex/start_coex_widgets.py:603
 msgid "Objects:"
 msgstr "Objets :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:617
+#: dui/stages/start_coex/start_coex_widgets.py:604
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:637
+#: dui/stages/start_coex/start_coex_widgets.py:624
 msgid "Target:"
 msgstr "But :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:773
+#: dui/stages/start_coex/start_coex_widgets.py:760
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:786
+#: dui/stages/start_coex/start_coex_widgets.py:773
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:787
-#: dui/stages/start_coex/start_coex_widgets.py:929
+#: dui/stages/start_coex/start_coex_widgets.py:774
+#: dui/stages/start_coex/start_coex_widgets.py:916
 msgid "Exercises"
 msgstr "Exercices"
 
-#: dui/stages/start_coex/start_coex_widgets.py:999
+#: dui/stages/start_coex/start_coex_widgets.py:986
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1029
+#: dui/stages/start_coex/start_coex_widgets.py:1016
 msgid "Congratulations, exercise finished!"
 msgstr "Bravo, l’exercice est résolu !"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1031
+#: dui/stages/start_coex/start_coex_widgets.py:1018
 msgid "Exercise finished — d∃∀duction"
 msgstr "Exercice terminé — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1070
+#: dui/stages/start_coex/start_coex_widgets.py:1056
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1077
+#: dui/stages/start_coex/start_coex_widgets.py:1063
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1078
+#: dui/stages/start_coex/start_coex_widgets.py:1064
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -1802,8 +1802,8 @@ msgstr "un nombre rationnel"
 msgid "a real number"
 msgstr "un nombre réel"
 
-#: pylib/math_display/display_data.py:318 pylib/proof_state/proof_state.py:1395
-#: pylib/proof_state/proof_state.py:1409
+#: pylib/math_display/display_data.py:318 pylib/proof_state/proof_state.py:1391
+#: pylib/proof_state/proof_state.py:1405
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -2093,7 +2093,7 @@ msgstr "Tous les buts ont été atteints !"
 msgid "elements of"
 msgstr "éléments de"
 
-#: pylib/memory/__init__.py:152
+#: pylib/memory/__init__.py:153
 msgid "Step n°{} "
 msgstr "Etape n°{} "
 
@@ -2193,56 +2193,60 @@ msgstr "Théorème :"
 msgid "All proof states received"
 msgstr "Etats de preuve reçu"
 
-#: pylib/proof_state/proof_state.py:1115
+#: pylib/proof_state/proof_state.py:1112
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:1116 pylib/proof_state/proof_state.py:1161
+#: pylib/proof_state/proof_state.py:1113 pylib/proof_state/proof_state.py:1158
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:1117
+#: pylib/proof_state/proof_state.py:1114
 msgid "Assume"
 msgstr "Supposons"
 
-#: pylib/proof_state/proof_state.py:1159 pylib/proof_state/proof_state.py:1205
+#: pylib/proof_state/proof_state.py:1156 pylib/proof_state/proof_state.py:1201
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/proof_state/proof_state.py:1162
+#: pylib/proof_state/proof_state.py:1159
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:1169 pylib/proof_state/proof_state.py:1207
+#: pylib/proof_state/proof_state.py:1166 pylib/proof_state/proof_state.py:1203
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:1175 pylib/proof_state/proof_state.py:1192
+#: pylib/proof_state/proof_state.py:1172
+msgid "True or False:"
+msgstr "Vrai ou faux :"
+
+#: pylib/proof_state/proof_state.py:1188
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: pylib/proof_state/proof_state.py:1194 pylib/proof_state/proof_state.py:1227
+#: pylib/proof_state/proof_state.py:1190 pylib/proof_state/proof_state.py:1223
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:1196 pylib/proof_state/proof_state.py:1228
+#: pylib/proof_state/proof_state.py:1192 pylib/proof_state/proof_state.py:1224
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:1202 pylib/proof_state/proof_state.py:1238
+#: pylib/proof_state/proof_state.py:1198 pylib/proof_state/proof_state.py:1234
 #: pylib/proof_step/proof_step.py:453
 msgid ": "
 msgstr " : "
 
-#: pylib/proof_state/proof_state.py:1225
+#: pylib/proof_state/proof_state.py:1221
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:1243
+#: pylib/proof_state/proof_state.py:1239
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:1245
+#: pylib/proof_state/proof_state.py:1241
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
