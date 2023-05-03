@@ -56,7 +56,7 @@ field_value = string_with_quotes / number / bool
 string_with_quotes = ('"' string1 '"')
 string1 = (!'"' any_char)*
 number = "-"? digits+
-bool = 'true' / 'false'
+bool = 'true' / 'false' / 'True' / 'False'
 """
 
 
@@ -111,7 +111,7 @@ class SettingsVisitor(NodeVisitor):
         return int(node.text)
 
     def visit_bool(self, node, visited_children):
-        return True if node.text == "true" else False
+        return True if node.text in ('true', 'True') else False
 
     def generic_visit(self, node, visited_children):
         # items = list(filter(lambda it: isinstance(it, Item), visited_children))

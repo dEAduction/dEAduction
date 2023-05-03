@@ -512,7 +512,7 @@ class ServerInterface(QObject):
         if msg.seq_num in self.pending_requests:
             request = self.pending_requests[msg.seq_num]
         else:
-            self.log.debug(f"ignoring msg form seq_num {msg.seq_num}")
+            self.log.debug(f"ignoring msg from seq_num {msg.seq_num}")
             return
 
         severity = msg.severity

@@ -375,7 +375,6 @@ class Coordinator(QObject):
             # Save journal
             self.journal.save_exercise_with_proof_steps(emw=self)
             # Save new initial proof states, if any
-            # FIXME: also in test mode ??
             self.exercise.course.save_initial_proof_states()
             # Save exercise for autotest
             if save_for_test:

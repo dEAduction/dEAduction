@@ -110,10 +110,11 @@ class Journal:
             total_string += '    ' + step.raw_string + ',\n'
         print(total_string)
 
-        log.debug(f"Saving auto_steps in {file_path}")
-        save_object(exercise, file_path)
-        # with open(file_path, mode='wb') as output:
-        #     pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+        # Commented out, file is already saved in
+        # editing.save_exercise_for_autotest
+        # log.debug(f"Saving auto_steps in {file_path}")
+        # save_object(exercise, file_path)
+
 
         file_path = file_path.with_suffix('.txt')
         log.debug(f"Saving journal in {file_path}")
