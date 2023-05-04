@@ -101,3 +101,20 @@ def pre_process_lean_code(lean_code: str) -> str:
     for key in lean_dic:
         lean_code = lean_code.replace(key, lean_dic[key])
     return lean_code
+
+
+def extract_var(potential_var: MathObject) -> MathObject:
+    """
+    Try to extract objects (not prop) from properties. This is called in case
+    usr has selected, say, an equality, e.g. y = f(x), but really want to
+    select y.
+    """
+
+    if potential_var.is_equality():
+        # Removed: this may not be pertinent if not equality
+        # or potential_var.is_inequality(is_math_type=True)
+        #     or potential_var.is_belongs_or_included(is_math_type=True)):
+        return potential_var.math_type.children[0]
+    else:
+        return potential_var
+

@@ -63,6 +63,7 @@ from deaduction.pylib.actions.commun_actions import (introduce_new_subgoal,
                                                      inequality_from_pattern_matching,
                                                      have_new_property)
 
+from deaduction.pylib.actions.utils import extract_var
 from deaduction.pylib.actions.magic import compute
 from deaduction.pylib.actions     import (action,
                                           InputType,
@@ -250,7 +251,7 @@ def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
-    (or equivalent to such after unfolding definitions)
+    (or equivalent to such after unfolding definitions).
 
     selected_objects: list of MathObjects of length ≥ 2.
     """
@@ -261,14 +262,15 @@ def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     proof_step.prove_or_use = "use"
 
     universal_property = selected_objects[-1]  # The property to be applied
-    potential_var = selected_objects[0]
-
     new_hypo_name = get_new_hyp(proof_step)
     var_names = [var.info['name'] for var in selected_objects[:-1]]
+    # Replace first var if pertinent:
+    potential_var = extract_var(selected_objects[0])
+    var_names[0] = potential_var.to_display(format_='lean')
     simple_code = have_new_property(universal_property, var_names,
                                     new_hypo_name)
     simple_code.add_success_msg(_("Property {} added to the context").
-                         format(new_hypo_name))
+                                format(new_hypo_name))
     simple_code.add_used_properties(selected_objects)
 
     inequality = inequality_from_pattern_matching(universal_property,
@@ -375,8 +377,8 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
 
 def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
     """
-    Assuming the target is an existential property '∃ x, P(x)', prove it by
-    providing a witness x and proving P(x).
+    Assuming the target is an existential property '∃ x, P(x)' and no other
+    object has been selected, prove it by providing a witness x and proving P(x).
     """
 
     proof_step.prove_or_use = "prove"
@@ -391,6 +393,22 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
     # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
+
+
+def prove_exists_with_selected_witness(prove, witness, proof_step):
+
+    prop_type = "an existential property '∃x, P(x)'"
+    goal = proof_step.goal
+    if not prove:
+        raise WrongUseModeInput(prop=prop_type)
+    # object_name = selected_objects[0].info["name"]
+    if not goal.target.is_exists(implicit=True):
+        # error = _("Target is not existential property '∃x, P(x)'")
+        error = _("Select a property on {} to get an existential "
+                  "property").format(witness)
+        raise WrongUserInput(error)
+    else:
+        return prove_exists(proof_step, [witness])
 
 
 def use_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
@@ -514,6 +532,12 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
     elif len(selected_objects) == 1 and not user_input:
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
+            if selected_hypo.is_equality(is_math_type=False):
+                witness = selected_hypo.math_type.children[0]
+                # Try prove_exists with term of equality
+                return prove_exists_with_selected_witness(prove, witness,
+                                                          proof_step)
+
             # Try to apply property "exists x, P(x)" to get a new MathObject x
             if not use:
                 raise WrongProveModeInput(prop=prop_type)
@@ -523,16 +547,9 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             else:
                 return use_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            if not prove:
-                raise WrongUseModeInput(prop=prop_type)
-            object_name = selected_objects[0].info["name"]
-            if not goal.target.is_exists(implicit=True):
-                # error = _("Target is not existential property '∃x, P(x)'")
-                error = _("Select a property on {} to get an existential "
-                          "property").format(object_name)
-                raise WrongUserInput(error)
-            else:
-                return prove_exists(proof_step, [object_name])
+            witness = selected_objects[0].info.get("name")
+            return prove_exists_with_selected_witness(prove, witness,
+                                                      proof_step)
     elif len(selected_objects) == 2:
         if not prove:
             raise WrongUseModeInput(prop=prop_type)
