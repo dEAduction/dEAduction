@@ -138,6 +138,13 @@ class UserAction:
         else:
             return self._statement_name
 
+    def prove_or_use_button_name(self):
+        name = self.button_name
+        if self.prove_or_use and not (name.endswith("_use")
+                                      or name.endswith("_prove")):
+            name = name + '_' + self.prove_or_use
+        return name
+
     def button_name_adapted_to_mode(self, mode=None):
         """
         Return the button name that corresponds to self.button_name adapted
@@ -155,9 +162,7 @@ class UserAction:
 
         adapted_name = name
         if mode in ('display_switch', 'display_both'):
-            if self.prove_or_use and not (adapted_name.endswith("_use")
-                                          or adapted_name.endswith("_prove")):
-                adapted_name = name + '_' + self.prove_or_use
+            adapted_name = self.prove_or_use_button_name()
         elif mode == 'display_unified':
             adapted_name = name.replace('_use', '')
             adapted_name = adapted_name.replace('_prove', '')
@@ -344,7 +349,14 @@ class AutoStep(UserAction):
 
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'
-        button = proof_step.button_name if proof_step.button_name else ''
+        user_action: UserAction = proof_step.user_action
+        if user_action:
+            button = user_action.prove_or_use_button_name()
+        else:
+            button = proof_step.button_name
+
+        if button is None:
+            button = ''
 
         # Statement: short Lean name
         statement = proof_step.statement.lean_short_name \

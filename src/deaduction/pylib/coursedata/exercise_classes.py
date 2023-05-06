@@ -29,8 +29,12 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
+from time import strftime
+from deaduction.pylib.utils.filesystem import check_dir
 
 import deaduction.pylib.config.vars             as cvars
+import deaduction.pylib.config.dirs             as cdirs
+
 from deaduction.pylib.text                  import (logic_buttons_line_1,
                                                     logic_buttons_line_2)
 
@@ -649,10 +653,11 @@ class Exercise(Theorem):
         tabulation = "  "
         code_lines = tabulation + code_lines
         code_lines = code_lines.replace("\n", "\n" + tabulation)
+        analysis = self.analysis_code2(seq_num) if seq_num is not None else ""
 
         code = "begin\n" \
                + code_lines \
-               + self.analysis_code2(seq_num) \
+               + analysis \
                + "end\n"
         return code
 
@@ -674,10 +679,19 @@ class Exercise(Theorem):
         if goal is None:
             if self.initial_proof_state:
                 goal = self.initial_proof_state.goals[0]
-
-        # TODO: compute metadata_lines, and insert them
+            else:
+                log.warning("Unable to get file_contents_from_goal")
+                return
 
         seq_num_line = f"-- Seq num {seq_num}\n" if seq_num is not None else ""
+
+        # Metadata, e.g. AutoSteps
+        if additional_metadata:
+            metadata_lines = [key + '\n' + additional_metadata[key]
+                              for key in additional_metadata]
+            metadata_lines = '\n'.join(metadata_lines)
+        else:
+            metadata_lines = ""
 
         file_content = seq_num_line \
             + self.course.lean_import_course_preamble() \
@@ -686,6 +700,7 @@ class Exercise(Theorem):
             + self.open_namespace_str() \
             + self.open_read_only_namespace_str() \
             + goal.to_lean_example() \
+            + metadata_lines \
             + self.__begin_end_code(seq_num, code_lines) \
             + self.close_namespace_str() \
             + "end course\n"
@@ -708,6 +723,32 @@ class Exercise(Theorem):
     #     tests = (action.name.endswith('_use') or action.name.endswith('_prove')
     #              for action in self.available_logic_1)
     #     return any(tests)
+
+    def history_file_path(self):
+        """
+        Return path to history file for this exercise.
+        """
+
+        date = strftime("%d%b%Hh%M")
+        filename = 'history_' \
+                   + self.lean_short_name.replace('.', '_') \
+                   + '_' + date \
+                   + '.lean'
+
+        check_dir(cdirs.history, create=True)
+        return cdirs.history / filename
+
+    def is_history(self):
+        return self.course.is_history_file()
+
+    def save_with_auto_steps(self, additional_metadata, code_lines):
+        path = self.history_file_path()
+        content = self.file_contents_from_goal(additional_metadata=additional_metadata,
+                                               code_lines=code_lines)
+        print(f"Path: {path}")
+        print(f"Content: {content}")
+        with open(path, mode='wt') as output:
+            output.write(content)
 
 
 #############

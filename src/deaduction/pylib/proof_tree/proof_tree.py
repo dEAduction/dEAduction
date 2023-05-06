@@ -106,7 +106,7 @@ class GoalNode:
         cls._truncate_at_proof_step_nb = proof_step_nb
 
     @property
-    def child_proof_step(self):
+    def child_proof_step(self) -> Optional[ProofStep]:
         if not self._child_proof_step:
             return None
 
@@ -761,6 +761,23 @@ class GoalNode:
         # Disconnect child_proof_step and clear future info
         self.clear_descendance()
 
+    def descendant_proof_steps(self) -> [ProofStep]:
+        """
+        Return the list of proof_steps encountered in a depth-first search
+        of the tree.
+        """
+
+        # FIXME: truncate_mode = ??
+        # self.set_truncate_mode(False)
+
+        proof_step = self.child_proof_step
+
+        proof_steps = ([proof_step] + proof_step.descendant_proof_steps()
+                       if proof_step else [])
+        return proof_steps
+
+        # self.set_truncate_mode(truncate_mode)
+
 
 class RootGoalNode(GoalNode):
     """
@@ -867,6 +884,9 @@ class ProofTree:
         self._last_proof_step: Optional[ProofStep] = None
 
         GoalNode.set_truncate_mode = self.set_truncate_mode
+
+    def __str__(self):
+        return str(self.root_node)
 
     @property
     def last_proof_step(self):
@@ -1109,15 +1129,12 @@ class ProofTree:
         # print("ProofTree:")
         # print(str(self))
 
-    # def prune(self, proof_step_nb):
-    #     """
-    #     Remove from self all information posterior to the given proof_step.
-    #     This includes info on ContextMathObjects, so that self should be as
-    #     it was before.
-    #     Value proof_step_nb = 0 corresponds to initial goal (as this is the
-    #     step number of self.root_node.parent).
-    #     """
-    #     self.root_node.prune_from(proof_step_nb)
+    def proof_steps(self):
+        """
+        Return the list of proof_steps encountered in a depth-first search
+        of the tree. If the proof is complete, the corresponding list of
+        CodeForLean (or AutoSteps) should reconstruct the whole proof!
+        """
 
-    def __str__(self):
-        return str(self.root_node)
+        return self.root_node.descendant_proof_steps()
+

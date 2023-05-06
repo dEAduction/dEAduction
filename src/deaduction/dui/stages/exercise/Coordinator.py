@@ -145,6 +145,7 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
+        self.history_mode                   = exercise.is_history()
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.stop_button_will_stop_server   = False
@@ -369,16 +370,19 @@ class Coordinator(QObject):
 
         self.disconnect_signals()
 
-        ref = 'functionality.save_solved_exercises_for_autotest'
-        save_for_test = cvars.get(ref, False)
-        if not self.test_mode:
+        # key = 'functionality.save_history_of_solved_exercises'
+        # save_history = cvars.get(key, False)
+        if not self.test_mode and not self.history_mode:
             # Save journal
             self.journal.save_exercise_with_proof_steps(emw=self)
             # Save new initial proof states, if any
             self.exercise.course.save_initial_proof_states()
             # Save exercise for autotest
-            if save_for_test:
-                self.lean_file.save_exercise_for_autotest(self)
+            # if save_history:
+            #     # TODO: compute list of pertinent ProofSteps
+            #     #  (without history moves)
+            #     #  And turn them to AutoSteps, then to strings.
+            #     self.exercise.save_with_auto_steps()
 
         # Emit close_server_task signal and wait for effect
         # tasks = self.servint.nursery.child_tasks
@@ -1187,6 +1191,7 @@ class Coordinator(QObject):
         # Store journal and auto_step
         if not self.test_mode:
             self.journal.store(self.proof_step, self)
+            # Fixme: compute only at end
             self.proof_step.auto_step = AutoStep.from_proof_step(
                                                             self.proof_step,
                                                             emw=self.emw)
@@ -1222,6 +1227,25 @@ class Coordinator(QObject):
     def invalidate_events(self):
         # self.current_user_action = None
         self.lean_code_sent = None
+
+    def save_history(self):
+        key = 'functionality.save_history_of_solved_exercises'
+        save_history = cvars.get(key, False)
+        if save_history and (not self.test_mode and not self.history_mode):
+            log.info("Saving history")
+
+            # Compute AutoSteps string
+            proof_steps = self.proof_tree.proof_steps()
+            auto_steps = [AutoStep.from_proof_step(step, self.emw)
+                          for step in proof_steps]
+            auto_steps_str = ''
+            for step in auto_steps:
+                auto_steps_str += '    ' + step.raw_string + ',\n'
+
+            additional_metadata = {'AutoTest': auto_steps_str}
+            self.exercise.save_with_auto_steps(
+                additional_metadata=additional_metadata,
+                code_lines="todo")  # TODO
 
     @Slot()
     def process_lean_response(self, lean_response):
@@ -1353,3 +1377,4 @@ class Coordinator(QObject):
             QTimer.singleShot(0, self.display_fireworks_msg)
             # self.servint.nursery.start_soon(self.restart_lean_server,
             #                                 name="Restart Lean Server")
+            self.save_history()

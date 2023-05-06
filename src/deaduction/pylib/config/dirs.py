@@ -54,6 +54,7 @@ else:
 # Other paths
 journal        = (local / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
+history        = (local / "history").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
@@ -71,6 +72,7 @@ log_file = (local / "deaduction.log").resolve()
 def init():
     fs.check_dir(local, create=True)
     fs.check_dir(all_courses_ipf_dir, create=True)
-    fs.check_dir(journal)
-    fs.check_dir(test_exercises)
+    fs.check_dir(journal, create=True)
+    fs.check_dir(history, create=True)
+    fs.check_dir(test_exercises)  # FIXME
     fs.check_dir(usr_lean_exercises_dir, create=True)

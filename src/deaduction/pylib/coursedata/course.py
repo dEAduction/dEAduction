@@ -99,6 +99,9 @@ class Course:
     def lean_import_course_preamble(self) -> str:
         return f"import {self.course_file_name}\n"
 
+    def is_history_file(self):
+        return self.course_file_name.startswith('history_')
+
     @property
     def title(self) -> str:
         """

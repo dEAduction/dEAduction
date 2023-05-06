@@ -692,6 +692,15 @@ class ProofStep:
     def beginning_of_proof_msg(self):
         return _("Beginning of Proof")
 
+    def descendant_proof_steps(self) -> []:
+        """
+        Return list of descendant proof steps in a depth first search. The
+        list does not include self.
+        """
+
+        proof_steps = sum([child.descendant_proof_steps()
+                          for child in self.children_goal_nodes], [])
+        return proof_steps
 
 # class Proof(list):
 #     """

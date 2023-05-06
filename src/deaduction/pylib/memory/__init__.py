@@ -79,7 +79,7 @@ class Journal:
     def save_exercise_with_proof_steps(self, emw):
         """
         (1) Incorporate journal as auto_steps attribute to emw.exercise,
-        and save this to cdirs.journal as a 'pkl' file.
+        and save this to cdirs.journal as a 'pkl' file. FIXME: obsolete
         (2) Compute a text version of each proof step, and save the result
         in a 'txt' file.
 

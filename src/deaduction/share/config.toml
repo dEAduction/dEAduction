@@ -77,7 +77,7 @@ drag_statements_to_context = false
 drag_several_items = false
 ask_to_prove_premises_of_implications = true
 automatic_intro_of_variables_and_hypotheses = false
-save_solved_exercises_for_autotest = false
+save_history_of_solved_exercises = true
 
 [i18n]
 available_languages = ["en", "fr_FR"]
