@@ -96,6 +96,9 @@ class Course:
             name = self.relative_course_path.stem
             return name
 
+    def lean_import_course_preamble(self) -> str:
+        return f"import {self.course_file_name}\n"
+
     @property
     def title(self) -> str:
         """

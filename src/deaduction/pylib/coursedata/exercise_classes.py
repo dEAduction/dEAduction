@@ -387,6 +387,9 @@ class Theorem(Statement):
     pass
 
 
+LEAN_CLASSICAL_LOGIC = "local attribute[instance] classical.prop_decidable\n"
+
+
 @dataclass
 class Exercise(Theorem):
     """
@@ -624,6 +627,77 @@ class Exercise(Theorem):
                 if action.name == name:
                     actions.append(action)
         return actions
+
+    @staticmethod
+    def analysis_code2(seq_num=0) -> str:
+        code = f"    targets_analysis2 {seq_num},\n" \
+               f"    all_goals {{hypo_analysis2 {seq_num}}},\n"
+        return code
+
+    def __begin_end_code(self, seq_num, code_lines: str) -> str:
+        """
+        Return a Lean code string containint code_lines in a begin/end block,
+        including hypo/targets analyses.
+        """
+        code_string = code_lines.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        tabulation = "  "
+        code_lines = tabulation + code_lines
+        code_lines = code_lines.replace("\n", "\n" + tabulation)
+
+        code = "begin\n" \
+               + code_lines \
+               + self.analysis_code2(seq_num) \
+               + "end\n"
+        return code
+
+    def file_contents_from_goal(self, goal=None, seq_num=None,
+                                code_lines="todo\n",
+                                additional_metadata=None):
+        """
+        Set the file content from goal and code. e.g.
+        import ...
+        namespace ...
+        open ...
+        lemma <exercise_name> <Lean content, e.g. (X: Type) : true> :=
+        <additional metadata>
+        begin
+            <some code>
+        end
+        """
+
+        if goal is None:
+            if self.initial_proof_state:
+                goal = self.initial_proof_state.goals[0]
+
+        # TODO: compute metadata_lines, and insert them
+
+        seq_num_line = f"-- Seq num {seq_num}\n" if seq_num is not None else ""
+
+        file_content = seq_num_line \
+            + self.course.lean_import_course_preamble() \
+            + LEAN_CLASSICAL_LOGIC \
+            + "section course\n" \
+            + self.open_namespace_str() \
+            + self.open_read_only_namespace_str() \
+            + goal.to_lean_example() \
+            + self.__begin_end_code(seq_num, code_lines) \
+            + self.close_namespace_str() \
+            + "end course\n"
+        return file_content
+
+    def lean_file_afterword(self, seq_num=0) -> str:
+        # Construct short end of file by closing all open namespaces
+        end_of_file = "end\n"
+        end_of_file += self.close_namespace_str()
+        end_of_file += "end course"
+        lean_file_afterword = self.analysis_code2(seq_num) + end_of_file
+        return lean_file_afterword
 
     # def prove_use_mode_set_by_exercise(self):
     #     """
