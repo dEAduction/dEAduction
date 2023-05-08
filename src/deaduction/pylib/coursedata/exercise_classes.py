@@ -69,12 +69,13 @@ class StructuredContent:
     hypotheses: str
     conclusion: str
     raw_metadata: Optional[str]
-    metadata: Optional[Dict[str, str]]
+    metadata: Optional[Dict[str, str]]  # Deprecated
     lean_code: str
 
     course_file_content: str
 
-    skeleton = "lemma {} \n{} :\n{}:=\n{}\nbegin\n{}\nend\n"
+    negated_core_content: str = ""  # If not empty, statement will be negated
+    skeleton = "lemma {} \n{} :=\n{}\nbegin\n{}\nend\n"
 
     @property
     def metadata_str(self) -> str:
@@ -92,10 +93,13 @@ class StructuredContent:
     @property
     def content(self) -> str:
 
+        core_content = self.negated_core_content
+        if not core_content:
+            core_content = f'{self.hypotheses} :\n{self.conclusion}'
+
         skeleton = self.skeleton
         content = skeleton.format(self.name,
-                                  self.hypotheses,
-                                  self.conclusion,
+                                  core_content,
                                   self.metadata_str,
                                   comment(indent(self.lean_code))
                                   )
@@ -133,7 +137,8 @@ class StructuredContent:
                           initial_structured_content.hypotheses,
                           initial_structured_content.conclusion,
                           raw_metadata, new_metadata, lean_code,
-                          initial_structured_content.course_file_content)
+                          initial_structured_content.course_file_content,
+                          initial_structured_content.negated_core_content)
         return new_content
 
     def history_file_content(self):
@@ -183,6 +188,8 @@ class Statement:
 
     initial_proof_state:    Any             = None
     # this is filled when pre-processing
+
+    __negated_goal:         Any             = None
 
     auto_steps: str                         = ''
     auto_test: str                          = ''
@@ -440,9 +447,11 @@ class Statement:
             return ips.goals[0]
 
     def negated_goal(self):
-        goal = self.goal()
-        if goal:
-            return goal.negated_goal(goal)
+        if not self.__negated_goal:
+            goal = self.goal()
+            if goal:
+                self.__negated_goal = goal.negated_goal(goal)
+        return self.__negated_goal
 
 
 class Definition(Statement):
@@ -512,6 +521,8 @@ class Exercise(Theorem):
     def raw_metadata(self):
         raw_metadata = self.info.get('raw_metadata')
         lines = raw_metadata.splitlines()
+        if self.negate_statement:
+            lines += ['NegateStatement', 'True']
         return '\n'.join(lines[1:-1])
 
     @property
@@ -526,9 +537,12 @@ class Exercise(Theorem):
         code = "todo\n"
         file_content = self.course.file_content
 
+        negated_content = (self.negated_goal().to_lean_statement(name)
+                           if self.negate_statement else "")
+
         return StructuredContent(first_line_nb, last_line_nb,
                                  name, hypo, conclusion, raw_metadata, None,
-                                 code, file_content)
+                                 code, file_content, negated_content)
 
     @property
     def exercise_number(self) -> int:
@@ -823,7 +837,7 @@ class Exercise(Theorem):
             + "section course\n" \
             + self.open_namespace_str() \
             + self.open_read_only_namespace_str() \
-            + goal.to_lean_example(title) \
+            + goal.to_lean_statement(title) \
             + metadata_lines \
             + self.__begin_end_code(seq_num, code_lines) \
             + self.close_namespace_str() \

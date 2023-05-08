@@ -1055,7 +1055,7 @@ class Goal:
         """
         return self.target.math_type.to_display(format_='lean')
 
-    def to_lean_example(self, title="deaduction"):
+    def to_lean_statement(self, title="deaduction"):
         """
         Return self's content as a Lean example, e.g.
         'example

@@ -157,7 +157,9 @@ class Coordinator(QObject):
         # Initialization
         self.is_frozen = False
         self.__connect_signals()
-        self.__initialize_exercise()
+        self.nursery.start_soon(self.__initialize_exercise)
+        # self.__initialize_exercise()
+        # self.__set_initial_proof_states()
         # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
     ######################
     ######################
@@ -175,51 +177,69 @@ class Coordinator(QObject):
         self.servint.lean_response.connect(self.process_lean_response)
         # self.emw.cancel_server.connect(self.cancel_server)
 
-    def __initialize_exercise(self):
+    async def __initialize_exercise(self):
         """
         Set initial proof states of exercise and all statements.
         Note that server_task will be started by the process_lean_response
         method that will be called after the self.servint.set_exercise.
+
+        The case when exercise.negate_statement is true is special: in order
+        to get the negated Lean statement, we need to wait for the initial
+        proof state to be set. This is the reason why this is an async method.
         """
         log.debug("Initializing exercise")
+
+        self.exercise.course.load_initial_proof_states()
 
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
+        exercise = self.exercise
+
         self.proof_tree = ProofTree()
         self.emw.proof_tree_controller.set_proof_tree(self.proof_tree)
         self.emw.set_msgs_for_status_bar(self.proof_tree.current_proof_msg)
         self.proof_step = ProofStep()
+
+        # Get initial proof state
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
             # goal.name_bound_vars()
             self.emw.ecw.update_goal(goal, [])
+        elif exercise.negate_statement:
+            ##############################################
+            # We need initial proof state to negate goal #
+            ##############################################
+            log.debug("Missing initial proof state for negating goal: "
+                      "requesting")
+            self.servint.set_statements(exercise.course,
+                                        statements=[exercise],
+                                        on_top=True)
+            log.debug("Waiting for initial proof state")
+            ###########
+            # Waiting #
+            ###########
+            while not exercise.initial_proof_state:
+                await trio.sleep(0.1)
 
         # Set exercise. In particular, this will initialize servint.lean_file.
         task = Task(fct=self.servint.set_exercise,
                     kwargs={'proof_step': self.proof_step,
-                            'exercise': self.exercise,
+                            'exercise': exercise,
                             'on_top': True})
         self.send_task_to_server(task)
 
-        # Set initial proof states for all statements
-        # (Already done if start_coex was launched, but useful otherwise:)
-        self.exercise.course.load_initial_proof_states()
-        self.set_initial_proof_states()
+        # Finally set initial proof states
+        self.__set_missing_initial_proof_states()
 
-        # Set implicit definitions
-        # Initialize the following lists to erase lists from previous exercise
-        MathObject.implicit_definitions = []
-        MathObject.definition_patterns = []
-        self.set_math_object_definitions()
-        self.set_definitions_for_implicit_use()
-
-    def set_initial_proof_states(self):
+    def __set_missing_initial_proof_states(self):
         """
         If some ips are missing, ask servint for them and connect signal to
-        update information when ips are set.
+        update information when ips are set. This method also sets implicit
+        definitions, since they rely on ips.
         """
+
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
         if statements:
@@ -229,6 +249,13 @@ class Coordinator(QObject):
         else:
             log.info("All initial proof states set")
             self.initial_proof_states_set.set()
+
+        # Set implicit definitions
+        # Initialize the following lists to erase lists from previous exercise
+        MathObject.implicit_definitions = []
+        MathObject.definition_patterns = []
+        self.set_math_object_definitions()
+        self.set_definitions_for_implicit_use()
 
     @Slot()
     def check_initial_proof_states_set(self):
@@ -1145,7 +1172,7 @@ class Coordinator(QObject):
 
     def abort_process(self):
         log.debug("Aborting process")
-        if not self.servint.lean_file.history_at_beginning:
+        if self.lean_file and not self.servint.lean_file.history_at_beginning:
             # Abort and go back to last goal
             self.lean_file.delete()
             self.unfreeze()
@@ -1306,8 +1333,9 @@ class Coordinator(QObject):
         proof_state = lean_response.new_proof_state
 
         log.info("** Processing Lean's response **")
-        history_nb = self.lean_file.target_idx
-        log.info(f"History nb: {history_nb}")
+        if self.lean_file:
+            history_nb = self.lean_file.target_idx
+            log.info(f"History nb: {history_nb}")
         self.emw.automatic_action = False  # FIXME: move
 
         # ─────── Errors ─────── #

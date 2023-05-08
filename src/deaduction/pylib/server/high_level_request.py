@@ -512,11 +512,16 @@ class ExerciseRequest(ProofStepRequest):
         if (hasattr(statement, 'negate_statement')
                 and statement.negate_statement):
             lemma_line = statement.lean_line - 1
+            # negated_goal = None
             negated_goal = statement.negated_goal()
-            new_core_content = negated_goal.to_lean_example(title)
-            lean_file_preamble = "\n".join(lines[:lemma_line]) \
-                                    + "\n" + new_core_content \
-                                    + "begin\n"
+            # # Wait for negated goal in case initial proof state has not been set
+            # #  (which should not happen)
+            # while not negated_goal:
+            #     negated_goal = statement.negated_goal()
+            new_core_content = negated_goal.to_lean_statement(title)
+            lean_file_preamble = ("\n".join(lines[:lemma_line])
+                                  + "\n" + new_core_content
+                                  + "begin\n")
             # Debug
             # core = lines[lemma_line] + "\n" + new_core_content + "begin\n"
             # print(core)

@@ -702,14 +702,16 @@ class ServerInterface(QObject):
     async def set_exercise(self, task, proof_step, exercise: Exercise):
         """
         Initialise the lean_file from exercise, and call Lean.
-
-        :param proof_step:      The current proof_step
-        :param exercise:        The exercise to be set
         """
 
         self.log.info(f"Set exercise to: "
                       f"{exercise.lean_name} -> {exercise.pretty_name}")
         self.__exercise_current = exercise
+
+        if exercise.negate_statement and not exercise.initial_proof_state:
+            self.log.warning("No for initial proof state to negate goal: "
+                             "cancelling")
+            self.cancel_task(task)
 
         request = ExerciseRequest(task=task,
                                   proof_step=proof_step,
