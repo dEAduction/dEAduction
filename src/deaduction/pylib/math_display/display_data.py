@@ -66,6 +66,9 @@ def value(mo):
     return mo.info.get('value')
 
 
+def math_type(mo):
+    return mo.math_type
+
 # def lean_inst_name(mo):
 #     return '[' + name(mo) + ']'
 
@@ -415,7 +418,8 @@ lean_from_node = {
     "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')'),
     "SET_UNION+": ("set.Union", "(", 0, ")"),
     "SET_INTER+": ("set.Inter", "(", 0, ")"),
-    "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')')
+    "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
+    "NUMBER": ('(', value, ': ', 'self.math_type', ')'),
 }
 
 # Only those lean symbols that are distinct from the latex_to_utf8 dict
