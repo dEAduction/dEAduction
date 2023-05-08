@@ -419,6 +419,7 @@ lean_from_node = {
     "SET_UNION+": ("set.Union", "(", 0, ")"),
     "SET_INTER+": ("set.Inter", "(", 0, ")"),
     "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
+    # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
     "NUMBER": ('(', value, ': ', 'self.math_type', ')'),
 }
 
