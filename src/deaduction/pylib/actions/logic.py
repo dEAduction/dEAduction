@@ -26,6 +26,11 @@ specialised functions, according to the number and nature of
 selected_objects. All these auxiliary functions occurs immediately before the
 function action_* in the present file.
 
+To add a new action,
+- define the function here with decorator @action,
+- incorporate action button in UI (see Exercise.available_logic, etc.)
+- add name to auto_stapes.button_dict
+
 Author(s)     : - Marguerite Bin <bin.marguerite@gmail.com>
 Maintainer(s) : - Frédéric Le Roux <frederic.le-roux@imj-prg.fr>
 Created       : July 2020 (creation)

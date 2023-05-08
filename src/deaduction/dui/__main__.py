@@ -114,8 +114,8 @@ def set_logger():
                        # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
-                       'deaduction.dui.stages',
-                       # 'deaduction.pylib',
+                       'deaduction.dui.stages',  # Includes Coordinator
+                       'deaduction.pylib.actions',
                        # 'logic',
                        # 'magic',
                        'coursedata',

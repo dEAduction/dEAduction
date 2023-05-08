@@ -56,7 +56,7 @@ class LeanEnvironment:
         paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
                  (self.mathlib_path / "src").resolve(),
                  cdirs.usr_lean_src_dir,
-                 usr_dir] + usr_subdirs
+                 usr_dir] + usr_subdirs + [cdirs.history.resolve()]
 
         return paths
 

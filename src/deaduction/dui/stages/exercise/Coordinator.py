@@ -148,6 +148,8 @@ class Coordinator(QObject):
         self.history_mode                   = exercise.is_history()
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
+        self.initial_proof_states_set = trio.Event()
+
         self.stop_button_will_stop_server   = False
 
         # Initialization
@@ -222,6 +224,9 @@ class Coordinator(QObject):
             self.servint.initial_proof_state_set.connect(
                                 self.check_initial_proof_states_set)
             self.servint.set_statements(self.exercise.course, statements)
+        else:
+            log.info("All initial proof states set")
+            self.initial_proof_states_set.set()
 
     @Slot()
     def check_initial_proof_states_set(self):
@@ -239,6 +244,8 @@ class Coordinator(QObject):
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
         if not statements:
+            log.info("All initial proof states set")
+            self.initial_proof_states_set.set()
             self.servint.initial_proof_state_set.disconnect()
 
     def set_math_object_definitions(self):

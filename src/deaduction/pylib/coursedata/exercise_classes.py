@@ -1107,7 +1107,7 @@ def make_statement_callable(prefix: str, statements) -> callable:
 
 def polish_data(data):
     """
-    Make some formal smoothing. BEware that capitalization modifies math
+    Make some formal smoothing. Beware that capitalization modifies math
     notations!
     """
     if 'description' in data:
@@ -1134,8 +1134,8 @@ def comment(text: str) -> str:
     Comment each line by adding '# ".
     """
     lines = text.splitlines()
-    new_lines = [line if line.startswith('# ')
-                 else '# ' + line for line in lines]
+    new_lines = [line if line.strip().startswith('--')
+                 else '-- ' + line for line in lines]
     new_text = '\n'.join(new_lines)
 
     new_text += '\n  todo'
