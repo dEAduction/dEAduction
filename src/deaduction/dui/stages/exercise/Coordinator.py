@@ -38,9 +38,11 @@ from typing import Optional
 from PySide2.QtCore import ( QObject,
                              Signal,
                              Slot,
-                             QTimer)
+                             QTimer,
+                             Qt)
 from PySide2.QtWidgets import (QInputDialog,
-                               QMessageBox)
+                               QMessageBox,
+                               QCheckBox)
 
 # Configs, utils
 import deaduction.pylib.config.dirs as          cdirs
@@ -311,6 +313,8 @@ class Coordinator(QObject):
         and save the resulting exercise object in a pkl file for future
         testing.
         """
+
+        # FIXME: this method is deprecated, tests are done via history file
         save = cvars.get('functionality.save_solved_exercises_for_autotest',
                          False)
         if not save:
@@ -1169,6 +1173,12 @@ class Coordinator(QObject):
 
         return proof_state
 
+    @staticmethod
+    def save_history_set(yes=True):
+        key = 'functionality.save_history_of_solved_exercises'
+        log.debug(f"Set save history to {yes}")
+        cvars.set(key, yes)
+
     def display_fireworks_msg(self):
         """
         Display a QMessageBox informing that the proof is complete.
@@ -1185,8 +1195,19 @@ class Coordinator(QObject):
                                           QMessageBox.YesRole)
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
+            # Save history button
+            key = 'functionality.save_history_of_solved_exercises'
+            save_history = cvars.get(key, False)
+            check_box = QCheckBox(_('Save history'))
+            check_box.setChecked(save_history)
+            msg_box.setCheckBox(check_box)
+            # button_history.clicked.connect(self.save_history_set,
+            #                                button_history.checkState ==
+            #                                Qt.Checked)
             button_change.clicked.connect(self.emw.change_exercise)
             msg_box.exec_()
+
+            self.save_history(yes=(check_box.isChecked()))
 
     def update_proof_step(self):
         """
@@ -1235,10 +1256,11 @@ class Coordinator(QObject):
         # self.current_user_action = None
         self.lean_code_sent = None
 
-    def save_history(self):
+    def save_history(self, yes=True):
         key = 'functionality.save_history_of_solved_exercises'
-        save_history = cvars.get(key, False)
-        if save_history and (not self.test_mode and not self.history_mode):
+        # save_history = cvars.get(key, False)
+        cvars.set(key, yes)
+        if yes:  # and (not self.test_mode and not self.history_mode):
             log.info("Saving history")
 
             # Compute AutoSteps string
@@ -1384,5 +1406,5 @@ class Coordinator(QObject):
             # Display QMessageBox but give deaduction time to properly update
             # ui before.
             QTimer.singleShot(0, self.display_fireworks_msg)
-            self.save_history()
+            # self.save_history()
 

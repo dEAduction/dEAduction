@@ -89,6 +89,8 @@ PRETTY_NAMES = {
         _("Automatic intro of existence properties"),
     'functionality.save_solved_exercises_for_autotest':
         _("Save exercises for autotest"),
+    'functionality.save_history_of_solved_exercises':
+        _("Save history when exercise is solved"),
     'functionality.auto_solve_inequalities_in_bounded_quantification':
         _("Try to silently prove ε>0 when applying '∀ε>0'"),
     'functionality.ask_to_prove_premises_of_implications':
