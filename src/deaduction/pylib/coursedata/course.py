@@ -43,13 +43,14 @@ from sys import version_info
 # else:
 #     import pickle
 
+from deaduction.pylib.utils.filesystem import check_dir
 import deaduction.pylib.config.dirs as      cdirs
-import deaduction.pylib.config.vars as      cvars
+# import deaduction.pylib.config.vars as      cvars
 import deaduction.pylib.logger as           logger
 from deaduction.pylib.utils import (        load_object, save_object)
 
-from deaduction.pylib.mathobj import MathObject
-from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
+# from deaduction.pylib.mathobj import MathObject
+# from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,
@@ -69,7 +70,7 @@ class Course:
     which is materialised by a Lean file containing a list of definitions,
     theorems and exercises (all being statements introduced by Lean's
     keyword "lemma"), structured into namespaces that corresponds to sections.
-    Th attributes are:
+    The attributes are:
     - the content of the corresponding Lean file,
     - the course metadata (e.g. authors, institution, etc.)
     - the "outline" of the course, an ordered dict describing namespaces
@@ -98,6 +99,33 @@ class Course:
 
     def lean_import_course_preamble(self) -> str:
         return f"import {self.course_file_name}\n"
+
+    @property
+    def history_file_path(self):
+        """
+        Return path to history file for this exercise.
+        """
+
+        filename = 'history_' \
+                   + self.course_file_name.replace('.', '_') \
+                   + '.lean'
+
+        check_dir(cdirs.history, create=True)
+        return cdirs.history / filename
+
+    @classmethod
+    def history_course(cls, course):
+        """
+        Return Course instance created from history version of course,
+        if a history versions exists.
+        """
+
+        history_file_path = course.history_file_path
+        history_course = (cls.from_file(history_file_path)
+                          if history_file_path.exists()
+                          else None)
+
+        return history_course
 
     def is_history_file(self):
         return self.course_file_name.startswith('history_')
@@ -268,7 +296,9 @@ class Course:
         outline = OrderedDict()
         opened_namespace_lines = {}
         begin_counter = 0
+        # Will be False between statement event and begin_proof event:
         begin_found = True
+
         ########################
         # Parsimonious's magic #
         ########################
@@ -307,6 +337,12 @@ class Course:
                 name = event_content['name']
                 if name not in opened_namespace_lines:
                     opened_namespace_lines[name] = line_counter
+
+            # elif event_name == "begin_metadata":
+            #     # Exercise metadata are before begin_proof event
+            #     if not begin_found and statements:
+            #         info = statements[-1].info
+            #         info['begin_metadata_line'] = line_counter
 
             ##############
             # statements #

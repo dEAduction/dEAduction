@@ -1241,11 +1241,13 @@ class Coordinator(QObject):
             auto_steps_str = ''
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'
-
             additional_metadata = {'AutoTest': auto_steps_str}
+            log.debug(additional_metadata)
+            lean_code = self.lean_file.inner_contents
+
             self.exercise.save_with_auto_steps(
                 additional_metadata=additional_metadata,
-                code_lines="todo")  # TODO
+                lean_code=lean_code)
 
     @Slot()
     def process_lean_response(self, lean_response):
@@ -1375,6 +1377,5 @@ class Coordinator(QObject):
             # Display QMessageBox but give deaduction time to properly update
             # ui before.
             QTimer.singleShot(0, self.display_fireworks_msg)
-            # self.servint.nursery.start_soon(self.restart_lean_server,
-            #                                 name="Restart Lean Server")
             self.save_history()
+

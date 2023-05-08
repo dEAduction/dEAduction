@@ -30,10 +30,8 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 from time import strftime
-from deaduction.pylib.utils.filesystem import check_dir
 
 import deaduction.pylib.config.vars             as cvars
-import deaduction.pylib.config.dirs             as cdirs
 
 from deaduction.pylib.text                  import (logic_buttons_line_1,
                                                     logic_buttons_line_2)
@@ -56,6 +54,103 @@ LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
 # e.g. key = action_and, value = corresponding instance of the class Action
 PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
 MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+
+
+@dataclass
+class StructuredContent:
+    """
+    A class to store the structured content of a Lean Statement.
+    """
+
+    first_line_nb: int
+    last_line_nb: int
+
+    name: str
+    hypotheses: str
+    conclusion: str
+    raw_metadata: Optional[str]
+    metadata: Optional[Dict[str, str]]
+    lean_code: str
+
+    course_file_content: str
+
+    skeleton = "lemma {} \n{} :\n{}:=\n{}\nbegin\n{}\nend\n"
+
+    @property
+    def metadata_str(self) -> str:
+        """
+        Format metadata dict for Lean files. Indent values if needed.
+        """
+
+        if self.metadata and not self.raw_metadata:
+            self.raw_metadata = metadata_to_str(self.metadata)
+
+        metadata_str = '/- dEAduction\n' + self.raw_metadata + '-/\n'
+
+        return metadata_str
+
+    @property
+    def content(self) -> str:
+
+        skeleton = self.skeleton
+        content = skeleton.format(self.name,
+                                  self.hypotheses,
+                                  self.conclusion,
+                                  self.metadata_str,
+                                  comment(indent(self.lean_code))
+                                  )
+        # Remove double CR
+        while content.find('\n\n') != -1:
+            content = content.replace('\n\n', '\n')
+
+        return content
+
+    @classmethod
+    def history_content(cls, initial_structured_content,
+                        additional_metadata, lean_code):
+
+        # Compute new name
+        initial_name = initial_structured_content.name
+        date = strftime("%d%b%Hh%M")
+        prefix = 'exercise.history_' + date + '_'
+        new_name = initial_name.replace('exercise.', prefix)
+
+        # New metadata
+        metadata = initial_structured_content.metadata
+        new_metadata = dict()
+        if metadata:
+            new_metadata = metadata.copy()
+            new_metadata.update(additional_metadata)
+
+        raw_metadata = initial_structured_content.raw_metadata
+        if not raw_metadata.endswith('\n'):
+            raw_metadata += '\n'
+        raw_metadata += metadata_to_str(additional_metadata)
+
+        new_content = cls(initial_structured_content.first_line_nb,
+                          initial_structured_content.last_line_nb,
+                          new_name,
+                          initial_structured_content.hypotheses,
+                          initial_structured_content.conclusion,
+                          raw_metadata, new_metadata, lean_code,
+                          initial_structured_content.course_file_content)
+        return new_content
+
+    def history_file_content(self):
+        """
+        Compute the content of the history file, by adding content to
+        the course_file_content juste after the original content.
+        This method should be applied to a history_content.
+        """
+        content_lines = self.course_file_content.splitlines()
+
+        part_1 = '\n'.join(content_lines[:self.last_line_nb])
+        part_2 = self.content
+        part_3 = '\n'.join(content_lines[self.last_line_nb:])
+
+        history_file = part_1 + '\n\n' + part_2 + '\n' + part_3
+
+        return history_file
 
 
 @dataclass
@@ -414,6 +509,28 @@ class Exercise(Theorem):
     # This is True if the negation of the statement must be proved.
 
     @property
+    def raw_metadata(self):
+        raw_metadata = self.info.get('raw_metadata')
+        lines = raw_metadata.splitlines()
+        return '\n'.join(lines[1:-1])
+
+    @property
+    def structured_content(self) -> StructuredContent:
+
+        first_line_nb = self.lean_line
+        last_line_nb = self.lean_end_line_number
+        name = self.lean_short_name
+        hypo = self.lean_variables
+        conclusion = self.lean_core_statement
+        raw_metadata = self.raw_metadata
+        code = "todo\n"
+        file_content = self.course.file_content
+
+        return StructuredContent(first_line_nb, last_line_nb,
+                                 name, hypo, conclusion, raw_metadata, None,
+                                 code, file_content)
+
+    @property
     def exercise_number(self) -> int:
         exercises = [statement for statement in self.course.statements
                      if isinstance(statement, Exercise)]
@@ -632,6 +749,10 @@ class Exercise(Theorem):
                     actions.append(action)
         return actions
 
+    @property
+    def begin_metadata_line(self):
+        return self.info.get('begin_metadata_line')
+
     @staticmethod
     def analysis_code2(seq_num=0) -> str:
         code = f"    targets_analysis2 {seq_num},\n" \
@@ -690,8 +811,11 @@ class Exercise(Theorem):
             metadata_lines = [key + '\n' + additional_metadata[key]
                               for key in additional_metadata]
             metadata_lines = '\n'.join(metadata_lines)
+            metadata_lines = '/- dEAduction\n' + metadata_lines + '-/\n'
         else:
             metadata_lines = ""
+
+        title = self.lean_name
 
         file_content = seq_num_line \
             + self.course.lean_import_course_preamble() \
@@ -699,7 +823,7 @@ class Exercise(Theorem):
             + "section course\n" \
             + self.open_namespace_str() \
             + self.open_read_only_namespace_str() \
-            + goal.to_lean_example() \
+            + goal.to_lean_example(title) \
             + metadata_lines \
             + self.__begin_end_code(seq_num, code_lines) \
             + self.close_namespace_str() \
@@ -714,6 +838,20 @@ class Exercise(Theorem):
         lean_file_afterword = self.analysis_code2(seq_num) + end_of_file
         return lean_file_afterword
 
+    def __new_history_file_content(self, lean_code="todo ",
+                                   additional_metadata=None):
+        """
+        Insert additional metadata (in particular AutoSteps) and code_lines
+        into self.course.file_content.
+        """
+
+        struct_content = self.structured_content
+        new_st_content = StructuredContent.history_content(struct_content,
+                                                           additional_metadata,
+                                                           lean_code)
+        new_file_content = new_st_content.history_file_content()
+        return new_file_content
+
     # def prove_use_mode_set_by_exercise(self):
     #     """
     #     Test if the list of logic buttons determined by self's metadata
@@ -724,29 +862,58 @@ class Exercise(Theorem):
     #              for action in self.available_logic_1)
     #     return any(tests)
 
-    def history_file_path(self):
-        """
-        Return path to history file for this exercise.
-        """
-
-        date = strftime("%d%b%Hh%M")
-        filename = 'history_' \
-                   + self.lean_short_name.replace('.', '_') \
-                   + '_' + date \
-                   + '.lean'
-
-        check_dir(cdirs.history, create=True)
-        return cdirs.history / filename
+    # def history_file_path(self):
+    #     """
+    #     Return path to history file for this exercise.
+    #     """
+    #
+    #     # date = strftime("%d%b%Hh%M")
+    #     filename = 'history_' \
+    #                + self.lean_short_name.replace('.', '_') \
+    #                + '.lean'
+    #
+    #     check_dir(cdirs.history, create=True)
+    #     return cdirs.history / filename
 
     def is_history(self):
         return self.course.is_history_file()
 
-    def save_with_auto_steps(self, additional_metadata, code_lines):
-        path = self.history_file_path()
-        content = self.file_contents_from_goal(additional_metadata=additional_metadata,
-                                               code_lines=code_lines)
-        print(f"Path: {path}")
-        print(f"Content: {content}")
+    def save_with_auto_steps(self, additional_metadata, lean_code):
+        """
+        Save current exercise with auto_steps in self.course's history file.
+        If the history file does not exist, create it with initial content
+        identical to self.course.file_content.
+        The exercise is saved just after the original exercise in the history
+        file.
+        """
+        path = self.course.history_file_path
+
+        if path.exists():
+            course = self.course
+            historic_course = course.history_course(course)
+            self_index = course.statements.index(self)
+            str_content = self.structured_content
+            (name, hypo, cc) = (str_content.name,
+                                str_content.hypotheses,
+                                str_content.conclusion)
+            # Search original exercise in history_file from self_index
+            exercise = historic_course.statements[self_index]
+            his_content = exercise.structured_content
+            while (his_content.name, his_content.hypotheses,
+                   his_content.conclusion) != (name, hypo, cc):
+                self_index += 1
+                exercise = historic_course.statements[self_index]
+                his_content = exercise.structured_content
+
+            # exercise.info['raw_metadata'] = self.raw_metadata
+        else:
+            exercise = self
+
+        content = exercise.__new_history_file_content(lean_code,
+                                                      additional_metadata)
+
+        # print(f"Path: {path}")
+        # print(f"Content: {content}")
         with open(path, mode='wt') as output:
             output.write(content)
 
@@ -947,6 +1114,50 @@ def polish_data(data):
         # data['description'] = data['description'].capitalize()
         if data['description'][-1].isalpha():
             data['description'] += '.'
+
+
+def indent(text: str) -> str:
+    """
+    Indent each line by 2 spaces.
+    """
+    lines = text.splitlines()
+    new_lines = [line if line.startswith('  ')
+                 else ' ' + line if line.startswith(' ')
+                 else '  ' + line
+                 for line in lines]
+    new_text = '\n'.join(new_lines)
+    return new_text
+
+
+def comment(text: str) -> str:
+    """
+    Comment each line by adding '# ".
+    """
+    lines = text.splitlines()
+    new_lines = [line if line.startswith('# ')
+                 else '# ' + line for line in lines]
+    new_text = '\n'.join(new_lines)
+
+    new_text += '\n  todo'
+    return new_text
+
+
+def metadata_to_str(metadata: Dict[str, str]):
+    """
+    Format metadata dict for Lean files. Indent values if needed.
+    """
+    if not metadata:
+        return ""
+
+    metadata_str = ''
+    for key in metadata:
+        if not key[0].isupper():
+            key = key.capitalize()
+        metadata_str += key + '\n'
+        value = str(metadata[key])
+        metadata_str += indent(value) + '\n'
+
+    return metadata_str
 
 
 if __name__ == "__main__":

@@ -503,6 +503,7 @@ class ExerciseRequest(ProofStepRequest):
         """
 
         statement = self.exercise
+        title = statement.lean_name
         file_content = statement.course.file_content
         lines        = file_content.splitlines()
         begin_line   = statement.lean_begin_line_number
@@ -512,7 +513,7 @@ class ExerciseRequest(ProofStepRequest):
                 and statement.negate_statement):
             lemma_line = statement.lean_line - 1
             negated_goal = statement.negated_goal()
-            new_core_content = negated_goal.to_lean_example()
+            new_core_content = negated_goal.to_lean_example(title)
             lean_file_preamble = "\n".join(lines[:lemma_line]) \
                                     + "\n" + new_core_content \
                                     + "begin\n"

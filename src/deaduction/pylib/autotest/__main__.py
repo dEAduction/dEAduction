@@ -198,15 +198,16 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
 def get_exercises_from_dir(dir_path: Path):
     test_course_files = [file for file in dir_path.iterdir()
                          if file.suffix == '.lean'
-                         and file.name.startswith('test')]
+                         and (file.name.startswith('test')
+                              or file.name.startswith('history'))]
 
-    test_course_files.sort(key = (lambda x: x.stat().st_mtime))
+    test_course_files.sort(key=(lambda x: x.stat().st_mtime))
 
     test_exercise_files = [file for file in dir_path.iterdir()
                            if file.suffix == '.pkl'
                            and file.name.startswith('test_exercise')]
 
-    test_exercise_files.sort(key = (lambda x: x.stat().st_mtime),
+    test_exercise_files.sort(key=(lambda x: x.stat().st_mtime),
                              reverse=True)
 
     nb_files = len(test_course_files) + len(test_exercise_files)

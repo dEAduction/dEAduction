@@ -1055,7 +1055,7 @@ class Goal:
         """
         return self.target.math_type.to_display(format_='lean')
 
-    def to_lean_example(self):
+    def to_lean_example(self, title="deaduction"):
         """
         Return self's content as a Lean example, e.g.
         'example
@@ -1064,7 +1064,7 @@ class Goal:
         """
         context = self.context_to_lean()
         target = self.target_to_lean()
-        lean_statement = f"example\n {context} :\n {target}"
+        lean_statement = f"lemma exercise.{title}\n {context} :\n {target}"
         # lean_proof = "begin\n\nend\n"
         # debug:
         # print(lean_statement)

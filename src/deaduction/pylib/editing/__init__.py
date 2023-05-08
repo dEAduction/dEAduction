@@ -381,7 +381,7 @@ class VirtualFile:
     @property
     def inner_contents(self):
         """
-        Retrieve the inner text
+        Retrieve the inner text.
         """
         self.__update()
         return self.__txt
