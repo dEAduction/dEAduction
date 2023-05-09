@@ -74,6 +74,7 @@ class StructuredContent:
 
     course_file_content: str
 
+    # FIXME: deprecated
     negated_core_content: str = ""  # If not empty, statement will be negated
     skeleton = "lemma {} \n{} :=\n{}\nbegin\n{}\nend\n"
 
@@ -521,9 +522,11 @@ class Exercise(Theorem):
     def raw_metadata(self):
         raw_metadata = self.info.get('raw_metadata')
         lines = raw_metadata.splitlines()
+        if len(lines) > 1:  # Exclude open/close metadata
+            lines = lines[1:-1]
         if self.negate_statement:
-            lines += ['NegateStatement', 'True']
-        return '\n'.join(lines[1:-1])
+            lines += ['NegateStatement', '  True']
+        return '\n'.join(lines)
 
     @property
     def structured_content(self) -> StructuredContent:
@@ -537,12 +540,12 @@ class Exercise(Theorem):
         code = "todo\n"
         file_content = self.course.file_content
 
-        negated_content = (self.negated_goal().to_lean_statement(name)
-                           if self.negate_statement else "")
+        # negated_content = (self.negated_goal().to_lean_statement(name)
+        #                    if self.negate_statement else "")
 
         return StructuredContent(first_line_nb, last_line_nb,
                                  name, hypo, conclusion, raw_metadata, None,
-                                 code, file_content, negated_content)
+                                 code, file_content)
 
     @property
     def exercise_number(self) -> int:
@@ -922,6 +925,9 @@ class Exercise(Theorem):
             # exercise.info['raw_metadata'] = self.raw_metadata
         else:
             exercise = self
+
+        if self.negate_statement:
+            exercise.negate_statement = True
 
         content = exercise.__new_history_file_content(lean_code,
                                                       additional_metadata)

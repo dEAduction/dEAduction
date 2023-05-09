@@ -398,7 +398,7 @@ class Coordinator(QObject):
         Called at closing, and when closing ExerciseMainWindow.
         """
         log.info("Closing Coordinator")
-        # continue_ = input("Closing Coordinator?")  # FIXME: debugging
+        # continue_ = input("Closing Coordinator?"
 
         # try:
         #     self.disconnect_signals()
@@ -408,29 +408,16 @@ class Coordinator(QObject):
 
         self.disconnect_signals()
 
-        # key = 'functionality.save_history_of_solved_exercises'
-        # save_history = cvars.get(key, False)
         if not self.test_mode and not self.history_mode:
             # Save journal
             self.journal.save_exercise_with_proof_steps(emw=self)
             # Save new initial proof states, if any
             self.exercise.course.save_initial_proof_states()
-            # Save exercise for autotest
-            # if save_history:
-            #     # TODO: compute list of pertinent ProofSteps
-            #     #  (without history moves)
-            #     #  And turn them to AutoSteps, then to strings.
-            #     self.exercise.save_with_auto_steps()
 
-        # Emit close_server_task signal and wait for effect
-        # tasks = self.servint.nursery.child_tasks
-        # log.debug(f"{len(tasks)} nursery tasks:")
-        # log.debug([task.name for task in tasks])
         # log.debug("Closing server task")
         self.close_server_task.emit()
         if self.cvars_to_be_restored:
             cvars.update(self.cvars_to_be_restored)
-        # self.deleteLater()  FIXME: needed ??
 
     ##############
     # Properties #
@@ -1200,12 +1187,6 @@ class Coordinator(QObject):
 
         return proof_state
 
-    @staticmethod
-    def save_history_set(yes=True):
-        key = 'functionality.save_history_of_solved_exercises'
-        log.debug(f"Set save history to {yes}")
-        cvars.set(key, yes)
-
     def display_fireworks_msg(self):
         """
         Display a QMessageBox informing that the proof is complete.
@@ -1285,7 +1266,6 @@ class Coordinator(QObject):
 
     def save_history(self, yes=True):
         key = 'functionality.save_history_of_solved_exercises'
-        # save_history = cvars.get(key, False)
         cvars.set(key, yes)
         if yes:  # and (not self.test_mode and not self.history_mode):
             log.info("Saving history")
@@ -1297,10 +1277,24 @@ class Coordinator(QObject):
             auto_steps_str = ''
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'
+
             additional_metadata = {'AutoTest': auto_steps_str}
-            log.debug(additional_metadata)
+
+            # Compute pertinent settings
+            # keys = ["others.Lean_request_method"]
+            keys = []
+            if keys:
+                settings = '\n'.join([f'{key} --> "{cvars.get(key)}"'
+                                      for key in keys])
+                additional_metadata.update({'Settings': settings})
+
+            # log.debug(additional_metadata)
             lean_code = self.lean_file.inner_contents
 
+            print("ProofTree:")
+            print(self.proof_tree)
+            print("AutoSteps:")
+            print(auto_steps_str)
             self.exercise.save_with_auto_steps(
                 additional_metadata=additional_metadata,
                 lean_code=lean_code)

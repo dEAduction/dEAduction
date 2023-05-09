@@ -321,8 +321,9 @@ class AutoStep(UserAction):
         except ValueError:
             pass
 
-        user_input = [item for item in items[button_or_statement_rank+1:]
-                      if item]  # Remove if item = ''
+        # Remaining non-trivial items are user input
+        user_input = [item.replace('__', ' ')
+                      for item in items[button_or_statement_rank+1:] if item]
 
         return cls(selection, button, statement_name, user_input,
                    target_selected, string, error_type, error_msg, success_msg)
@@ -398,6 +399,8 @@ class AutoStep(UserAction):
             string = ' '.join(selection) + ' '
         string += button + statement
         if user_input:
+            # Replace spaces by '__'
+            user_input = [item.replace(' ', '__') for item in user_input]
             string += ' ' + ' '.join(user_input)
         if proof_step.is_error():
             string += ' ' + AutoStep.error_dic[proof_step.error_type]

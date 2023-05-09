@@ -675,29 +675,6 @@ class GoalNode:
                 unsolved_leaves.extend(child.unsolved_leaves)
             return unsolved_leaves
 
-    # def truncated_unsolved_leaves(self, till_proof_step_nb=None) -> []:
-    #     """
-    #     Return the list of unsolved leaves of self (truncating all proof steps
-    #     after till_proof_step_nb). Admitted is considered as solved.
-    #     """
-    #     if till_proof_step_nb is None:
-    #         return self.unsolved_leaves
-    #
-    #     if (not self.child_proof_step or self.child_proof_step.pf_nb >
-    #             till_proof_step_nb):
-    #         # Unsolved leaf of the truncated ProofTree
-    #         return [self]
-    #     elif self.is_immediately_solved or self.is_immediately_sorry():
-    #         # Leaf is solved NOT AFTER till_proof_step_nb
-    #         return []
-    #
-    #     # Add unsolved leaves of children
-    #     unsolved_leaves = []
-    #     for child in self.children_goal_nodes:
-    #         child_leaves = child.truncated_unsolved_leaves(till_proof_step_nb)
-    #         unsolved_leaves.extend(child_leaves)
-    #     return unsolved_leaves
-
     def total_degree(self):
         """
         Number of bifurcations from root node to self in ProofTree. Used only
@@ -772,9 +749,12 @@ class GoalNode:
 
         proof_step = self.child_proof_step
 
-        proof_steps = ([proof_step] + proof_step.descendant_proof_steps()
-                       if proof_step else [])
-        return proof_steps
+        if not proof_step:
+            return []
+        elif proof_step.has_solved_one_goal:
+            return [proof_step]
+        else:
+            return [proof_step] + proof_step.descendant_proof_steps()
 
         # self.set_truncate_mode(truncate_mode)
 
@@ -886,7 +866,10 @@ class ProofTree:
         GoalNode.set_truncate_mode = self.set_truncate_mode
 
     def __str__(self):
-        return str(self.root_node)
+        """
+        Print tree of the First ProofStep.
+        """
+        return str(self.root_node.parent)
 
     @property
     def last_proof_step(self):
@@ -981,18 +964,9 @@ class ProofTree:
         self.set_truncate_mode(False)
         return leaves
 
-    # def pending_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
-    #     """
-    #     The list of unsolved oal nodes, except current_goal_node.
-    #     """
-    #     pgn = [gn for gn in self.unsolved_goal_nodes(till_proof_step_nb)
-    #            if gn is not self.current_goal_node]
-    #     return pgn
-    #
-
     def pending_goal_nodes(self, truncated=True) -> [GoalNode]:
         """
-        The list of unsolved oal nodes, except current_goal_node.
+        The list of unsolved goal nodes, except current_goal_node.
         """
         pgn = [gn for gn in self.unsolved_goal_nodes(truncated)
                if gn is not self.current_goal_node]
@@ -1080,7 +1054,7 @@ class ProofTree:
         # ─────── Compute delta goal ─────── #
         # NB; this must be done BEFORE connecting new_proof_step, since we
         # want the nb of unsolved goals BEFORE new_proof_step (which might
-        # solved (maybe by sorry) the current_goal_node).
+        # solve (maybe by sorry) the current_goal_node).
         new_goal = new_proof_state.goals[0]
         unsolved_gn = self.unsolved_goal_nodes()
         delta_goal = (len(new_proof_state.goals)
@@ -1126,8 +1100,8 @@ class ProofTree:
         previous_goal = self.current_goal_node.parent_node.goal
         Goal.compare(new_goal, previous_goal)
         Goal.transfer_name_hints_from(new_goal, previous_goal)
-        # print("ProofTree:")
-        # print(str(self))
+        print("ProofTree:")
+        print(str(self.root_node.parent))
 
     def proof_steps(self):
         """
