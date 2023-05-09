@@ -426,7 +426,7 @@ class ProofStep:
             return self.statement.lean_name
 
     @property
-    def success_msg(self):
+    def success_msg(self) -> str:
         if self._success_msg:
             return self._success_msg
         elif self.history_nb == -1:
@@ -450,7 +450,11 @@ class ProofStep:
 
     @property
     def txt(self):
-        return str(self.history_nb+1) + _(": ") + self.success_msg
+        msg = self.success_msg if self.success_msg else ""
+        nb = str(self.history_nb+1) if self.history_nb else ""
+        txt = "STEP " + nb \
+              + " (" + self.short_display() + ")" + _(": ") + msg
+        return txt
 
     @property
     def goal(self):
@@ -672,6 +676,13 @@ class ProofStep:
 
         return txt
 
+    def short_display(self) -> str:
+        statement = self.statement
+        statement_name = statement.pretty_name if statement else ""
+        button_name = self.button_name if self.button_name else ""
+        txt = button_name + statement_name
+        return txt
+
     def used_properties(self):
         code = self.effective_code if self.effective_code else self.lean_code
         if code and not self.is_error():
@@ -702,58 +713,39 @@ class ProofStep:
                           for child in self.children_goal_nodes], [])
         return proof_steps
 
-# class Proof(list):
-#     """
-#     This proof encodes the data used to display the outline of a proof.
-#     It is a list whose elements are either ProofNodes or ProofSteps.
-#     """
-#     # FIXME: unused, suppress
-#
-#     def __init__(self, outline: list):
-#         super().__init__()
-#
-#     @classmethod
-#     def from_proof_steps(cls, proof_steps: [ProofStep]):
-#         if not proof_steps:
-#             return []
-#         first_proof_step = proof_steps.pop(0)
-#         if not first_proof_step.is_node():
-#             # No NewGoal at first step:
-#             #  proof is [first proof_step, <end of proof>]
-#             end_of_proof = cls.from_proof_steps(proof_steps)
-#             return [first_proof_step] + end_of_proof
-#
-#         else:
-#             # There is a new_goal at first step,
-#             #  proof will be a list of ProofNodes
-#             #  given by [first proof step, first proof node, <end of proof>]
-#             # Current goal is the last of the pile.
-#
-#             # goals = first_proof_step.new_goals
-#             # new_goal = goals[-1]  # This is the proof node's goal
-#             # new_goal_nb = len(goals)
-#             sub_proof_steps = []
-#             # The sub_proof corresponding to that goal runs
-#             #  until this goal disappears from the pile,
-#             #  and we transfer all the corresponding sublist of proof_steps
-#             #  into sub_proof
-#             # while proof_steps \
-#             #         and new_goal_nb <= len(proof_steps[0].new_goals) \
-#             #         and proof_steps[0].new_goals \
-#             #         and new_goal == proof_steps[0].new_goals[new_goal_nb-1]:
-#             while proof_steps \
-#                     and proof_steps[0].parent == first_proof_step:
-#                     # and new_goal_nb <= len(proof_steps[0].new_goals):
-#                 # Remove proof_step[0] from proof_steps,
-#                 #  and put it in sub_proof.
-#                 proof_step = proof_steps.pop(0)
-#                 sub_proof_steps.append(proof_step)
-#             # Recursively call from_proof_steps method
-#             #  (new_goals beyond len(goals) are actual new_goals)
-#             sub_proof = Proof.from_proof_steps(sub_proof_steps)
-#             proof_node = ProofNode(proof_step=first_proof_step,
-#                                    sub_proof=sub_proof)
-#             end_of_proof = cls.from_proof_steps(proof_steps)
-#             return [first_proof_step, proof_node] + end_of_proof
+    def tree_display(self, msg="", level=0):
+        """
+        Compute a TREE representation of self and children GoalNode /
+        ProofSteps, including GoalNode msgs ( "Proof of...") and success msgs.
+        """
 
+        indent = " |"
+        separator = "__"
+        ret = (indent * level) + msg + " --> " + self.txt
+        if self.has_solved_one_goal:
+            ret += ' //GOAL SOLVED//\n'
+            # ret += (indent * level) + (separator * 10) + '\n'
+        else:
+            ret += '\n'
+            children = self.children_goal_nodes
+            if len(children) == 1:
+                child = children[0]
+                child_ps = child.child_proof_step
+                if child_ps:
+                    ret += child_ps.tree_display(children[0].msg(), level)
+                else:
+                    ret += indent * level + child.msg() + "/...\n"
+            else:  # Indent
+                for child_gn in self.children_goal_nodes:
+                    child_ps = child_gn.child_proof_step
+                    if child_ps:
+                        ret += child_ps.tree_display(child_gn.msg(), level+1)
+                    else:
+                        ret += indent*(level+1) + child_gn.msg() + "/...\n"
+                    # Add a separator between children
+                    if child_gn != self.children_goal_nodes[-1]:
+                        ret += (indent * (level+1)) + (separator * 5) + '\n'
+        return ret
 
+    def __str__(self):
+        return self.tree_display()
