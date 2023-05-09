@@ -1326,10 +1326,10 @@ class Coordinator(QObject):
             lean_code = self.lean_file.inner_contents
 
             # Debug:
-            print("ProofTree:")
-            print(self.proof_tree)
-            print("AutoSteps:")
-            print(auto_steps_str)
+            # print("ProofTree:")
+            # print(self.proof_tree)
+            # print("AutoSteps:")
+            # print(auto_steps_str)
             self.exercise.save_with_auto_steps(
                 additional_metadata=additional_metadata,
                 lean_code=lean_code)

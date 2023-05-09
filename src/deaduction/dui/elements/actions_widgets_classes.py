@@ -286,7 +286,6 @@ ActionButton.action_triggered = Signal(ActionButton)
 class Switch(QPushButton):
     def __init__(self, parent=None):
         super().__init__(parent)
-        print('init')
         self.setCheckable(True)
         # self.setMinimumWidth(66)
         # self.setMinimumHeight(22)

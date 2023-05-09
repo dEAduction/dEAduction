@@ -585,7 +585,7 @@ class MathObjectWidget(QListView):
             # Emit signal
             premise = source.item_from_index(dragged_index)
             operator = self.item_from_index(index)
-            print(premise, operator)
+            # print(premise, operator)
             if premise and operator:
                 self.set_selection([premise, operator])
             self.math_object_dropped.emit(premise, operator)

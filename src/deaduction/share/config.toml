@@ -78,6 +78,7 @@ drag_several_items = false
 ask_to_prove_premises_of_implications = true
 automatic_intro_of_variables_and_hypotheses = false
 save_history_of_solved_exercises = true
+max_recent_courses = 10
 
 [i18n]
 available_languages = ["en", "fr_FR"]

@@ -316,7 +316,7 @@ class ExerciseCentralWidget(QWidget):
         self.__actions_lyt         = QVBoxLayout()
 
         self.__actions_lyt.setSpacing(10)
-        print(f"margins {self.__actions_lyt.contentsMargins()}")
+        # print(f"margins {self.__actions_lyt.contentsMargins()}")
         mode = cvars.get('logic.button_use_or_prove_mode')
         # self.__actions_lyt.setContentsMargins(0,
         #                                       0 if mode == "display_unified" else -2,
