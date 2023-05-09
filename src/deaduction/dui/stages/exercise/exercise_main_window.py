@@ -158,6 +158,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal         = None
         self.displayed_proof_step = None
         self.test_mode            = False
+        self.history_mode         = False
         self.automatic_action     = False
 
         # From inside
@@ -976,6 +977,7 @@ class ExerciseMainWindow(QMainWindow):
     def display_current_goal_solved(self, delta):
         proof_step = self.lean_file.current_proof_step
         if proof_step.current_goal_number and not self.test_mode \
+                and not self.history_mode \
                 and self.lean_file.current_number_of_goals \
                 and not proof_step.is_error() \
                 and not proof_step.is_undo():

@@ -395,15 +395,15 @@ async def auto_test(wm: WindowManager):
                     emw.close()
                     break
 
-                step.user_input = [int(item) if item.isdecimal() else item
-                                   for item in step.user_input]
+                # Modified in AutoStep.from_string()
+                # step.user_input = [int(item) if item.isdecimal() else item
+                #                    for item in step.user_input]
 
                 if test_window.step_by_step or \
                     test_window.exercise_by_exercise and steps_counter == 1:
                     test_window.unfreeze()
                 else:
                     test_window.process_next_step.emit()
-
 
             ################
             # Process step #

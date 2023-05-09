@@ -845,6 +845,9 @@ class ProofTree:
     be recovered by following the ProofSteps's first child:
     Root node -> child_proof_step -> children_goal_node[0] -> child_proof_step
     ... and so on.
+
+    The pure tree structure is obtained by ignoring those ProofSteps for which
+    attribute proof_step.has_solved_one_goal is True.
     """
 
     # TODO: add a permutation to reflect Lean's own list of unsolved goals.

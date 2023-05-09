@@ -138,6 +138,7 @@ class Coordinator(QObject):
         self.emw.close_coordinator = self.closeEvent
 
         # Information
+        self.__auto_steps                             = None
         self.proof_step: Optional[ProofStep]          = None  # Set later
         self.proof_tree: Optional[ProofTree]          = None
         self.previous_proof_step: Optional[ProofStep] = None
@@ -147,7 +148,8 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
-        self.history_mode                   = exercise.is_history()
+        self.history_mode                   = (exercise.is_history() and
+                                               exercise.refined_auto_steps)
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.initial_proof_states_set = trio.Event()
@@ -157,10 +159,10 @@ class Coordinator(QObject):
         # Initialization
         self.is_frozen = False
         self.__connect_signals()
-        self.nursery.start_soon(self.__initialize_exercise)
-        # self.__initialize_exercise()
-        # self.__set_initial_proof_states()
-        # log.debug(f"Selected style: {self.emw.ecw.target_wgt.selected_style}")
+        if self.history_mode:
+            self.__init_auto_steps()
+        self.nursery.start_soon(self.__init_exercise)
+
     ######################
     ######################
     # Init/close methods #
@@ -177,7 +179,11 @@ class Coordinator(QObject):
         self.servint.lean_response.connect(self.process_lean_response)
         # self.emw.cancel_server.connect(self.cancel_server)
 
-    async def __initialize_exercise(self):
+    def __init_auto_steps(self):
+        log.info("Initializing auto steps")
+        self.__auto_steps = self.exercise.refined_auto_steps.copy()
+
+    async def __init_exercise(self):
         """
         Set initial proof states of exercise and all statements.
         Note that server_task will be started by the process_lean_response
@@ -228,7 +234,7 @@ class Coordinator(QObject):
                     kwargs={'proof_step': self.proof_step,
                             'exercise': exercise,
                             'on_top': True})
-        self.send_task_to_server(task)
+        self.__send_task_to_server(task)
 
         # Finally set initial proof states
         self.__set_missing_initial_proof_states()
@@ -244,7 +250,7 @@ class Coordinator(QObject):
                       if not st.initial_proof_state]
         if statements:
             self.servint.initial_proof_state_set.connect(
-                                self.check_initial_proof_states_set)
+                                self.__check_initial_proof_states_set)
             self.servint.set_statements(self.exercise.course, statements)
         else:
             log.info("All initial proof states set")
@@ -254,11 +260,11 @@ class Coordinator(QObject):
         # Initialize the following lists to erase lists from previous exercise
         MathObject.implicit_definitions = []
         MathObject.definition_patterns = []
-        self.set_math_object_definitions()
+        self.__set_math_object_definitions()
         self.set_definitions_for_implicit_use()
 
     @Slot()
-    def check_initial_proof_states_set(self):
+    def __check_initial_proof_states_set(self):
         """
         This is called by servint each time a new initial_proof_state is
         set, if the signal initial_proof_state_set is connected.
@@ -277,7 +283,7 @@ class Coordinator(QObject):
             self.initial_proof_states_set.set()
             self.servint.initial_proof_state_set.disconnect()
 
-    def set_math_object_definitions(self):
+    def __set_math_object_definitions(self):
         definitions = self.exercise.definitions
         DefinitionMathObject.set_definitions(definitions)
 
@@ -333,43 +339,43 @@ class Coordinator(QObject):
         # except RuntimeError:
         #     log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
 
-    def save_exercise_for_autotest(self):
-        """
-        This method fills self.exercise's attribute refined_auto_step
-        by retrieving the list of proof_step.auto_step from the lean_file,
-        and save the resulting exercise object in a pkl file for future
-        testing.
-        """
+    # def save_exercise_for_autotest(self):
+    #     """
+    #     This method fills self.exercise's attribute refined_auto_step
+    #     by retrieving the list of proof_step.auto_step from the lean_file,
+    #     and save the resulting exercise object in a pkl file for future
+    #     testing.
+    #     """
+    #
+    #     # FIXME: this method is deprecated, tests are done via history file
+    #     save = cvars.get('functionality.save_solved_exercises_for_autotest',
+    #                      False)
+    #     if not save:
+    #         return
+    #
+    #     auto_steps = [entry.misc_info.get("proof_step").auto_step
+    #                   for entry in self.lean_file.history]
+    #     auto_steps = [step for step in auto_steps if step is not None]
+    #
+    #     exercise = self.exercise
+    #     exercise.refined_auto_steps = auto_steps
+    #     filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
+    #         + '.pkl'
+    #     file_path = cdirs.test_exercises / filename
+    #     check_dir(cdirs.test_exercises, create=True)
+    #
+    #     total_string = 'AutoTest\n'
+    #     for step in auto_steps:
+    #         total_string += '    ' + step.raw_string + ',\n'
+    #     print(total_string)
+    #
+    #     log.debug(f"Saving auto_steps in {file_path}")
+    #
+    #     save_object(exercise, file_path)
+    #     # with open(file_path, mode='wb') as output:
+    #     #     dump(exercise, output, HIGHEST_PROTOCOL)
 
-        # FIXME: this method is deprecated, tests are done via history file
-        save = cvars.get('functionality.save_solved_exercises_for_autotest',
-                         False)
-        if not save:
-            return
-
-        auto_steps = [entry.misc_info.get("proof_step").auto_step
-                      for entry in self.lean_file.history]
-        auto_steps = [step for step in auto_steps if step is not None]
-
-        exercise = self.exercise
-        exercise.refined_auto_steps = auto_steps
-        filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
-            + '.pkl'
-        file_path = cdirs.test_exercises / filename
-        check_dir(cdirs.test_exercises, create=True)
-
-        total_string = 'AutoTest\n'
-        for step in auto_steps:
-            total_string += '    ' + step.raw_string + ',\n'
-        print(total_string)
-
-        log.debug(f"Saving auto_steps in {file_path}")
-
-        save_object(exercise, file_path)
-        # with open(file_path, mode='wb') as output:
-        #     dump(exercise, output, HIGHEST_PROTOCOL)
-
-    def disconnect_signals(self):
+    def __disconnect_signals(self):
         """
         This method is called at closing. It may be important: without it,
         servint signals will still be connected to methods concerning
@@ -406,7 +412,7 @@ class Coordinator(QObject):
         #     # It seems that sometimes signals are already deleted
         #     log.debug("(Impossible to disconnect signals)")
 
-        self.disconnect_signals()
+        self.__disconnect_signals()
 
         if not self.test_mode and not self.history_mode:
             # Save journal
@@ -422,6 +428,14 @@ class Coordinator(QObject):
     ##############
     # Properties #
     ##############
+
+    @property
+    def history_mode(self):
+        return self.emw.history_mode
+
+    @history_mode.setter
+    def history_mode(self, yes=True):
+        self.emw.history_mode = yes
 
     @property
     def action_button_names(self) -> [str]:
@@ -530,7 +544,7 @@ class Coordinator(QObject):
     ######################################################
     ######################################################
 
-    async def restart_lean_server(self):
+    async def __restart_lean_server(self):
         log.debug("Stopping Lean server...")
         # with trio.move_on_after(10):
         #     await self.servint.file_invalidated.wait()
@@ -539,7 +553,7 @@ class Coordinator(QObject):
         await self.servint.start()
         log.info("Lean server started")
 
-    def stop_button_will_cancel_task(self):
+    def __stop_button_will_cancel_task(self):
         self.stop_button_will_stop_server = False
 
     async def stop(self):
@@ -553,26 +567,22 @@ class Coordinator(QObject):
                 self.servint.cancel_task(task)
                 log.debug(f"(new status: {task.status})")
             elif self.stop_button_will_stop_server:
-                await self.restart_lean_server()
+                await self.__restart_lean_server()
                 msg = _("Server restarted")
                 self.statusBar.show_tmp_msg(msg)
 
             else:
                 msg = _("No action to be cancelled, press again to restart "
                         "server")
-                # msg = _("No action to be cancelled")
-                # bar_msg = self.statusBar.messageWidget.text()
-                # FIXME: bar_msg always empty?? REMOVE FOLLOWING LINE:
-                # await self.restart_lean_server()
                 self.stop_button_will_stop_server = True
-                QTimer.singleShot(3000, self.stop_button_will_cancel_task)
+                QTimer.singleShot(3000, self.__stop_button_will_cancel_task)
                 self.statusBar.show_tmp_msg(msg, duration=3000)
 
-    def send_task_to_server(self, task: Task):
+    def __send_task_to_server(self, task: Task):
         self.last_servint_task = task
         self.servint.add_task(task)
 
-    def start_server_task(self):
+    def __start_server_task(self):
         """
         A front end for starting the async server_task method,
         which is called by self.process_lean_response at first call.
@@ -913,7 +923,7 @@ class Coordinator(QObject):
                             kwargs={'proof_step': self.proof_step,
                                     'label': action.symbol,
                                     'cancel_fct': self.lean_file.undo})
-                self.send_task_to_server(task)
+                self.__send_task_to_server(task)
                 break
 
     def __server_call_statement(self, item):
@@ -949,7 +959,7 @@ class Coordinator(QObject):
                         kwargs={'proof_step': self.proof_step,
                                 'label': statement.pretty_name,
                                 'cancel_fct': self.lean_file.undo})
-            self.send_task_to_server(task)
+            self.__send_task_to_server(task)
 
     def __server_send_editor_lean(self):
         """
@@ -961,7 +971,7 @@ class Coordinator(QObject):
                             'label': "code_set",
                             'cancel_fct': self.lean_file.undo,
                             'code': self.lean_editor.code_get()})
-        self.send_task_to_server(task)
+        self.__send_task_to_server(task)
 
     #########################
     #########################
@@ -985,6 +995,31 @@ class Coordinator(QObject):
         self.emw.update_goal(None)
         self.emw.ui_updated.emit()
 
+    async def __process_auto_steps(self):
+        """
+        Process auto_steps. This is called when self.history_mode is True.
+        The remaining steps to process are stored in self.__auto_steps.
+        """
+
+        duration = 0
+
+        # End of auto steps?
+        if not self.__auto_steps:  # Stop history_mode!
+            log.info("Exiting history mode")
+            self.history_mode = False
+            self.history_rewind()
+            return
+
+        # Wait for crucial data and server_task
+        await self.initial_proof_states_set.wait()
+        await self.server_task_started.wait()
+
+        # Next step
+        next_step = self.__auto_steps.pop(0)
+        self.freeze()
+        self.nursery.start_soon(self.emw.simulate_user_action,
+                                next_step, duration)
+
     @staticmethod
     def automatic_actions(goal: Goal) -> UserAction:
         """
@@ -998,6 +1033,8 @@ class Coordinator(QObject):
         (3) Intro of variables and hypotheses when target is a
         universal statement or an implication.
         """
+
+        # Fixme: move this to a Goal method?
 
         target = goal.target
 
@@ -1064,7 +1101,7 @@ class Coordinator(QObject):
                 target.turn_off_auto_action()
                 return user_action
 
-    def process_automatic_actions(self, goal):
+    def __process_automatic_actions(self, goal):
         """
         Perform the UserAction returned by self.automatic_action, if any.
         emw.automatic_action is set to True so that emw knows about it,
@@ -1117,7 +1154,7 @@ class Coordinator(QObject):
     #     self.proof_step.effective_code = effective_lean_code
     #     self.servint.history_replace(effective_lean_code)
 
-    def process_failed_request_error(self, errors):
+    def __process_failed_request_error(self, errors):
         lean_code = self.proof_step.lean_code
         if lean_code and lean_code.error_msg:
             self.proof_step.error_msg = lean_code.error_msg
@@ -1129,14 +1166,14 @@ class Coordinator(QObject):
             details += "\n" + error.text
         log.debug(f"Lean errors, details: {details}")
 
-    def process_error(self, error_type, errors):
+    def __process_error(self, error_type, errors):
         """
         Note that history_delete will be called, and then process_lean_response
         again.
         """
         self.proof_step.error_type = error_type
         if error_type == 1:  # FailedRequestError
-            self.process_failed_request_error(errors)
+            self.__process_failed_request_error(errors)
         elif error_type == 3:  # Timeout
             self.proof_step.error_msg = _("I've got a headache, try again...")
             log.debug("Lean timeout")
@@ -1168,7 +1205,7 @@ class Coordinator(QObject):
 
         else:
             # Resent the whole code
-            self.__initialize_exercise()
+            self.__init_exercise()
 
     def set_fireworks(self):
         """
@@ -1193,7 +1230,8 @@ class Coordinator(QObject):
         """
         if not self.proof_step.is_redo() \
                 and not self.proof_step.is_goto()\
-                and not self.test_mode:
+                and not self.test_mode\
+                and not self.history_mode:
             title = _('Target solved')
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self.emw)
@@ -1203,16 +1241,15 @@ class Coordinator(QObject):
                                           QMessageBox.YesRole)
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
+            button_change.clicked.connect(self.emw.change_exercise)
+
             # Save history button
             key = 'functionality.save_history_of_solved_exercises'
             save_history = cvars.get(key, False)
             check_box = QCheckBox(_('Save history'))
             check_box.setChecked(save_history)
             msg_box.setCheckBox(check_box)
-            # button_history.clicked.connect(self.save_history_set,
-            #                                button_history.checkState ==
-            #                                Qt.Checked)
-            button_change.clicked.connect(self.emw.change_exercise)
+
             msg_box.exec_()
 
             self.save_history(yes=(check_box.isChecked()))
@@ -1225,7 +1262,7 @@ class Coordinator(QObject):
         """
 
         # Store journal and auto_step
-        if not self.test_mode:
+        if not self.test_mode and not self.history_mode:
             self.journal.store(self.proof_step, self)
             # Fixme: compute only at end
             self.proof_step.auto_step = AutoStep.from_proof_step(
@@ -1238,12 +1275,9 @@ class Coordinator(QObject):
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
 
-        # # Target in context?
-        # solving_objs = context_obj_solving_target(self.proof_step)
-        # self.proof_step.solving_objs = solving_objs
         self.proof_step_updated.emit()  # Received in auto_test
 
-    def check_response_coherence(self, lean_response):
+    def __check_response_coherence(self, lean_response):
         """
         Check if lean_response concerns current proof step.
         """
@@ -1260,14 +1294,14 @@ class Coordinator(QObject):
                 lean_response.proof_step is self.proof_step)
         return test
 
-    def invalidate_events(self):
+    def __invalidate_events(self):
         # self.current_user_action = None
         self.lean_code_sent = None
 
     def save_history(self, yes=True):
         key = 'functionality.save_history_of_solved_exercises'
         cvars.set(key, yes)
-        if yes:  # and (not self.test_mode and not self.history_mode):
+        if yes:
             log.info("Saving history")
 
             # Compute AutoSteps string
@@ -1291,6 +1325,7 @@ class Coordinator(QObject):
             # log.debug(additional_metadata)
             lean_code = self.lean_file.inner_contents
 
+            # Debug:
             print("ProofTree:")
             print(self.proof_tree)
             print("AutoSteps:")
@@ -1317,7 +1352,7 @@ class Coordinator(QObject):
         log.debug("Lean response received")
 
         # (1) Test Response corresponds to request
-        if not self.check_response_coherence(lean_response):
+        if not self.__check_response_coherence(lean_response):
             log.warning("Lean response with incoherent proof step, ignoring")
             # self.abort_process()
             return
@@ -1335,7 +1370,7 @@ class Coordinator(QObject):
         # ─────── Errors ─────── #
         if error_type != 0:
             log.info("  -> error!")
-            self.process_error(error_type, lean_response.error_list)
+            self.__process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
 
@@ -1346,7 +1381,7 @@ class Coordinator(QObject):
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
             # log.debug("First proof step")
-            self.start_server_task()
+            self.__start_server_task()
 
         # ─────── Compute proof state ─────── #
         if no_more_goals:
@@ -1364,7 +1399,7 @@ class Coordinator(QObject):
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
                 # No proof state!? Maybe empty analysis?
-                self.process_error(error_type=5, errors=[])
+                self.__process_error(error_type=5, errors=[])
                 log.debug(f"Analysis: {lean_response.analysis[0]} ///"
                           f" {lean_response.analysis[1]}")
                 self.abort_process()
@@ -1413,20 +1448,23 @@ class Coordinator(QObject):
         else:
             self.emw.update_goal(proof_state.goals[0])
 
+        # ─────── No more goal? ─────── #
+        # This is before process_auto_steps, as self could leave history mode.
+        if no_more_goals and not self.history_mode and not self.test_mode:
+            # Display QMessageBox but give time to properly update ui before
+            QTimer.singleShot(0, self.display_fireworks_msg)
+
         # ─────── Automatic actions ─────── #
-        if not (self.previous_proof_step.is_history_move()
-                or self.previous_proof_step.is_error()
-                or self.test_mode):
-            self.process_automatic_actions(proof_state.goals[0])
+        if self.history_mode:
+            self.nursery.start_soon(self.__process_auto_steps)
+
+        elif not (self.previous_proof_step.is_history_move()
+                  or self.previous_proof_step.is_error()
+                  or self.test_mode):
+            self.__process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing
 
         # FIXME: unused??
-        self.invalidate_events()
-
-        if no_more_goals:
-            # Display QMessageBox but give deaduction time to properly update
-            # ui before.
-            QTimer.singleShot(0, self.display_fireworks_msg)
-            # self.save_history()
+        self.__invalidate_events()
 

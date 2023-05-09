@@ -324,6 +324,8 @@ class AutoStep(UserAction):
         # Remaining non-trivial items are user input
         user_input = [item.replace('__', ' ')
                       for item in items[button_or_statement_rank+1:] if item]
+        user_input = [int(item) if item.isdecimal() else item
+                      for item in user_input]
 
         return cls(selection, button, statement_name, user_input,
                    target_selected, string, error_type, error_msg, success_msg)
