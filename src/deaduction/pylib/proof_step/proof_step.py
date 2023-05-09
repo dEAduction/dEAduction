@@ -450,6 +450,10 @@ class ProofStep:
 
     @property
     def txt(self):
+        return str(self.history_nb+1) + _(": ") + self.success_msg
+
+    @property
+    def txt_debug(self):
         msg = self.success_msg if self.success_msg else ""
         nb = str(self.history_nb+1) if self.history_nb else ""
         txt = "STEP " + nb \
@@ -721,7 +725,7 @@ class ProofStep:
 
         indent = " |"
         separator = "__"
-        ret = (indent * level) + msg + " --> " + self.txt
+        ret = (indent * level) + msg + " --> " + self.txt_debug
         if self.has_solved_one_goal:
             ret += ' //GOAL SOLVED//\n'
             # ret += (indent * level) + (separator * 10) + '\n'
