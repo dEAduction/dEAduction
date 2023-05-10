@@ -70,11 +70,10 @@ from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
+from deaduction.pylib.math_display.pattern_data import *
 
 global _
 
-# For debug
-from deaduction.pylib.math_display.pattern_data import *
 
 log = logging.getLogger(__name__)
 
@@ -114,8 +113,10 @@ def set_logger():
                        # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
-                       'deaduction.dui.stages',  # Includes Coordinator
+                       # Includes Coordinator, start_coex:
+                       'deaduction.dui.stages',
                        'deaduction.pylib.actions',
+                       'deaduction.pylib.coursedata',
                        # 'logic',
                        # 'magic',
                        'coursedata',

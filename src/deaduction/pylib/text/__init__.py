@@ -24,6 +24,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
+
 from .tooltips import (button_symbol,
                        button_tool_tip,
                        logic_buttons_line_1,

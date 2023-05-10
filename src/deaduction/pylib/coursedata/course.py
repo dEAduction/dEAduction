@@ -85,6 +85,8 @@ class Course:
     relative_course_path:   Path = None
     # Relative_course_path is added after instantiation.
 
+    __history_course      = None
+
     # Outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
@@ -120,15 +122,69 @@ class Course:
         if a history versions exists.
         """
 
-        history_file_path = course.history_file_path
-        history_course = (cls.from_file(history_file_path)
-                          if history_file_path.exists()
-                          else None)
+        if not course.__history_course:
+            history_file_path = course.history_file_path
+            course.__history_course = (cls.from_file(history_file_path)
+                                       if history_file_path.exists()
+                                       else None)
+        return course.__history_course
 
-        return history_course
+    def saved_exercises_in_history_course(self) -> [Exercise]:
+        """
+        Provide list of all exercises saved in history course.
+        """
+
+        hstr_course = self.history_course(self)
+        if not hstr_course:
+            return []
+
+        exercises = [exo for exo in hstr_course.exercises
+                     if exo.is_history()]
+        # debug
+        # for exo in hstr_course.exercises:
+        #     if exo.is_history():
+        #         break
+
+        return exercises
+
+    def saved_in_history_course_from_exercise(self, exercise: Exercise):
+        """
+        Return the versions of exercise as saved in self.history_course().
+        """
+        saved_exercises = self.saved_exercises_in_history_course()
+        exercises = [exo for exo in saved_exercises
+                     if exercise.has_identical_content(exo)]
+        return exercises
 
     def is_history_file(self):
         return self.course_file_name.startswith('history_')
+
+    def exercises_including_saved_version(self):
+        """
+        Return a list containing self's exercises and all saved versions.
+        """
+        original_exercises = self.exercises
+        saved_exercises = self.saved_exercises_in_history_course()
+        log.debug(f"Found {len(saved_exercises)} saved exercises")
+        if not saved_exercises:
+            return self.exercises
+
+        mixed_exercises = []
+        saved_index = 0
+
+        for exercise in original_exercises:
+            mixed_exercises.append(exercise)
+            while saved_index < len(saved_exercises) \
+                    and saved_exercises[saved_index].has_identical_content(exercise):
+                mixed_exercises.append(saved_exercises[saved_index])
+                saved_index += 1
+
+        missing = (len(original_exercises) + len(saved_exercises)
+                   - len(mixed_exercises))
+        if missing > 0:
+            log.warning(f"Missed {missing} saved exercises")
+
+        return mixed_exercises
 
     @property
     def title(self) -> str:

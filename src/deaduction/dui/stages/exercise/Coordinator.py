@@ -48,6 +48,7 @@ from PySide2.QtWidgets import (QInputDialog,
 import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
 from deaduction.pylib.utils.filesystem import   check_dir
+import deaduction.pylib.text.text as text
 
 # DUI
 from deaduction.dui.primitives import           ButtonsDialog
@@ -1214,7 +1215,8 @@ class Coordinator(QObject):
         """
 
         self.proof_step.no_more_goal = True
-        self.proof_step.success_msg = _("Proof complete")
+        # self.proof_step.success_msg = _("Proof complete")
+        self.proof_step.success_msg = _(text.proof_complete)
         self.proof_step.new_goals = []
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).

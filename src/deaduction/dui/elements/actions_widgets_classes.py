@@ -72,6 +72,7 @@ from PySide2.QtWidgets import ( QTreeWidget,
 
 from deaduction.pylib.text        import ( button_symbol,
                                            button_tool_tip)
+import deaduction.pylib.config.dirs as cdirs
 
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
@@ -628,12 +629,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         :param statement: The instance of the class (or child) one wants
             to associate to self.
         """
-        if StatementsTreeWidget.show_lean_name_for_statements:
-            to_display = [statement.pretty_name, statement.lean_name]
-        else:
-            to_display = [statement.pretty_name]
 
-        super().__init__(None, to_display)
+        super().__init__(None, self.to_display())
 
         self.statement = statement
         self.parent = None  # Will be the QTreeWidget when inserted
@@ -642,11 +639,28 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.setForeground(1, QBrush(QColor('gray')))
         # TODO: use mono font for lean name column (column 1)
 
+        self.set_icon()
+
+        self.from_lean_name[statement.lean_name] = self
+
+        # Set tooltips: tooltips are set when item is put in the QTReeWidget
+        # so that is_exercise property has a meaning
+        # self.set_tooltip()
+
+    def to_display(self) -> [str]:
+        statement = self.statement
+        if StatementsTreeWidget.show_lean_name_for_statements:
+            to_display = [statement.pretty_name, statement.lean_name]
+        else:
+            to_display = [statement.pretty_name]
+        return to_display
+
+    def set_icon(self):
         # Print icon (D for definition, T for theorem, etc)
         icons_base_dir = cvars.get("icons.path")
         icons_type     = cvars.get("icons.letter_type")
-
         icons_dir = fs.path_helper(icons_base_dir) / icons_type
+        statement = self.statement
         if isinstance(statement, Definition):
             path = icons_dir / 'd.png'
         elif isinstance(statement, Exercise):
@@ -654,12 +668,6 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         elif isinstance(statement, Theorem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
-
-        self.from_lean_name[statement.lean_name] = self
-
-        # Set tooltips: tooltips are set when item is put in the QTReeWidget
-        # so that is_exercise property has a meaning
-        # self.set_tooltip()
 
     @property
     def is_exercise(self):
@@ -706,6 +714,30 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         for key in cls.from_lean_name:
             if key.endswith(name):
                 return cls.from_lean_name[key]
+
+
+class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
+
+    def set_icon(self):
+        # icons_base_dir = cvars.get("icons.path")
+        icons_base_dir = cdirs.icons
+        icons_type     = cvars.get("icons.letter_type")
+        icons_letter_dir = fs.path_helper(icons_base_dir) / icons_type
+
+        exercise = self.statement
+        assert isinstance(exercise, Exercise)
+
+        if exercise.is_solved_in_history_course():
+            path = icons_base_dir / 'checked.png'
+        elif exercise.is_in_history_course():
+            path = icons_base_dir / 'icons8-in-progress-96.png'
+        elif exercise.is_history():
+            path = None
+        else:
+            path = icons_letter_dir / 'e.png'
+
+        if path:
+            self.setIcon(0, QIcon(str(path.resolve())))
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -827,7 +859,10 @@ class StatementsTreeWidget(QTreeWidget):
         # If branch is empty, put statement at the end. This occurs when
         # the branch is already created.
         if not branch:
-            item            = StatementsTreeWidgetItem(statement)
+            if self.is_exercise_list:
+                item = ChooseExerciseWidgetItem(statement)
+            else:
+                item = StatementsTreeWidgetItem(statement)
             self.items.append(item)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
@@ -914,6 +949,7 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self.is_exercise_list = is_exercise_list
         self._potential_drop_receiver = None
         self._current_dragging_node = None
         self.expand_node_timer = QTimer()
@@ -921,7 +957,6 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.items: [QTreeWidgetItem] = [] # List of items
         self._init_tree(statements, outline)
-        self.is_exercise_list = is_exercise_list
         self.update_tooltips()
         # By default, drag and drop disabled. See _exercise_main_window_widgets.
         self.setDragEnabled(False)
@@ -976,7 +1011,7 @@ class StatementsTreeWidget(QTreeWidget):
 
     def goto_statement(self, statement: Statement, expand=True):
         """
-        Go to to the Statement statement (as if usr clicked on it).
+        Go to the Statement statement (as if usr clicked on it).
 
         :param statement: Statement to go to.
         :param expand: if True, expandreveal statement by expanding all

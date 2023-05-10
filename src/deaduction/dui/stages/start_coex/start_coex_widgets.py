@@ -75,6 +75,9 @@ from deaduction.dui.elements        import (MathObjectWidget,
                                             RecentCoursesLWI,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem)
+
+from deaduction.dui.elements.start_coex_widget_classes import ChooseExerciseWidgetItem
+
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
@@ -440,9 +443,19 @@ class ExerciseChooser(AbstractCoExChooser):
 
         self.__exercise = None
         browser_layout = QVBoxLayout()
-        exercises_tree = StatementsTreeWidget(course.exercises,
+        # exercises = course.exercises
+        # saved_exercises = course.saved_exercises_in_history_course()
+        # history_course = course.history_course(course)
+        # if history_course:
+        #     history_exercises = history_course.exercises
+        #     if history_exercises:
+        #         exercises = history_exercises
+
+        exercises = course.exercises_including_saved_version()
+        exercises_tree = StatementsTreeWidget(exercises,
                                               course.outline,
                                               is_exercise_list=True)
+
         exercises_tree.resizeColumnToContents(0)
         browser_layout.addWidget(exercises_tree)
 

@@ -35,6 +35,7 @@ import deaduction.pylib.config.vars             as cvars
 
 from deaduction.pylib.text                  import (logic_buttons_line_1,
                                                     logic_buttons_line_2)
+import deaduction.pylib.text.text as text
 
 from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
@@ -76,8 +77,11 @@ class StructuredContent:
 
     # FIXME: deprecated
     negated_core_content: str = ""  # If not empty, statement will be negated
-    skeleton = "lemma {} \n{} :=\n{}\nbegin\n{}\nend\n"
+    skeleton = "lemma {} \n{}:=\n{}\nbegin\n{}\nend\n"
 
+    #  This must be coherent with Exercise.history_date():
+    name_prefix = 'exercise.history_'
+    
     @property
     def metadata_str(self) -> str:
         """
@@ -117,7 +121,7 @@ class StructuredContent:
         # Compute new name
         initial_name = initial_structured_content.name
         date = strftime("%d%b%Hh%M")
-        prefix = 'exercise.history_' + date + '_'
+        prefix = cls.name_prefix + date + '_'
         new_name = initial_name.replace('exercise.', prefix)
 
         # New metadata
@@ -158,6 +162,10 @@ class StructuredContent:
 
         return history_file
 
+    def has_identical_content(self, other):
+        return (self.hypotheses.strip(), self.conclusion.strip()) == \
+            (other.hypotheses.strip(), other.conclusion.strip())
+    
 
 @dataclass
 class Statement:
@@ -245,7 +253,7 @@ class Statement:
         """
         Keep only the last two parts, e.g.
         'set_theory.unions_and_intersections.exercise.union_distributive_inter'
-        -> # 'exercise.union_distributive_inter'
+        -> 'exercise.union_distributive_inter'
         """
         return '.'.join(self.lean_name.split('.')[-2:])
 
@@ -892,9 +900,64 @@ class Exercise(Theorem):
     #     check_dir(cdirs.history, create=True)
     #     return cdirs.history / filename
 
-    def is_history(self):
-        return self.course.is_history_file()
+    def history_date(self):
+        """
+        Return the date when this exercise was saved, if self.is_history.
+        """
 
+        prefix = StructuredContent.name_prefix  # --> "exercise.history_"
+        if self.lean_name.find(prefix) == -1:
+            return
+        end_name = self.lean_name.split(prefix)[1]  # --> _<date>_<short_name>
+        date = end_name.split('_')[0]
+        print(f"date: {date}")
+        return date
+
+    def is_history(self):
+        """
+        True if self is an exercise as saved in history file.
+        """
+        tests = [self.course.is_history_file(),
+                 self.history_date(),
+                 self.auto_test]
+        return all(tests)
+
+    def is_solved_in_auto_steps(self):
+        """
+        Return True if a global success msg is found in self.auto_steps.
+        """
+        txt = self.auto_steps
+        solved_txts = [text.proof_complete, _(text.proof_complete)]
+        solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
+        print(solved_txts)
+        test = any(txt.find(solved_txt) != -1
+                   for solved_txt in solved_txts)
+        return test
+
+    def saved_in_history_course(self) -> []:
+        """
+        Return the versions of self as saved in self.history_course().
+        """
+        return self.course.saved_in_history_course_from_exercise(self)
+
+    def is_in_history_course(self):
+        """
+        True if at least one saved version of self in history_course.
+        """
+        return len(self.saved_in_history_course()) > 0
+
+    def is_solved_in_history_course(self):
+        """
+        True if at least one version as saved in history_course has a
+        complete proof.
+        """
+        return any([exo.is_solved_in_auto_steps()
+                    for exo in self.saved_in_history_course()])
+
+    def has_identical_content(self, other):
+        return self.structured_content.has_identical_content(
+            other.structured_content)
+    
     def save_with_auto_steps(self, additional_metadata, lean_code):
         """
         Save current exercise with auto_steps in self.course's history file.
@@ -909,18 +972,20 @@ class Exercise(Theorem):
             course = self.course
             historic_course = course.history_course(course)
             self_index = course.statements.index(self)
-            str_content = self.structured_content
-            (name, hypo, cc) = (str_content.name,
-                                str_content.hypotheses,
-                                str_content.conclusion)
-            # Search original exercise in history_file from self_index
+
+            # Search original exercise in history_file from self_index:
+
+            # str_content = self.structured_content
+            # (name, hypo, cc) = (str_content.name,
+            #                     str_content.hypotheses,
+            #                     str_content.conclusion)
             exercise = historic_course.statements[self_index]
-            his_content = exercise.structured_content
-            while (his_content.name, his_content.hypotheses,
-                   his_content.conclusion) != (name, hypo, cc):
+            # his_content = exercise.structured_content
+            while not (self.has_identical_content(exercise) and
+                       self.lean_name == exercise.lean_name):
                 self_index += 1
                 exercise = historic_course.statements[self_index]
-                his_content = exercise.structured_content
+                # his_content = exercise.structured_content
 
             # exercise.info['raw_metadata'] = self.raw_metadata
         else:
