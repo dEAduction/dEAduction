@@ -845,11 +845,10 @@ class AbstractStartCoEx(QDialog):
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
-        # TODO: adapt goto_exercise to unfold tree so that the exercise is
-        #  visible.
 
         self.course_chooser.set_preview(exercise.course)
         self.course_chooser.add_browsed_course(exercise.course)
+        # self.course_chooser.course_chosen.emit()
         self.__exercise_chooser.set_preview(exercise)
         self.__goto_exercise()
 
@@ -949,10 +948,16 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
+        # (1) Check if exercise is from history file
+        if exercise.history_date():
+            # Back to original, incorporating auto_steps
+            exercise = exercise.from_history_exercise()
+
         # check if exercise must be negated (e.g. is an open question)
         # TODO: this should be moved elsewhere, e.g. in __main__
-        if not check_negate_statement(exercise):
-            return
+        else:
+            if not check_negate_statement(exercise):
+                return
 
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list

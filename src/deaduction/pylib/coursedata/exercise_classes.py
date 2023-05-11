@@ -123,7 +123,10 @@ class StructuredContent:
 
         # Add date to metadata
         date = strftime("%d%b%Hh%M")
-        additional_metadata['HistoryDate'] = date
+        additional_metadata['history_date'] = date
+
+        # Change pretty name
+        additional_metadata["pretty_name"] = _("saved ") + date
 
         # New metadata
         new_metadata = initial_content.raw_metadata.copy()
@@ -190,14 +193,14 @@ class Statement:
     initial_proof_state:    Any             = None
     # this is filled when pre-processing
 
-    __negated_goal:         Any             = None
+    __negated_goal:         Any                     = None
 
-    auto_steps: str                         = ''
-    auto_test: str                          = ''
-    __refined_auto_steps: Optional[AutoStep]= None
-    _raw_metadata: Dict[str, str]           = None
+    # auto_steps: str                         = ''
+    auto_test: str                                 = ''
+    __refined_auto_steps: Optional[List[AutoStep]] = None
+    _raw_metadata: Dict[str, str]                  = None
 
-    info:                   Dict[str, Any]  = None
+    info:                   Dict[str, Any]         = None
     # Any other (non-essential) information
 
     # def __repr__(self):
@@ -391,13 +394,13 @@ class Statement:
         if self.__refined_auto_steps:
             return self.__refined_auto_steps
 
-        if not self.auto_steps:
-            if not self.auto_test:
-                return ''
-            else:
-                self.auto_steps = self.auto_test
-        auto_steps = self.auto_steps.replace('\\n', ' ')
-        auto_steps_strings = auto_steps.split(',')
+        # if not self.auto_steps:
+        if not self.auto_test:
+            return ''
+        else:
+            auto_steps_strings = self.auto_test
+        auto_steps_strings = auto_steps_strings.replace('\\n', ' ')
+        auto_steps_strings = auto_steps_strings.split(',')
         auto_steps = []
         for string in auto_steps_strings:
             if string is not None:
@@ -519,7 +522,8 @@ class Exercise(Theorem):
     # This is True if the negation of the statement must be proved:
     negate_statement:           bool            = False
     # This is true if exercise should be launched in history mode:
-    is_history:                 bool            = False
+    # is_history:                 bool            = False
+    original_exercise                           = None
 
     @property
     def raw_metadata(self) -> Dict[str, str]:
@@ -534,10 +538,18 @@ class Exercise(Theorem):
         if self._raw_metadata is None:
             self._raw_metadata = dict()
         if self.negate_statement:
-            self._raw_metadata['NegateStatement'] = '  True'
+            self._raw_metadata['negate_statement'] = '  True'
             # lines += ['NegateStatement', '  True']
         # return '\n'.join(lines)
         return self._raw_metadata
+
+    @property
+    def launch_in_history_mode(self):
+        """
+        If True, self should be launched in history mode,
+        with refined_auto_steps executed automatically.
+        """
+        return bool(self.refined_auto_steps)
 
     @property
     def structured_content(self) -> StructuredContent:
@@ -665,6 +677,12 @@ class Exercise(Theorem):
         # Finally construct the Exercise object #
         #########################################
         exercise = cls(**extract_data)
+        return exercise
+
+    def from_history_exercise(self):
+        exercise = self.original_exercise
+        exercise.auto_test = self.auto_test
+        exercise.negate_statement = self.negate_statement
         return exercise
 
     def update_cvars_from_metadata(self) -> dict:
@@ -866,6 +884,9 @@ class Exercise(Theorem):
         lean_file_afterword = self.analysis_code2(seq_num) + end_of_file
         return lean_file_afterword
 
+    #######################################
+    # Managing versions from history file #
+    #######################################
     def __new_file_content(self, lean_code="todo ",
                            additional_metadata=None,
                            version_nb=1) -> str:
@@ -907,12 +928,13 @@ class Exercise(Theorem):
 
     def is_solved_in_auto_test(self):
         """
-        Return True if a global success msg is found in self.auto_steps.
+        Return True if a global success msg is found in the last
+        step of self.refined_auto_steps.
         """
-        txt = self.auto_test
+        txt = self.refined_auto_steps[-1].success_msg
         solved_txts = [text.proof_complete, _(text.proof_complete)]
-        solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
-        print(solved_txts)
+        # solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
+        # print(solved_txts)
         test = any(txt.find(solved_txt) != -1
                    for solved_txt in solved_txts)
         return test
@@ -934,7 +956,7 @@ class Exercise(Theorem):
         True if at least one version as saved in history_course has a
         complete proof.
         """
-        return any([exo.is_solved_in_auto_steps()
+        return any([exo.is_solved_in_auto_test()
                     for exo in self.versions_saved_in_history_course()])
 
     def is_copy_of(self, other) -> bool:
@@ -966,44 +988,30 @@ class Exercise(Theorem):
         The exercise is saved just after the original exercise in the history
         file.
         """
+
         path = self.course.history_file_path
 
-        version_nb = len(self.versions_saved_in_history_course()) + 1
-
-        # if path.exists():
-        #     course = self.course
-        #     historic_course = course.history_course(course)
-        #     self_index = course.statements.index(self)
-        #
-        #     # Search original exercise in history_file from self_index:
-        #
-        #     # str_content = self.structured_content
-        #     # (name, hypo, cc) = (str_content.name,
-        #     #                     str_content.hypotheses,
-        #     #                     str_content.conclusion)
-        #     exercise = historic_course.statements[self_index]
-        #     # his_content = exercise.structured_content
-        #     while not (self.has_identical_content(exercise) and
-        #                self.lean_name == exercise.lean_name):
-        #         self_index += 1
-        #         exercise = historic_course.statements[self_index]
-        #         # his_content = exercise.structured_content
-        if self.course.history_course(self.course):
+        # (1) Take history file into account, if any
+        if self.course.history_course():
             exercise = self.course.original_version_in_history_file(self)
-
         else:
             exercise = self
 
+        # (2) Negate statement?
         if self.negate_statement:
             exercise.negate_statement = True
 
+        # (3) Compute new content
+        version_nb = len(self.versions_saved_in_history_course()) + 1
         content = exercise.__new_file_content(lean_code, additional_metadata,
                                               version_nb)
 
-        # print(f"Path: {path}")
-        # print(f"Content: {content}")
+        # (4) Save!
         with open(path, mode='wt') as output:
             output.write(content)
+
+        # (5) Reload history_course to get new entry
+        self.course.set_history_course()
 
 
 #############
@@ -1239,9 +1247,13 @@ def metadata_to_str(metadata: Dict[str, str]):
 
     metadata_str = ''
     for key in metadata:
-        if not key[0].isupper():
-            key = key.capitalize()
-        metadata_str += key + '\n'
+        keys = key.split('_')
+        keys = [key.capitalize() if not key[0].isupper() else key
+                for key in keys]
+        capitalised_key = ''.join(keys)
+        # if not key[0].isupper():
+        #     key = key.capitalize()
+        metadata_str += capitalised_key + '\n'
         value = str(metadata[key])
         metadata_str += indent(value) + '\n'
 

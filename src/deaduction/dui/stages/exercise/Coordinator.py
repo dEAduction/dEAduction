@@ -149,8 +149,7 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
-        self.history_mode                   = (exercise.is_history and
-                                               exercise.refined_auto_steps)
+        self.history_mode                   = exercise.launch_in_history_mode
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.initial_proof_states_set = trio.Event()
@@ -1244,6 +1243,7 @@ class Coordinator(QObject):
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
             button_change.clicked.connect(self.emw.change_exercise)
+            # FIXME: sometimes chooser is called BEFORE exercise is saved
 
             # Save history button
             key = 'functionality.save_history_of_solved_exercises'
@@ -1308,7 +1308,7 @@ class Coordinator(QObject):
 
             # Compute AutoSteps string
             proof_steps = self.proof_tree.proof_steps()
-            auto_steps = [step.auto_test for step in proof_steps]
+            auto_steps = [step.auto_step for step in proof_steps]
             auto_steps_str = ''
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'
@@ -1331,9 +1331,7 @@ class Coordinator(QObject):
             # print(self.proof_tree)
             # print("AutoSteps:")
             # print(auto_steps_str)
-            self.exercise.save_with_auto_steps(
-                additional_metadata=additional_metadata,
-                lean_code=lean_code)
+            self.exercise.save_with_auto_steps(additional_metadata, lean_code)
 
     @Slot()
     def process_lean_response(self, lean_response):

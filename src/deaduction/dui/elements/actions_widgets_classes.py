@@ -630,10 +630,10 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             to associate to self.
         """
 
-        super().__init__(None, self.to_display())
-
         self.statement = statement
         self.parent = None  # Will be the QTreeWidget when inserted
+
+        super().__init__(None, self.to_display())
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
@@ -718,6 +718,15 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
 class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
 
+    def to_display(self) -> [str]:
+        exercise = self.statement
+        if exercise.history_date():
+            to_display = ['\t' + exercise.pretty_name]
+        else:
+            to_display = [exercise.pretty_name]
+
+        return to_display
+
     def set_icon(self):
         # icons_base_dir = cvars.get("icons.path")
         icons_base_dir = cdirs.icons
@@ -727,12 +736,15 @@ class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
         exercise = self.statement
         assert isinstance(exercise, Exercise)
 
-        if exercise.is_solved_in_history_course():
+        if exercise.history_date():
+            if exercise.is_solved_in_auto_test():
+                path = icons_base_dir / 'checked.png'
+            else:
+                path = icons_base_dir / 'icons8-in-progress-96.png'
+        elif exercise.is_solved_in_history_course():
             path = icons_base_dir / 'checked.png'
         elif exercise.has_versions_in_history_course():
             path = icons_base_dir / 'icons8-in-progress-96.png'
-        elif exercise.is_history():
-            path = None
         else:
             path = icons_letter_dir / 'e.png'
 

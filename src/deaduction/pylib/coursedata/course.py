@@ -115,26 +115,27 @@ class Course:
         check_dir(cdirs.history, create=True)
         return cdirs.history / filename
 
-    @classmethod
-    def history_course(cls, course):
+    def history_course(self):
         """
         Return Course instance created from history version of course,
         if a history versions exists.
         """
 
-        if not course.__history_course:
-            history_file_path = course.history_file_path
-            course.__history_course = (cls.from_file(history_file_path)
-                                       if history_file_path.exists()
-                                       else None)
-        return course.__history_course
+        if not self.__history_course:
+            self.set_history_course()
+        return self.__history_course
+
+    def set_history_course(self):
+        history_file_path = self.history_file_path
+        self.__history_course = (Course.from_file(history_file_path)
+                                 if history_file_path.exists() else None)
 
     def original_version_in_history_file(self, exercise: Exercise) -> Exercise:
         """
         Return Exercise identical to exercise but in history file.
         """
 
-        history_course = self.history_course(self)
+        history_course = self.history_course()
         if history_course:
             for other in history_course.exercises:
                 if other.is_copy_of(exercise):
@@ -148,16 +149,16 @@ class Course:
         Provide list of all exercises saved in history course.
         """
 
-        hstr_course = self.history_course(self)
+        hstr_course = self.history_course()
         if not hstr_course:
             return []
 
         exercises = [exo for exo in hstr_course.exercises
-                     if exo.history_date() and exo.auto_test]
-        # debug
+                     if exo.history_date() and exo.refined_auto_steps]
+        # # debug
         # for exo in hstr_course.exercises:
-        #     if exo.is_history():
-        #         break
+        #     if exo.history_date():
+        #         continue
 
         return exercises
 
@@ -191,7 +192,9 @@ class Course:
             while saved_index < len(saved_exercises) \
                     and saved_exercises[saved_index].\
                     is_history_version_of(exercise):
-                mixed_exercises.append(saved_exercises[saved_index])
+                saved_exercise = saved_exercises[saved_index]
+                mixed_exercises.append(saved_exercise)
+                saved_exercise.original_exercise = exercise
                 saved_index += 1
 
         missing = (len(original_exercises) + len(saved_exercises)
