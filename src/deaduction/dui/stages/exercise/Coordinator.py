@@ -149,7 +149,7 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
-        self.history_mode                   = (exercise.is_history() and
+        self.history_mode                   = (exercise.is_history and
                                                exercise.refined_auto_steps)
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()

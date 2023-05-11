@@ -77,7 +77,7 @@ class StructuredContent:
     skeleton = "lemma {} \n{}:=\n{}\nbegin\n{}\nend\n"
 
     #  This must be coherent with Exercise.history_date():
-    name_prefix = 'exercise.history_'
+    # history_name_prefix = 'exercise.history_'
     
     @property
     def metadata_str(self) -> str:
@@ -109,17 +109,21 @@ class StructuredContent:
         return content
 
     @classmethod
-    def new_content(cls, initial_content, additional_metadata, lean_code):
+    def new_content(cls, initial_content, additional_metadata, lean_code,
+                    version_nb):
         """
         Create a new StructuredContent instance by updating initial_content
         with additional_metadata, and replacing code by lean_code.
+        Date is also included in metadata.
+        Name is modified by inserting version_nb at the end.
         """
 
         # Compute new name
-        initial_name = initial_content.name
+        new_name = initial_content.name + '_' + str(version_nb)
+
+        # Add date to metadata
         date = strftime("%d%b%Hh%M")
-        prefix = cls.name_prefix + date + '_'
-        new_name = initial_name.replace('exercise.', prefix)
+        additional_metadata['HistoryDate'] = date
 
         # New metadata
         new_metadata = initial_content.raw_metadata.copy()
@@ -509,14 +513,20 @@ class Exercise(Theorem):
     available_magic:            List[Action]    = None
     available_proof:            List[Action]    = None
     available_statements:       List[Statement] = None
+    # FIXME: not used:
     expected_vars_number:       Dict[str, int]  = None  # e.g. {'X': 3, 'A': 1}
-    # FIXME: not used
     info:                       Dict[str, Any]  = None
+    # This is True if the negation of the statement must be proved:
     negate_statement:           bool            = False
-    # This is True if the negation of the statement must be proved.
+    # This is true if exercise should be launched in history mode:
+    is_history:                 bool            = False
 
     @property
-    def raw_metadata(self):
+    def raw_metadata(self) -> Dict[str, str]:
+        """
+        This is the metadata dictionary reflecting the individual metadata of
+        self in the Lean course file, with maybe addition of NegateStatement.
+        """
         # raw_metadata = self.info.get('raw_metadata')
         # lines = raw_metadata.splitlines()
         # if len(lines) > 1:  # Exclude open/close metadata
@@ -531,7 +541,10 @@ class Exercise(Theorem):
 
     @property
     def structured_content(self) -> StructuredContent:
-
+        """
+        This data string structure contains the different parts of self's
+        statement in Lean code.
+        """
         first_line_nb = self.lean_line
         last_line_nb = self.lean_end_line_number
         name = self.lean_short_name
@@ -853,70 +866,50 @@ class Exercise(Theorem):
         lean_file_afterword = self.analysis_code2(seq_num) + end_of_file
         return lean_file_afterword
 
-    def __new_history_file_content(self, lean_code="todo ",
-                                   additional_metadata=None):
+    def __new_file_content(self, lean_code="todo ",
+                           additional_metadata=None,
+                           version_nb=1) -> str:
         """
-        Insert additional metadata (in particular AutoSteps) and code_lines
+        Insert additional metadata (e.g. AutoSteps) and code_lines
         into self.course.file_content.
         """
 
         struct_content = self.structured_content
         new_st_content = StructuredContent.new_content(struct_content,
                                                        additional_metadata,
-                                                       lean_code)
+                                                       lean_code, version_nb)
         new_file_content = new_st_content.content_with_lemma()
         return new_file_content
 
-    # def prove_use_mode_set_by_exercise(self):
-    #     """
-    #     Test if the list of logic buttons determined by self's metadata
-    #     contains a use or demo button; in this case the ui should display
-    #     exactly those buttons, and ignore settings.
-    #     """
-    #     tests = (action.name.endswith('_use') or action.name.endswith('_prove')
-    #              for action in self.available_logic_1)
-    #     return any(tests)
-
-    # def history_file_path(self):
-    #     """
-    #     Return path to history file for this exercise.
-    #     """
-    #
-    #     # date = strftime("%d%b%Hh%M")
-    #     filename = 'history_' \
-    #                + self.lean_short_name.replace('.', '_') \
-    #                + '.lean'
-    #
-    #     check_dir(cdirs.history, create=True)
-    #     return cdirs.history / filename
-
     def history_date(self):
         """
-        Return the date when this exercise was saved, if self.is_history.
+        Return the date when this exercise was saved.
+        Pertinent only if self is from the history file.
         """
 
-        prefix = StructuredContent.name_prefix  # --> "exercise.history_"
-        if self.lean_name.find(prefix) == -1:
-            return
-        end_name = self.lean_name.split(prefix)[1]  # --> _<date>_<short_name>
-        date = end_name.split('_')[0]
-        print(f"date: {date}")
+        # prefix = StructuredContent.history_name_prefix  # --> "exercise.history_"
+        # if self.lean_name.find(prefix) == -1:
+        #     return
+        # end_name = self.lean_name.split(prefix)[1]  # --> _<date>_<short_name>
+        # date = end_name.split('_')[0]
+        # print(f"date: {date}")
+        date = self.info.get('history_date')
         return date
 
-    def is_history(self):
-        """
-        True if self is an exercise as saved in history file.
-        """
-        tests = [self.course.is_history_file(),
-                 self.history_date(),
-                 self.auto_test]
-        return all(tests)
+    # def is_from_history_file(self):
+    #     """
+    #     True if self is an exercise as saved in history file.
+    #     """
+    #     tests = [self.course.is_history_file(),
+    #              self.history_date(),
+    #              self.auto_test]
+    #     return all(tests)
 
-    def is_solved_in_auto_steps(self):
+    def is_solved_in_auto_test(self):
         """
         Return True if a global success msg is found in self.auto_steps.
         """
-        txt = self.auto_steps
+        txt = self.auto_test
         solved_txts = [text.proof_complete, _(text.proof_complete)]
         solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
         print(solved_txts)
@@ -924,17 +917,17 @@ class Exercise(Theorem):
                    for solved_txt in solved_txts)
         return test
 
-    def saved_in_history_course(self) -> []:
+    def versions_saved_in_history_course(self) -> []:
         """
         Return the versions of self as saved in self.history_course().
         """
-        return self.course.saved_in_history_course_from_exercise(self)
+        return self.course.history_versions_from_exercise(self)
 
-    def is_in_history_course(self):
+    def has_versions_in_history_course(self):
         """
         True if at least one saved version of self in history_course.
         """
-        return len(self.saved_in_history_course()) > 0
+        return len(self.versions_saved_in_history_course()) > 0
 
     def is_solved_in_history_course(self):
         """
@@ -942,12 +935,29 @@ class Exercise(Theorem):
         complete proof.
         """
         return any([exo.is_solved_in_auto_steps()
-                    for exo in self.saved_in_history_course()])
+                    for exo in self.versions_saved_in_history_course()])
 
-    def has_identical_content(self, other):
-        return self.structured_content.has_identical_core_lemma_content(
-            other.structured_content)
-    
+    def is_copy_of(self, other) -> bool:
+        """
+        This is true if self is a copy of other (in a distinct file).
+        Name and core content are tested.
+        """
+        tests = [self.structured_content.has_identical_core_lemma_content(
+                 other.structured_content),
+                self.lean_name == other.lean_name]
+        return all(tests)
+
+    def is_history_version_of(self, other):
+        """
+        True if self is a history version of other. Name and core content are
+        tested.
+        """
+        tests = [self.history_date(), self.auto_test,
+                 self.structured_content.has_identical_core_lemma_content(
+                 other.structured_content),
+                 self.lean_name.startswith(other.lean_name + '_')]
+        return all(tests)
+
     def save_with_auto_steps(self, additional_metadata, lean_code):
         """
         Save current exercise with auto_steps in self.course's history file.
@@ -958,34 +968,37 @@ class Exercise(Theorem):
         """
         path = self.course.history_file_path
 
-        if path.exists():
-            course = self.course
-            historic_course = course.history_course(course)
-            self_index = course.statements.index(self)
+        version_nb = len(self.versions_saved_in_history_course()) + 1
 
-            # Search original exercise in history_file from self_index:
+        # if path.exists():
+        #     course = self.course
+        #     historic_course = course.history_course(course)
+        #     self_index = course.statements.index(self)
+        #
+        #     # Search original exercise in history_file from self_index:
+        #
+        #     # str_content = self.structured_content
+        #     # (name, hypo, cc) = (str_content.name,
+        #     #                     str_content.hypotheses,
+        #     #                     str_content.conclusion)
+        #     exercise = historic_course.statements[self_index]
+        #     # his_content = exercise.structured_content
+        #     while not (self.has_identical_content(exercise) and
+        #                self.lean_name == exercise.lean_name):
+        #         self_index += 1
+        #         exercise = historic_course.statements[self_index]
+        #         # his_content = exercise.structured_content
+        if self.course.history_course(self.course):
+            exercise = self.course.original_version_in_history_file(self)
 
-            # str_content = self.structured_content
-            # (name, hypo, cc) = (str_content.name,
-            #                     str_content.hypotheses,
-            #                     str_content.conclusion)
-            exercise = historic_course.statements[self_index]
-            # his_content = exercise.structured_content
-            while not (self.has_identical_content(exercise) and
-                       self.lean_name == exercise.lean_name):
-                self_index += 1
-                exercise = historic_course.statements[self_index]
-                # his_content = exercise.structured_content
-
-            # exercise.info['raw_metadata'] = self.raw_metadata
         else:
             exercise = self
 
         if self.negate_statement:
             exercise.negate_statement = True
 
-        content = exercise.__new_history_file_content(lean_code,
-                                                      additional_metadata)
+        content = exercise.__new_file_content(lean_code, additional_metadata,
+                                              version_nb)
 
         # print(f"Path: {path}")
         # print(f"Content: {content}")

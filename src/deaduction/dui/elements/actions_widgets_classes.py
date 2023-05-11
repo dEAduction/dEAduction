@@ -729,7 +729,7 @@ class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
 
         if exercise.is_solved_in_history_course():
             path = icons_base_dir / 'checked.png'
-        elif exercise.is_in_history_course():
+        elif exercise.has_versions_in_history_course():
             path = icons_base_dir / 'icons8-in-progress-96.png'
         elif exercise.is_history():
             path = None

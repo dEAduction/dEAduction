@@ -129,6 +129,20 @@ class Course:
                                        else None)
         return course.__history_course
 
+    def original_version_in_history_file(self, exercise: Exercise) -> Exercise:
+        """
+        Return Exercise identical to exercise but in history file.
+        """
+
+        history_course = self.history_course(self)
+        if history_course:
+            for other in history_course.exercises:
+                if other.is_copy_of(exercise):
+                    return other
+
+            log.warning(f"No copy of original exercise {exercise.pretty_name}"
+                        f"found in history file")
+
     def saved_exercises_in_history_course(self) -> [Exercise]:
         """
         Provide list of all exercises saved in history course.
@@ -139,7 +153,7 @@ class Course:
             return []
 
         exercises = [exo for exo in hstr_course.exercises
-                     if exo.is_history()]
+                     if exo.history_date() and exo.auto_test]
         # debug
         # for exo in hstr_course.exercises:
         #     if exo.is_history():
@@ -147,13 +161,13 @@ class Course:
 
         return exercises
 
-    def saved_in_history_course_from_exercise(self, exercise: Exercise):
+    def history_versions_from_exercise(self, exercise: Exercise):
         """
         Return the versions of exercise as saved in self.history_course().
         """
         saved_exercises = self.saved_exercises_in_history_course()
-        exercises = [exo for exo in saved_exercises
-                     if exercise.has_identical_content(exo)]
+        exercises = [history_exo for history_exo in saved_exercises
+                     if history_exo.is_history_version_of(exercise)]
         return exercises
 
     def is_history_file(self):
@@ -174,10 +188,9 @@ class Course:
 
         for exercise in original_exercises:
             mixed_exercises.append(exercise)
-            # FIXME: this will include original lemma in history file??
             while saved_index < len(saved_exercises) \
-                    and saved_exercises[
-                saved_index].has_identical_core_lemma_content(exercise):
+                    and saved_exercises[saved_index].\
+                    is_history_version_of(exercise):
                 mixed_exercises.append(saved_exercises[saved_index])
                 saved_index += 1
 
