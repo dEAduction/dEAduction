@@ -394,7 +394,7 @@ class LeanCourseVisitor(NodeVisitor):
         to PEP8 conventions, e.g. PrettyName -> pretty_name
         """
         course_history, metadata = get_info(visited_children)
-        metadata['raw_metadata'] = node.text
+        metadata['_raw_metadata'] = metadata.copy()
         data = {"metadata": metadata}
         # event = "begin_metadata", None
         # course_history.insert(0, event)

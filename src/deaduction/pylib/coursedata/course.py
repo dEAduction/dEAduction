@@ -174,8 +174,10 @@ class Course:
 
         for exercise in original_exercises:
             mixed_exercises.append(exercise)
+            # FIXME: this will include original lemma in history file??
             while saved_index < len(saved_exercises) \
-                    and saved_exercises[saved_index].has_identical_content(exercise):
+                    and saved_exercises[
+                saved_index].has_identical_core_lemma_content(exercise):
                 mixed_exercises.append(saved_exercises[saved_index])
                 saved_index += 1
 
@@ -363,6 +365,8 @@ class Course:
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
+        # Meaningless here
+        course_metadata.pop('_raw_metadata')
         # log.debug(f"course history: {course_history}")
         log.info(f"Course metadata: {course_metadata}")
 
@@ -423,8 +427,9 @@ class Course:
                     # AvailableDefinitions
                     # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
-                        metadata.setdefault(field_name,
-                                            course_metadata[field_name])
+                        if field_name != '_raw_metadata':
+                            metadata.setdefault(field_name,
+                                                course_metadata[field_name])
                     # Creating Exercise!
                     exercise = Exercise.from_parser_data(metadata, statements)
                     statements.append(exercise)

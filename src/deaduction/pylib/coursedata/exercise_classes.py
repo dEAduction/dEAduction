@@ -69,14 +69,11 @@ class StructuredContent:
     name: str
     hypotheses: str
     conclusion: str
-    raw_metadata: Optional[str]
-    metadata: Optional[Dict[str, str]]  # Deprecated
+    raw_metadata: Dict[str, str]
     lean_code: str
 
     course_file_content: str
 
-    # FIXME: deprecated
-    negated_core_content: str = ""  # If not empty, statement will be negated
     skeleton = "lemma {} \n{}:=\n{}\nbegin\n{}\nend\n"
 
     #  This must be coherent with Exercise.history_date():
@@ -88,19 +85,16 @@ class StructuredContent:
         Format metadata dict for Lean files. Indent values if needed.
         """
 
-        if self.metadata and not self.raw_metadata:
-            self.raw_metadata = metadata_to_str(self.metadata)
+        metadata_str = metadata_to_str(self.raw_metadata)
 
-        metadata_str = '/- dEAduction\n' + self.raw_metadata + '-/\n'
-
-        return metadata_str
+        return '/- dEAduction\n' + metadata_str + '-/\n'
 
     @property
-    def content(self) -> str:
+    def lemma_content(self) -> str:
 
-        core_content = self.negated_core_content
-        if not core_content:
-            core_content = f'{self.hypotheses} :\n{self.conclusion}'
+        # core_content = self.negated_core_content
+        # if not core_content:
+        core_content = f'{self.hypotheses} :\n{self.conclusion}'
 
         skeleton = self.skeleton
         content = skeleton.format(self.name,
@@ -115,54 +109,48 @@ class StructuredContent:
         return content
 
     @classmethod
-    def history_content(cls, initial_structured_content,
-                        additional_metadata, lean_code):
+    def new_content(cls, initial_content, additional_metadata, lean_code):
+        """
+        Create a new StructuredContent instance by updating initial_content
+        with additional_metadata, and replacing code by lean_code.
+        """
 
         # Compute new name
-        initial_name = initial_structured_content.name
+        initial_name = initial_content.name
         date = strftime("%d%b%Hh%M")
         prefix = cls.name_prefix + date + '_'
         new_name = initial_name.replace('exercise.', prefix)
 
         # New metadata
-        metadata = initial_structured_content.metadata
-        new_metadata = dict()
-        if metadata:
-            new_metadata = metadata.copy()
-            new_metadata.update(additional_metadata)
+        new_metadata = initial_content.raw_metadata.copy()
+        new_metadata.update(additional_metadata)
 
-        raw_metadata = initial_structured_content.raw_metadata
-        if not raw_metadata.endswith('\n'):
-            raw_metadata += '\n'
-        raw_metadata += metadata_to_str(additional_metadata)
-
-        new_content = cls(initial_structured_content.first_line_nb,
-                          initial_structured_content.last_line_nb,
+        new_content = cls(initial_content.first_line_nb,
+                          initial_content.last_line_nb,
                           new_name,
-                          initial_structured_content.hypotheses,
-                          initial_structured_content.conclusion,
-                          raw_metadata, new_metadata, lean_code,
-                          initial_structured_content.course_file_content,
-                          initial_structured_content.negated_core_content)
+                          initial_content.hypotheses,
+                          initial_content.conclusion,
+                          new_metadata, lean_code,
+                          initial_content.course_file_content)
         return new_content
 
-    def history_file_content(self):
+    def content_with_lemma(self):
         """
-        Compute the content of the history file, by adding content to
-        the course_file_content juste after the original content.
-        This method should be applied to a history_content.
+        Compute the content of the history file, by adding lemma_content to
+        the course_file_content at line self.last_line_nb.
+        This method should be applied to a new_content.
         """
         content_lines = self.course_file_content.splitlines()
 
         part_1 = '\n'.join(content_lines[:self.last_line_nb])
-        part_2 = self.content
+        part_2 = self.lemma_content
         part_3 = '\n'.join(content_lines[self.last_line_nb:])
 
         history_file = part_1 + '\n\n' + part_2 + '\n' + part_3
 
         return history_file
 
-    def has_identical_content(self, other):
+    def has_identical_core_lemma_content(self, other):
         return (self.hypotheses.strip(), self.conclusion.strip()) == \
             (other.hypotheses.strip(), other.conclusion.strip())
     
@@ -203,6 +191,7 @@ class Statement:
     auto_steps: str                         = ''
     auto_test: str                          = ''
     __refined_auto_steps: Optional[AutoStep]= None
+    _raw_metadata: Dict[str, str]           = None
 
     info:                   Dict[str, Any]  = None
     # Any other (non-essential) information
@@ -528,13 +517,17 @@ class Exercise(Theorem):
 
     @property
     def raw_metadata(self):
-        raw_metadata = self.info.get('raw_metadata')
-        lines = raw_metadata.splitlines()
-        if len(lines) > 1:  # Exclude open/close metadata
-            lines = lines[1:-1]
+        # raw_metadata = self.info.get('raw_metadata')
+        # lines = raw_metadata.splitlines()
+        # if len(lines) > 1:  # Exclude open/close metadata
+        #     lines = lines[1:-1]
+        if self._raw_metadata is None:
+            self._raw_metadata = dict()
         if self.negate_statement:
-            lines += ['NegateStatement', '  True']
-        return '\n'.join(lines)
+            self._raw_metadata['NegateStatement'] = '  True'
+            # lines += ['NegateStatement', '  True']
+        # return '\n'.join(lines)
+        return self._raw_metadata
 
     @property
     def structured_content(self) -> StructuredContent:
@@ -548,11 +541,8 @@ class Exercise(Theorem):
         code = "todo\n"
         file_content = self.course.file_content
 
-        # negated_content = (self.negated_goal().to_lean_statement(name)
-        #                    if self.negate_statement else "")
-
         return StructuredContent(first_line_nb, last_line_nb,
-                                 name, hypo, conclusion, raw_metadata, None,
+                                 name, hypo, conclusion, raw_metadata,
                                  code, file_content)
 
     @property
@@ -871,10 +861,10 @@ class Exercise(Theorem):
         """
 
         struct_content = self.structured_content
-        new_st_content = StructuredContent.history_content(struct_content,
-                                                           additional_metadata,
-                                                           lean_code)
-        new_file_content = new_st_content.history_file_content()
+        new_st_content = StructuredContent.new_content(struct_content,
+                                                       additional_metadata,
+                                                       lean_code)
+        new_file_content = new_st_content.content_with_lemma()
         return new_file_content
 
     # def prove_use_mode_set_by_exercise(self):
@@ -955,7 +945,7 @@ class Exercise(Theorem):
                     for exo in self.saved_in_history_course()])
 
     def has_identical_content(self, other):
-        return self.structured_content.has_identical_content(
+        return self.structured_content.has_identical_core_lemma_content(
             other.structured_content)
     
     def save_with_auto_steps(self, additional_metadata, lean_code):

@@ -1308,8 +1308,7 @@ class Coordinator(QObject):
 
             # Compute AutoSteps string
             proof_steps = self.proof_tree.proof_steps()
-            auto_steps = [AutoStep.from_proof_step(step, self.emw)
-                          for step in proof_steps]
+            auto_steps = [step.auto_test for step in proof_steps]
             auto_steps_str = ''
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'
