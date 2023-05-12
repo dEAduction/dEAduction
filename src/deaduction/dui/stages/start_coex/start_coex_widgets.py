@@ -233,7 +233,7 @@ class CourseChooser(AbstractCoExChooser):
     """
 
     course_chosen = Signal(Course)
-    goto_exercise = Signal()
+    goto_exercises = Signal()
 
     def __init__(self, servint):
         """
@@ -263,7 +263,7 @@ class CourseChooser(AbstractCoExChooser):
         self.__recent_courses_wgt.currentItemChanged.connect(
             self.current_item_changed)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
-                lambda x: self.goto_exercise.emit())
+                lambda x: self.goto_exercises.emit())
 
         super().__init__(browser_layout)
 
@@ -273,6 +273,9 @@ class CourseChooser(AbstractCoExChooser):
         course = Course.from_file(course_path)
         self.__set_initial_proof_states(course)
         self.set_preview(course)
+
+    def give_focus_to_course_wdg(self):
+        self.__recent_courses_wgt.setFocus()
 
     def add_browsed_course(self, course: Course):
         """
@@ -457,7 +460,15 @@ class ExerciseChooser(AbstractCoExChooser):
                                               is_exercise_list=True)
 
         exercises_tree.resizeColumnToContents(0)
+
+        self.__history_checkbox = QCheckBox(_('Show saved exercises'))
+        self.__history_checkbox.clicked.connect(self.toggle_history)
+        btns_lyt = QHBoxLayout()
+        btns_lyt.addWidget(self.__history_checkbox)
+        btns_lyt.addStretch()
+
         browser_layout.addWidget(exercises_tree)
+        browser_layout.addLayout(btns_lyt)
 
         exercises_tree.currentItemChanged.connect(self.current_item_changed)
 
@@ -478,6 +489,11 @@ class ExerciseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
 
+        show_history = cvars.get('display.show_saved_exercises')
+        self.__history_checkbox.setChecked(show_history)
+        self.toggle_history(yes=show_history)
+        # self.__exercises_tree.setFocus()
+
     def current_item_changed(self):
         item = self.__exercises_tree.currentItem()
         if isinstance(item, StatementsTreeWidgetItem):
@@ -486,6 +502,9 @@ class ExerciseChooser(AbstractCoExChooser):
 
     def exercises_tree_double_clicked_connect(self, slot):
         self.__exercises_tree.itemDoubleClicked.connect(slot)
+
+    def give_focus_to_exercises_tree(self):
+        self.__exercises_tree.setFocus()
 
     def set_preview(self, exercise: Exercise):
         """
@@ -515,9 +534,12 @@ class ExerciseChooser(AbstractCoExChooser):
             # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
-            cb_lyt = QHBoxLayout()
-            cb_lyt.addStretch()
-            cb_lyt.addWidget(self.__text_mode_checkbox)
+            # self.__history_checkbox = QCheckBox(_('Show saved exercises'))
+            # self.__history_checkbox.clicked.connect(self.toggle_history)
+            btns_lyt = QHBoxLayout()
+            # btns_lyt.addWidget(self.__history_checkbox)
+            btns_lyt.addStretch()
+            btns_lyt.addWidget(self.__text_mode_checkbox)
 
             main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
@@ -530,14 +552,16 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__goal_widget = self.create_widget()
             main_widget_lyt.addWidget(self.__goal_widget)
             main_widget_lyt.addStretch()  # -> check box at bottom
-            main_widget_lyt.addLayout(cb_lyt)
+            main_widget_lyt.addLayout(btns_lyt)
             self.__main_widget_lyt = main_widget_lyt
         else:
             self.servint.initial_proof_state_set.connect(
                                         self.__check_proof_state_for_preview)
             # Try to get preview with high priority:
+            exercise_ = (exercise if not exercise.original_exercise
+                         else exercise.original_exercise)
             self.servint.set_statements(exercise.course,
-                                        [exercise],
+                                        [exercise_],
                                         on_top=True)
             widget_lbl = QTextEdit(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
@@ -559,6 +583,7 @@ class ExerciseChooser(AbstractCoExChooser):
                             description=description, expand_details=False)
 
         self.exercise_previewed.emit()
+        # self.give_focus_to_exercises_tree()
         # item = self.__exercises_tree.currentItem()
         # self.__exercises_tree.scrollToItem(item)
                                # hint=self.__exercises_tree.PositionAtCenter)
@@ -642,6 +667,16 @@ class ExerciseChooser(AbstractCoExChooser):
             widget = self.__ui_wgt
 
         return widget
+
+    def toggle_history(self, yes=True):
+        """
+        Show or hide all saved versions according to bool yes.
+        """
+
+        history_versions = self.course.saved_exercises_in_history_course()
+        tree_widget = self.__exercises_tree
+        tree_widget.hide_statements(history_versions, not yes)
+        cvars.set('display.show_saved_exercises', yes)
 
     ##############
     # Properties #
@@ -762,7 +797,7 @@ class AbstractStartCoEx(QDialog):
         self.__exercise_chooser = QWidget()
 
         # Somehow the order of connections changes performances
-        self.course_chooser.goto_exercise.connect(self.__goto_exercise)
+        self.course_chooser.goto_exercises.connect(self.__goto_exercises)
         self.course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
@@ -777,7 +812,6 @@ class AbstractStartCoEx(QDialog):
 
         self.__quit_btn.clicked.connect(self.quit_deaduction)
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
-
         self.disable_start_btn = None
 
         # ───────────────────── Layouts ──────────────────── #
@@ -809,6 +843,8 @@ class AbstractStartCoEx(QDialog):
         self.__tabwidget.setTabEnabled(1, False)
         if exercise:
             self.__preset_exercise(exercise)
+        else:
+            self.course_chooser.give_focus_to_course_wdg()
 
     def closeEvent(self, event: QEvent):
         """
@@ -849,8 +885,9 @@ class AbstractStartCoEx(QDialog):
         self.course_chooser.set_preview(exercise.course)
         self.course_chooser.add_browsed_course(exercise.course)
         # self.course_chooser.course_chosen.emit()
+        self.__goto_exercises()
         self.__exercise_chooser.set_preview(exercise)
-        self.__goto_exercise()
+        # self.__exercise_chooser.give_focus_to_exercise_tree()
 
     #########
     # Slots #
@@ -897,7 +934,7 @@ class AbstractStartCoEx(QDialog):
             self.__start_ex_btn.setDefault(True)
 
     @Slot()
-    def __goto_exercise(self):
+    def __goto_exercises(self):
         """
         Go to the exercise tab.
         """
@@ -1008,46 +1045,46 @@ class StartCoExStartup(AbstractStartCoEx):
                          servint=servint)
 
 
-class StartCoExExerciseFinished(AbstractStartCoEx):
-    """
-    The CoEx chooser after usr just finished an exercise. It displays
-    a CoEx chooser with the finished exercise
-    being preset / previewed. See AbstractStartCoEx docstring.
-    """
-    # FIXME: not used
-
-    def __init__(self, finished_exercise: Exercise):
-        """
-        Init self.
-
-        :param finisehd_exercise: Exercise that usr just finished.
-        """
-
-        congrats_wgt = QWidget()
-        lyt          = QHBoxLayout()
-        img          = QLabel()
-        pixmap       = QPixmap(cdirs.icons / 'confetti.png')
-        pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
-        img.setPixmap(pixmap)
-        lyt.addWidget(img)
-        lyt.addStretch()
-        lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
-        congrats_wgt.setLayout(lyt)
-        title = _('Exercise finished — d∃∀duction')
-
-        super().__init__(title=title, widget=congrats_wgt,
-                         exercise=finished_exercise)
-
-    def closeEvent(self, event: QEvent):
-        """
-        Overload native Qt closeEvent method — which is called when self
-        is closed — to send the signal self.window_closed.
-
-        :param event: Some Qt mandatory thing.
-        """
-
-        super().closeEvent(event)
-        self.window_closed.emit()
+# class StartCoExExerciseFinished(AbstractStartCoEx):
+#     """
+#     The CoEx chooser after usr just finished an exercise. It displays
+#     a CoEx chooser with the finished exercise
+#     being preset / previewed. See AbstractStartCoEx docstring.
+#     """
+#     # FIXME: not used
+#
+#     def __init__(self, finished_exercise: Exercise):
+#         """
+#         Init self.
+#
+#         :param finisehd_exercise: Exercise that usr just finished.
+#         """
+#
+#         congrats_wgt = QWidget()
+#         lyt          = QHBoxLayout()
+#         img          = QLabel()
+#         pixmap       = QPixmap(cdirs.icons / 'confetti.png')
+#         pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
+#         img.setPixmap(pixmap)
+#         lyt.addWidget(img)
+#         lyt.addStretch()
+#         lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
+#         congrats_wgt.setLayout(lyt)
+#         title = _('Exercise finished — d∃∀duction')
+#
+#         super().__init__(title=title, widget=congrats_wgt,
+#                          exercise=finished_exercise)
+#
+#     def closeEvent(self, event: QEvent):
+#         """
+#         Overload native Qt closeEvent method — which is called when self
+#         is closed — to send the signal self.window_closed.
+#
+#         :param event: Some Qt mandatory thing.
+#         """
+#
+#         super().closeEvent(event)
+#         self.window_closed.emit()
 
 
 def check_negate_statement(exercise) -> bool:

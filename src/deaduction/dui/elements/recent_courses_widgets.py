@@ -64,6 +64,7 @@ class RecentCoursesLW(QListWidget):
             if course_path.exists():
                 item = RecentCoursesLWI(course_path, course_title)
                 self.addItem(item)
+        self.setCurrentItem(self.item(0))
 
     def add_browsed_course(self, course_path: Path, course_title: str):
         """

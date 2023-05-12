@@ -125,8 +125,8 @@ class StructuredContent:
         date = strftime("%d%b%Hh%M")
         additional_metadata['history_date'] = date
 
-        # Change pretty name
-        additional_metadata["pretty_name"] = _("saved ") + date
+        # # Change pretty name
+        # additional_metadata["pretty_name"] = _("saved ") + date
 
         # New metadata
         new_metadata = initial_content.raw_metadata.copy()
@@ -190,7 +190,7 @@ class Statement:
     course:                 Any             = None
     # the parent course
 
-    initial_proof_state:    Any             = None
+    _initial_proof_state:    Any             = None
     # this is filled when pre-processing
 
     __negated_goal:         Any                     = None
@@ -243,6 +243,14 @@ class Statement:
         if cls != Statement:
             attributes.update(cls.__annotations__)
         return attributes
+
+    @property
+    def initial_proof_state(self):
+        return self._initial_proof_state
+
+    @initial_proof_state.setter
+    def initial_proof_state(self, ips):
+        self._initial_proof_state = ips
 
     @property
     def lean_short_name(self):
@@ -521,9 +529,20 @@ class Exercise(Theorem):
     info:                       Dict[str, Any]  = None
     # This is True if the negation of the statement must be proved:
     negate_statement:           bool            = False
-    # This is true if exercise should be launched in history mode:
-    # is_history:                 bool            = False
+    # If self is in a history file, then this points to the original exercise
+    # in the original course file:
     original_exercise                           = None
+
+    @property
+    def initial_proof_state(self):
+        if self.original_exercise:
+            return self.original_exercise.initial_proof_state
+        else:
+            return self._initial_proof_state
+
+    @initial_proof_state.setter
+    def initial_proof_state(self, ips):
+        self._initial_proof_state = ips
 
     @property
     def raw_metadata(self) -> Dict[str, str]:

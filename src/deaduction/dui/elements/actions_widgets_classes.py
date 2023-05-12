@@ -720,8 +720,12 @@ class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
 
     def to_display(self) -> [str]:
         exercise = self.statement
-        if exercise.history_date():
-            to_display = ['\t' + exercise.pretty_name]
+        date = exercise.history_date()
+        if date:
+            nb_steps = len(exercise.refined_auto_steps)
+            txt1 = _("saved ") + date
+            txt2 = f"({nb_steps} " + _("steps") + ")"
+            to_display = ['\t' + txt1 + '\t' + txt2]
         else:
             to_display = [exercise.pretty_name]
 
@@ -1037,7 +1041,8 @@ class StatementsTreeWidget(QTreeWidget):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
                 if item.statement == statement:
-                    item.setSelected(True)
+                    # item.setSelected(True)
+                    self.setCurrentItem(item)
                     return True
             for i in range(0, item.childCount()):
                 if traverse_node(item.child(i)):
@@ -1048,16 +1053,26 @@ class StatementsTreeWidget(QTreeWidget):
             if traverse_node(item):
                 item.setExpanded(expand)
 
+        self.setFocus()
+
     @staticmethod
     def item_from_lean_name(lean_name: str) -> StatementsTreeWidgetItem:
         """
-        Return the StatementsTreeWidgetItem whose statement's pretty name is
-        pretty_name.
+        Return the StatementsTreeWidgetItem whose statement's Lean name is
+        lean_name.
         """
-        return StatementsTreeWidgetItem.from_name.get(lean_name)
+        return StatementsTreeWidgetItem.from_lean_name.get(lean_name)
 
     def item_from_statement(self, statement):
         return self.item_from_lean_name(statement.lean_name)
+
+    def hide_statements(self, statements: [Statement], yes=True):
+        """
+        Hide all the provided statements. Based on item_from_statement.
+        """
+        for statement in statements:
+            item = self.item_from_statement(statement)
+            item.setHidden(yes)
 
     def index_from_event(self, event):
         return self.indexAt(event.pos())
