@@ -178,6 +178,7 @@ class Coordinator(QObject):
         #                                         self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
         # self.emw.cancel_server.connect(self.cancel_server)
+        self.emw.save_history.connect(self.save_history)
 
     def __init_auto_steps(self):
         log.info("Initializing auto steps")
@@ -1254,7 +1255,7 @@ class Coordinator(QObject):
 
             msg_box.exec_()
 
-            self.save_history(yes=(check_box.isChecked()))
+            self.save_history(save_history=(check_box.isChecked()))
 
     def update_proof_step(self):
         """
@@ -1300,13 +1301,20 @@ class Coordinator(QObject):
         # self.current_user_action = None
         self.lean_code_sent = None
 
-    def save_history(self, yes=True):
-        key = 'functionality.save_history_of_solved_exercises'
-        cvars.set(key, yes)
-        if yes:
-            log.info("Saving history")
+    def save_history(self, save_history=None):
+        """
+        If parameter yes is True or False, attribute value yes to cvars
+        functionality.
+        Save if yes=True or None.
+        """
 
-            # Compute AutoSteps string
+        if save_history is not None:
+            key = 'functionality.save_history_of_solved_exercises'
+            cvars.set(key, save_history)
+
+        if save_history is not False:
+            log.info("Saving history")
+            # Retrieve AutoSteps string
             proof_steps = self.proof_tree.proof_steps()
             auto_steps = [step.auto_step for step in proof_steps]
             auto_steps_str = ''

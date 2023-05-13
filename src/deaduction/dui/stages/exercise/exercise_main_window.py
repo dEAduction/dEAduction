@@ -134,6 +134,7 @@ class ExerciseMainWindow(QMainWindow):
     change_exercise              = Signal()
     ui_updated                   = Signal()
     stop                         = Signal()
+    save_history                 = Signal()
 
     # User action signals:
     action_triggered             = Signal(ActionButton)
@@ -252,7 +253,9 @@ class ExerciseMainWindow(QMainWindow):
                               ]),
                          self.exercise_toolbar.toggle_help_action,
                          self.exercise_toolbar.toggle_lean_editor_action,
-                         self.global_toolbar.change_exercise_action])
+                         self.global_toolbar.change_exercise_action,
+                          self.global_toolbar.save_history_action]
+                         )
 
         # ─────────────────────── Main Menu ─────────────────────── #
         outline = [menu_deaduction, menu_exercise]
@@ -332,10 +335,16 @@ class ExerciseMainWindow(QMainWindow):
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
         self.global_toolbar.stop.triggered.connect(self.stop)
+        self.global_toolbar.save_history_action.triggered.connect(
+            self.emit_save_history)
 
     def close_help_window(self):
         if self.help_window.isVisible():
             self.close_help_window_timer.start(200)
+
+    @Slot()
+    def emit_save_history(self):
+        self.save_history.emit()
 
     @Slot()
     def context_clicked(self):

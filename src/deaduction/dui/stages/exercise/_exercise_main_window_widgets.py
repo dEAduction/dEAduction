@@ -792,9 +792,14 @@ class GlobalToolbar(QToolBar):
         self.change_exercise_action = QAction(
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
+        self.save_history_action = QAction(
+            QIcon(str((icons_dir / 'icons8-save-96.png').resolve())),
+            _("Save proof"), self)
 
         self.addAction(self.stop)
         self.addAction(self.settings_action)
+        self.addAction(self.save_history_action)
+        self.save_history_action.setShortcut(QKeySequence.Save)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)
 
@@ -805,5 +810,6 @@ class GlobalToolbar(QToolBar):
         self.change_exercise_action.setText(_('Change exercise'))
         self.settings_action.setText(_("Settings"))
         self.stop.setText(_('Stop me from thinking!'))
+        self.save_history_action.setText(_("Save proof"))
 
 
