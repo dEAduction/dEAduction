@@ -1216,7 +1216,10 @@ class Coordinator(QObject):
 
         self.proof_step.no_more_goal = True
         # self.proof_step.success_msg = _("Proof complete")
-        self.proof_step.success_msg = _(text.proof_complete)
+        if self.proof_tree.root_node.proof_uses_sorry():
+            self.proof_step.success_msg = _(text.proof_sorry)
+        else:
+            self.proof_step.success_msg = _(text.proof_complete)
         self.proof_step.new_goals = []
         # Artificially create a final proof_state by replacing target by a msg
         # (We do not get the final proof_state from Lean).
@@ -1301,17 +1304,24 @@ class Coordinator(QObject):
         # self.current_user_action = None
         self.lean_code_sent = None
 
-    def save_history(self, save_history=None):
+    def save_history(self, save_history=None, all_goals_solved=None):
         """
         If parameter yes is True or False, attribute value yes to cvars
         functionality.
         Save if yes=True or None.
         """
 
+        additional_metadata = dict()
         if save_history is not None:
             key = 'functionality.save_history_of_solved_exercises'
             cvars.set(key, save_history)
 
+        if all_goals_solved is None:
+            node = self.proof_tree.root_node
+            all_goals_solved = (node.is_recursively_solved()
+                                and not node.is_recursively_sorry())
+            if all_goals_solved:
+                additional_metadata["all_goals_solved"] = 'True'
         if save_history is not False:
             log.info("Saving history")
             # Retrieve AutoSteps string
@@ -1321,7 +1331,7 @@ class Coordinator(QObject):
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'
 
-            additional_metadata = {'AutoTest': auto_steps_str}
+            additional_metadata['auto_test'] = auto_steps_str
 
             # Compute pertinent settings
             # keys = ["others.Lean_request_method"]
@@ -1396,12 +1406,6 @@ class Coordinator(QObject):
             proof_state = self.set_fireworks()
 
         else:  # Generic step
-            # hypo_analysis, targets_analysis = analysis
-            # if hypo_analysis and targets_analysis:
-            #     log.info("** Creating new proof state **")
-            #     proof_state = ProofState.from_lean_data(hypo_analysis,
-            #                                             targets_analysis,
-            #                                             to_prove=True)
             if proof_state:
                 self.lean_file.state_info_attach(ProofState=proof_state)
             else:
@@ -1412,7 +1416,7 @@ class Coordinator(QObject):
                 self.abort_process()
                 return
 
-        self.proof_step.proof_state = proof_state  # FIXME
+        self.proof_step.proof_state = proof_state
 
         if not self.proof_step.is_error():
             if not self.proof_step.is_history_move():

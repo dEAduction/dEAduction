@@ -35,4 +35,4 @@ def _(txt):
 
 
 proof_complete = _("Proof complete")
-
+proof_sorry = _("Proof complete (but for some admitted goals)")

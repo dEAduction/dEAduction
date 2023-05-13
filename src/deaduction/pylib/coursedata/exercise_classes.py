@@ -950,12 +950,13 @@ class Exercise(Theorem):
         Return True if a global success msg is found in the last
         step of self.refined_auto_steps.
         """
-        txt = self.refined_auto_steps[-1].success_msg
-        solved_txts = [text.proof_complete, _(text.proof_complete)]
-        # solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
-        # print(solved_txts)
-        test = any(txt.find(solved_txt) != -1
-                   for solved_txt in solved_txts)
+        # txt = self.refined_auto_steps[-1].success_msg
+        # solved_txts = [text.proof_complete, _(text.proof_complete)]
+        # # solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
+        # # print(solved_txts)
+        # test = any(txt.find(solved_txt) != -1
+        #            for solved_txt in solved_txts)
+        test = self.raw_metadata.get('all_goals_solved', False)
         return test
 
     def versions_saved_in_history_course(self) -> []:

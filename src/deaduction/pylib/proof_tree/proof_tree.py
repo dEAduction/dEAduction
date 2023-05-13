@@ -627,6 +627,13 @@ class GoalNode:
         if self.child_proof_step:
             return self.child_proof_step.is_sorry()
 
+    def proof_uses_sorry(self):
+        if self.is_immediately_sorry():
+            return True
+        else:
+            return any([child.is_immediately_sorry()
+                        for child in self.children_goal_nodes])
+
     def is_recursively_sorry(self, truncate=False):
         """
         Self is recursively sorry all of its children are solved or sorry,
