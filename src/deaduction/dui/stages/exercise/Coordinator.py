@@ -1246,8 +1246,8 @@ class Coordinator(QObject):
                                           QMessageBox.YesRole)
             button_change = msg_box.addButton(_('Change exercise'),
                                               QMessageBox.YesRole)
-            button_change.clicked.connect(self.emw.change_exercise)
-            # FIXME: sometimes chooser is called BEFORE exercise is saved
+            button_change.setCheckable(True)
+            # button_change.clicked.connect(self.emw.change_exercise)
 
             # Save history button
             key = 'functionality.save_history_of_solved_exercises'
@@ -1258,7 +1258,11 @@ class Coordinator(QObject):
 
             msg_box.exec_()
 
+            # Save history, and then change exercise,
+            #  so that saved exercise appears in exercises list
             self.save_history(save_history=(check_box.isChecked()))
+            if button_change.isChecked():
+                self.emw.change_exercise.emit()
 
     def update_proof_step(self):
         """
@@ -1326,7 +1330,8 @@ class Coordinator(QObject):
             log.info("Saving history")
             # Retrieve AutoSteps string
             proof_steps = self.proof_tree.proof_steps()
-            auto_steps = [step.auto_step for step in proof_steps]
+            auto_steps = [step.auto_step for step in proof_steps
+                          if step is not None]
             auto_steps_str = ''
             for step in auto_steps:
                 auto_steps_str += '    ' + step.raw_string + ',\n'

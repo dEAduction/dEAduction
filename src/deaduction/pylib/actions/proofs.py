@@ -80,7 +80,7 @@ def action_proof_methods(proof_step) -> CodeForLean:
                                      )
     # 2nd call, call the adequate proof method. len(user_input) = 1.
     else:
-        method = user_input[0] + 1
+        method = int(user_input[0]) + 1
         if method == 1:
             return method_cbr(proof_step, selected_objects, user_input)
         if method == 2:

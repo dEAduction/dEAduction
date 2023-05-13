@@ -530,7 +530,7 @@ class WindowManager(QObject):
         """
 
         log.info("Choosing new exercise")
-
+        # trio.sleep(0)  # Give time to save
         if not self.chooser_window:
             # Start chooser window
             self.chooser_window = StartCoExStartup(exercise=self.exercise,
