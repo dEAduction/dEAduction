@@ -94,7 +94,8 @@ log_to_file = true
 
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':
-Lean_request_method = "automatic"
+# Put 'automatic' for efficiency in metadata of exercises with heavy computations
+Lean_request_method = "normal"
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
 version_nb = "0.32111"

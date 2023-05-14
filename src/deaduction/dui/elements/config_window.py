@@ -218,7 +218,7 @@ CONFIGS["Advanced"] = {
                                     'from_previous_proof_state'], True, ''),
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
-    'functionality.save_solved_exercises_for_autotest': (None, True, ""),
+    # 'functionality.save_solved_exercises_for_autotest': (None, True, ""),
     'functionality.save_history_of_solved_exercises': (None, True, "")}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",

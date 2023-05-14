@@ -87,8 +87,8 @@ PRETTY_NAMES = {
         _("Automatic intro of variables and hypotheses"),
     'functionality.automatic_intro_of_exists':
         _("Automatic intro of existence properties"),
-    'functionality.save_solved_exercises_for_autotest':
-        _("Save exercises for autotest"),
+    # 'functionality.save_solved_exercises_for_autotest':
+    #     _("Save exercises for autotest"),
     'functionality.save_history_of_solved_exercises':
         _("Save history when exercise is solved"),
     'functionality.auto_solve_inequalities_in_bounded_quantification':

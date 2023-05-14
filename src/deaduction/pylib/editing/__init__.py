@@ -532,36 +532,36 @@ class LeanFile(VirtualFile):
     #     proof = Proof.from_proof_steps(proof_steps)
     #     return proof
 
-    def save_exercise_for_autotest(self, emw):
-        """
-
-        :param emw: ExerciseMainWindow instance
-        """
-        # FIXME: this has been transfered to a Coordinator method
-        save = cvars.get('functionality.save_solved_exercises_for_autotest',
-                         False)
-        if not save:
-            return
-
-        proof_steps = [entry.proof_step for entry in self.history]
-        auto_steps = [ps.auto_step for ps in proof_steps if ps is not None]
-        auto_steps = [step for step in auto_steps if step is not None]
-
-        exercise = emw.exercise
-        exercise.refined_auto_steps = auto_steps
-        filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
-            + '.pkl'
-        file_path = cdirs.test_exercises / filename
-        check_dir(cdirs.test_exercises, create=True)
-
-        total_string = 'AutoTest\n'
-        for step in auto_steps:
-            total_string += '    ' + step.raw_string + ',\n'
-        print(total_string)
-
-        log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='wb') as output:
-            dump(exercise, output, HIGHEST_PROTOCOL)
+    # def save_exercise_for_autotest(self, emw):
+    #     """
+    #
+    #     :param emw: ExerciseMainWindow instance
+    #     """
+    #     # FIXME: this has been transfered to a Coordinator method
+    #     save = cvars.get('functionality.save_solved_exercises_for_autotest',
+    #                      False)
+    #     if not save:
+    #         return
+    #
+    #     proof_steps = [entry.proof_step for entry in self.history]
+    #     auto_steps = [ps.auto_step for ps in proof_steps if ps is not None]
+    #     auto_steps = [step for step in auto_steps if step is not None]
+    #
+    #     exercise = emw.exercise
+    #     exercise.refined_auto_steps = auto_steps
+    #     filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
+    #         + '.pkl'
+    #     file_path = cdirs.test_exercises / filename
+    #     check_dir(cdirs.test_exercises, create=True)
+    #
+    #     total_string = 'AutoTest\n'
+    #     for step in auto_steps:
+    #         total_string += '    ' + step.raw_string + ',\n'
+    #     print(total_string)
+    #
+    #     log.debug(f"Saving auto_steps in {file_path}")
+    #     with open(file_path, mode='wb') as output:
+    #         dump(exercise, output, HIGHEST_PROTOCOL)
 
     def add_seq_num(self, seq_num: int):
         """
