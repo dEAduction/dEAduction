@@ -66,6 +66,7 @@ use_bounded_quantification_notation = true
 
 
 [functionality]
+# Beginner, Intermediata, Advanced, Expert,
 default_functionality_level = "Beginner"
 allow_proof_by_sorry = true
 automatic_intro_of_exists = true

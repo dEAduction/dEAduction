@@ -43,6 +43,8 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from parsimonious import ParseError
 
+import deaduction.pylib.config.vars as cvars
+
 
 settings = """
 rules = rule more_rules
@@ -121,11 +123,33 @@ class SettingsVisitor(NodeVisitor):
 settings_grammar = Grammar(settings_rules)
 
 
-def vars_from_metadata(metadata_settings):
+def vars_from_metadata(metadata_settings: str):
+    """
+    Convert the string metadata_settings, from the Lean file metadata of
+    individual exercise, into a dict that can be used to update cvars.
+    """
     if metadata_settings:
         tree = settings_grammar.parse(metadata_settings)
         vars_from_metadata = SettingsVisitor().visit(tree)
         return vars_from_metadata
+
+
+def metadata_str_from_cvar_keys(keys: [str]):
+    """
+    Complement to the vars_form_metadata() method.
+    Given a list of keys, retrieve the corresponding values in cvars and
+    convert these data into a string that can be inserted in Lean's file
+    metadata with field name 'Settings'.
+    """
+
+    settings_line = []
+    for key in keys:
+        value = cvars.get(key)
+        separator = '"' if isinstance(value, str) else ''
+        settings_line.append(f'{key} --> {separator}{value}{separator}')
+
+    settings = '\n'.join(settings_line) if keys else None
+    return settings
 
 
 if __name__ == "__main__":
@@ -135,6 +159,6 @@ if __name__ == "__main__":
     essai4 = """pair --> 14"""
     tree = settings_grammar.parse(essai + " " + essai2 + " " + essai3 + " " +
                                                          essai4)
-    dic = SettingsVisitor.visit(tree)
+    dic = SettingsVisitor().visit(tree)
     print(dic)
 

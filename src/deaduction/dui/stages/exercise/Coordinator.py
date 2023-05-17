@@ -61,6 +61,7 @@ from deaduction.pylib.server import             ServerInterface, Task
 from deaduction.pylib.utils import save_object
 
 # Maths
+from deaduction.pylib.coursedata.settings_parser import metadata_str_from_cvar_keys
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
@@ -125,10 +126,14 @@ class Coordinator(QObject):
     close_server_task  = Signal()  # Send by self.closeEvent
     frozen             = Signal()
     unfrozen           = Signal()
+    cvars_for_history = {
+        'functionality.default_functionality_level': 'Free settings',
+        'functionality.allow_implicit_use_of_definitions': True,
+        'functionality.target_selected_by_default': True}
 
     def __init__(self, exercise, servint):
         super().__init__()
-        self.cvars_to_be_restored = exercise.update_cvars_from_metadata()
+        self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
         self.exercise: Exercise       = exercise
         self.servint: ServerInterface = servint
         self.last_servint_task = None
@@ -149,7 +154,6 @@ class Coordinator(QObject):
         # Flags
         self.exercise_solved                = False
         self.test_mode                      = False
-        self.history_mode                   = exercise.launch_in_history_mode
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.initial_proof_states_set = trio.Event()
@@ -159,8 +163,8 @@ class Coordinator(QObject):
         # Initialization
         self.is_frozen = False
         self.__connect_signals()
-        if self.history_mode:
-            self.__init_auto_steps()
+        self.__history_cvars = dict()
+        self.__init_history_mode()
         self.nursery.start_soon(self.__init_exercise)
 
     ######################
@@ -180,9 +184,31 @@ class Coordinator(QObject):
         # self.emw.cancel_server.connect(self.cancel_server)
         self.emw.save_history.connect(self.save_history)
 
-    def __init_auto_steps(self):
-        log.info("Initializing auto steps")
+    # def __init_auto_steps(self):
+    #     log.info("Initializing auto steps")
+    #     self.__auto_steps = self.exercise.refined_auto_steps.copy()
+
+    def __init_history_mode(self):
+        if not self.exercise.launch_in_history_mode:
+            return
+        self.history_mode = True
         self.__auto_steps = self.exercise.refined_auto_steps.copy()
+
+        # Save cvars and set special cvars values for history
+        self.__history_cvars = {key: cvars.get(key)
+                                for key in self.cvars_for_history}
+        cvars.update(self.cvars_for_history)
+
+        # Active outline_window
+        outline_window = self.emw.proof_outline_window
+        outline_window.show()
+        outline_window.activateWindow()
+
+    def __exit_history_mode(self):
+        log.info("Exiting history mode")
+        self.history_mode = False
+        cvars.update(self.__history_cvars)  # Restore cvars
+        self.history_rewind()
 
     async def __init_exercise(self):
         """
@@ -423,8 +449,10 @@ class Coordinator(QObject):
 
         # log.debug("Closing server task")
         self.close_server_task.emit()
-        if self.cvars_to_be_restored:
-            cvars.update(self.cvars_to_be_restored)
+
+        # Restore course metadata over exercise metadata:
+        if self.__cvars_to_be_restored:
+            cvars.update(self.__cvars_to_be_restored)
 
     ##############
     # Properties #
@@ -1005,10 +1033,8 @@ class Coordinator(QObject):
         duration = 0
 
         # End of auto steps?
-        if not self.__auto_steps:  # Stop history_mode!
-            log.info("Exiting history mode")
-            self.history_mode = False
-            self.history_rewind()
+        if not self.__auto_steps:
+            self.__exit_history_mode()
             return
 
         # Wait for crucial data and server_task
@@ -1313,6 +1339,8 @@ class Coordinator(QObject):
         If parameter yes is True or False, attribute value yes to cvars
         functionality.
         Save if yes=True or None.
+        The main task here is to compute additional metadata to be stored in
+        the metadata of the saved exercise.
         """
 
         additional_metadata = dict()
@@ -1320,41 +1348,59 @@ class Coordinator(QObject):
             key = 'functionality.save_history_of_solved_exercises'
             cvars.set(key, save_history)
 
+        if save_history is False:
+            return
+        else:
+            log.info("Saving history")
+
+        # (1) Proof complete?
         if all_goals_solved is None:
             node = self.proof_tree.root_node
             all_goals_solved = (node.is_recursively_solved()
                                 and not node.is_recursively_sorry())
             if all_goals_solved:
                 additional_metadata["all_goals_solved"] = 'True'
-        if save_history is not False:
-            log.info("Saving history")
-            # Retrieve AutoSteps string
-            proof_steps = self.proof_tree.proof_steps()
-            auto_steps = [step.auto_step for step in proof_steps
-                          if step is not None]
-            auto_steps_str = ''
-            for step in auto_steps:
-                auto_steps_str += '    ' + step.raw_string + ',\n'
 
-            additional_metadata['auto_test'] = auto_steps_str
+        # (2) Retrieve AutoSteps string
+        proof_steps = self.proof_tree.proof_steps()
+        auto_steps = [step.auto_step for step in proof_steps
+                      if step is not None]
+        auto_steps_str = ''
+        for step in auto_steps:
+            auto_steps_str += '    ' + step.raw_string + ',\n'
 
-            # Compute pertinent settings
-            # keys = ["others.Lean_request_method"]
-            keys = []
-            if keys:
-                settings = '\n'.join([f'{key} --> "{cvars.get(key)}"'
-                                      for key in keys])
-                additional_metadata.update({'Settings': settings})
+        additional_metadata['auto_test'] = auto_steps_str
 
-            # log.debug(additional_metadata)
-            lean_code = self.lean_file.inner_contents
+        # (3) Metadata Settings
+        # First remove default level to allow free settings
+        keys = self.cvars_for_history.keys()
+        default_key = 'functionality.default_functionality_level'
+        default_level = cvars.get(default_key)
+        cvars.set(default_key, 'Free settings')
+        settings = metadata_str_from_cvar_keys(keys)
+        if settings:
+            additional_metadata.update({'Settings': settings})
 
-            # Debug:
-            # print("ProofTree:")
-            # print(self.proof_tree)
-            # print("AutoSteps:")
-            # print(auto_steps_str)
-            self.exercise.save_with_auto_steps(additional_metadata, lean_code)
+        # (4) Negate statement?
+        if self.exercise.negate_statement:
+            additional_metadata['negate_statement'] = '  True'
+
+        log.debug(additional_metadata)
+        lean_code = self.lean_file.inner_contents
+
+        # (6) Save
+        # Debug:
+        # print("ProofTree:")
+        # print(self.proof_tree)
+        # print("AutoSteps:")
+        # print(auto_steps_str)
+        self.exercise.save_with_auto_steps(additional_metadata, lean_code)
+
+        # (7) Remove steps and restore default_level
+        self.exercise.refined_auto_steps = None
+        # Fixme: Remove negate statement??
+        cvars.set(default_key, default_level)
+
 
     @Slot()
     def process_lean_response(self, lean_response):

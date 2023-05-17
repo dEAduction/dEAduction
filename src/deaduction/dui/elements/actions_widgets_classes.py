@@ -649,11 +649,12 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
 
     def to_display(self) -> [str]:
         statement = self.statement
-        if StatementsTreeWidget.show_lean_name_for_statements:
-            to_display = [statement.pretty_name, statement.lean_name]
-        else:
-            to_display = [statement.pretty_name]
-        return to_display
+        # if StatementsTreeWidget.show_lean_name_for_statements:
+        #     to_display = [statement.pretty_name, statement.lean_name]
+        # else:
+        #     to_display = [statement.pretty_name]
+        # return to_display
+        return [statement.pretty_name]
 
     def set_icon(self):
         # Print icon (D for definition, T for theorem, etc)
@@ -725,7 +726,8 @@ class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
             nb_steps = len(exercise.refined_auto_steps)
             txt1 = _("saved ") + date
             txt2 = f"({nb_steps} " + _("steps") + ")"
-            to_display = ['\t' + txt1 + '\t' + txt2]
+            # to_display = ['\t' + txt1 + '\t' + txt2]
+            to_display = ['', txt1 + '\t' + txt2]
         else:
             to_display = [exercise.pretty_name]
 
@@ -843,8 +845,8 @@ class StatementsTreeWidget(QTreeWidget):
     depth_of_unfold_statements = \
                         cvars.get("display.depth_of_unfold_statements")
 
-    show_lean_name_for_statements = \
-                    cvars.get("display.show_lean_name_for_statements")
+    # show_lean_name_for_statements = \
+    #                 cvars.get("display.show_lean_name_for_statements")
 
     tooltips_font_size = cvars.get('display.tooltips_font_size', 10)
 
@@ -965,6 +967,8 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self.setColumnCount(2)
+
         self.is_exercise_list = is_exercise_list
         self._potential_drop_receiver = None
         self._current_dragging_node = None
@@ -996,13 +1000,13 @@ class StatementsTreeWidget(QTreeWidget):
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
-        if StatementsTreeWidget.show_lean_name_for_statements:
-            self.setHeaderLabels([_('Statements'), _('L∃∀N name')])
-            self.resizeColumnToContents(0)
-            self.resizeColumnToContents(1)
+        if self.is_exercise_list:
+            self.setHeaderLabels([_('Exercises'), _('Saved history')])
+            # self.resizeColumnToContents(0)
+            # self.resizeColumnToContents(1)
         else:
-            self.resizeColumnToContents(0)
             self.setHeaderLabels([_('Statements')])
+            self.resizeColumnToContents(0)
 
         # Modify color for selected objects
         palette = self.palette()

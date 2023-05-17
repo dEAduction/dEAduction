@@ -39,6 +39,7 @@ from PySide2.QtWidgets import ( QListWidget,
 from deaduction.pylib.config.course import get_recent_courses
 global _
 
+
 class RecentCoursesLW(QListWidget):
     """
     An adaptated QListWidget to display *the* list of *recent* (i.e.
@@ -51,7 +52,7 @@ class RecentCoursesLW(QListWidget):
     instead of QListWidgetItem.
     """
 
-    def __init__(self):
+    def __init__(self, select_first_item=True):
         """
         Init self. See self docstring.
         """
@@ -64,7 +65,8 @@ class RecentCoursesLW(QListWidget):
             if course_path.exists():
                 item = RecentCoursesLWI(course_path, course_title)
                 self.addItem(item)
-        self.setCurrentItem(self.item(0))
+        if self.count() and select_first_item:
+            self.setCurrentItem(self.item(0))
 
     def add_browsed_course(self, course_path: Path, course_title: str):
         """

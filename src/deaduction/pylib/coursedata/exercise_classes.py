@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
 from time import strftime
+from copy import      copy
 
 import deaduction.pylib.config.vars             as cvars
 
@@ -124,9 +125,6 @@ class StructuredContent:
         # Add date to metadata
         date = strftime("%d%b%Hh%M")
         additional_metadata['history_date'] = date
-
-        # # Change pretty name
-        # additional_metadata["pretty_name"] = _("saved ") + date
 
         # New metadata
         new_metadata = initial_content.raw_metadata.copy()
@@ -548,19 +546,20 @@ class Exercise(Theorem):
     def raw_metadata(self) -> Dict[str, str]:
         """
         This is the metadata dictionary reflecting the individual metadata of
-        self in the Lean course file, with maybe addition of NegateStatement.
+        self in the Lean course file.
         """
-        # raw_metadata = self.info.get('raw_metadata')
-        # lines = raw_metadata.splitlines()
-        # if len(lines) > 1:  # Exclude open/close metadata
-        #     lines = lines[1:-1]
+
         if self._raw_metadata is None:
             self._raw_metadata = dict()
-        if self.negate_statement:
-            self._raw_metadata['negate_statement'] = '  True'
+        # if self.negate_statement:
+        #     self._raw_metadata['negate_statement'] = '  True'
             # lines += ['NegateStatement', '  True']
         # return '\n'.join(lines)
         return self._raw_metadata
+
+    @raw_metadata.setter
+    def raw_metadata(self, metadata):
+        self._raw_metadata = metadata
 
     @property
     def launch_in_history_mode(self):
@@ -568,6 +567,7 @@ class Exercise(Theorem):
         If True, self should be launched in history mode,
         with refined_auto_steps executed automatically.
         """
+
         return bool(self.refined_auto_steps)
 
     @property
@@ -699,9 +699,11 @@ class Exercise(Theorem):
         return exercise
 
     def from_history_exercise(self):
-        exercise = self.original_exercise
+        # Copy original exercise to avoid altering attributes
+        exercise = copy(self.original_exercise)
         exercise.auto_test = self.auto_test
         exercise.negate_statement = self.negate_statement
+        exercise.raw_metadata = self.raw_metadata
         return exercise
 
     def update_cvars_from_metadata(self) -> dict:
@@ -709,7 +711,7 @@ class Exercise(Theorem):
         Update cvars with entries in metadata['settings'], and return a
         dictionary with the values that have been replaced.
         """
-        metadata_settings = self.info.get('settings')
+        metadata_settings = self.raw_metadata.get('settings')
         if metadata_settings:
             more_vars = vars_from_metadata(metadata_settings)
             if more_vars:
@@ -946,10 +948,6 @@ class Exercise(Theorem):
     #     return all(tests)
 
     def is_solved_in_auto_test(self):
-        """
-        Return True if a global success msg is found in the last
-        step of self.refined_auto_steps.
-        """
         # txt = self.refined_auto_steps[-1].success_msg
         # solved_txts = [text.proof_complete, _(text.proof_complete)]
         # # solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
@@ -1017,9 +1015,9 @@ class Exercise(Theorem):
         else:
             exercise = self
 
-        # (2) Negate statement?
-        if self.negate_statement:
-            exercise.negate_statement = True
+        # # (2) Negate statement?
+        # if self.negate_statement:
+        #     exercise.negate_statement = True
 
         # (3) Compute new content
         version_nb = len(self.versions_saved_in_history_course()) + 1
@@ -1032,6 +1030,29 @@ class Exercise(Theorem):
 
         # (5) Reload history_course to get new entry
         self.course.set_history_course()
+
+    def delete_in_history_file(self):
+        """
+        Assuming self comes from a history file, delete the corresponding
+        entry. Beware that self is saved exercise, not original one.
+        """
+        path = self.course.relative_course_path.resolve()
+
+        first_line_nb = self.structured_content.first_line_nb
+        last_line_nb = self.structured_content.last_line_nb
+
+        content: str = self.course.file_content
+        content_lines = content.splitlines()
+        new_content_lines = (content_lines[:first_line_nb-1] +
+                             content_lines[last_line_nb:])
+        new_content = '\n'.join(new_content_lines)
+
+        # Save new content!
+        with open(path, mode='wt') as output:
+            output.write(new_content)
+
+        # Reload history_course to remove deleted entry
+        # self.original_exercise.course.set_history_course()
 
 
 #############
