@@ -341,11 +341,13 @@ class AutoStep(UserAction):
         :return: 
         """
 
+        user_action: UserAction = proof_step.user_action
+
         # Selection: [str]
         selection = []
-        if proof_step.selection:
+        if user_action.selection:
             # log.debug("Analysing selection...")
-            for math_object in proof_step.selection:
+            for math_object in user_action.selection:
                 # log.debug(f"Searching {math_object.display_name}")
                 # log.debug(f"in {[mo.display_name for mo in emw.objects]}")
                 # log.debug(f"& {[mo.display_name for mo in emw.properties]}")
@@ -363,28 +365,28 @@ class AutoStep(UserAction):
                 if item_str is not None:
                     selection.append(item_str)
 
+        # Target selected ?
+        if user_action.target_selected:
+            selection.append("target")
+
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'
-        user_action: UserAction = proof_step.user_action
-        if user_action:
-            button = user_action.prove_or_use_button_name()
-        else:
-            button = proof_step.button_name
+        button = user_action.prove_or_use_button_name()
 
         if button is None:
             button = ''
 
         # Statement: short Lean name
-        statement = proof_step.statement.lean_short_name \
-            if proof_step.statement else ''
+        statement = user_action.statement.lean_short_name \
+            if user_action.statement else ''
 
         if not (button or statement):
             return None
 
         # User input: int
         user_input = []
-        if proof_step.user_input:
-            user_input = [str(item) for item in proof_step.user_input]
+        if user_action.user_input:
+            user_input = [str(item) for item in user_action.user_input]
 
         error_msg = proof_step.error_msg
         if error_msg:
