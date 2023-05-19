@@ -967,7 +967,7 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
-        self.setColumnCount(2)
+        self.setColumnCount(2 if is_exercise_list else 1)
 
         self.is_exercise_list = is_exercise_list
         self._potential_drop_receiver = None
@@ -1002,11 +1002,12 @@ class StatementsTreeWidget(QTreeWidget):
         self.setWindowTitle('StatementsTreeWidget')
         if self.is_exercise_list:
             self.setHeaderLabels([_('Exercises'), _('Saved history')])
-            # self.resizeColumnToContents(0)
-            # self.resizeColumnToContents(1)
         else:
             self.setHeaderLabels([_('Statements')])
-            self.resizeColumnToContents(0)
+
+        self.expandToDepth(3)  # To get reasonable column size
+        self.resizeColumnToContents(0)
+        self.expandToDepth(self.depth_of_unfold_statements)
 
         # Modify color for selected objects
         palette = self.palette()
