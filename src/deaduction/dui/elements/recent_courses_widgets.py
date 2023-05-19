@@ -4,8 +4,8 @@
 ##################################################################
     
     Provide classes:
-        - RecentCoursesLW;
-        - RecentCoursesLWI.
+        - CoursesLW;
+        - CoursesLWI.
     Those two classes are used dEAduction's 'Start exercise' dialog to
     display the list of recent courses used by usr.
 
@@ -36,39 +36,45 @@ from pathlib import Path
 from PySide2.QtWidgets import ( QListWidget,
                                 QListWidgetItem)
 
-from deaduction.pylib.config.course import get_recent_courses
+from deaduction.pylib.config.course import (get_recent_courses,
+                                            get_preset_courses)
 global _
 
 
-class RecentCoursesLW(QListWidget):
+class CoursesLW(QListWidget):
     """
     An adaptated QListWidget to display *the* list of *recent* (i.e.
-    last five courses done in dEAduction by usr) courses' paths and
+    last five or ten courses done in dEAduction by usr) courses' paths and
     minor metadata (e.g. course title). Consequently, no arguments are
     given to __init__ since the function get_recent_courses gets the
     recent courses itself. Therefore, the items do not contain Course
     objects since only courses' paths and minor metadata are saved in
-    the config files. This class uses the RecentCoursesLWI for items
+    the config files. This class uses the CoursesLWI for items
     instead of QListWidgetItem.
     """
 
-    def __init__(self, select_first_item=True):
+    def __init__(self, recent=False, select_first_item=True):
         """
         Init self. See self docstring.
         """
 
         super().__init__()
+        if recent:
+            courses_paths, titles, exercise_numbers = get_recent_courses()
+        else:
+            courses_paths, titles, exercise_numbers = get_preset_courses()
 
-        courses_paths, titles, exercise_numbers = get_recent_courses()
+        self.course_paths = courses_paths
         info = zip(courses_paths, titles, exercise_numbers)
         for course_path, course_title, exercise_number in info:
             if course_path.exists():
-                item = RecentCoursesLWI(course_path, course_title)
+                item = CoursesLWI(course_path, course_title)
                 self.addItem(item)
         if self.count() and select_first_item:
             self.setCurrentItem(self.item(0))
 
-    def add_browsed_course(self, course_path: Path, course_title: str):
+    def add_browsed_course(self, course_path: Path, course_title: str,
+                           browsed=False):
         """
         Insert a course at the top of the list and mark (in the item
         text) the course as browsed. This is useful in dEaduction
@@ -82,17 +88,22 @@ class RecentCoursesLW(QListWidget):
         :param course_title: The course title of the browsed course.
         """
 
-        displayed_title = f'(browsed) {course_title}'
-        item = RecentCoursesLWI(course_path, displayed_title)
+        if course_path in self.course_paths:
+            index = self.course_paths.index(course_path)
+            self.removeItemWidget(self.item(index))
+
+        displayed_title = (f'(browsed) {course_title}' if browsed
+                           else course_title)
+        item = CoursesLWI(course_path, displayed_title)
         self.insertItem(0, item)
-        self.setItemSelected(item, True)
+        self.setCurrentItem(item)
 
 
-class RecentCoursesLWI(QListWidgetItem):
+class CoursesLWI(QListWidgetItem):
     """
-    Course items used in the class RecentCoursesLW (see the docstring).
+    Course items used in the class CoursesLW (see the docstring).
     Those courses are not instanciated with an instance of the Course
-    class but with a course's path and title. Indeed: RecentCoursesLW
+    class but with a course's path and title. Indeed: CoursesLW
     displays the recent courses in which the user did exercises, and
     only those data are in the config files.
 

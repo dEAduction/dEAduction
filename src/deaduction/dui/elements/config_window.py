@@ -219,7 +219,7 @@ CONFIGS["Advanced"] = {
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
     # 'functionality.save_solved_exercises_for_autotest': (None, True, ""),
-    'functionality.save_history_of_solved_exercises': (None, True, "")}
+    'functionality.save_history_of_solved_exercises': (None, False, "")}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # Fonts
@@ -725,7 +725,8 @@ class ConfigWindow(QDialog):
         if self.selected_level == "Free settings":
             # Unfreeze all, and that's all:
             for setting, toto in self.settings.items():
-                self.widgets[setting].setEnabled(True)
+                if setting in self.widgets:
+                    self.widgets[setting].setEnabled(True)
             return
 
         predefined_dict = self.predefined_settings_dict[self.selected_level]

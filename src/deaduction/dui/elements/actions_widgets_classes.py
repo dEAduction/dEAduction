@@ -1045,8 +1045,9 @@ class StatementsTreeWidget(QTreeWidget):
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
-                if item.statement == statement:
-                    # item.setSelected(True)
+                if (item.statement == statement
+                    or isinstance(statement, Exercise) and
+                        statement.is_copy_of(item.statement)):
                     self.setCurrentItem(item)
                     return True
             for i in range(0, item.childCount()):

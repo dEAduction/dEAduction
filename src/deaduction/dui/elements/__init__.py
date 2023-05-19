@@ -51,8 +51,8 @@ from .menubar import (
     MenuBarMenu)
 
 from .recent_courses_widgets import (
-    RecentCoursesLW,
-    RecentCoursesLWI)
+    CoursesLW,
+    CoursesLWI)
 
 from .config_window import ConfigMainWindow
 

@@ -31,8 +31,32 @@ import logging
 from   pathlib import Path
 
 import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.dirs as cdirs
 
 log = logging.getLogger(__name__)
+
+
+def courses_paths() -> [Path]:
+    """
+    Get list of all lean files in Lean exercises dir.
+    """
+
+    exercise_dir = cdirs.usr_lean_exercises_dir
+
+    paths = list(exercise_dir.glob('*.lean'))
+
+    return paths
+
+
+def get_preset_courses() -> ([Path], [str], [int]):
+    """
+    Return the list of (recent course, title) found in the user_config dict
+    """
+    preset_courses = cvars.get('course.preset_courses', None)
+    courses = preset_courses if preset_courses else courses_paths()
+    titles = [file.stem for file in courses]
+
+    return courses, titles, [-1]*len(courses)
 
 
 def get_recent_courses() -> ([Path], [str], [int]):
@@ -47,21 +71,6 @@ def get_recent_courses() -> ([Path], [str], [int]):
     courses_paths         = list(map(Path, recent_courses))
     exercises_numbers     = exercises_numbers or ([-1] * len(recent_courses))
 
-    #if recent_courses:
-    #    recent_courses_list = recent_courses.split(',')
-    #    courses_paths = list(map(Path, recent_courses_list))
-    #    courses_titles = titles.split(',')
-    #    exercises_numbers = [-1] * len(recent_courses_list)
-    #else:
-    #    courses_paths = []
-    #    courses_titles = []
-    #    exercises_numbers = []
-
-    #if exercises_numbers:
-    #    try:
-    #        exercises_numbers = list(map(int, numbers.split(',')))
-    #    except ValueError:
-    #        pass
     return courses_paths, courses_titles, exercises_numbers
 
 
@@ -70,7 +79,7 @@ def add_to_recent_courses(course_path: Path,
                           title: str = "",
                           exercise_number: int = -1):
     """
-    Add course_path to the list of recent courses in cvars["course"]
+    Add course_path to the list of recent courses in cvars["course"].
     """
 
     max_ = cvars.get("functionality.max_recent_courses", 5)
@@ -99,10 +108,6 @@ def add_to_recent_courses(course_path: Path,
 
     # Turn each list into a single string
     courses_paths_strings = [str(path.resolve()) for path in courses_paths]
-
-    #courses_paths_string   = ','.join(courses_paths_strings)
-    #courses_titles_string = ','.join(courses_titles)
-    #exercises_numbers_string = ','.join(map(str, exercises_numbers))
 
     cvars.set("course.recent_courses"       , courses_paths_strings)
     cvars.set("course.recent_courses_titles", courses_titles)

@@ -597,37 +597,6 @@ class ExerciseMainWindow(QMainWindow):
         return [item.math_object for item in self.current_selection]
 
     # ─────────────────── Conversion methods ─────────────────── #
-
-    # def button_from_string(self, string: str):
-    #     """
-    #     Search a button widget that match string.
-    #     Search successively in
-    #     - ActionButton,
-    #     - history buttons
-    #
-    #     :return: ActionButton or None
-    #     """
-    #     # FIXME: obsolete
-    #     # TODO: add search in context widgets.
-    #     button = self.ecw.action_button(string)
-    #     if button:
-    #         return button
-    #     history_buttons = {'undo': self.exercise_toolbar.undo_action,
-    #                        'redo': self.exercise_toolbar.redo_action,
-    #                        'rewind': self.exercise_toolbar.rewind,
-    #                        'go_to_end': self.exercise_toolbar.go_to_end}
-    #     if string.find('undo') != -1:
-    #         string = 'undo'
-    #     elif string.find('redo') != -1:
-    #         string = 'redo'
-    #     elif string.find('rewind') != -1:
-    #         string = 'rewind'
-    #     elif string.find('end') != -1:
-    #         string = 'go_to_end'
-    #     if string in history_buttons:
-    #         return history_buttons[string]
-    #     log.warning(f"No button found from {string}")
-
     def context_item_from_math_object(self, math_object) -> \
             MathObjectWidgetItem:
         """

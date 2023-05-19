@@ -3,6 +3,7 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
+
 [display]
 display_success_messages = true
 text_mode_in_chooser_window = true
@@ -81,6 +82,7 @@ ask_to_prove_premises_of_implications = true
 automatic_intro_of_variables_and_hypotheses = false
 save_history_of_solved_exercises = true
 max_recent_courses = 10
+show_recent_courses_only = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]
@@ -92,6 +94,9 @@ save_journal = false
 display_level = "info"
 domains = [""]
 log_to_file = true
+
+[course]
+preset_courses = []
 
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':

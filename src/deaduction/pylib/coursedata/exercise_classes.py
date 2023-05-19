@@ -741,13 +741,6 @@ class Exercise(Theorem):
         index = statements.index(name)
         return statements[:index]
 
-    def is_last(self) -> bool:
-        """
-        Check if self is the last exercise in the statements list of
-        self.Course.
-        """
-        return self.next_exercise() is None
-
     def next_exercise(self):
         """
         Return next Exercise in the statements list of self.Course, or None
@@ -760,6 +753,13 @@ class Exercise(Theorem):
             if isinstance(statement, Exercise):
                 return statement
         return None
+
+    def is_last(self) -> bool:
+        """
+        Check if self is the last exercise in the statements list of
+        self.Course.
+        """
+        return self.next_exercise() is None
 
     @property
     def available_logic_1(self):
@@ -982,9 +982,11 @@ class Exercise(Theorem):
         This is true if self is a copy of other (in a distinct file).
         Name and core content are tested.
         """
+        if not isinstance(other, Exercise):
+            return False
         tests = [self.structured_content.has_identical_core_lemma_content(
                  other.structured_content),
-                self.lean_name == other.lean_name]
+                 self.lean_name == other.lean_name]
         return all(tests)
 
     def is_history_version_of(self, other):

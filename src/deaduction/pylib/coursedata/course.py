@@ -149,11 +149,11 @@ class Course:
         Provide list of all exercises saved in history course.
         """
 
-        hstr_course = self.history_course()
-        if not hstr_course:
+        history_course = self.history_course()
+        if not history_course:
             return []
 
-        exercises = [exo for exo in hstr_course.exercises
+        exercises = [exo for exo in history_course.exercises
                      if exo.history_date() and exo.refined_auto_steps]
         # # debug
         # for exo in hstr_course.exercises:
@@ -382,7 +382,8 @@ class Course:
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
         # Meaningless here
-        course_metadata.pop('_raw_metadata')
+        if '_raw_metadata' in course_metadata:
+            course_metadata.pop('_raw_metadata')
         # log.debug(f"course history: {course_history}")
         log.info(f"Course metadata: {course_metadata}")
 
