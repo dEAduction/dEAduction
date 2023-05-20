@@ -59,25 +59,25 @@ def _(msg):
 # A list of lines for the tooltip of each button, with key = action name
 # Modify tooltips here, add an entry for a new button
 __tooltips = {
-    'forall_prove':
+    'prove_forall':
         [_("""Prove '∀ x, P(x)' by introducing 'x'""")],
-    'forall_use':
+    'use_forall':
         [_("""From some 'x' and '∀ x, P(x)' get 'P(x)'""")],
-    'exists_prove':
+    'prove_exists':
         [_("""Prove '∃ x, P(x)' by specifying some 'x'""")],
-    'exists_use':
+    'use_exists':
         [_("""From '∃ x, P(x)' get an 'x' and 'P(x)'""")],
-    'implies_prove':
+    'prove_implies':
         [_("""Prove 'P ⇒ Q' by assuming 'P', and proving 'Q'""")],
-    'implies_use':
+    'use_implies':
         [_("""From 'P' and 'P ⇒ Q' get 'Q'""")],
-    'and_prove':
+    'prove_and':
         [_("Prove the property 'P AND Q' by proving separately 'P' and 'Q'")],
-    'and_use':
+    'use_and':
         [_("From the property 'P AND Q', get 'P' and 'Q'")],
-    'or_prove':
+    'prove_or':
         [_("Prove 'P OR Q' by choosing to prove either 'P' or 'Q'")],
-    'or_use':
+    'use_or':
         [_("Use property 'P OR Q' by splitting cases")],
     'not':
         [_("""Try to simplify the property 'NOT P'""")],
@@ -108,6 +108,10 @@ __tooltips = {
     'compute':
         [_("Terminate the proof when target results from manipulating numbers")]
 }
+
+for key in ('forall', 'exists', 'implies', 'and', 'or'):
+    __tooltips[key] = __tooltips['prove_' + key] + __tooltips['use_' + key]
+
 # Decentralized apply buttons
 # this phrase will be preceded by "double click to "
 # __tooltips_apply = {
@@ -138,8 +142,14 @@ logic_buttons_line_1 = ["forall", "exists", "implies", "and", "or"]
 logic_buttons_line_2 = ["not", "iff", "equal", "map"]
 # logic_buttons = logic_buttons_line_1 + logic_buttons_line_2
 
-__logic_translation = [_('AND'), _('OR'), _('NOT'), _('IMPLIES'), _('IFF'),
-                       _('FORALL'), _('EXISTS'), _('EQUAL'), _('MAP')]
+__logic_translation =\
+    [_('FORALL'), _('EXISTS'), _('IMPLIES'), _('AND'), _('OR'),
+     _('PROVE FORALL'), _('PROVE EXISTS'), _('PROVE IMPLIES'), _('PROVE AND'),
+     _('PROVE OR'),
+     _('USE FORALL'), _('USE EXISTS'), _('USE IMPLIES'), _('USE AND'),
+     _('USE OR'),
+     _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
+     _('NEW OBJECT'), _('PROOF METHODS')]
 
 
 def __compute_buttons_symbols_dict():
@@ -185,8 +195,8 @@ def __compute_buttons_symbols_dict():
         __buttons_symbols[key] = value
         # Add demo and use buttons
         if key in logic_buttons_line_1:
-            __buttons_symbols[key + '_prove'] = value + ' ' + _('prove')
-            __buttons_symbols[key + '_use'] = value + ' ' + _('use')
+            __buttons_symbols['prove_' + key] = _('prove') + ' ' + value
+            __buttons_symbols['use_' + key] = _('use') + ' ' + value
 
 
 def button_symbol(name):

@@ -168,8 +168,8 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = button_symbol(name)
         if self.in_demo_or_use_line:
-            # Remove ugly suffix, '_use' or '_prove'
-            symbol = symbol[0]
+            # Remove ugly prefix, '_use' or '_prove'
+            symbol = symbol[-1]
         symbol = _(symbol)  # Translate, finally!
         self.setText(symbol)
 
@@ -218,8 +218,9 @@ class ActionButton(QPushButton):
     def name(self):
         """
         (Immutable) name of the corresponding action.
-        One of  ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
-                 'equal', 'map']
+        One of  ['forall', 'exists', 'implies', 'and', 'or',
+                 'not', 'iff', 'equal', 'map',
+                 'prove_forall', 'use_forall', ...]
         """
         return self.action.name
 
@@ -227,7 +228,7 @@ class ActionButton(QPushButton):
         """
         Test if symbol is the symbol of (the action associated to) self.
         """
-        # TODO: obsolete (?)
+        # TODO: obsolete (?) startswith --> ends_with ?
         return self.action.symbol.startswith(symbol) \
             or self.action.symbol.startswith(symbol.replace('_', ' ')) \
             or _(self.action.symbol).startswith(_(symbol)) \
@@ -408,9 +409,9 @@ class ActionButtonsWidget(QWidget):
 
         self.set_lbl_size()
 
-        self.demo_line = all((action.name.endswith('_prove')
+        self.demo_line = all((action.name.startswith('prove_')
                               for action in actions))
-        self.use_line = all((action.name.endswith('_use')
+        self.use_line = all((action.name.startswith('use_')
                              for action in actions))
         demo_or_use_line = self.demo_line or self.use_line
 

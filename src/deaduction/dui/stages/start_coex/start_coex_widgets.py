@@ -254,6 +254,8 @@ class CourseChooser(AbstractCoExChooser):
 
         browser_layout = QVBoxLayout()
         self.__label_title = QLabel()
+        self.__label_title.setStyleSheet('font-weight: bold;')
+                                         # 'font-size:   17pt;')
         browser_layout.addWidget(self.__label_title)
         browser_layout.addLayout(self.__courses_lyt)
         browser_layout.addWidget(self.__browse_btn)

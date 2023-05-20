@@ -786,8 +786,8 @@ class Exercise(Theorem):
         self.available_logic.
         """
         actions = [action for action in LOGIC_BUTTONS.values()
-                   if (action.name.endswith('_prove')
-                       and action.name[:-6] in
+                   if (action.name.startswith('prove_')
+                       and action.name[6:] in
                        [action.name for action in self.available_logic_1])]
         return actions
 
@@ -798,8 +798,8 @@ class Exercise(Theorem):
         self.available_logic.
         """
         actions = [action for action in LOGIC_BUTTONS.values()
-                   if (action.name.endswith('_use')
-                       and action.name[:-4] in
+                   if (action.name.startswith('use_')
+                       and action.name[4:] in
                        [action.name for action in self.available_logic_1])]
         return actions
 

@@ -296,12 +296,12 @@ def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
 
 @action()
-def action_forall_prove(proof_step) -> CodeForLean:
+def action_prove_forall(proof_step) -> CodeForLean:
     return action_forall(proof_step, prove=True, use=False)
 
 
 @action()
-def action_forall_use(proof_step) -> CodeForLean:
+def action_use_forall(proof_step) -> CodeForLean:
     return action_forall(proof_step, prove=False, use=True)
 
 
@@ -402,7 +402,7 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
 
 def prove_exists_with_selected_witness(prove, witness, proof_step):
 
-    prop_type = "an existential property '∃x, P(x)'"
+    prop_type = _("an existential property '∃x, P(x)'")
     goal = proof_step.goal
     if not prove:
         raise WrongUseModeInput(prop=prop_type)
@@ -494,12 +494,12 @@ def prove_exists_on_hyp(proof_step,
 
 
 @action()
-def action_exists_prove(proof_step) -> CodeForLean:
+def action_prove_exists(proof_step) -> CodeForLean:
     return action_exists(proof_step, prove=True, use=False)
 
 
 @action()
-def action_exists_use(proof_step) -> CodeForLean:
+def action_use_exists(proof_step) -> CodeForLean:
     return action_exists(proof_step, prove=False, use=True)
 
 
@@ -766,12 +766,12 @@ def implies_hyp(proof_step):
 
 
 @action()
-def action_implies_prove(proof_step) -> CodeForLean:
+def action_prove_implies(proof_step) -> CodeForLean:
     return action_implies(proof_step, prove=True, use=False)
 
 
 @action()
-def action_implies_use(proof_step) -> CodeForLean:
+def action_use_implies(proof_step) -> CodeForLean:
     return action_implies(proof_step, prove=False, use=True)
 
 
@@ -945,12 +945,12 @@ def prove_and_hyp(proof_step, selected_objects: [MathObject]) \
 
 
 @action()
-def action_and_prove(proof_step) -> CodeForLean:
+def action_prove_and(proof_step) -> CodeForLean:
     return action_and(proof_step, prove=True, use=False)
 
 
 @action()
-def action_and_use(proof_step) -> CodeForLean:
+def action_use_and(proof_step) -> CodeForLean:
     return action_and(proof_step, prove=False, use=True)
 
 
@@ -974,7 +974,7 @@ If two hypothesis P, then Q, have been previously selected:
     test_selection(selected_objects, target_selected)
     # goal = proof_step.goal
 
-    prop_type = "a conjunction 'P AND Q'"
+    prop_type = _("a conjunction 'P AND Q'")
 
     if len(selected_objects) == 0:
         if not prove:
@@ -1167,12 +1167,12 @@ def prove_or_on_hyp(proof_step,
 
 
 @action()
-def action_or_prove(proof_step) -> CodeForLean:
+def action_prove_or(proof_step) -> CodeForLean:
     return action_or(proof_step, prove=True, use=False)
 
 
 @action()
-def action_or_use(proof_step) -> CodeForLean:
+def action_use_or(proof_step) -> CodeForLean:
     return action_or(proof_step, prove=False, use=True)
 
 
@@ -1193,7 +1193,7 @@ def action_or(proof_step, prove=True, use=True) -> CodeForLean:
 
     test_selection(selected_objects, target_selected)
     goal = proof_step.goal
-    prop_type = "a disjunction 'P OR Q'"
+    prop_type = _("a disjunction 'P OR Q'")
     if len(selected_objects) == 0:
         if not prove:
             raise WrongUseModeInput(prop=prop_type)

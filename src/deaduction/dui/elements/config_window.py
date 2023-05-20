@@ -285,6 +285,7 @@ class ConfigMainWindow(QDialog):
                                       # QDialogButtonBox.Cancel)
         # button_box.setStandardButtons()
         self.ok_btn = button_box.addButton(QDialogButtonBox.Ok)
+        self.ok_btn.setDefault(True)
         self.cancel_btn = button_box.addButton(QDialogButtonBox.Cancel)
         self.apply_btn = button_box.addButton(QDialogButtonBox.Apply)
 

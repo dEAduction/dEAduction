@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-05-20 13:53+0200\n"
-"PO-Revision-Date: 2023-05-20 13:55+0200\n"
+"POT-Creation-Date: 2023-05-20 14:23+0200\n"
+"PO-Revision-Date: 2023-05-20 14:24+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -52,7 +52,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:183
-#: dui/elements/config_window.py:535
+#: dui/elements/config_window.py:536
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -61,43 +61,43 @@ msgstr "Bouton"
 msgid ":"
 msgstr " :"
 
-#: dui/elements/actions_widgets_classes.py:339
+#: dui/elements/actions_widgets_classes.py:340
 msgid "Prove mode"
 msgstr "Mode Démontrer"
 
-#: dui/elements/actions_widgets_classes.py:340
+#: dui/elements/actions_widgets_classes.py:341
 msgid "Use mode"
 msgstr "Mode Utiliser"
 
-#: dui/elements/actions_widgets_classes.py:388
-#: dui/elements/actions_widgets_classes.py:426
+#: dui/elements/actions_widgets_classes.py:389
+#: dui/elements/actions_widgets_classes.py:427
 msgid "Prove:"
 msgstr "Démontrer :"
 
-#: dui/elements/actions_widgets_classes.py:389
-#: dui/elements/actions_widgets_classes.py:430
+#: dui/elements/actions_widgets_classes.py:390
+#: dui/elements/actions_widgets_classes.py:431
 msgid "Use:"
 msgstr "Utiliser :"
 
-#: dui/elements/actions_widgets_classes.py:727
-msgid "saved on "
-msgstr ""
-
 #: dui/elements/actions_widgets_classes.py:728
-msgid "steps"
-msgstr ""
+msgid "saved on "
+msgstr "sauvegarde du "
 
-#: dui/elements/actions_widgets_classes.py:1004
+#: dui/elements/actions_widgets_classes.py:729
+msgid "steps"
+msgstr "étapes"
+
+#: dui/elements/actions_widgets_classes.py:1005
 #: dui/stages/start_coex/start_coex_widgets.py:829
 #: dui/stages/start_coex/start_coex_widgets.py:1131
 msgid "Exercises"
 msgstr "Exercices"
 
-#: dui/elements/actions_widgets_classes.py:1004
+#: dui/elements/actions_widgets_classes.py:1005
 msgid "Saved proofs"
 msgstr "Sauvegardes"
 
-#: dui/elements/actions_widgets_classes.py:1006
+#: dui/elements/actions_widgets_classes.py:1007
 msgid "Statements"
 msgstr "Enoncés"
 
@@ -207,31 +207,31 @@ msgstr "Préférences"
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:291
+#: dui/elements/config_window.py:292
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:292
+#: dui/elements/config_window.py:293
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/elements/config_window.py:293
+#: dui/elements/config_window.py:294
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:418
+#: dui/elements/config_window.py:419
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:506
+#: dui/elements/config_window.py:507
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:539
+#: dui/elements/config_window.py:540
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:762
+#: dui/elements/config_window.py:763
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
 "Caractères manquants : entrer exactement {} groupes de caractères séparés "
@@ -813,11 +813,11 @@ msgstr "Afficher seulement les fichiers récents"
 
 #: dui/stages/start_coex/start_coex_widgets.py:908
 msgid "Show saved proofs"
-msgstr ""
+msgstr "Afficher les sauvegardes"
 
 #: dui/stages/start_coex/start_coex_widgets.py:915
 msgid "Delete saved proofs"
-msgstr ""
+msgstr "Effacer les sauvegardes"
 
 #: dui/stages/start_coex/start_coex_widgets.py:1061
 msgid "Load proof"
@@ -1002,6 +1002,10 @@ msgstr "Existence"
 msgid "Now prove {} suits our needs"
 msgstr "Il reste à démontrer que {} convient"
 
+#: pylib/actions/logic.py:405
+msgid "an existential property '∃x, P(x)'"
+msgstr "une propriété existentielle ‘∃x, P(x)’"
+
 #: pylib/actions/logic.py:412
 msgid "Select a property on {} to get an existential property"
 msgstr ""
@@ -1109,6 +1113,10 @@ msgstr "Propriété {} découpée en {} et {}"
 msgid "Conjunction {} added to the context"
 msgstr "Conjonction {} ajoutée au contexte"
 
+#: pylib/actions/logic.py:977
+msgid "a conjunction 'P AND Q'"
+msgstr "une conjonction ‘P ET Q’"
+
 #: pylib/actions/logic.py:987
 msgid "Selected property is not a conjunction 'P AND Q'"
 msgstr "La propriété sélectionnée n’est pas une conjonction ‘P ET Q’"
@@ -1164,6 +1172,10 @@ msgstr "Gauche ou droite ?"
 #: pylib/actions/logic.py:1149
 msgid "On which side do you want"
 msgstr "De quel côté voulez-vous"
+
+#: pylib/actions/logic.py:1196
+msgid "a disjunction 'P OR Q'"
+msgstr "une disjonction ‘P OU Q’"
 
 #: pylib/actions/logic.py:1202
 msgid "Target is not a disjunction 'P OR Q'"
@@ -2951,54 +2963,44 @@ msgid "OR"
 msgstr "OU"
 
 #: pylib/text/tooltips.py:147
-msgid "FORALL PROVE"
-msgstr "DEMONTRER POUR TOUT"
+msgid "PROVE FORALL"
+msgstr "DEMONTRE POUR TOUT"
 
 #: pylib/text/tooltips.py:147
-#, fuzzy
-#| msgid "EXISTS"
-msgid "EXISTS PROVE"
-msgstr "EXISTE"
+msgid "PROVE EXISTS"
+msgstr "DEMONTRE EXISTE"
 
 #: pylib/text/tooltips.py:147
-#, fuzzy
-#| msgid "IMPLIES"
-msgid "IMPLIES PROVE"
-msgstr "IMPLIQUE"
+msgid "PROVE IMPLIES"
+msgstr "DEMONTRE IMPLIQUE"
 
 #: pylib/text/tooltips.py:147
-msgid "AND PROVE"
-msgstr ""
+msgid "PROVE AND"
+msgstr "DEMONTRE ET"
 
 #: pylib/text/tooltips.py:148
-msgid "OR PROVE"
-msgstr ""
+msgid "PROVE OR"
+msgstr "DEMONTRE OU"
 
 #: pylib/text/tooltips.py:149
-#, fuzzy
-#| msgid "FORALL"
-msgid "FORALL USE"
-msgstr "POUR TOUT"
+msgid "USE FORALL"
+msgstr "UTILISE POUR TOUT"
 
 #: pylib/text/tooltips.py:149
-#, fuzzy
-#| msgid "EXISTS"
-msgid "EXISTS USE"
-msgstr "EXISTE"
+msgid "USE EXISTS"
+msgstr "UTILISE EXISTE"
 
 #: pylib/text/tooltips.py:149
-#, fuzzy
-#| msgid "IMPLIES"
-msgid "IMPLIES USE"
-msgstr "IMPLIQUE"
+msgid "USE IMPLIES"
+msgstr "UTILISE IMPLIQUE"
 
 #: pylib/text/tooltips.py:149
-msgid "AND USE"
-msgstr ""
+msgid "USE AND"
+msgstr "UTILISE ET"
 
 #: pylib/text/tooltips.py:150
-msgid "OR USE"
-msgstr ""
+msgid "USE OR"
+msgstr "UTILISE OU"
 
 #: pylib/text/tooltips.py:151
 msgid "NOT"
@@ -3018,11 +3020,11 @@ msgstr "APPLICATION"
 
 #: pylib/text/tooltips.py:152
 msgid "NEW OBJECT"
-msgstr ""
+msgstr "NOUVEL OBJET"
 
 #: pylib/text/tooltips.py:152
 msgid "PROOF METHODS"
-msgstr ""
+msgstr "METHODES DE PREUVES"
 
 #: pylib/text/tooltips.py:168
 msgid "Proof methods..."
@@ -3087,6 +3089,34 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "FORALL PROVE"
+#~ msgstr "DEMONTRER POUR TOUT"
+
+#, fuzzy
+#~| msgid "EXISTS"
+#~ msgid "EXISTS PROVE"
+#~ msgstr "EXISTE"
+
+#, fuzzy
+#~| msgid "IMPLIES"
+#~ msgid "IMPLIES PROVE"
+#~ msgstr "IMPLIQUE"
+
+#, fuzzy
+#~| msgid "FORALL"
+#~ msgid "FORALL USE"
+#~ msgstr "POUR TOUT"
+
+#, fuzzy
+#~| msgid "EXISTS"
+#~ msgid "EXISTS USE"
+#~ msgstr "EXISTE"
+
+#, fuzzy
+#~| msgid "IMPLIES"
+#~ msgid "IMPLIES USE"
+#~ msgstr "IMPLIQUE"
 
 #~ msgid "Load history"
 #~ msgstr "Charger l'historique"
