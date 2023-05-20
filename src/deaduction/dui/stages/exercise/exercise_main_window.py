@@ -942,6 +942,10 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor.code_set(lean_file_content)
 
     def display_current_goal_solved(self, delta):
+        """
+        Display a QMessageBox informing user that the current goal has been
+        solved.
+        """
         proof_step = self.lean_file.current_proof_step
         if proof_step.current_goal_number and not self.test_mode \
                 and not self.history_mode \

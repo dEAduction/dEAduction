@@ -208,6 +208,8 @@ class Coordinator(QObject):
         log.info("Exiting history mode")
         self.history_mode = False
         cvars.update(self.__history_cvars)  # Restore cvars
+        # IMPORTANT: Mark proof step as a history move
+        self.proof_step.button_name = 'history_rewind'
         self.history_rewind()
 
     async def __init_exercise(self):
@@ -1479,7 +1481,8 @@ class Coordinator(QObject):
 
         if not self.proof_step.is_error():
             if not self.proof_step.is_history_move():
-                log.debug("     Storing proof step in lean_file info")
+                log.debug("     Storing proof step in lean_file info, hst nb "
+                          f"= {self.lean_file.target_idx}")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
                 self.proof_tree.process_new_proof_step(self.proof_step)
                 # self.proof_step.unsolved_goal_nodes_after = \

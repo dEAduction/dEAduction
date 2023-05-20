@@ -409,7 +409,8 @@ class Statement:
         auto_steps_strings = auto_steps_strings.split(',')
         auto_steps = []
         for string in auto_steps_strings:
-            if string is not None:
+            string = string.strip()
+            if string != '':
                 auto_steps.append(AutoStep.from_string(string))
         # Remove None steps:
         # auto_steps = [step for step in auto_steps if step]

@@ -521,9 +521,12 @@ class ProofStep:
     def is_goto(self):
         return self.button_name == 'history_goto'
 
+    def is_go_to_end(self):
+        return self.button_name == 'history_go_to_end'
+
     def is_history_move(self):
         return self.is_undo() or self.is_redo() \
-               or self.is_rewind() or self.is_goto()
+               or self.is_rewind() or self.is_goto() or self.is_go_to_end()
 
     def is_error(self):
         return bool(self.error_type)

@@ -115,8 +115,10 @@ def set_logger():
                        # 'lean',
                        # Includes Coordinator, start_coex:
                        'deaduction.dui.stages',
+                       'deaduction.dui.elements',
                        'deaduction.pylib.actions',
                        'deaduction.pylib.coursedata',
+                       'deaduction.pylib.editing',
                        # 'logic',
                        # 'magic',
                        'coursedata',
