@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-05-20 14:23+0200\n"
-"PO-Revision-Date: 2023-05-20 14:24+0200\n"
+"POT-Creation-Date: 2023-05-20 16:45+0200\n"
+"PO-Revision-Date: 2023-05-20 16:47+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -56,7 +56,7 @@ msgstr "Bouton"
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
-#: dui/stages/start_coex/start_coex_widgets.py:327
+#: dui/stages/start_coex/start_coex_widgets.py:329
 #: pylib/math_display/display_data.py:261 pylib/proof_tree/proof_tree.py:526
 msgid ":"
 msgstr " :"
@@ -88,8 +88,8 @@ msgid "steps"
 msgstr "étapes"
 
 #: dui/elements/actions_widgets_classes.py:1005
-#: dui/stages/start_coex/start_coex_widgets.py:829
-#: dui/stages/start_coex/start_coex_widgets.py:1131
+#: dui/stages/start_coex/start_coex_widgets.py:831
+#: dui/stages/start_coex/start_coex_widgets.py:1133
 msgid "Exercises"
 msgstr "Exercices"
 
@@ -545,12 +545,12 @@ msgid "Global proof view"
 msgstr "Aperçu global de la preuve"
 
 #: dui/primitives/buttons_dialog.py:86 dui/primitives/yes_no_dialog.py:73
-#: dui/stages/exercise/Coordinator.py:1109
+#: dui/stages/exercise/Coordinator.py:1117
 msgid "Yes"
 msgstr "Oui"
 
 #: dui/primitives/buttons_dialog.py:87 dui/primitives/yes_no_dialog.py:74
-#: dui/stages/exercise/Coordinator.py:1110
+#: dui/stages/exercise/Coordinator.py:1118
 msgid "No"
 msgstr "Non"
 
@@ -562,57 +562,57 @@ msgstr "Redémarrage du serveur"
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1106
+#: dui/stages/exercise/Coordinator.py:1114
 msgid "Do you want to prove the premise \"{}\" as a new sub-goal?"
 msgstr "Voulez-vous démontrer la prémisse {}  ?"
 
-#: dui/stages/exercise/Coordinator.py:1189 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1197 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1205
+#: dui/stages/exercise/Coordinator.py:1213
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1208
+#: dui/stages/exercise/Coordinator.py:1216
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1215
+#: dui/stages/exercise/Coordinator.py:1223
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1218
+#: dui/stages/exercise/Coordinator.py:1226
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1220
+#: dui/stages/exercise/Coordinator.py:1228
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1222 pylib/actions/logic.py:1326
+#: dui/stages/exercise/Coordinator.py:1230 pylib/actions/logic.py:1326
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1266
+#: dui/stages/exercise/Coordinator.py:1274
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1267
+#: dui/stages/exercise/Coordinator.py:1275
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1271
+#: dui/stages/exercise/Coordinator.py:1279
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1273
+#: dui/stages/exercise/Coordinator.py:1281
 #: dui/stages/exercise/_exercise_main_window_widgets.py:794
 #: dui/stages/exercise/_exercise_main_window_widgets.py:810
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1281
+#: dui/stages/exercise/Coordinator.py:1289
 msgid "Save history"
 msgstr "Sauver l'historique"
 
@@ -708,12 +708,12 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:964
+#: dui/stages/exercise/exercise_main_window.py:953
 #: pylib/proof_step/proof_step.py:700
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:967
+#: dui/stages/exercise/exercise_main_window.py:956
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -734,7 +734,7 @@ msgid "Installing — d∃∀duction"
 msgstr "Installation — d∃∀duction"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:138
-#: dui/stages/start_coex/start_coex_widgets.py:815
+#: dui/stages/start_coex/start_coex_widgets.py:817
 msgid "Quit"
 msgstr "Quitter"
 
@@ -766,80 +766,80 @@ msgstr "Détails :"
 msgid "Browse all files..."
 msgstr "Parcourir tous les fichiers…"
 
-#: dui/stages/start_coex/start_coex_widgets.py:319
+#: dui/stages/start_coex/start_coex_widgets.py:321
 msgid "Recent files"
 msgstr "Fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:324
+#: dui/stages/start_coex/start_coex_widgets.py:326
 msgid "Preset files"
 msgstr "Fichiers pré-sélectionnés"
 
-#: dui/stages/start_coex/start_coex_widgets.py:578
+#: dui/stages/start_coex/start_coex_widgets.py:580
 msgid "Text mode"
 msgstr "Mode texte"
 
-#: dui/stages/start_coex/start_coex_widgets.py:609
+#: dui/stages/start_coex/start_coex_widgets.py:611
 msgid "Preview not available (be patient...)"
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:621
+#: dui/stages/start_coex/start_coex_widgets.py:623
 msgid "(saved proof)"
 msgstr "(sauvegarde)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:680
+#: dui/stages/start_coex/start_coex_widgets.py:682
 msgid "Objects:"
 msgstr "Objets :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:681
+#: dui/stages/start_coex/start_coex_widgets.py:683
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:701
+#: dui/stages/start_coex/start_coex_widgets.py:703
 msgid "Target:"
 msgstr "But :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:817
-#: dui/stages/start_coex/start_coex_widgets.py:1063
+#: dui/stages/start_coex/start_coex_widgets.py:819
+#: dui/stages/start_coex/start_coex_widgets.py:1065
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:828
+#: dui/stages/start_coex/start_coex_widgets.py:830
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:900
+#: dui/stages/start_coex/start_coex_widgets.py:902
 msgid "Show only recent files"
 msgstr "Afficher seulement les fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:908
+#: dui/stages/start_coex/start_coex_widgets.py:910
 msgid "Show saved proofs"
 msgstr "Afficher les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:915
+#: dui/stages/start_coex/start_coex_widgets.py:917
 msgid "Delete saved proofs"
 msgstr "Effacer les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1061
+#: dui/stages/start_coex/start_coex_widgets.py:1063
 msgid "Load proof"
 msgstr "Charger la démonstration"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1162
+#: dui/stages/start_coex/start_coex_widgets.py:1164
 msgid "Do you want to delete this saved proof?"
 msgstr "Voulez-vous effacer cette sauvegarde ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1250
+#: dui/stages/start_coex/start_coex_widgets.py:1252
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1320
+#: dui/stages/start_coex/start_coex_widgets.py:1322
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1327
+#: dui/stages/start_coex/start_coex_widgets.py:1329
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1328
+#: dui/stages/start_coex/start_coex_widgets.py:1330
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -1551,15 +1551,15 @@ msgstr "Exercices dans la liste d’énoncés"
 msgid "implicit use allowed"
 msgstr "peut être utilisée implicitement"
 
-#: pylib/coursedata/exercise_classes.py:449
+#: pylib/coursedata/exercise_classes.py:450
 msgid "definition"
 msgstr "définition"
 
-#: pylib/coursedata/exercise_classes.py:451
+#: pylib/coursedata/exercise_classes.py:452
 msgid "theorem"
 msgstr "théorème"
 
-#: pylib/coursedata/exercise_classes.py:453
+#: pylib/coursedata/exercise_classes.py:454
 msgid "exercise"
 msgstr "exercice"
 
@@ -2521,10 +2521,10 @@ msgstr ""
 #: pylib/text/help_msgs.py:133
 #, python-brace-format
 msgid ""
-"{to_use}, press {forall_use} after selecting {an_element_of_type_}"
+"{to_use}, press {use_forall} after selecting {an_element_of_type_}"
 "{or_drag_element_to_property}."
 msgstr ""
-"{to_use}, cliquez sur {forall_use} après avoir sélectionné "
+"{to_use}, cliquez sur {use_forall} après avoir sélectionné "
 "{an_element_of_type_}{or_drag_element_to_property}."
 
 #: pylib/text/help_msgs.py:135
@@ -2538,8 +2538,8 @@ msgstr ""
 
 #: pylib/text/help_msgs.py:140
 #, python-brace-format
-msgid "{to_start_proof}, press {forall_prove}."
-msgstr "{to_start_proof}, cliquez sur {forall_prove}."
+msgid "{to_start_proof}, press {prove_forall}."
+msgstr "{to_start_proof}, cliquez sur {prove_forall}."
 
 #: pylib/text/help_msgs.py:143
 msgid ""
@@ -2564,10 +2564,10 @@ msgstr ""
 #: pylib/text/help_msgs.py:152
 #, python-brace-format
 msgid ""
-"{to_use}, press {implies_use} after selecting another property which match "
+"{to_use}, press {use_implies} after selecting another property which match "
 "the premise{or_drag_premise}."
 msgstr ""
-"{to_use}, cliquez sur {implies_use} après avoir sélectionné une autre "
+"{to_use}, cliquez sur {use_implies} après avoir sélectionné une autre "
 "propriété qui corresponde à la prémisse{or_drag_premise}."
 
 #: pylib/text/help_msgs.py:155
@@ -2578,8 +2578,8 @@ msgstr ""
 
 #: pylib/text/help_msgs.py:159
 #, python-brace-format
-msgid "{to_start_proof}, press {implies_prove}."
-msgstr "{to_start_proof}, cliquez sur {implies_prove}."
+msgid "{to_start_proof}, press {prove_implies}."
+msgstr "{to_start_proof}, cliquez sur {prove_implies}."
 
 #: pylib/text/help_msgs.py:161
 msgid ""
@@ -2600,15 +2600,15 @@ msgstr ""
 
 #: pylib/text/help_msgs.py:170
 #, python-brace-format
-msgid "{to_use}, just press {exists_use}."
-msgstr "{to_use}, cliquez simplement {exists_use}."
+msgid "{to_use}, just press {use_exists}."
+msgstr "{to_use}, cliquez simplement {use_exists}."
 
 #: pylib/text/help_msgs.py:174
 #, python-brace-format
 msgid ""
-"{to_start_proof}, press {exists_prove} after selecting {an_element_of_type_}."
+"{to_start_proof}, press {prove_exists} after selecting {an_element_of_type_}."
 msgstr ""
-"{to_start_proof}, cliquez sur {exists_prove} après avoir sélectionné "
+"{to_start_proof}, cliquez sur {prove_exists} après avoir sélectionné "
 "{an_element_of_type_}."
 
 #: pylib/text/help_msgs.py:176
@@ -2634,10 +2634,10 @@ msgstr "{this_property_is} une disjonction."
 #: pylib/text/help_msgs.py:183
 #, python-brace-format
 msgid ""
-"Press {or_use} to engage in a proof by cases; you will successively examine "
+"Press {use_or} to engage in a proof by cases; you will successively examine "
 "the case when {ch0} holds and the case when {ch1} holds."
 msgstr ""
-"Cliquez sur {or_use} pour débuter une preuve par cas ; vous examinerez alors "
+"Cliquez sur {use_or} pour débuter une preuve par cas ; vous examinerez alors "
 "successivement le cas où {ch0}, puis le cas où {ch1}."
 
 #: pylib/text/help_msgs.py:186
@@ -2653,10 +2653,10 @@ msgstr "Si oui, alors vous pourriez envisager une preuve par cas."
 #: pylib/text/help_msgs.py:193
 #, python-brace-format
 msgid ""
-"Press {or_prove} to simplify the goal by deciding which one of the two "
+"Press {prove_or} to simplify the goal by deciding which one of the two "
 "properties you will prove. You may forget about the other one!"
 msgstr ""
-"Cliquez sur {or_prove} pour simplifier le but en décidant laquelle des deux "
+"Cliquez sur {prove_or} pour simplifier le but en décidant laquelle des deux "
 "propriétés vous aller montrer. Vous pouvez oublier l'autre propriété !"
 
 #: pylib/text/help_msgs.py:196
@@ -2683,14 +2683,14 @@ msgstr "{this_property_is} une conjonction."
 
 #: pylib/text/help_msgs.py:204
 #, python-brace-format
-msgid "Press {and_use} to separate both properties."
-msgstr "Cliquez sur {and_use} pour séparer les deux propriétés."
+msgid "Press {use_and} to separate both properties."
+msgstr "Cliquez sur {use_and} pour séparer les deux propriétés."
 
 #: pylib/text/help_msgs.py:209
 #, python-brace-format
-msgid "Press {and_prove} to prove separately and successively each property."
+msgid "Press {prove_and} to prove separately and successively each property."
 msgstr ""
-"Cliquez sur {and_prove} pour démontrer séparément et successivement chacune "
+"Cliquez sur {prove_and} pour démontrer séparément et successivement chacune "
 "des deux propriétés."
 
 #: pylib/text/help_msgs.py:211
@@ -2741,11 +2741,11 @@ msgstr ""
 #, python-brace-format
 msgid ""
 "Press the ⇔ (\"IF AND ONLY IF\") button, to split the proof into the proofs "
-"of the direct and reverse implications. You may also use {and_prove}."
+"of the direct and reverse implications. You may also use {prove_and}."
 msgstr ""
 "Cliquez sur le bouton ⇔ (\"SI ET SEULEMENT SI\"), pour démontrer séparément "
 "l'implication directe et l'implication réciproque. Vous pouvez aussi "
-"utiliser {and_prove}."
+"utiliser {prove_and}."
 
 #: pylib/text/help_msgs.py:241
 #, python-brace-format

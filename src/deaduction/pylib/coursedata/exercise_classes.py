@@ -411,7 +411,8 @@ class Statement:
         for string in auto_steps_strings:
             if string is not None:
                 auto_steps.append(AutoStep.from_string(string))
-        auto_steps = [step for step in auto_steps if step]
+        # Remove None steps:
+        # auto_steps = [step for step in auto_steps if step]
         self.__refined_auto_steps = auto_steps
         return auto_steps
 

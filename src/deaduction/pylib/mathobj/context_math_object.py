@@ -173,12 +173,12 @@ class ContextMathObject(MathObject):
 
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):
-                actions.append("implies_use")
+                actions.append("use_implies")
             yes, subs = operator.can_be_used_for_substitution()
             if yes:
                 actions.append("equal")
         if operator.is_for_all(implicit=implicit):
-            actions.append("forall_use")
+            actions.append("use_forall")
 
         if button_names:
             actions = [action for action in actions if action in button_names]
@@ -272,9 +272,9 @@ class ContextMathObject(MathObject):
 
         # Name of action buttons according to current prove/use mode
         cbn = help_msgs.current_button_name
-        prove_use_dic = {key+suffix: cbn(key+suffix)
+        prove_use_dic = {prefix+key: cbn(prefix+key)
                          for key in ('forall', 'exists', 'implies', 'and', 'or')
-                         for suffix in ('_prove', '_use')}
+                         for prefix in ('prove_', 'use_')}
         format_dic.update(prove_use_dic)
 
         # Translate values

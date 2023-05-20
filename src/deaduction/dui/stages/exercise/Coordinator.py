@@ -1043,6 +1043,12 @@ class Coordinator(QObject):
 
         # Next step
         next_step = self.__auto_steps.pop(0)
+        if not next_step:
+            log.warning("Empty step (unable to recover saved step),"
+                        "exiting history mode")
+            self.__exit_history_mode()
+            return
+
         self.freeze()
         done, msg = await self.emw.simulate_user_action(next_step, duration=0)
         log.debug(f"Simulate user action: {done}, msg = {msg}")
