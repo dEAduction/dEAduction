@@ -1030,22 +1030,24 @@ class Coordinator(QObject):
         The remaining steps to process are stored in self.__auto_steps.
         """
 
-        duration = 0
-
         # End of auto steps?
         if not self.__auto_steps:
             self.__exit_history_mode()
             return
 
         # Wait for crucial data and server_task
+        log.debug("Waiting for initial proof states...")
         await self.initial_proof_states_set.wait()
+        log.debug("Waiting for server task to start...")
         await self.server_task_started.wait()
 
         # Next step
         next_step = self.__auto_steps.pop(0)
         self.freeze()
-        self.nursery.start_soon(self.emw.simulate_user_action,
-                                next_step, duration)
+        done, msg = await self.emw.simulate_user_action(next_step, duration=0)
+        log.debug(f"Simulate user action: {done}, msg = {msg}")
+        # self.nursery.start_soon(self.emw.simulate_user_action,
+        #                         next_step, duration)
 
     @staticmethod
     def automatic_actions(goal: Goal) -> UserAction:
@@ -1073,7 +1075,7 @@ class Coordinator(QObject):
             for prop in goal.context_props:
                 if prop.is_exists() and prop.allow_auto_action:
                     user_action = UserAction(selection=[prop],
-                                             button_name="exists_use")
+                                             button_name="use_exists")
                     # Turn off auto_action for this prop:
                     prop.turn_off_auto_action()
                     return user_action
@@ -1098,7 +1100,7 @@ class Coordinator(QObject):
                     index = context_types.index(premise)
                     context_premise = goal.context_props[index]
                     user_action = UserAction(selection=[context_premise, prop],
-                                             button_name="implies_use")
+                                             button_name="use_implies")
                     return user_action
                 elif ask_auto_premises:
                     prop.turn_off_auto_action()  # No more asking for this one
@@ -1112,7 +1114,7 @@ class Coordinator(QObject):
                     if msg_box.clickedButton() != no_button:
                         user_action = UserAction(selection=[prop],
                                                  user_input=[0],
-                                                 button_name="implies_use")
+                                                 button_name="use_implies")
                     return user_action
 
         # (3) Check automatic intro of variables and hypotheses
@@ -1120,11 +1122,11 @@ class Coordinator(QObject):
                                  "_variables_and_hypotheses", False)
         if auto_for_all and target.allow_auto_action:
             if target.is_for_all():
-                user_action = UserAction.simple_action("forall_prove")
+                user_action = UserAction.simple_action("prove_forall")
                 target.turn_off_auto_action()
                 return user_action
             elif target.is_implication():
-                user_action = UserAction.simple_action("implies_prove")
+                user_action = UserAction.simple_action("prove_implies")
                 target.turn_off_auto_action()
                 return user_action
 

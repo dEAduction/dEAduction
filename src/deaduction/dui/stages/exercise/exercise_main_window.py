@@ -814,17 +814,6 @@ class ExerciseMainWindow(QMainWindow):
         if not name:  # Nothing to do
             return
 
-        # if mode == 'display_switch':
-        #     switch_mode = self.ecw.switch_mode
-        #     prove_mode = (switch_mode == "prove")
-        #     if name.endswith("_use") or name.endswith("_prove"):
-        #         OK = ((name.endswith('_use') and not prove_mode) or
-        #               (name.endswith('_prove') and prove_mode))
-        #         if not OK:
-        #             self.ecw.set_switch_mode(to_prove=not prove_mode)
-        # elif mode == 'display_unified':
-        #     name = name.replace('_use', '')
-        #     user_action.button_name = name.replace('_prove', '')
         if cvars.get('logic.button_use_or_prove_mode') == 'display_switch':
             switch_mode = self.ecw.switch_mode
             prove_mode = (switch_mode == "prove")
@@ -928,7 +917,7 @@ class ExerciseMainWindow(QMainWindow):
         """
         Simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
-        when redoing, but also when processing automatic actions, or testing.
+        when redoing.
         Note that the corresponding actions are NOT processed,
         since this would modify history of the lean_file which is not what
         we want when redoing.

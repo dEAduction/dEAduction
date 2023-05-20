@@ -153,16 +153,16 @@ class UserAction:
 
     def prove_or_use_button_name(self):
         name = self.button_name
-        if self.prove_or_use and not (name.endswith("_use")
-                                      or name.endswith("_prove")):
-            name = name + '_' + self.prove_or_use
+        if self.prove_or_use and not (name.startswith("use_")
+                                      or name.startswith("prove_")):
+            name = self.prove_or_use + '_' + name
         return name
 
     def button_name_adapted_to_mode(self, mode=None):
         """
         Return the button name that corresponds to self.button_name adapted
-        to mode : without suffix '_prove' / '_use' if the unified buttons are
-        displayed, with suffix in the opposite case. Note that the returned
+        to mode : without prefix 'prove_' / 'use_' if the unified buttons are
+        displayed, with prefix in the opposite case. Note that the returned
         name may not be adapted if self.prove_or_use is None.
         """
 
@@ -177,8 +177,8 @@ class UserAction:
         if mode in ('display_switch', 'display_both'):
             adapted_name = self.prove_or_use_button_name()
         elif mode == 'display_unified':
-            adapted_name = name.replace('_use', '')
-            adapted_name = adapted_name.replace('_prove', '')
+            adapted_name = name.replace('use_', '')
+            adapted_name = adapted_name.replace('prove_', '')
 
         return adapted_name
 

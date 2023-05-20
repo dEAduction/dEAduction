@@ -19,7 +19,7 @@ forall, exists, implies, and, or
 take two other boolean arguments, prove and use. These arguments tells if
 usr is trying to prove or/and use the corresponding property.
 To these five actions also correspond methods that try only either to prove
-xor use the property, which are named e.g. forall_prove and forall_use.
+xor use the property, which are named e.g. prove_forall and use_forall.
 
 Most of these functions are just switches that call other more
 specialised functions, according to the number and nature of
