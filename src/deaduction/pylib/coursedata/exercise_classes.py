@@ -531,6 +531,9 @@ class Exercise(Theorem):
     # in the original course file:
     original_exercise                           = None
 
+    non_pertinent_course_metadate = ('_raw_metadata', 'description',
+                                     'pretty_name')
+
     @property
     def initial_proof_state(self):
         if self.original_exercise:

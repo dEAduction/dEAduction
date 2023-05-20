@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-05-08 16:46+0200\n"
-"PO-Revision-Date: 2023-05-08 16:47+0200\n"
+"POT-Creation-Date: 2023-05-20 13:53+0200\n"
+"PO-Revision-Date: 2023-05-20 13:55+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,27 +15,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.3.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/__main__.py:175
+#: dui/__main__.py:176
 msgid "No connection! Maybe your wifi is off?"
 msgstr "Pas de connexion ! Le wifi est peut-être désactivé ?"
 
-#: dui/__main__.py:179
+#: dui/__main__.py:180
 msgid "Wrong url!"
 msgstr "Mauvaise url !"
 
-#: dui/__main__.py:181
+#: dui/__main__.py:182
 msgid "Download interrupted!"
 msgstr "Téléchargement interrompu !"
 
-#: dui/__main__.py:184
+#: dui/__main__.py:185
 msgid "Download interrupted by user."
 msgstr "Téléchargement interrompu par l’utilisateur."
 
-#: dui/__main__.py:252
+#: dui/__main__.py:253
 msgid ""
 "Missing packages have been installed, but user decided to quit without "
 "launching d∃∀duction."
@@ -43,20 +43,20 @@ msgstr ""
 "Les dépendances manquantes ont été installées, mais l’utilisateur a décidé "
 "de quitter sans lancer d∃∀duction."
 
-#: dui/__main__.py:260
+#: dui/__main__.py:261
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
 
-#: dui/elements/actions_widgets_classes.py:182
+#: dui/elements/actions_widgets_classes.py:183
 msgid "Button"
 msgstr "Bouton"
 
-#: dui/elements/actions_widgets_classes.py:182
+#: dui/elements/actions_widgets_classes.py:183
 #: dui/elements/config_window.py:535
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_triangle.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
-#: dui/stages/start_coex/start_coex_widgets.py:255
+#: dui/stages/start_coex/start_coex_widgets.py:327
 #: pylib/math_display/display_data.py:261 pylib/proof_tree/proof_tree.py:526
 msgid ":"
 msgstr " :"
@@ -79,14 +79,27 @@ msgstr "Démontrer :"
 msgid "Use:"
 msgstr "Utiliser :"
 
-#: dui/elements/actions_widgets_classes.py:950
-#: dui/elements/actions_widgets_classes.py:955
+#: dui/elements/actions_widgets_classes.py:727
+msgid "saved on "
+msgstr ""
+
+#: dui/elements/actions_widgets_classes.py:728
+msgid "steps"
+msgstr ""
+
+#: dui/elements/actions_widgets_classes.py:1004
+#: dui/stages/start_coex/start_coex_widgets.py:829
+#: dui/stages/start_coex/start_coex_widgets.py:1131
+msgid "Exercises"
+msgstr "Exercices"
+
+#: dui/elements/actions_widgets_classes.py:1004
+msgid "Saved proofs"
+msgstr "Sauvegardes"
+
+#: dui/elements/actions_widgets_classes.py:1006
 msgid "Statements"
 msgstr "Enoncés"
-
-#: dui/elements/actions_widgets_classes.py:950
-msgid "L∃∀N name"
-msgstr "Nom L∃∀N"
 
 #: dui/elements/config_window.py:120
 msgid "The variables of the context are displayed in color"
@@ -186,7 +199,7 @@ msgstr ""
 "propriété universelle ou une implication"
 
 #: dui/elements/config_window.py:267
-#: dui/stages/exercise/exercise_main_window.py:240
+#: dui/stages/exercise/exercise_main_window.py:242
 msgid "Preferences"
 msgstr "Préférences"
 
@@ -218,7 +231,7 @@ msgstr "Choix libres"
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:761
+#: dui/elements/config_window.py:762
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
 "Caractères manquants : entrer exactement {} groupes de caractères séparés "
@@ -368,10 +381,6 @@ msgstr "Introduction automatique des variables et des hypothèses"
 #: dui/elements/config_window_text.py:89
 msgid "Automatic intro of existence properties"
 msgstr "Introduction automatique des propriétés d’existence"
-
-#: dui/elements/config_window_text.py:91
-msgid "Save exercises for autotest"
-msgstr "Sauvegarder pour auto-tests"
 
 #: dui/elements/config_window_text.py:93
 msgid "Save history when exercise is solved"
@@ -523,7 +532,7 @@ msgstr "CQFD !!"
 
 #: dui/elements/proof_tree/proof_tree_widget.py:363
 #: pylib/coursedata/course_metadata_translations.py:32
-#: pylib/text/tooltips.py:161 pylib/text/tooltips.py:163
+#: pylib/text/tooltips.py:171 pylib/text/tooltips.py:173
 msgid "Goal!"
 msgstr "But !"
 
@@ -536,79 +545,74 @@ msgid "Global proof view"
 msgstr "Aperçu global de la preuve"
 
 #: dui/primitives/buttons_dialog.py:86 dui/primitives/yes_no_dialog.py:73
-#: dui/stages/exercise/Coordinator.py:1031
+#: dui/stages/exercise/Coordinator.py:1109
 msgid "Yes"
 msgstr "Oui"
 
 #: dui/primitives/buttons_dialog.py:87 dui/primitives/yes_no_dialog.py:74
-#: dui/stages/exercise/Coordinator.py:1032
+#: dui/stages/exercise/Coordinator.py:1110
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/exercise/Coordinator.py:543
+#: dui/stages/exercise/Coordinator.py:600
 msgid "Server restarted"
 msgstr "Redémarrage du serveur"
 
-#: dui/stages/exercise/Coordinator.py:547
+#: dui/stages/exercise/Coordinator.py:604
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1028
+#: dui/stages/exercise/Coordinator.py:1106
 msgid "Do you want to prove the premise \"{}\" as a new sub-goal?"
 msgstr "Voulez-vous démontrer la prémisse {}  ?"
 
-#: dui/stages/exercise/Coordinator.py:1111 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1189 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1127
+#: dui/stages/exercise/Coordinator.py:1205
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1130
+#: dui/stages/exercise/Coordinator.py:1208
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1137
+#: dui/stages/exercise/Coordinator.py:1215
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1140
+#: dui/stages/exercise/Coordinator.py:1218
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1142
+#: dui/stages/exercise/Coordinator.py:1220
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1144 pylib/actions/logic.py:1326
+#: dui/stages/exercise/Coordinator.py:1222 pylib/actions/logic.py:1326
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1166
-#: pylib/proof_state/lean_response.py:112
-msgid "Proof complete"
-msgstr "La preuve est terminée !"
-
-#: dui/stages/exercise/Coordinator.py:1189
+#: dui/stages/exercise/Coordinator.py:1266
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1190
+#: dui/stages/exercise/Coordinator.py:1267
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1194
+#: dui/stages/exercise/Coordinator.py:1271
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1196
+#: dui/stages/exercise/Coordinator.py:1273
 #: dui/stages/exercise/_exercise_main_window_widgets.py:794
-#: dui/stages/exercise/_exercise_main_window_widgets.py:805
+#: dui/stages/exercise/_exercise_main_window_widgets.py:810
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1201
+#: dui/stages/exercise/Coordinator.py:1281
 msgid "Save history"
 msgstr "Sauver l'historique"
 
@@ -681,30 +685,35 @@ msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:784
-#: dui/stages/exercise/_exercise_main_window_widgets.py:807
+#: dui/stages/exercise/_exercise_main_window_widgets.py:812
 msgid "Stop me from thinking!"
 msgstr "Arrêter la requête"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:789
-#: dui/stages/exercise/_exercise_main_window_widgets.py:806
+#: dui/stages/exercise/_exercise_main_window_widgets.py:811
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/exercise_main_window.py:243
+#: dui/stages/exercise/_exercise_main_window_widgets.py:797
+#: dui/stages/exercise/_exercise_main_window_widgets.py:813
+msgid "Save proof"
+msgstr "Sauvegarder la preuve"
+
+#: dui/stages/exercise/exercise_main_window.py:245
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:244
+#: dui/stages/exercise/exercise_main_window.py:246
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:984
-#: pylib/proof_step/proof_step.py:685
+#: dui/stages/exercise/exercise_main_window.py:964
+#: pylib/proof_step/proof_step.py:700
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:987
+#: dui/stages/exercise/exercise_main_window.py:967
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -725,7 +734,7 @@ msgid "Installing — d∃∀duction"
 msgstr "Installation — d∃∀duction"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:138
-#: dui/stages/start_coex/start_coex_widgets.py:757
+#: dui/stages/start_coex/start_coex_widgets.py:815
 msgid "Quit"
 msgstr "Quitter"
 
@@ -745,76 +754,92 @@ msgstr "Toutes les données téléchargées seront perdues."
 msgid "Do you really want to quit?"
 msgstr "Voulez-vous vraiment quitter ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:135
+#: dui/stages/start_coex/start_coex_widgets.py:129
 msgid "No preview yet."
 msgstr "Aperçu indisponible."
 
-#: dui/stages/start_coex/start_coex_widgets.py:209
+#: dui/stages/start_coex/start_coex_widgets.py:204
 msgid "Details:"
 msgstr "Détails :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:247
-msgid "Browse files..."
-msgstr "Choisir un fichier…"
+#: dui/stages/start_coex/start_coex_widgets.py:242
+msgid "Browse all files..."
+msgstr "Parcourir tous les fichiers…"
 
-#: dui/stages/start_coex/start_coex_widgets.py:255
+#: dui/stages/start_coex/start_coex_widgets.py:319
 msgid "Recent files"
 msgstr "Fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:503
+#: dui/stages/start_coex/start_coex_widgets.py:324
+msgid "Preset files"
+msgstr "Fichiers pré-sélectionnés"
+
+#: dui/stages/start_coex/start_coex_widgets.py:578
 msgid "Text mode"
 msgstr "Mode texte"
 
-#: dui/stages/start_coex/start_coex_widgets.py:529
+#: dui/stages/start_coex/start_coex_widgets.py:609
 msgid "Preview not available (be patient...)"
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:603
+#: dui/stages/start_coex/start_coex_widgets.py:621
+msgid "(saved proof)"
+msgstr "(sauvegarde)"
+
+#: dui/stages/start_coex/start_coex_widgets.py:680
 msgid "Objects:"
 msgstr "Objets :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:604
+#: dui/stages/start_coex/start_coex_widgets.py:681
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:624
+#: dui/stages/start_coex/start_coex_widgets.py:701
 msgid "Target:"
 msgstr "But :"
 
-#: dui/stages/start_coex/start_coex_widgets.py:760
+#: dui/stages/start_coex/start_coex_widgets.py:817
+#: dui/stages/start_coex/start_coex_widgets.py:1063
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:773
+#: dui/stages/start_coex/start_coex_widgets.py:828
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:774
-#: dui/stages/start_coex/start_coex_widgets.py:916
-msgid "Exercises"
-msgstr "Exercices"
+#: dui/stages/start_coex/start_coex_widgets.py:900
+msgid "Show only recent files"
+msgstr "Afficher seulement les fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:986
+#: dui/stages/start_coex/start_coex_widgets.py:908
+msgid "Show saved proofs"
+msgstr ""
+
+#: dui/stages/start_coex/start_coex_widgets.py:915
+msgid "Delete saved proofs"
+msgstr ""
+
+#: dui/stages/start_coex/start_coex_widgets.py:1061
+msgid "Load proof"
+msgstr "Charger la démonstration"
+
+#: dui/stages/start_coex/start_coex_widgets.py:1162
+msgid "Do you want to delete this saved proof?"
+msgstr "Voulez-vous effacer cette sauvegarde ?"
+
+#: dui/stages/start_coex/start_coex_widgets.py:1250
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1016
-msgid "Congratulations, exercise finished!"
-msgstr "Bravo, l’exercice est résolu !"
-
-#: dui/stages/start_coex/start_coex_widgets.py:1018
-msgid "Exercise finished — d∃∀duction"
-msgstr "Exercice terminé — d∃∀duction"
-
-#: dui/stages/start_coex/start_coex_widgets.py:1056
+#: dui/stages/start_coex/start_coex_widgets.py:1320
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1063
+#: dui/stages/start_coex/start_coex_widgets.py:1327
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1064
+#: dui/stages/start_coex/start_coex_widgets.py:1328
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -1458,11 +1483,11 @@ msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
 msgid "target"
 msgstr "But"
 
-#: pylib/coursedata/course.py:166
+#: pylib/coursedata/course.py:240
 msgid "no description"
 msgstr "pas de description"
 
-#: pylib/coursedata/course.py:212
+#: pylib/coursedata/course.py:286
 msgid "except"
 msgstr "sauf"
 
@@ -1510,19 +1535,19 @@ msgstr "Boutons « preuve »"
 msgid "Exercises in statements list"
 msgstr "Exercices dans la liste d’énoncés"
 
-#: pylib/coursedata/exercise_classes.py:374
+#: pylib/coursedata/exercise_classes.py:392
 msgid "implicit use allowed"
 msgstr "peut être utilisée implicitement"
 
-#: pylib/coursedata/exercise_classes.py:431
+#: pylib/coursedata/exercise_classes.py:449
 msgid "definition"
 msgstr "définition"
 
-#: pylib/coursedata/exercise_classes.py:433
+#: pylib/coursedata/exercise_classes.py:451
 msgid "theorem"
 msgstr "théorème"
 
-#: pylib/coursedata/exercise_classes.py:435
+#: pylib/coursedata/exercise_classes.py:453
 msgid "exercise"
 msgstr "exercice"
 
@@ -2201,6 +2226,10 @@ msgstr "Théorème :"
 msgid "All proof states received"
 msgstr "Etats de preuve reçu"
 
+#: pylib/proof_state/lean_response.py:112 pylib/text/text.py:37
+msgid "Proof complete"
+msgstr "La preuve est terminée !"
+
 #: pylib/proof_state/proof_state.py:1112
 msgid "Assume that"
 msgstr "Supposons que"
@@ -2242,7 +2271,7 @@ msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
 #: pylib/proof_state/proof_state.py:1198 pylib/proof_state/proof_state.py:1234
-#: pylib/proof_step/proof_step.py:453
+#: pylib/proof_step/proof_step.py:453 pylib/proof_step/proof_step.py:460
 msgid ": "
 msgstr " : "
 
@@ -2294,19 +2323,19 @@ msgstr "Preuve du but intermédiaire : {}"
 msgid "Proof of new subgoal"
 msgstr "Preuve du but intermédiaire"
 
-#: pylib/proof_step/proof_step.py:652
+#: pylib/proof_step/proof_step.py:660
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/proof_step/proof_step.py:656
+#: pylib/proof_step/proof_step.py:664
 msgid "Success:"
 msgstr "Succès :"
 
-#: pylib/proof_step/proof_step.py:689
+#: pylib/proof_step/proof_step.py:704
 msgid "(Current goal admitted)"
 msgstr "(But en cours admis)"
 
-#: pylib/proof_step/proof_step.py:693
+#: pylib/proof_step/proof_step.py:708
 msgid "Beginning of Proof"
 msgstr "Début de la preuve"
 
@@ -2806,6 +2835,10 @@ msgid "This target follows obviously from context property {solving_obj}."
 msgstr ""
 "Ce but se déduit manifestement de la propriété {solving_obj} du contexte."
 
+#: pylib/text/text.py:38
+msgid "Proof complete (but for some admitted goals)"
+msgstr "La preuve est terminée (mais certains buts ont été admis)"
+
 #: pylib/text/tooltips.py:63
 msgid "Prove '∀ x, P(x)' by introducing 'x'"
 msgstr "Démontre ‘∀ x, P(x)’ en introduisant ‘x’"
@@ -2897,59 +2930,117 @@ msgstr ""
 "Conclut la preuve lorsque le but s’obtient en manipulant des égalités ou "
 "inégalités de nombres"
 
-#: pylib/text/tooltips.py:141
-msgid "AND"
-msgstr "ET"
-
-#: pylib/text/tooltips.py:141
-msgid "OR"
-msgstr "OU"
-
-#: pylib/text/tooltips.py:141
-msgid "NOT"
-msgstr "NON"
-
-#: pylib/text/tooltips.py:141
-msgid "IMPLIES"
-msgstr "IMPLIQUE"
-
-#: pylib/text/tooltips.py:141
-msgid "IFF"
-msgstr "SSI"
-
-#: pylib/text/tooltips.py:142
+#: pylib/text/tooltips.py:146
 msgid "FORALL"
 msgstr "POUR TOUT"
 
-#: pylib/text/tooltips.py:142
+#: pylib/text/tooltips.py:146
 msgid "EXISTS"
 msgstr "EXISTE"
 
-#: pylib/text/tooltips.py:142
+#: pylib/text/tooltips.py:146
+msgid "IMPLIES"
+msgstr "IMPLIQUE"
+
+#: pylib/text/tooltips.py:146
+msgid "AND"
+msgstr "ET"
+
+#: pylib/text/tooltips.py:146
+msgid "OR"
+msgstr "OU"
+
+#: pylib/text/tooltips.py:147
+msgid "FORALL PROVE"
+msgstr "DEMONTRER POUR TOUT"
+
+#: pylib/text/tooltips.py:147
+#, fuzzy
+#| msgid "EXISTS"
+msgid "EXISTS PROVE"
+msgstr "EXISTE"
+
+#: pylib/text/tooltips.py:147
+#, fuzzy
+#| msgid "IMPLIES"
+msgid "IMPLIES PROVE"
+msgstr "IMPLIQUE"
+
+#: pylib/text/tooltips.py:147
+msgid "AND PROVE"
+msgstr ""
+
+#: pylib/text/tooltips.py:148
+msgid "OR PROVE"
+msgstr ""
+
+#: pylib/text/tooltips.py:149
+#, fuzzy
+#| msgid "FORALL"
+msgid "FORALL USE"
+msgstr "POUR TOUT"
+
+#: pylib/text/tooltips.py:149
+#, fuzzy
+#| msgid "EXISTS"
+msgid "EXISTS USE"
+msgstr "EXISTE"
+
+#: pylib/text/tooltips.py:149
+#, fuzzy
+#| msgid "IMPLIES"
+msgid "IMPLIES USE"
+msgstr "IMPLIQUE"
+
+#: pylib/text/tooltips.py:149
+msgid "AND USE"
+msgstr ""
+
+#: pylib/text/tooltips.py:150
+msgid "OR USE"
+msgstr ""
+
+#: pylib/text/tooltips.py:151
+msgid "NOT"
+msgstr "NON"
+
+#: pylib/text/tooltips.py:151
+msgid "IFF"
+msgstr "SSI"
+
+#: pylib/text/tooltips.py:151
 msgid "EQUAL"
 msgstr "ÉGAL"
 
-#: pylib/text/tooltips.py:142
+#: pylib/text/tooltips.py:151
 msgid "MAP"
 msgstr "APPLICATION"
 
-#: pylib/text/tooltips.py:158
+#: pylib/text/tooltips.py:152
+msgid "NEW OBJECT"
+msgstr ""
+
+#: pylib/text/tooltips.py:152
+msgid "PROOF METHODS"
+msgstr ""
+
+#: pylib/text/tooltips.py:168
 msgid "Proof methods..."
 msgstr "Méthodes de preuve…"
 
-#: pylib/text/tooltips.py:159
+#: pylib/text/tooltips.py:169
 msgid "New object..."
 msgstr "Nouvel Objet…"
 
-#: pylib/text/tooltips.py:162
+#: pylib/text/tooltips.py:172
 msgid "Compute"
 msgstr "Calculer"
 
-#: pylib/text/tooltips.py:188
+#: pylib/text/tooltips.py:198
 msgid "prove"
 msgstr "démontrer"
 
-#: pylib/text/tooltips.py:189
+#: pylib/text/tooltips.py:199
 msgid "use"
 msgstr "utiliser"
 
@@ -2996,6 +3087,29 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Load history"
+#~ msgstr "Charger l'historique"
+
+#~ msgid "Show recent courses only"
+#~ msgstr "Afficher les "
+
+#, fuzzy
+#~| msgid "Save history"
+#~ msgid "Saved history"
+#~ msgstr "Sauver l'historique"
+
+#~ msgid "L∃∀N name"
+#~ msgstr "Nom L∃∀N"
+
+#~ msgid "Save exercises for autotest"
+#~ msgstr "Sauvegarder pour auto-tests"
+
+#~ msgid "Congratulations, exercise finished!"
+#~ msgstr "Bravo, l’exercice est résolu !"
+
+#~ msgid "Exercise finished — d∃∀duction"
+#~ msgstr "Exercice terminé — d∃∀duction"
 
 #~ msgid "Apply a universal property"
 #~ msgstr "Appliquer une propriété universelle"

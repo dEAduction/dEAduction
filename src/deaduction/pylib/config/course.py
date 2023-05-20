@@ -54,7 +54,8 @@ def get_preset_courses() -> ([Path], [str], [int]):
     """
     preset_courses = cvars.get('course.preset_courses', None)
     courses = preset_courses if preset_courses else courses_paths()
-    titles = [file.stem for file in courses]
+    file_titles = [file.stem for file in courses]
+    titles = [title.replace('_', ' ') for title in file_titles]
 
     return courses, titles, [-1]*len(courses)
 

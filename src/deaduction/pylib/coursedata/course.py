@@ -444,7 +444,8 @@ class Course:
                     # AvailableDefinitions
                     # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
-                        if field_name != '_raw_metadata':
+                        if field_name not in \
+                                Exercise.non_pertinent_course_metadate:
                             metadata.setdefault(field_name,
                                                 course_metadata[field_name])
                     # Creating Exercise!

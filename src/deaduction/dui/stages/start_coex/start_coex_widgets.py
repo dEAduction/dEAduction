@@ -253,10 +253,10 @@ class CourseChooser(AbstractCoExChooser):
         self.__courses_lyt.addWidget(self.__recent_courses_wgt)
 
         browser_layout = QVBoxLayout()
-        browser_layout.addWidget(self.__browse_btn)
         self.__label_title = QLabel()
         browser_layout.addWidget(self.__label_title)
         browser_layout.addLayout(self.__courses_lyt)
+        browser_layout.addWidget(self.__browse_btn)
 
         # Signals
         self.__courses_wgt = self.__preset_courses_wgt
@@ -273,6 +273,11 @@ class CourseChooser(AbstractCoExChooser):
         self.show_recent_courses()
 
     def set_selected_course(self):
+        """
+        Select the current course item:
+            - Call for loading of initial proof states
+            - Preview course.
+        """
         course_item = self.__courses_wgt.currentItem()
         if course_item:
             course_path = course_item.course_path
@@ -281,17 +286,27 @@ class CourseChooser(AbstractCoExChooser):
             self.set_preview(course)
 
     def give_focus_to_course_wdg(self):
+        """
+        Give the focus to the course list. This should be called after any
+        action that gives focus to another part of the window. It allows usr
+        to select course with the keyboard's arrows.
+        """
         self.__courses_wgt.setFocus()
 
+    @Slot()
     def current_item_changed(self):
+        """
+        This is called when the course item changes: the course is selected,
+        usr sees the details, and we give focus back to the course list widget.
+        """
         self.set_selected_course()
         self.give_focus_to_course_wdg()
 
     @Slot()
     def show_recent_courses(self, yes=None):
         """
-        Show or hide recent courses. If yes is None then apply the config
-        settings.
+        Select recent courses / preset courses.
+        If yes is None then select according to the config settings.
         """
         if yes is None:
             yes = cvars.get('functionality.show_recent_courses_only')
@@ -308,7 +323,8 @@ class CourseChooser(AbstractCoExChooser):
             self.__courses_wgt = self.__preset_courses_wgt
             title = _("Preset files")
 
-        self.__label_title.setText(title + _(" (double click to select file):"))
+        # self.__label_title.setText(title + _(" (double click to select file):"))
+        self.__label_title.setText(title + _(":"))
         self.current_item_changed()
 
     def add_browsed_course(self, course: Course, browsed=False):
@@ -338,7 +354,7 @@ class CourseChooser(AbstractCoExChooser):
         course files or clicking on a recent course in
         self.__recent_courses_wgt), the signal course_chosen is emitted with
         the course. It is received in StartExerciseDialog, which then
-        instanciates an ExerciseChooser for this course and the view is set to
+        instantiates an ExerciseChooser for this course and the view is set to
         the exercise chooser.
         """
 
@@ -601,6 +617,8 @@ class ExerciseChooser(AbstractCoExChooser):
 
         # TODO: Add subtitle, task…
         title       = exercise.pretty_name
+        if exercise.history_date():
+            title += " " + _("(saved proof)")
         description = exercise.description
 
         super().set_preview(main_widget=main_widget, title=title,
@@ -879,7 +897,7 @@ class AbstractStartCoEx(QDialog):
         # Courses actions
         self.__recent_courses_action = QAction(
             QIcon(str((icons_dir / 'icons8-history-folder-96.png').resolve())),
-            _('Show recent courses only'), self)
+            _('Show only recent files'), self)
         self.__recent_courses_action.setCheckable(True)
         show_recent_courses = cvars.get('functionality.show_recent_courses_only')
         self.__recent_courses_action.setChecked(show_recent_courses)
@@ -1040,9 +1058,20 @@ class AbstractStartCoEx(QDialog):
             start_btn.setEnabled(True)
             start_btn.setDefault(True)
             if self.__exercise_chooser.selected_exercise_is_from_history_file():
-                start_btn.setText(_('Load history'))
+                start_btn.setText(_('Load proof'))
             else:
                 start_btn.setText(_('Start exercise'))
+
+        # start_btn = self.__start_ex_btn
+        # if self.courses_tab_is_selected:
+        #     start_btn.setText(_('Select file'))
+        # elif self.exercises_tab_is_selected:
+        #     if self.__exercise_chooser.selected_exercise_is_from_history_file():
+        #         start_btn.setText(_('Load history'))
+        #     else:
+        #         start_btn.setText(_('Start exercise'))
+        #
+        # start_btn.setEnabled(True)
 
     @property
     def exercises_tab_is_selected(self):

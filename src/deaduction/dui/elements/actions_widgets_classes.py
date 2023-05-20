@@ -724,7 +724,7 @@ class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
         date = exercise.history_date()
         if date:
             nb_steps = len(exercise.refined_auto_steps)
-            txt1 = _("saved ") + date
+            txt1 = _("saved on ") + date
             txt2 = f"({nb_steps} " + _("steps") + ")"
             # to_display = ['\t' + txt1 + '\t' + txt2]
             to_display = ['', txt1 + '\t' + txt2]
@@ -1001,7 +1001,7 @@ class StatementsTreeWidget(QTreeWidget):
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
         if self.is_exercise_list:
-            self.setHeaderLabels([_('Exercises'), _('Saved history')])
+            self.setHeaderLabels([_('Exercises'), _('Saved proofs')])
         else:
             self.setHeaderLabels([_('Statements')])
 
@@ -1045,9 +1045,9 @@ class StatementsTreeWidget(QTreeWidget):
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
-                if (item.statement == statement
-                    or isinstance(statement, Exercise) and
-                        statement.is_copy_of(item.statement)):
+                if ((isinstance(statement, Exercise) and
+                        statement.is_copy_of(item.statement))
+                        or item.statement == statement):
                     self.setCurrentItem(item)
                     return True
             for i in range(0, item.childCount()):
