@@ -53,7 +53,10 @@ def get_preset_courses() -> ([Path], [str], [int]):
     Return the list of (recent course, title) found in the user_config dict
     """
     preset_courses = cvars.get('course.preset_courses', None)
-    courses = preset_courses if preset_courses else courses_paths()
+    if preset_courses:
+        courses = [Path(course) for course in preset_courses]
+    else:
+        courses = courses_paths()
     file_titles = [file.stem for file in courses]
     titles = [title.replace('_', ' ') for title in file_titles]
 

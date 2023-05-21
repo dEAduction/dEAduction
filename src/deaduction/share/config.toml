@@ -43,9 +43,9 @@ color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
 color_for_highlight_in_proof_tree = "Yellow"
 
-show_saved_exercises = true
+show_saved_exercises = false
 # Any modification of the following must be echoed
-# in the replace_dubious_characters function in in math_display.utils
+# in the replace_dubious_characters function in math_display.utils
 dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [windows.display]
@@ -96,7 +96,10 @@ domains = [""]
 log_to_file = true
 
 [course]
-preset_courses = []
+# Absolute path or relative to a Deaduction reference dir
+# (home, .deaduction, or lean_exercises_dir)
+preset_courses = ["Tutoriel.lean", "Ensembles_et_applications.lean",
+                  "Logique_et_inegalites.lean", "Logique_propositionnelle.lean"]
 
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':

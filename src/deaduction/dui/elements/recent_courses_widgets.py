@@ -36,6 +36,8 @@ from pathlib import Path
 from PySide2.QtWidgets import ( QListWidget,
                                 QListWidgetItem)
 
+import deaduction.pylib.config.dirs as cdirs
+
 from deaduction.pylib.config.course import (get_recent_courses,
                                             get_preset_courses)
 global _
@@ -67,9 +69,13 @@ class CoursesLW(QListWidget):
         self.course_paths = courses_paths
         info = zip(courses_paths, titles, exercise_numbers)
         for course_path, course_title, exercise_number in info:
-            if course_path.exists():
-                item = CoursesLWI(course_path, course_title)
-                self.addItem(item)
+            for path in [course_path,
+                         cdirs.local / course_path,
+                         cdirs.home / course_path,
+                         cdirs.usr_lean_exercises_dir / course_path]:
+                if path.exists():
+                    item = CoursesLWI(path, course_title)
+                    self.addItem(item)
         if self.count() and select_first_item:
             self.setCurrentItem(self.item(0))
             self.setItemSelected(self.item(0), True)
