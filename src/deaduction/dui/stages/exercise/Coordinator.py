@@ -131,7 +131,7 @@ class Coordinator(QObject):
         'functionality.allow_implicit_use_of_definitions': True,
         'functionality.target_selected_by_default': True}
 
-    def __init__(self, exercise, servint):
+    def __init__(self, exercise, servint, test_mode=False):
         super().__init__()
         self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
         self.exercise: Exercise       = exercise
@@ -153,7 +153,8 @@ class Coordinator(QObject):
 
         # Flags
         self.exercise_solved                = False
-        self.test_mode                      = False
+        self.test_mode                      = test_mode
+        self.emw.test_mode                  = test_mode
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.initial_proof_states_set = trio.Event()
@@ -189,7 +190,7 @@ class Coordinator(QObject):
     #     self.__auto_steps = self.exercise.refined_auto_steps.copy()
 
     def __init_history_mode(self):
-        if not self.exercise.launch_in_history_mode:
+        if not self.exercise.launch_in_history_mode or self.test_mode:
             return
         self.history_mode = True
         self.__auto_steps = self.exercise.refined_auto_steps.copy()
@@ -363,46 +364,6 @@ class Coordinator(QObject):
 
         # Just in case of deletion:
         self.emw.ecw.statements_tree.update_tooltips()
-        # try:
-        #     self.emw.ecw.statements_tree.update_tooltips()
-        # except RuntimeError:
-        #     log.warning(f"Runtime error (StatementsTreeWidgetItem deleted?)")
-
-    # def save_exercise_for_autotest(self):
-    #     """
-    #     This method fills self.exercise's attribute refined_auto_step
-    #     by retrieving the list of proof_step.auto_step from the lean_file,
-    #     and save the resulting exercise object in a pkl file for future
-    #     testing.
-    #     """
-    #
-    #     # FIXME: this method is deprecated, tests are done via history file
-    #     save = cvars.get('functionality.save_solved_exercises_for_autotest',
-    #                      False)
-    #     if not save:
-    #         return
-    #
-    #     auto_steps = [entry.misc_info.get("proof_step").auto_step
-    #                   for entry in self.lean_file.history]
-    #     auto_steps = [step for step in auto_steps if step is not None]
-    #
-    #     exercise = self.exercise
-    #     exercise.refined_auto_steps = auto_steps
-    #     filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
-    #         + '.pkl'
-    #     file_path = cdirs.test_exercises / filename
-    #     check_dir(cdirs.test_exercises, create=True)
-    #
-    #     total_string = 'AutoTest\n'
-    #     for step in auto_steps:
-    #         total_string += '    ' + step.raw_string + ',\n'
-    #     print(total_string)
-    #
-    #     log.debug(f"Saving auto_steps in {file_path}")
-    #
-    #     save_object(exercise, file_path)
-    #     # with open(file_path, mode='wb') as output:
-    #     #     dump(exercise, output, HIGHEST_PROTOCOL)
 
     def __disconnect_signals(self):
         """
@@ -745,38 +706,6 @@ class Coordinator(QObject):
                     premise_item = emission.args[0]  # MathWidgetItem
                     op_item = emission.args[1]  # Optional[MathWidgetItem]
                     await self.__server_call_d_n_n(premise_item, op_item)
-                    # Operator is None if dropping did not occur on a property.
-                    # Then WrongUI exception will be raised by drag_n_drop().
-
-                    # # selection = self.current_selection_as_mathobjects
-                    # operator = op_item.math_object if op_item else None
-                    # premise = premise_item.math_object if premise_item else None
-                    # #     selection.remove(operator)
-                    #
-                    # self.proof_step.drag_n_drop = DragNDrop(premise, operator)
-                    # try:
-                    #     names = drag_n_drop(premise, operator,
-                    #                         self.action_button_names)
-                    # except WrongUserInput as error:
-                    #     self.proof_step.user_input = self.emw.user_input
-                    #     self.process_wrong_user_input(error)
-                    #
-                    # else:
-                    #     # Only first name is tried
-                    #     for name in names:
-                    #         action_btn = ActionButton.from_name.get(name)
-                    #         if action_btn:
-                    #             self.proof_step.button_name = name
-                    #             # Fixme: ne marche pas
-                    #             selection = self.current_selection_as_mathobjects
-                    #             self.proof_step.selection = selection
-                    #             self.proof_step.target_selected = self.emw.target_selected
-                    #             await self.emw.simulate(self.proof_step,
-                    #                                     duration=0.5)
-                    #             # await action_btn.simulate(duration=0.5)
-                    #             # self.__server_call_action(action_btn)
-                    #             break
-                    #     # No button found: this should not happen
 
     ###################
     # History actions #
@@ -1310,7 +1239,7 @@ class Coordinator(QObject):
         # Store journal and auto_step
         if not self.test_mode and not self.history_mode:
             self.journal.store(self.proof_step, self)
-            # Fixme: compute only at end
+            # Compute right now since we need current proof_state
             self.proof_step.auto_step = AutoStep.from_proof_step(
                                                             self.proof_step,
                                                             emw=self.emw)

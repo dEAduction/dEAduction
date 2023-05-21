@@ -608,11 +608,12 @@ class WindowManager(QObject):
         log.debug(f"Preparing {self.exercise.pretty_name} for test")
 
         # Start exercise window and test window
-        self.coordinator = Coordinator(self.exercise, self.servint)
+        self.coordinator = Coordinator(self.exercise, self.servint,
+                                       test_mode=True)
         self.test_window = test_window
         self.test_window.show()
-        self.exercise_window.test_mode = True
-        self.coordinator.test_mode = True
+        # self.exercise_window.test_mode = True
+        # self.coordinator.test_mode = True
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.exercise_window_closed)

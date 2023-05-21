@@ -110,6 +110,7 @@ log_domains = ['deaduction.pylib.autotest', 'deaduction.dui',
                'ServerInterface', 'HighLevelServerRequest']
 
 logger.configure(domains=log_domains, display_level="debug")
+
 log = logging.getLogger(__name__)
 
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
@@ -400,7 +401,7 @@ async def auto_test(wm: WindowManager):
                 #                    for item in step.user_input]
 
                 if test_window.step_by_step or \
-                    test_window.exercise_by_exercise and steps_counter == 1:
+                        test_window.exercise_by_exercise and steps_counter == 1:
                     test_window.unfreeze()
                 else:
                     test_window.process_next_step.emit()
