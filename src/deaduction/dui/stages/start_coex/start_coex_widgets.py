@@ -280,12 +280,12 @@ class CourseChooser(AbstractCoExChooser):
             - Call for loading of initial proof states
             - Preview course.
         """
-        course_item = self.__courses_wgt.currentItem()
+        course_item: CoursesLWI = self.__courses_wgt.currentItem()
         if course_item:
-            course_path = course_item.course_path
-            course = Course.from_file(course_path)
-            self.__set_initial_proof_states(course)
-            self.set_preview(course)
+            if not course_item.course :
+                course_item.course = Course.from_file(course_item.course_path)
+                self.__set_initial_proof_states(course_item.course)
+            self.set_preview(course_item.course)
 
     def give_focus_to_course_wdg(self):
         """

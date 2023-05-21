@@ -76,6 +76,7 @@ class CoursesLW(QListWidget):
                 if path.exists():
                     item = CoursesLWI(path, course_title)
                     self.addItem(item)
+                    break
         if self.count() and select_first_item:
             self.setCurrentItem(self.item(0))
             self.setItemSelected(self.item(0), True)
@@ -147,6 +148,7 @@ class CoursesLWI(QListWidgetItem):
         super().__init__(course_title)
         self.setToolTip(str(course_path))
         self.__course_path = course_path
+        self.__course = None
 
     @property
     def course_path(self):
@@ -155,3 +157,11 @@ class CoursesLWI(QListWidgetItem):
         """
 
         return self.__course_path
+
+    @property
+    def course(self):
+        return self.__course
+
+    @course.setter
+    def course(self, course):
+        self.__course = course
