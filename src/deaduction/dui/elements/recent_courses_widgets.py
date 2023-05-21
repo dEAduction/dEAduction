@@ -72,6 +72,19 @@ class CoursesLW(QListWidget):
                 self.addItem(item)
         if self.count() and select_first_item:
             self.setCurrentItem(self.item(0))
+            self.setItemSelected(self.item(0), True)
+
+    def set_current_item(self, course_path) -> bool:
+        """
+        If course_path is in self.course_paths, set the current
+        corresponding item and return True. If not, return False.
+        """
+        if course_path in self.course_paths:
+            index = self.course_paths.index(course_path)
+            self.setCurrentItem(self.item(index))
+            return True
+        else:
+            return False
 
     def add_browsed_course(self, course_path: Path, course_title: str,
                            browsed=False):
@@ -80,7 +93,7 @@ class CoursesLW(QListWidget):
         text) the course as browsed. This is useful in dEaduction
         courses's chooser (see CourseChooser and StartExerciseDialog
         from deaduction.widgets): when a user browses a course, this
-        allows to temporarly save the course. This way, the user can
+        allows to temporarily save the course. This way, the user can
         preview other courses without having to rebrowse the files
         everytime they want to see the first browsed course.
 
@@ -90,11 +103,13 @@ class CoursesLW(QListWidget):
 
         if course_path in self.course_paths:
             index = self.course_paths.index(course_path)
-            self.removeItemWidget(self.item(index))
+            item = self.takeItem(index)
+            # self.removeItemWidget(self.item(index))
+        else:
+            displayed_title = (_('(browsed)') + ' ' + course_title if browsed
+                               else course_title)
+            item = CoursesLWI(course_path, displayed_title)
 
-        displayed_title = (f'(browsed) {course_title}' if browsed
-                           else course_title)
-        item = CoursesLWI(course_path, displayed_title)
         self.insertItem(0, item)
         self.setCurrentItem(item)
 

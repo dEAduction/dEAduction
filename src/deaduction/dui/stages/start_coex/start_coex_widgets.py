@@ -227,7 +227,7 @@ class CourseChooser(AbstractCoExChooser):
     course_chosen = Signal(Course)
     goto_exercises = Signal()
 
-    def __init__(self, servint):
+    def __init__(self, servint, select_first_item=True):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser
         layout is made of a browse-button to browse courses files
@@ -246,9 +246,9 @@ class CourseChooser(AbstractCoExChooser):
         # Recent courses widget
         self.__courses_lyt = QStackedLayout()
         self.__preset_courses_wgt = CoursesLW(recent=False,
-                                              select_first_item=True)
+                                              select_first_item=select_first_item)
         self.__recent_courses_wgt = CoursesLW(recent=True,
-                                              select_first_item=True)
+                                              select_first_item=select_first_item)
         self.__courses_lyt.addWidget(self.__preset_courses_wgt)
         self.__courses_lyt.addWidget(self.__recent_courses_wgt)
 
@@ -337,15 +337,27 @@ class CourseChooser(AbstractCoExChooser):
         useful in the method AbstractCoExChooser.__preset_exercise to
         preset / preview an exercise.
 
+        If browsed is True, then indicate that the course has been browsed.
+
         :param course: Course to be added to the recent courses list.
         """
-
-        course_path = course.relative_course_path
+        # relative_course_path is relative to the home dir.
+        relative_course_path = course.relative_course_path
+        # FIXME:
+        course_path = cdirs.home / relative_course_path
         course_title = course.title
+        # Add course on top of self.__recent_course_wgt,
+        # and set the current corresponding item
         self.__recent_courses_wgt.add_browsed_course(course_path,
                                                      course_title,
                                                      browsed=browsed)
-        self.show_recent_courses(yes=True)
+        yes = cvars.get('functionality.show_recent_courses_only')
+        if not yes:
+            # Try to select course in preset courses
+            in_preset = self.__preset_courses_wgt.set_current_item(course_path)
+            # If fails, switch to recent courses to display course
+            if not in_preset:
+                self.show_recent_courses(yes=True)
 
     def set_preview(self, course: Course):
         """
@@ -791,21 +803,24 @@ class AbstractStartCoEx(QDialog):
 
         super().__init__()
 
+        self.servint = servint
+
         settings = QSettings("deaduction")
         geometry = settings.value("coex_chooser/Geometry")
-        # maximised = settings.value("coex_chooser/isMaximised")
         if geometry:
             self.restoreGeometry(geometry)
-            # if maximised:
-            #     self.showMaximized()
 
-        self.servint = servint
+        self.toolbar = QToolBar()
+        self.__init_toolbar()
+
         if title:
             self.setWindowTitle(title)
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        self.__course_chooser   = CourseChooser(servint)
+        yes = bool(exercise)
+        self.__course_chooser   = CourseChooser(servint,
+                                                select_first_item=yes)
         self.__exercise_chooser = QWidget()
 
         # Somehow the order of connections changes performances
@@ -825,7 +840,6 @@ class AbstractStartCoEx(QDialog):
         self.disable_start_btn = None
 
         # ───────────────────── Layouts ──────────────────── #
-
         self.__tabwidget = QTabWidget()
         self.__tabwidget.addTab(self.__course_chooser, _('Files'))
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
@@ -835,20 +849,6 @@ class AbstractStartCoEx(QDialog):
         buttons_lyt.addWidget(self.__quit_btn)
         buttons_lyt.addStretch()
         buttons_lyt.addWidget(self.__start_ex_btn)
-
-        self.toolbar = QToolBar()
-        self.__init_toolbar()
-
-        # self.__history_checkbox = QCheckBox(_('Show saved exercises'))
-        # self.__history_checkbox.clicked.connect(self.__toggle_history)
-        # self.__supress_history_btn = QPushButton(_('Suppress saved exercise'))
-        # self.__supress_history_btn.clicked.connect(self.__supress_history)
-        # # self.load_history_btn = QPushButton(_('Load'))
-        # history_buttons_lyt = QHBoxLayout()
-        # history_buttons_lyt.addWidget(self.__history_checkbox)
-        # history_buttons_lyt.addSpacing(50)
-        # history_buttons_lyt.addWidget(self.__supress_history_btn)
-        # history_buttons_lyt.addStretch()
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.toolbar)
@@ -885,9 +885,11 @@ class AbstractStartCoEx(QDialog):
             self.__exercise_chooser.give_focus_to_exercises_wdg()
         else:
             self.__enter_shortcut.setEnabled(True)
-            self.__delete_history_action.setDisabled(True)
             self.__course_chooser.set_selected_course()
             self.__course_chooser.give_focus_to_course_wdg()
+
+        if not self.__show_history_action.isChecked():
+            self.__delete_history_action.setDisabled(True)
 
     # def keyPressEvent(self, event) -> None:
     #     print(event.key, event.type)
@@ -975,7 +977,11 @@ class AbstractStartCoEx(QDialog):
         """
         if self.course is not exercise.course:
             self.__course_chooser.set_preview(exercise.course)
+
         self.__course_chooser.add_browsed_course(exercise.course)
+        yes = cvars.get('functionality.show_recent_courses_only')
+        self.__recent_courses_action.setChecked(yes)
+
         self.__preview_exercises(self.course)  # Init __exercise_choser
         self.__exercise_chooser.goto_exercise(exercise)
         self.__exercise_chooser.preview_exercise()
@@ -1010,9 +1016,9 @@ class AbstractStartCoEx(QDialog):
                     and self.exercise.original_exercise):
                 ex_chooser.goto_exercise(self.exercise.original_exercise)
 
-        if self.exercise:
-            is_history = bool(self.exercise.history_date())
-            freeze = not (show_history and is_history)
+        if self.course:
+            # is_history = bool(self.exercise.history_date())
+            freeze = not show_history  # and is_history)
         else:
             freeze = True
         self.__delete_history_action.setDisabled(freeze)
@@ -1109,6 +1115,12 @@ class AbstractStartCoEx(QDialog):
         """
         self.__tabwidget.setCurrentIndex(1)
 
+    def __goto_courses(self):
+        """
+        Go to the file tab.
+        """
+        self.__tabwidget.setCurrentIndex(0)
+
     @Slot(Course, str)
     def __preview_exercises(self, course: Course):
         """
@@ -1146,39 +1158,74 @@ class AbstractStartCoEx(QDialog):
         exercise = self.exercise
         if exercise:
             self.__exercise_chooser.preview_exercise()
-            yes = self.__show_history_action.isChecked()
-            is_history = bool(exercise.history_date())
-            freeze = not (yes and is_history)
-        else:
-            freeze = True
 
+        freeze = not self.__show_history_action.isChecked()
+        # is_history = bool(exercise.history_date())
+        # freeze = not yes  # and is_history)
+        # else:
+        #     freeze = True
         self.__delete_history_action.setDisabled(freeze)
 
     @Slot()
     def __delete_history(self):
-        log.info("Deleting")
 
+        exercise = self.exercise
+
+        #######################
+        # Warning message box #
+        #######################
         yes_no_dialog = YesNoDialog()
-        # yes_no_dialog.setParent(self)
-        yes_no_dialog.setIcon(QMessageBox.Warning)
-        yes_no_dialog.setText(_("Do you want to delete this saved proof?"))
-        # log.debug('Executing DialogBox...')
+        # (1st case) Delete all saved proofs for 1 file!
+        if not exercise:
+            yes_no_dialog.setIcon(QMessageBox.Warning)
+            yes_no_dialog.setText(_("This will delete ALL saved proofs for "
+                                    "this file. Are you sure about this?"))
+        # (2nd case) Delete all saved proofs for 1 exercise!
+        elif not exercise.history_date():
+            yes_no_dialog.setIcon(QMessageBox.Warning)
+            yes_no_dialog.setText(_("This will delete ALL saved proofs for "
+                                    "this exercise. Are you sure about this?"))
+        # (3rd case) Delete one saved proof
+        else:
+            yes_no_dialog.setText(_("Do you want to delete this saved proof?"))
+
         yes_no_dialog.exec_()
-        # log.debug('...Executed')
         if yes_no_dialog.no:
             # log.debug('no')
             return
 
-        exercise = self.exercise
-        if exercise.history_date():
-            next_exercise = exercise.next_exercise()
-            exercise.delete_in_history_file()
+        ##############################
+        # Delete, and handle display #
+        ##############################
+        # (1st case) Delete all saved proofs for 1 file!
+        if not exercise:
+            log.info("Deleting saved proof file")
+            course = self.course
+            course.delete_history_file()
             self.course.set_history_course()
-            self.__preview_exercises(self.course)
-            if next_exercise:
-                self.__exercise_chooser.goto_exercise(next_exercise)
-                self.__exercise_chooser.preview_exercise()
+            exercise_to_display = None
+
+        # (2nd case) Delete all saved proofs for 1 exercise!
+        elif not exercise.history_date():
+            log.info("Deleting all saved proofs for this exercise")
+            course = self.course
+            course.delete_all_saved_proofs_of_exercise(exercise)
+            exercise_to_display = exercise
+        # (3rd case) Delete one saved proof
+        else:
+            log.info("Deleting this saved proof")
+            exercise_to_display = exercise.next_exercise()
+            exercise.delete_in_history_file()
+
+        # Reset history course since file has changed
+        self.course.set_history_course()
+        self.__preview_exercises(self.course)
+        if exercise_to_display:
+            self.__exercise_chooser.goto_exercise(exercise_to_display)
+            self.__exercise_chooser.preview_exercise()
             self.__goto_exercises()
+        else:
+            self.__goto_courses()
 
     @Slot()
     def __process_double_click(self, tree_item):
