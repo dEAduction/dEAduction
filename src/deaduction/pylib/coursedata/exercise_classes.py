@@ -1061,7 +1061,6 @@ class Exercise(Theorem):
         # Reload history_course to remove deleted entry
         # self.original_exercise.course.set_history_course()
 
-
 #############
 # utilities #
 #############

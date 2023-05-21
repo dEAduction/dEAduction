@@ -83,7 +83,8 @@ class Course:
     opened_namespace_lines: Dict
     statements:             List[Statement]
     relative_course_path:   Path = None
-    # Relative_course_path is added after instantiation.
+    # Relative_course_path, path relative to the home directory, is added after
+    # instantiation.
 
     __history_course      = None
 
@@ -170,6 +171,35 @@ class Course:
         exercises = [history_exo for history_exo in saved_exercises
                      if history_exo.is_history_version_of(exercise)]
         return exercises
+
+    def delete_all_saved_proofs_of_exercise(self, exercise: Exercise):
+        """
+        This method will delete all history versions of the given exercise in
+        the history file. Do not call without warning usr.
+        """
+        saved_versions = self.history_versions_from_exercise(exercise)
+        while saved_versions:
+            nb = len(saved_versions)
+            saved_version = saved_versions[-1]
+            assert isinstance(saved_version, Exercise)
+            saved_version.delete_in_history_file()
+            # Reset history course, since the line number of the remaining
+            # exercises may have changed
+            self.set_history_course()
+            saved_versions = self.history_versions_from_exercise(exercise)
+            if len(saved_versions) != nb - 1:
+                log.warning("Deleting failed!")
+                break
+
+    def delete_history_file(self):
+        """
+        This method delete the history file. Do not call without warning usr!
+        """
+        file = self.history_file_path
+        try:
+            file.unlink()
+        except FileNotFoundError:
+            log.warning("History file not found")
 
     def is_history_file(self):
         return self.course_file_name.startswith('history_')
@@ -311,7 +341,7 @@ class Course:
             log.info(f"Parsing file {str(course_path.resolve())}")
             file_content = course_path.read_text(encoding='utf-8')
             course = Course.from_file_content(file_content)
-        elif course_filetype == '.pkl':
+        elif course_filetype == '.pkl':  # Obsolete
             with course_path.open(mode='rb') as input_:
                 course = load_object(input_)
 
