@@ -344,10 +344,14 @@ class Course:
         elif course_filetype == '.pkl':  # Obsolete
             with course_path.open(mode='rb') as input_:
                 course = load_object(input_)
+        else:
+            return
 
         course.filetype = course_filetype
         course_path = course_path.resolve()
-        relative_course_path = Path(os.path.relpath(course_path))
+        home = cdirs.home.resolve()
+        relative_course_path = Path(os.path.relpath(course_path,
+                                                    start=home))
         course.relative_course_path = relative_course_path
         return course
 

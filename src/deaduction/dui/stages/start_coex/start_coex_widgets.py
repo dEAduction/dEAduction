@@ -454,8 +454,11 @@ class CourseChooser(AbstractCoExChooser):
         course-file, a Course object is instantiated and the method
         set_preview is called.
         """
+
+        # FIXME: directory and filter do not work on Linux?!
         directory = cvars.get('others.course_directory',
-                              str(cdirs.usr_lean_exercises_dir))
+                              str(cdirs.usr_lean_exercises_dir.resolve()))
+        # directory = str(cdirs.home.resolve())
         dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean')
@@ -464,7 +467,13 @@ class CourseChooser(AbstractCoExChooser):
         if dialog.exec_():
             course_path = Path(dialog.selectedFiles()[0])
             course = Course.from_file(course_path)
-            self.add_browsed_course(course, browsed=True)
+            if course:
+                self.add_browsed_course(course, browsed=True)
+            else:
+                dialog = QMessageBox()
+                dialog.setText(_("No file selected!\nSelect a '.lean' file"))
+                dialog.setIcon(QMessageBox.Warning)
+                dialog.exec_()
 
 
 class ExerciseChooser(AbstractCoExChooser):
