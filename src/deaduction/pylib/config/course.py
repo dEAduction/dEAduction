@@ -36,25 +36,39 @@ import deaduction.pylib.config.dirs as cdirs
 log = logging.getLogger(__name__)
 
 
+def real_path_relative_to_home(path):
+    """
+    Try to find a file from path, and return real path to this file relative
+    to home dir.
+    """
+    for real_path in [path, cdirs.local / path, cdirs.home / path,
+                      cdirs.usr_lean_exercises_dir / path]:
+        if real_path.exists():
+            return cdirs.relative_to_home(real_path)
+
+    print(f"Path {path} not found")
+
+
 def courses_paths() -> [Path]:
     """
     Get list of all lean files in Lean exercises dir.
     """
 
     exercise_dir = cdirs.usr_lean_exercises_dir
-
     paths = list(exercise_dir.glob('*.lean'))
-
-    return paths
+    real_paths = [real_path_relative_to_home(path) for path in paths]
+    return real_paths
 
 
 def get_preset_courses() -> ([Path], [str], [int]):
     """
-    Return the list of (recent course, title) found in the user_config dict
+    Return the list of (preset course, paths title)
+    found in the config file.
     """
     preset_courses = cvars.get('course.preset_courses', None)
     if preset_courses:
-        courses = [Path(course) for course in preset_courses]
+        courses = [real_path_relative_to_home(Path(course))
+                   for course in preset_courses]
     else:
         courses = courses_paths()
     file_titles = [file.stem for file in courses]
@@ -65,15 +79,17 @@ def get_preset_courses() -> ([Path], [str], [int]):
 
 def get_recent_courses() -> ([Path], [str], [int]):
     """
-    Return the list of (recent course, title) found in the user_config dict
+    Return the list of (recent course path, title)
+     found in the config file.
     """
 
-    recent_courses        = cvars.get("course.recent_courses", [])
+    recent_paths        = cvars.get("course.recent_courses", [])
     courses_titles        = cvars.get("course.recent_courses_titles", [])
     exercises_numbers     = cvars.get("course.exercise_numbers", [])
 
-    courses_paths         = list(map(Path, recent_courses))
-    exercises_numbers     = exercises_numbers or ([-1] * len(recent_courses))
+    courses_paths = [real_path_relative_to_home(Path(path))
+                     for path in recent_paths]
+    exercises_numbers = exercises_numbers or ([-1] * len(recent_paths))
 
     return courses_paths, courses_titles, exercises_numbers
 
@@ -91,7 +107,7 @@ def add_to_recent_courses(course_path: Path,
     if course_type == ".pkl" and course_path.suffix == ".lean":
         course_path = course_path.with_suffix(".pkl")
 
-    course_path = course_path.resolve()
+    course_path = real_path_relative_to_home(course_path)
     courses_paths, courses_titles, exercises_numbers = get_recent_courses()
     if course_path in courses_paths:
         # We want the course to appear in pole position

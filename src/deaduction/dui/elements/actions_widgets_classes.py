@@ -39,8 +39,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import              logging
-from typing import  Dict
+import logging
+from typing import Dict, Optional
 from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
@@ -1031,13 +1031,12 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.addTopLevelItem(item)
 
-    def goto_statement(self, statement: Statement, expand=True):
+    def goto_statement(self, statement: Optional[Statement], expand=True):
         """
         Go to the Statement statement (as if usr clicked on it).
-
+        If statement is None then go to the first Exercise.
         :param statement: Statement to go to.
-        :param expand: if True, expandreveal statement by expanding all
-        parents items.
+        :param expand: if True, reveal statement by expanding all parents items.
         """
         log.debug("goto exercise")
         # Thanks @mcosta from https://forum.qt.io/topic/54640/
@@ -1046,9 +1045,11 @@ class StatementsTreeWidget(QTreeWidget):
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
-                if ((isinstance(statement, Exercise) and
-                        statement.is_copy_of(item.statement))
-                        or item.statement == statement):
+                if ((isinstance(statement, Exercise)
+                     and (statement.is_copy_of(item.statement)
+                          or item.statement == statement))
+                    or (statement is None
+                        and isinstance(item.statement, Exercise))):
                     self.setCurrentItem(item)
                     return True
             for i in range(0, item.childCount()):
@@ -1059,6 +1060,7 @@ class StatementsTreeWidget(QTreeWidget):
             item = self.topLevelItem(i)
             if traverse_node(item):
                 item.setExpanded(expand)
+                break
 
         self.setFocus()
 

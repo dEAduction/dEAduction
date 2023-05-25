@@ -66,6 +66,12 @@ mathlib = local / "mathlib"
 log_file = (local / "deaduction.log").resolve()
 
 
+def relative_to_home(path: Path):
+    path = path.resolve()  # Absolute path
+    relative_path = Path(os.path.relpath(path, start=Path.home().resolve()))
+    return relative_path
+
+
 ############################################
 # Utilities
 ############################################

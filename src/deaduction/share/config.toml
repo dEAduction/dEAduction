@@ -8,7 +8,7 @@ context     = "letters/blue"
 display_success_messages = true
 text_mode_in_chooser_window = true
 target_display_on_top = false
-depth_of_unfold_statements = 1
+depth_of_unfold_statements = 0
 show_lean_name_for_statements = false
 
 # Fonts sizes:

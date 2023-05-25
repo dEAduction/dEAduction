@@ -55,7 +55,7 @@ class CoursesLW(QListWidget):
     instead of QListWidgetItem.
     """
 
-    def __init__(self, recent=False, select_first_item=True):
+    def __init__(self, recent=False):
         """
         Init self. See self docstring.
         """
@@ -69,32 +69,37 @@ class CoursesLW(QListWidget):
         self.course_paths = courses_paths
         info = zip(courses_paths, titles, exercise_numbers)
         for course_path, course_title, exercise_number in info:
-            for path in [course_path,
-                         cdirs.local / course_path,
-                         cdirs.home / course_path,
-                         cdirs.usr_lean_exercises_dir / course_path]:
-                if path.exists():
-                    item = CoursesLWI(path, course_title)
-                    self.addItem(item)
-                    break
-        if self.count() and select_first_item:
+            if course_path and course_path.exists():
+                item = CoursesLWI(course_path, course_title)
+                self.addItem(item)
+
+    def select_first_item(self):
+        if self.count():
             self.setCurrentItem(self.item(0))
             self.setItemSelected(self.item(0), True)
 
-    def set_current_item(self, course_path) -> bool:
+    def get_index(self, course_path):
+        for index in range(self.count()):
+            if course_path == self.item(index).course_path:
+                return index
+
+    def set_current_item(self, course) -> bool:
         """
         If course_path is in self.course_paths, set the current
         corresponding item and return True. If not, return False.
         """
-        if course_path in self.course_paths:
-            index = self.course_paths.index(course_path)
-            self.setCurrentItem(self.item(index))
+
+        course_path = course.relative_course_path
+        index = self.get_index(course_path)
+        if index is not None:
+            item = self.item(index)
+            self.setCurrentItem(item)
+            item.course = course
             return True
         else:
             return False
 
-    def add_browsed_course(self, course_path: Path, course_title: str,
-                           browsed=False):
+    def add_browsed_course(self, course, browsed=False):
         """
         Insert a course at the top of the list and mark (in the item
         text) the course as browsed. This is useful in dEaduction
@@ -103,22 +108,27 @@ class CoursesLW(QListWidget):
         allows to temporarily save the course. This way, the user can
         preview other courses without having to rebrowse the files
         everytime they want to see the first browsed course.
-
-        :param course_path: The course path of the browsed course.
-        :param course_title: The course title of the browsed course.
         """
 
-        if course_path in self.course_paths:
-            index = self.course_paths.index(course_path)
+        course_path = course.relative_course_path
+        index = self.get_index(course_path)
+        if index is not None:
             item = self.takeItem(index)
-            # self.removeItemWidget(self.item(index))
         else:
+            course_title = course.title
             displayed_title = (_('(browsed)') + ' ' + course_title if browsed
                                else course_title)
             item = CoursesLWI(course_path, displayed_title)
 
+        item.course = course
         self.insertItem(0, item)
         self.setCurrentItem(item)
+
+    def find_course(self, course_path):
+        index = self.get_index(course_path)
+        if index:
+            course = self.item(index).course
+            return course
 
 
 class CoursesLWI(QListWidgetItem):

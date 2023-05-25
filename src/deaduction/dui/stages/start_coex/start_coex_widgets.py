@@ -55,6 +55,7 @@ from PySide2.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
 
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
+
 import deaduction.pylib.utils.filesystem as fs
 from deaduction.dui.primitives      import (DisclosureTriangle,
                                             ButtonsDialog,
@@ -245,10 +246,8 @@ class CourseChooser(AbstractCoExChooser):
 
         # Recent courses widget
         self.__courses_lyt = QStackedLayout()
-        self.__preset_courses_wgt = CoursesLW(recent=False,
-                                              select_first_item=select_first_item)
-        self.__recent_courses_wgt = CoursesLW(recent=True,
-                                              select_first_item=select_first_item)
+        self.__preset_courses_wgt = CoursesLW(recent=False)
+        self.__recent_courses_wgt = CoursesLW(recent=True)
         self.__courses_lyt.addWidget(self.__preset_courses_wgt)
         self.__courses_lyt.addWidget(self.__recent_courses_wgt)
 
@@ -273,6 +272,13 @@ class CourseChooser(AbstractCoExChooser):
 
         super().__init__(browser_layout)
         self.show_recent_courses()
+        if select_first_item and self.__courses_wgt:
+            self.__courses_wgt.select_first_item()
+            # self.current_item_changed()
+
+    @property
+    def __current_item(self):
+        return self.__courses_wgt.currentItem()
 
     def set_selected_course(self):
         """
@@ -282,7 +288,7 @@ class CourseChooser(AbstractCoExChooser):
         """
         course_item: CoursesLWI = self.__courses_wgt.currentItem()
         if course_item:
-            if not course_item.course :
+            if not course_item.course:
                 course_item.course = Course.from_file(course_item.course_path)
                 self.__set_initial_proof_states(course_item.course)
             self.set_preview(course_item.course)
@@ -294,6 +300,8 @@ class CourseChooser(AbstractCoExChooser):
         to select course with the keyboard's arrows.
         """
         self.__courses_wgt.setFocus()
+        if self.__current_item:
+            self.__courses_wgt.setItemSelected(self.__current_item, True)
 
     @Slot()
     def current_item_changed(self):
@@ -341,20 +349,14 @@ class CourseChooser(AbstractCoExChooser):
 
         :param course: Course to be added to the recent courses list.
         """
-        # relative_course_path is relative to the home dir.
-        relative_course_path = course.relative_course_path
-        # FIXME:
-        course_path = cdirs.home / relative_course_path
-        course_title = course.title
         # Add course on top of self.__recent_course_wgt,
         # and set the current corresponding item
-        self.__recent_courses_wgt.add_browsed_course(course_path,
-                                                     course_title,
+        self.__recent_courses_wgt.add_browsed_course(course,
                                                      browsed=browsed)
         yes = cvars.get('functionality.show_recent_courses_only')
         if not yes:
             # Try to select course in preset courses
-            in_preset = self.__preset_courses_wgt.set_current_item(course_path)
+            in_preset = self.__preset_courses_wgt.set_current_item(course)
             # If fails, switch to recent courses to display course
             if not in_preset:
                 self.show_recent_courses(yes=True)
@@ -443,6 +445,12 @@ class CourseChooser(AbstractCoExChooser):
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
+    def find_course(self, course_path):
+        course = self.__preset_courses_wgt.find_course(course_path)
+        if not course:
+            course = self.__recent_courses_wgt.find_course(course_path)
+        return course
+
     #########
     # Slots #
     #########
@@ -465,8 +473,12 @@ class CourseChooser(AbstractCoExChooser):
 
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
-            course_path = Path(dialog.selectedFiles()[0])
-            course = Course.from_file(course_path)
+            path = Path(dialog.selectedFiles()[0])
+            course_path = cdirs.relative_to_home(path)
+            course = self.find_course(course_path)
+            if not course:
+                course = Course.from_file(course_path)
+
             if course:
                 self.add_browsed_course(course, browsed=True)
             else:
@@ -538,6 +550,12 @@ class ExerciseChooser(AbstractCoExChooser):
         super().__init__(browser_layout)
 
     @property
+    def __current_item(self):
+        item = self.__exercises_tree.currentItem()
+        if hasattr(item, 'statement'):
+            return item
+
+    @property
     def current_item_changed(self):
         if self.__exercises_tree:
             return self.__exercises_tree.currentItemChanged
@@ -550,11 +568,15 @@ class ExerciseChooser(AbstractCoExChooser):
                 exercise = item.statement
                 return exercise
 
-    def goto_exercise(self, exercise):
+    def goto_exercise(self, exercise=None):
         self.__exercises_tree.goto_statement(exercise)
 
     def give_focus_to_exercises_wdg(self):
         self.__exercises_tree.setFocus()
+        if not self.__current_item:
+            self.goto_exercise()  # Go to first exercise
+
+        self.__exercises_tree.setItemSelected(self.__current_item, True)
 
     def show_statements(self, statements, yes=True):
         """
@@ -827,12 +849,11 @@ class AbstractStartCoEx(QDialog):
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        yes = bool(exercise)
-        self.__course_chooser   = CourseChooser(servint,
-                                                select_first_item=yes)
+        yes = True if exercise else False
+        self.__course_chooser = CourseChooser(servint, select_first_item=yes)
         self.__exercise_chooser = QWidget()
 
-        # Somehow the order of connections changes performances
+        # Somehow the order of connections changes performances?
         self.__course_chooser.goto_exercises.connect(self.__goto_exercises)
         self.__course_chooser.course_chosen.connect(self.__preview_exercises)
 
@@ -863,7 +884,7 @@ class AbstractStartCoEx(QDialog):
         main_layout.addWidget(self.toolbar)
         separator = QFrame()
         separator.setFrameShape(QFrame.HLine)
-        main_layout.addWidget(separator)
+        # main_layout.addWidget(separator)
         # # FIXME: put this in the right place
         # explanation = _("First select a course, then choose "
         #                                "an exercise.")
@@ -1031,7 +1052,8 @@ class AbstractStartCoEx(QDialog):
         else:
             freeze = True
         self.__delete_history_action.setDisabled(freeze)
-        self.__exercise_chooser.give_focus_to_exercises_wdg()
+        if isinstance(ex_chooser, ExerciseChooser):
+            ex_chooser.give_focus_to_exercises_wdg()
 
     @Slot()
     def emw_not_ready(self):
@@ -1111,6 +1133,7 @@ class AbstractStartCoEx(QDialog):
             self.__enter_shortcut.setEnabled(True)
             # self.__course_chooser.set_selected_recent_course()
         else:
+            # self.__preview_exercises(self.course)
             # log.debug('Ex tab')
             # log.debug(self.__tabwidget.currentIndex())
             self.__enter_shortcut.setEnabled(False)
@@ -1148,10 +1171,10 @@ class AbstractStartCoEx(QDialog):
         self.__start_ex_btn.setEnabled(False)
 
         # Tab 0 is course, 1 is exercise
-        self.__tabwidget.removeTab(1)
-        self.__tabwidget.setTabEnabled(1, True)
         self.__exercise_chooser = ExerciseChooser(course, self.servint)
+        self.__tabwidget.removeTab(1)
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
+        self.__tabwidget.setTabEnabled(1, True)
 
         self.__exercise_chooser.current_item_changed.connect(
             self.__current_exercise_changed)

@@ -348,11 +348,11 @@ class Course:
             return
 
         course.filetype = course_filetype
-        course_path = course_path.resolve()
-        home = cdirs.home.resolve()
-        relative_course_path = Path(os.path.relpath(course_path,
-                                                    start=home))
-        course.relative_course_path = relative_course_path
+        # course_path = course_path.resolve()
+        # home = cdirs.home.resolve()
+        # relative_course_path = Path(os.path.relpath(course_path,
+        #                                             start=home))
+        course.relative_course_path = cdirs.relative_to_home(course_path)
         return course
 
     @classmethod
