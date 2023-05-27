@@ -297,5 +297,5 @@ lean_from_pattern_string = {
         (r"\forall", '⦃', (1,), ": ", (0,), '⦄', ", ", (2,)),
     # type class instance between brackets:
     "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
-        (r"\forall", '', (1, ), ": ", (0, ), ']', ", ", (2, ))
+        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, ))
 }
