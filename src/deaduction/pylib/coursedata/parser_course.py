@@ -248,7 +248,7 @@ interlude = ((!metadata !"lemma" !"namespace" any_char_but_eol)*
 # may be empty
 
 line_comment_rules = """
-line_comment = "--" any_char_but_eol* end_of_line
+line_comment = space* "--" any_char_but_eol* end_of_line
 """
 
 identifier_rules = """
@@ -311,6 +311,12 @@ class LeanCourseVisitor(NodeVisitor):
     #############
     # Statements #
     #############
+    def visit_something_else(self, node, visited_children):
+        log.debug("Got 'something else'")
+        # Just return the joined data of all children
+        course_history, data = get_info(visited_children)
+        return course_history, data
+
     def visit_statement(self, node, visited_children):
         """
         - Collect the metadata from children in data['metadata'],
@@ -364,7 +370,7 @@ class LeanCourseVisitor(NodeVisitor):
         metadata.setdefault("pretty_name", automatic_pretty_name)
 
         event = event_name, metadata
-        course_history.insert(0, event)
+        insert(course_history, event)
         return course_history, data
 
     def visit_begin_proof(self, node, visited_children):
@@ -375,13 +381,13 @@ class LeanCourseVisitor(NodeVisitor):
         """
         course_history, data = get_info(visited_children)
         event = "begin_proof", None
-        course_history.insert(0, event)  # To get the good line number
+        insert(course_history, event)  # To get the good line number
         return course_history, data
 
     def visit_end_proof(self, node, visited_children):
         course_history, data = get_info(visited_children)
         event = "end_proof", None
-        course_history.insert(0, event)
+        insert(course_history, event)
         return course_history, data
 
     ############
@@ -393,12 +399,13 @@ class LeanCourseVisitor(NodeVisitor):
         NB : keys are changed from Lean-deaduction file format
         to PEP8 conventions, e.g. PrettyName -> pretty_name
         """
+
         course_history, metadata = get_info(visited_children)
         metadata['_raw_metadata'] = metadata.copy()
         data = {"metadata": metadata}
         # event = "begin_metadata", None
-        # course_history.insert(0, event)
-        # log.debug(f"got metadata {data}")
+        # insert(course_history, event)
+        log.debug(f"got metadata {data}")
         return course_history, data
 
     def visit_metadata_field(self, node, visited_children):
@@ -474,7 +481,7 @@ class LeanCourseVisitor(NodeVisitor):
         name = data.pop("namespace_identifier")
         pretty_name = ""
         event = "open_open", {"name": name}
-        course_history.insert(0, event)
+        insert(course_history, event)
         return course_history, data
 
     def visit_open_namespace(self, node, visited_children):
@@ -495,7 +502,7 @@ class LeanCourseVisitor(NodeVisitor):
         if not pretty_name:
             pretty_name = name.replace("_", " ").capitalize()
         event = "open_namespace", {"name": name, "pretty_name": pretty_name}
-        course_history.insert(0, event)
+        insert(course_history, event)
         return course_history, data
 
     def visit_close_namespace(self, node, visited_children):
@@ -509,7 +516,7 @@ class LeanCourseVisitor(NodeVisitor):
         course_history, data = get_info(visited_children)
         name = data.pop("namespace_identifier")
         event = "close_namespace", {"name": name}
-        course_history.insert(0, event)
+        insert(course_history, event)
         return course_history, data
 
     ###############
@@ -582,6 +589,14 @@ class LeanCourseVisitor(NodeVisitor):
         # Just return the joined data of all children
         course_history, data = get_info(visited_children)
         return course_history, data
+
+
+def insert(course_history, event):
+    """
+    Insert and add a log entry.    
+    """
+    log.debug(f"Inserting event {event}")
+    course_history.insert(0, event)
 
 
 def get_info(children: List[Tuple[list, dict]]) -> Tuple[list, dict]:
