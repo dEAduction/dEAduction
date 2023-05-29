@@ -523,7 +523,7 @@ class Course:
             counter += 1
             if isinstance(st, Exercise):
                 counter_exercises += 1
-            st.course = course  # This makes printing raw exercises slow
+            st.course = course  # This makes __repr__() very slow
         log.info(f"{len(statements)} statements, including"
                  f" {counter_exercises} exercises found by parser")
         counter_lemma_exercises = file_content.count("lemma exercise.")

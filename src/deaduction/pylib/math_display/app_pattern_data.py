@@ -58,7 +58,9 @@ latex_from_app_pattern = {
         ('(0,).name', ['_', (1, )]),
     "APP(CONSTANT/name=limit_function, LAMBDA(?2, ?3, ?4), ?0, ?1)":
         (r'\no_text', "lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2),
-         " = ", (-1,))
+         " = ", (-1,)),
+    # "APP(CONSTANT/name=metric_space, ?0)":
+    #     (-1, r'\text_is', _('a metric space'))
 }
 
 # TODO: english translation
@@ -95,6 +97,7 @@ latex_from_constant_name = {
     "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
     "abs": ('|', -1, '|'),
     "max": ("Max", r'\parentheses', -2, ",", -1),
+    "min": ("Min", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
     "product": (-2, ".", -1),
     "image": (-1, " = ", -3, "(", -2, ")"),
@@ -107,7 +110,7 @@ latex_from_constant_name = {
     "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
     "even":  (-1,  r'\text_is', " " + _("even")),
-    "divise": (-2, ' | ', -1)
+    "divise": (-2, ' | ', -1),
 }
 
 # TODO: use latex_from_constant_names, éventuellement les transformer

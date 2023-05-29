@@ -88,7 +88,7 @@ def get_recent_courses() -> ([Path], [str], [int]):
     exercises_numbers     = cvars.get("course.exercise_numbers", [])
 
     courses_paths = [real_path_relative_to_home(Path(path))
-                     for path in recent_paths]
+                     for path in recent_paths if path]
     exercises_numbers = exercises_numbers or ([-1] * len(recent_paths))
 
     return courses_paths, courses_titles, exercises_numbers

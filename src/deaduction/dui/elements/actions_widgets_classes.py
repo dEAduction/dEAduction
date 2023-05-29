@@ -1081,7 +1081,8 @@ class StatementsTreeWidget(QTreeWidget):
         """
         for statement in statements:
             item = self.item_from_statement(statement)
-            item.setHidden(yes)
+            if item:
+                item.setHidden(yes)
 
     def index_from_event(self, event):
         return self.indexAt(event.pos())

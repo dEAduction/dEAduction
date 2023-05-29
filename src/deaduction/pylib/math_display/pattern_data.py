@@ -270,6 +270,7 @@ latex_from_pattern_string_for_type = {
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
     "SET_INDEX": (r'\set',),
+    "CONSTANT/name=MetricSpace": (r'\metric_space',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),
@@ -278,7 +279,9 @@ latex_from_pattern_string_for_type = {
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
+    "?:CONSTANT/name=MetricSpace": (r'\type_point', name),  # a point of...
     "?:SET(?0)": (r'\type_element', 'self'),
+    "CONSTANT/name=_inst_1": ('Hypo1',)
 }
 
 #################
@@ -297,5 +300,7 @@ lean_from_pattern_string = {
         (r"\forall", '⦃', (1,), ": ", (0,), '⦄', ", ", (2,)),
     # type class instance between brackets:
     "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
-        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, ))
+        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
+    "CONSTANT/name=_inst_1": ('_inst_1',),
+    "CONSTANT/name=_inst_2": ('_inst_2',)
 }
