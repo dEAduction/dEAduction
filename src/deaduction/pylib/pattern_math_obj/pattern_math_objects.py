@@ -1,7 +1,5 @@
 """
-implicit_definitions.py : provide the PatternMathObject class.
-    
-    <#optionalLongDescription>
+pattern_math_objects.py : provide the PatternMathObject class.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -34,6 +32,7 @@ from typing import Optional, Union
 from copy import copy
 
 from deaduction.pylib.utils import tree_list
+from .pattern_parser import tree_from_str
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 
@@ -156,6 +155,14 @@ class PatternMathObject(MathObject):
             pmo = cls(node=node, children=children_pmo, math_type=math_type,
                       info={}, imperative_matching=imperative)
 
+        return pmo
+
+    @classmethod
+    def from_string(cls, s: str, metavars=None):
+        if not metavars:
+            metavars = []
+        tree = tree_from_str(s)
+        pmo = cls.from_tree(tree, metavars)
         return pmo
 
     @classmethod
@@ -304,7 +311,8 @@ class PatternMathObject(MathObject):
             #   iff it is equal to the corresponding item in metavar_objects
             # If not, then self matches with math_object providing their
             #   math_types match. In this case, identify metavar.
-            if self in metavars:  # TODO: use only self.matched_math_object?
+            if self in metavars:
+                # TODO: use only self.matched_math_object and mvar.match?
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
             else:
@@ -496,7 +504,7 @@ class MetaVar(PatternMathObject):
     A class to store metavars that occur in PatternMathObject. The main use
     is that MVAR can be affected to a MathObject. This modifies their display.
     """
-    # TODO
+
     matched_math_object: Optional[MathObject] = None
 
     metavar_nb: int = 0  # Class attribute (counter)
@@ -530,6 +538,15 @@ class MetaVar(PatternMathObject):
     #                use_color=True, bf=False) -> str:
     #     # TODO
     #     return super().to_display(self, format_, text_depth, use_color, bf)
+
+    # def match(self, math_object):
+    #     mvar_type = self.math_type
+    #     math_type = math_object.math_type
+    #     match = mvar_type.match(math_type)
+    #
+    #     if match:
+    #         self.matched_math_object = math_object
+    #     return True
 
     def clear_matching(self):
         self.matched_math_object = None
