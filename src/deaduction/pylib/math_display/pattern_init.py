@@ -50,7 +50,7 @@ from deaduction.pylib.math_display.pattern_data import \
 from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants, generic_app_dict
 
-# from deaduction.pylib.pattern_math_obj.pattern_parser import tree_from_str
+from deaduction.pylib.math_display.pattern_parser import tree_from_str
 from deaduction.pylib.pattern_math_obj import PatternMathObject
 
 log = logging.getLogger(__name__)
@@ -90,9 +90,9 @@ def string_to_pattern():
     # (2) Fill in pattern dicts
     for dict_, list_ in dic_list_pairs:
         for key, latex_shape in dict_.items():
-            # tree = tree_from_str(key)
+            tree = tree_from_str(key)
             metavars = []
-            pattern = PatternMathObject.from_string(key, metavars)
+            pattern = PatternMathObject.from_tree(tree, metavars)
             list_.append((pattern, latex_shape, metavars))
             # print(key)
             # print(tree.display())
