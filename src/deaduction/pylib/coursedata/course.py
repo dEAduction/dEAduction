@@ -114,7 +114,15 @@ class Course:
                    + '.lean'
 
         check_dir(cdirs.history, create=True)
-        return cdirs.relative_to_home(cdirs.history / filename)
+        rel_path = cdirs.relative_to_home(cdirs.history / filename)
+        # print(f"History path:{rel_path}")
+        return rel_path
+
+    @property
+    def absolute_history_file_path(self):
+        abs_path = cdirs.home / self.history_file_path
+        # print(f"Abs history path:{abs_path}")
+        return abs_path
 
     def history_course(self):
         """
@@ -127,7 +135,7 @@ class Course:
         return self.__history_course
 
     def set_history_course(self):
-        history_file_path = self.history_file_path
+        history_file_path = cdirs.relative_to_home(self.history_file_path)
         self.__history_course = (Course.from_file(history_file_path)
                                  if history_file_path.exists() else None)
 
@@ -195,7 +203,7 @@ class Course:
         """
         This method delete the history file. Do not call without warning usr!
         """
-        file = self.history_file_path
+        file = self.absolute_history_file_path
         try:
             file.unlink()
         except FileNotFoundError:
