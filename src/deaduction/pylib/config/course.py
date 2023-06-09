@@ -57,7 +57,7 @@ def courses_paths() -> [Path]:
     exercise_dir = cdirs.usr_lean_exercises_dir
     paths = list(exercise_dir.glob('*.lean'))
     real_paths = [real_path_relative_to_home(path) for path in paths]
-    return real_paths
+    return [path for path in real_paths if path]
 
 
 def get_preset_courses() -> ([Path], [str], [int]):
