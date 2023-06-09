@@ -114,7 +114,7 @@ class Course:
                    + '.lean'
 
         check_dir(cdirs.history, create=True)
-        return cdirs.history / filename
+        return cdirs.relative_to_home(cdirs.history / filename)
 
     def history_course(self):
         """
@@ -332,11 +332,13 @@ class Course:
         Instantiate a Course object from the provided file.
 
         :param course_path:     path for file, either a'.lean' or a '.pkl' file
+        WARNING: this should be a path relative to home (or an absolute path).
         :return:                a Course instance
         """
 
         course_filetype = course_path.suffix
-
+        if not course_path.exists():
+            course_path = cdirs.home / course_path
         if course_filetype == '.lean':
             log.info(f"Parsing file {str(course_path.resolve())}")
             file_content = course_path.read_text(encoding='utf-8')
