@@ -50,7 +50,7 @@ from deaduction.pylib.math_display.pattern_data import \
 from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants, generic_app_dict
 
-from deaduction.pylib.math_display.pattern_parser import tree_from_str
+from deaduction.pylib.pattern_math_obj.pattern_parser import tree_from_str
 from deaduction.pylib.pattern_math_obj import PatternMathObject
 
 log = logging.getLogger(__name__)
