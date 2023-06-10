@@ -289,7 +289,8 @@ class CourseChooser(AbstractCoExChooser):
         course_item: CoursesLWI = self.__courses_wgt.currentItem()
         if course_item:
             if not course_item.course:
-                course_item.course = Course.from_file(course_item.course_path)
+                abs_path = course_item.abs_course_path
+                course_item.course = Course.from_file(abs_path)
                 self.__set_initial_proof_states(course_item.course)
             self.set_preview(course_item.course)
 
@@ -445,10 +446,10 @@ class CourseChooser(AbstractCoExChooser):
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
-    def find_course(self, course_path):
-        course = self.__preset_courses_wgt.find_course(course_path)
+    def find_course(self, abs_course_path):
+        course = self.__preset_courses_wgt.find_course(abs_course_path)
         if not course:
-            course = self.__recent_courses_wgt.find_course(course_path)
+            course = self.__recent_courses_wgt.find_course(abs_course_path)
         return course
 
     #########
@@ -473,11 +474,11 @@ class CourseChooser(AbstractCoExChooser):
 
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
-            path = Path(dialog.selectedFiles()[0])
-            course_path = cdirs.relative_to_home(path)
-            course = self.find_course(course_path)
+            abs_path = Path(dialog.selectedFiles()[0]).resolve()
+            # course_path = cdirs.relative_to_home(path)
+            course = self.find_course(abs_path)
             if not course:
-                course = Course.from_file(course_path)
+                course = Course.from_file(abs_path)
 
             if course:
                 self.add_browsed_course(course, browsed=True)
@@ -1289,16 +1290,13 @@ class AbstractStartCoEx(QDialog):
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
         # TODO: Rename the list recent_courses_list?
-        course_type = exercise.course.filetype
+        # course_type = exercise.course.filetype
         course      = exercise.course
-        course_path = course.relative_course_path
-        title       = course.title
-        if exercise in course.statements:
-            exercise_number = course.statements.index(exercise)
-        else:
-            exercise_number = -1
-        add_to_recent_courses(course_path, course_type, title,
-                              exercise_number)
+        statements = course.statements
+        exercise_nb = (statements.index(exercise) if exercise in statements
+                       else -1)
+        add_to_recent_courses(course.abs_course_path, course.title,
+                              exercise_nb)
 
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)

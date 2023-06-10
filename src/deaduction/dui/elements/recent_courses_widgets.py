@@ -78,9 +78,9 @@ class CoursesLW(QListWidget):
             self.setCurrentItem(self.item(0))
             self.setItemSelected(self.item(0), True)
 
-    def get_index(self, course_path):
+    def get_index(self, abs_course_path):
         for index in range(self.count()):
-            if course_path == self.item(index).course_path:
+            if abs_course_path == self.item(index).abs_course_path:
                 return index
 
     def set_current_item(self, course) -> bool:
@@ -89,7 +89,7 @@ class CoursesLW(QListWidget):
         corresponding item and return True. If not, return False.
         """
 
-        course_path = course.relative_course_path
+        course_path = course.abs_course_path
         index = self.get_index(course_path)
         if index is not None:
             item = self.item(index)
@@ -110,22 +110,21 @@ class CoursesLW(QListWidget):
         everytime they want to see the first browsed course.
         """
 
-        course_path = course.relative_course_path
-        index = self.get_index(course_path)
+        index = self.get_index(course.abs_course_path)
         if index is not None:
             item = self.takeItem(index)
         else:
             course_title = course.title
             displayed_title = (_('(browsed)') + ' ' + course_title if browsed
                                else course_title)
-            item = CoursesLWI(course_path, displayed_title)
+            item = CoursesLWI(course.abs_course_path, displayed_title)
 
         item.course = course
         self.insertItem(0, item)
         self.setCurrentItem(item)
 
-    def find_course(self, course_path):
-        index = self.get_index(course_path)
+    def find_course(self, abs_course_path):
+        index = self.get_index(abs_course_path)
         if index:
             course = self.item(index).course
             return course
@@ -142,7 +141,7 @@ class CoursesLWI(QListWidgetItem):
     :property course_path: Self's course path.
     """
 
-    def __init__(self, course_path: Path, course_title: str):
+    def __init__(self, abs_course_path: Path, course_title: str):
         """
         Init self, see self docstring.
 
@@ -156,17 +155,17 @@ class CoursesLWI(QListWidgetItem):
         # super().__init__(f'{course_title} [{w_or_wo} preview]')
 
         super().__init__(course_title)
-        self.setToolTip(str(course_path))
-        self.__course_path = course_path
+        self.setToolTip(str(abs_course_path))
+        self.__abs_course_path = abs_course_path
         self.__course = None
 
     @property
-    def course_path(self):
+    def abs_course_path(self):
         """
         Return the item's course path (self.__course_path)
         """
 
-        return self.__course_path
+        return self.__abs_course_path
 
     @property
     def course(self):

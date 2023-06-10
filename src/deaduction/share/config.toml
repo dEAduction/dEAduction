@@ -100,6 +100,9 @@ log_to_file = true
 # (home, .deaduction, or lean_exercises_dir)
 preset_courses = ["Tutoriel.lean", "Ensembles_et_applications.lean",
                   "Logique_et_inegalites.lean", "Logique_propositionnelle.lean"]
+recent_courses = []  # Absolute paths
+recent_courses_titles = []
+exercises_numbers = []
 
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':
