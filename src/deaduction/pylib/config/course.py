@@ -118,6 +118,15 @@ def get_recent_courses() -> ([Path], [str], [int]):
     return courses_paths, courses_titles, exercises_numbers
 
 
+def erase_recent_courses():
+    """
+    Erase all recent courses. This is called when version nb is modified.
+    """
+    cvars.set("course.recent_courses", [])
+    cvars.set("course.recent_courses_titles", [])
+    cvars.set("course.exercise_numbers", [])
+
+
 def add_to_recent_courses(course_path: Path,
                           # course_type: str = ".lean",
                           title: str = "",

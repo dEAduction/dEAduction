@@ -53,7 +53,7 @@ math_font_file = ""
 
 [logic]
 # "display_unified", "display_both", "display_switch"
-button_use_or_prove_mode = "display_unified"
+button_use_or_prove_mode = "display_both"
 # use_demo_mode_affect_line_1 = true
 # use_demo_mode_affect_line_2 = false
 do_not_name_dummy_vars_as_global_vars = true
@@ -110,7 +110,7 @@ exercises_numbers = []
 Lean_request_method = "normal"
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3501"
+version_nb = "0.35001"
 os = ""  # Let this to "" except for debugging
 
 #########################
