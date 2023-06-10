@@ -539,15 +539,6 @@ class MetaVar(PatternMathObject):
     #     # TODO
     #     return super().to_display(self, format_, text_depth, use_color, bf)
 
-    # def match(self, math_object):
-    #     mvar_type = self.math_type
-    #     math_type = math_object.math_type
-    #     match = mvar_type.match(math_type)
-    #
-    #     if match:
-    #         self.matched_math_object = math_object
-    #     return True
-
     def clear_matching(self):
         self.matched_math_object = None
 

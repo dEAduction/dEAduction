@@ -79,7 +79,8 @@ def select_course(course_path: Any = None) -> Course:
     extension = course_path.suffix
     # case of a standard Lean file
     if extension == '.lean':
-        course = Course.from_file(course_path)
+        abs_course_path = course_path.resolve()
+        course = Course.from_file(abs_course_path)
     # case of a pre-processed .pkl file
     elif extension == '.pkl':
         [course] = load_object(course_path)

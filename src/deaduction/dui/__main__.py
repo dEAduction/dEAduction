@@ -52,6 +52,7 @@ import qtrio
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.course            as     ccourses
 import deaduction.pylib.config.vars              as     cvars
 ###################
 # ! DO NOT MOVE ! #
@@ -452,6 +453,7 @@ def adapt_to_new_version():
         copy_lean_files_to_home()
         log.debug("Erasing previous initial proof states")
         erase_proof_states()
+        ccourses.erase_recent_courses()
         # Create empty dir again:
         cdirs.init()
         # Write new version nb in usr config.toml:

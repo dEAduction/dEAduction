@@ -83,6 +83,7 @@ class Course:
     opened_namespace_lines: Dict
     statements:             List[Statement]
     relative_course_path:   Path = None
+    abs_course_path:   Path = None
     # Relative_course_path, path relative to the home directory, is added after
     # instantiation.
 
@@ -106,21 +107,21 @@ class Course:
     @property
     def history_file_path(self):
         """
-        Return path to history file for this exercise.
+        Return path to history file for this exercise, relative to home.
         """
 
+        rel_path = cdirs.relative_to_home(self.abs_history_file_path)
+        # print(f"History path:{rel_path}")
+        return rel_path
+
+    @property
+    def abs_history_file_path(self):
         filename = 'history_' \
                    + self.course_file_name.replace('.', '_') \
                    + '.lean'
 
         check_dir(cdirs.history, create=True)
-        rel_path = cdirs.relative_to_home(cdirs.history / filename)
-        # print(f"History path:{rel_path}")
-        return rel_path
-
-    @property
-    def absolute_history_file_path(self):
-        abs_path = cdirs.home / self.history_file_path
+        abs_path = cdirs.home / filename
         # print(f"Abs history path:{abs_path}")
         return abs_path
 
@@ -135,9 +136,9 @@ class Course:
         return self.__history_course
 
     def set_history_course(self):
-        history_file_path = cdirs.relative_to_home(self.history_file_path)
-        self.__history_course = (Course.from_file(history_file_path)
-                                 if history_file_path.exists() else None)
+        abs_path = self.abs_history_file_path
+        self.__history_course = (Course.from_file(abs_path)
+                                 if abs_path.exists() else None)
 
     def original_version_in_history_file(self, exercise: Exercise) -> Exercise:
         """
@@ -203,7 +204,7 @@ class Course:
         """
         This method delete the history file. Do not call without warning usr!
         """
-        file = self.absolute_history_file_path
+        file = self.abs_history_file_path
         try:
             file.unlink()
         except FileNotFoundError:
@@ -335,34 +336,39 @@ class Course:
     #             cvars.update(more_vars)
 
     @classmethod
-    def from_file(cls, course_path: Path):
+    def from_file(cls, abs_course_path: Path):
         """
         Instantiate a Course object from the provided file.
 
-        :param course_path:     path for file, either a'.lean' or a '.pkl' file
-        WARNING: this should be a path relative to home (or an absolute path).
+        :param abs_course_path: path fora Lean file. WARNING: this should be
+        an absolute path.
+
         :return:                a Course instance
         """
 
-        course_filetype = course_path.suffix
-        if not course_path.exists():
-            course_path = cdirs.home / course_path
-        if course_filetype == '.lean':
-            log.info(f"Parsing file {str(course_path.resolve())}")
-            file_content = course_path.read_text(encoding='utf-8')
-            course = Course.from_file_content(file_content)
-        elif course_filetype == '.pkl':  # Obsolete
-            with course_path.open(mode='rb') as input_:
-                course = load_object(input_)
-        else:
+        # course_filetype = course_path.suffix
+        # if not course_path.exists():
+        #     course_path = cdirs.home / course_path
+        # if course_filetype == '.lean':
+        log.info(f"Parsing file {str(abs_course_path)}")
+        file_content = abs_course_path.read_text(encoding='utf-8')
+        course = Course.from_file_content(file_content)
+        if not course:
             return
+        # elif course_filetype == '.pkl':  # Obsolete
+        #     with course_path.open(mode='rb') as input_:
+        #         course = load_object(input_)
+        # else:
+        #     return
 
-        course.filetype = course_filetype
+        # course.filetype = course_filetype
         # course_path = course_path.resolve()
         # home = cdirs.home.resolve()
         # relative_course_path = Path(os.path.relpath(course_path,
         #                                             start=home))
-        course.relative_course_path = cdirs.relative_to_home(course_path)
+        course.relative_course_path = cdirs.relative_to_home(abs_course_path)
+        course.abs_course_path = abs_course_path
+
         return course
 
     @classmethod
@@ -422,6 +428,8 @@ class Course:
         ########################
         # Transform the file content into a list of events
         # and a dict of metadata.
+
+        # FIXME: handle parsimonius exception if this is not a Deaduction file
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)

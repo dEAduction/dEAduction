@@ -1014,7 +1014,7 @@ class Exercise(Theorem):
         file.
         """
 
-        path = self.course.absolute_history_file_path
+        path = self.course.abs_history_file_path
 
         # (1) Take history file into account, if any
         if self.course.history_course():
