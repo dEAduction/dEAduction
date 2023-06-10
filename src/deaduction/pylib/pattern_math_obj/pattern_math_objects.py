@@ -159,7 +159,7 @@ class PatternMathObject(MathObject):
 
     @classmethod
     def from_string(cls, s: str, metavars=None):
-        if not metavars:
+        if metavars is None:
             metavars = []
         tree = tree_from_str(s)
         pmo = cls.from_tree(tree, metavars)
