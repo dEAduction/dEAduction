@@ -661,6 +661,7 @@ class TargetLabel(MathLabel):
             # self.target_label.setStyleSheet(self.unselected_style)
 
     def highlight(self, yes=True, duration=None):
+        # FIXME: obsolete
         # self.select(not yes)
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")

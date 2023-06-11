@@ -118,7 +118,7 @@ def set_logger():
                        'deaduction.dui.stages',
                        'deaduction.dui.elements',
                        'deaduction.pylib.actions',
-                       'deaduction.pylib.coursedata',
+                       # 'deaduction.pylib.coursedata',
                        'deaduction.pylib.editing',
                        # 'logic',
                        # 'magic',

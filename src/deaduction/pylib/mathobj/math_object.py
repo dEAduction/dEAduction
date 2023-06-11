@@ -48,7 +48,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any, Optional
-from copy import copy
+from copy import copy, deepcopy
 import logging
 from functools import partial
 
@@ -411,6 +411,23 @@ class MathObject:
         other = MathObject(node=self.node, info=new_info,
                            children=self.children, math_type=self.math_type)
         return other
+
+    @classmethod
+    def deep_copy(cls, self):
+        """
+        Return a deep copy of self. This should work for subclasses.
+        """
+        new_info = deepcopy(self.info)
+        math_type: cls = self.math_type
+        children: [cls] = self.children  # Real type could be different
+        new_math_type = (math_type if math_type.is_no_math_type()
+                         else math_type.deep_copy(math_type))
+
+        new_children = [child.deep_copy(child) for child in children]
+
+        new_math_object = cls(node=self.node, info=new_info,
+                              children=new_children, math_type=new_math_type)
+        return new_math_object
 
     @classmethod
     def negate(cls, math_object):

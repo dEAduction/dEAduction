@@ -530,6 +530,13 @@ class MetaVar(PatternMathObject):
         rep = f"MV n°{self.nb}" if not math_obj else f"MV, matched = {math_obj}"
         return rep
 
+    @classmethod
+    def deep_copy(cls, self):
+        new_mvar = super().deep_copy(self)
+        mmo = self.matched_math_object
+        new_mvar.matched_math_object = mmo.deep_copy(mmo)
+        return new_mvar
+
     @property
     def nb(self):
         return self.info['nb']
