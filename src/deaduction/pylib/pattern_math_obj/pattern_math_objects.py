@@ -323,6 +323,7 @@ class PatternMathObject(MathObject):
                 if match:
                     metavars.append(self)
                     metavar_objects.append(math_object)
+                    # FIXME: make a PMO deep_copy?
                     self.matched_math_object = math_object
             return match
 
@@ -492,6 +493,19 @@ class PatternMathObject(MathObject):
                 MathObject.definition_patterns.append(pattern)
                 definition.implicit_use_activated = True  # Obsolete
 
+    def first_mvar(self, unmatched=True):
+        """
+        Return the first (unmatched) mvar of self, if any.
+        """
+
+        if self.is_metavar() and not (unmatched and self.matched_math_object):
+            return self
+        else:
+            for child in self.children:
+                mvar = child.firs_mvar(unmatched)
+                if mvar:
+                    return mvar
+
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},
@@ -595,7 +609,6 @@ if __name__ == '__main__':
     print("    ", pattern.to_display())
     # print("Pattern matches left?")
     # print(pattern.match(left))
-
 
     MathObject.definition_patterns.append(pattern)
     tree = lean_expr_with_type_grammar.parse(hypo)

@@ -41,15 +41,21 @@ global _
 # "POWER": (0, [r'\super', 1]),
 # "SQRT": ('√', -1),
 
-pattern_strings = {'1': 'NUMBER/value=1',
+calculator_pattern_strings = {     # NUMBERS
+                   '0': 'NUMBER/value=0',  # Unspecified math_type...
+                   '1': 'NUMBER/value=1',
                    '2': 'NUMBER/value=2',
                    '3': 'NUMBER/value=2',
                    '4': 'NUMBER/value=2',
                    '+': 'ADD(?0: ?2, ?1: ?2)',
                    '()': 'PARENTHESES(?0)',
+                        # LOGIC
                    '∀': 'PROP_FORALL(?0, ?1, ?2)',
                    '⇒': 'PROP_IMPLIES(?0, ?1)',
-                   '∧': 'PROP_AND(?0, ?1)'
+                   '∧': 'PROP_AND(?0, ?1)',
+                        # SET THEORY
+                   '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                   '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))'
 }
 
 
@@ -69,7 +75,7 @@ class CalculatorPatternLines:
     """
 
     marked_patterns = OrderedDict()
-    for symbol, string in pattern_strings.items():
+    for symbol, string in calculator_pattern_strings.items():
         marked_pmo = MarkedPatternMathObject.from_string(string, [])
         marked_patterns[symbol] = marked_pmo
 
@@ -104,5 +110,5 @@ calculator_group = CalculatorPatternLines(_('Calculator'), [['1', '+', '()'],
                                                      ['2', '3', '4']
                                                      ])
 logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
-
+set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
 

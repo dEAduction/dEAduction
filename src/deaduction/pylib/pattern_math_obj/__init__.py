@@ -27,5 +27,5 @@ This file is part of dEAduction.
 from .pattern_math_objects import PatternMathObject, MetaVar
 from .definition_math_object import DefinitionMathObject
 from .marked_pattern_math_object import MarkedPatternMathObject, MarkedMetavar
-from .pattern_strings import (CalculatorPatternLines, calculator_group,
-                              logic_group)
+from .calculator_pattern_strings import (CalculatorPatternLines, calculator_group,
+                                         logic_group, set_theory_group)

@@ -41,7 +41,8 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedMetavar,
                                                CalculatorPatternLines,
                                                calculator_group,
-                                               logic_group)
+                                               logic_group,
+                                               set_theory_group)
 
 from deaduction.dui.elements import TargetLabel
 
@@ -126,7 +127,8 @@ class CalculatorController:
         if calculator_groups:
             self.calculator_groups = calculator_groups
         else:  # Standard groups
-            self.calculator_groups = [calculator_group]
+            self.calculator_groups = [calculator_group, logic_group,
+                                      set_theory_group]
 
         self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
         self.calculator_ui.set_target(target)
@@ -137,8 +139,10 @@ class CalculatorController:
 
 def main():
 
+    target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
+    target.mark()
     app = QApplication([])
-    calculator = CalculatorController()
+    calculator = CalculatorController(target=target)
 
     calculator.show()
     sys.exit(app.exec_())
