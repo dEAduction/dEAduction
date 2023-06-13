@@ -130,7 +130,7 @@ class MathObject:
 
     node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
     info              : dict  # e.g. "name", "id", "pp_type"
-    children          : list  # List of MathObjects
+    _children          : list  # List of MathObjects
 
     Variables = {}  # Containing every element having an identifier,
     # i.e. global and bound variables, whose node is LOCAL_CONSTANT.
@@ -168,10 +168,10 @@ class MathObject:
         """
         Create a MathObject.
         """
-        self.node = node
+        self._node = node
         self.info = info
         self.math_type = math_type
-        self.children = children
+        self._children = children
 
         if self.has_bound_var():  # Set bound var math_type and parent
             # Every object here should have children matching this:
@@ -198,6 +198,22 @@ class MathObject:
 
     def __repr__(self):
         return self.debug_repr('MO')
+
+    @property
+    def children(self):
+        return self._children
+
+    @children.setter
+    def children(self, children):
+        self._children = children
+
+    @property
+    def node(self):
+        return self._node
+
+    @node.setter
+    def node(self, node):
+        self._node = node
 
     @classmethod
     def application(cls, function, var):
