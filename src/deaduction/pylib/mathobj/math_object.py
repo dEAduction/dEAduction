@@ -170,8 +170,8 @@ class MathObject:
         """
         self._node = node
         self.info = info
-        self.math_type = math_type
         self._children = children
+        self._math_type = math_type
 
         if self.has_bound_var():  # Set bound var math_type and parent
             # Every object here should have children matching this:
@@ -215,15 +215,25 @@ class MathObject:
     def node(self, node):
         self._node = node
 
-    @classmethod
-    def application(cls, function, var):
+    @property
+    def math_type(self) -> Any:
         """
-        Construct a MathObject obtained by applying function to var.
+        This is a work-around to the impossibility of defining a class
+        recursively. Thus every instance of a MathObject has a math_type
+        which is a MathObject (and has a node, info dict, and children list)
+        The constant NO_MATH_TYPE is defined below, after the methods
         """
-        return cls(node="APPLICATION",
-                   info={},
-                   children=[function, var],
-                   math_type=function.math_type.children[1])
+        if self._math_type is None:
+            return MathObject.NO_MATH_TYPE
+        else:
+            return self._math_type
+
+    @math_type.setter
+    def math_type(self, math_type: Any):
+        self._math_type = math_type
+
+    def is_no_math_type(self):
+        return self is self.NO_MATH_TYPE
 
     @classmethod
     def lambda_(cls, var, body, math_type):
@@ -281,13 +291,6 @@ class MathObject:
                     lam = MathObject.lambda_(var, body, child.math_type)
                     # Replace child by lambda with the same math_type
                     self.children[index] = lam
-
-    @classmethod
-    def FALSE(cls):
-        """
-        The constant FALSE as a MathObject.
-        """
-        return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
 
     @classmethod
     def add_numbers_set(cls, name: str):
@@ -386,27 +389,6 @@ class MathObject:
 
         return math_object
 
-# ----- math_type ----- #
-    @property
-    def math_type(self) -> Any:
-        """
-        This is a work-around to the impossibility of defining a class
-        recursively. Thus every instance of a MathObject has a math_type
-        which is a MathObject (and has a node, info dict, and children list)
-        The constant NO_MATH_TYPE is defined below, after the methods
-        """
-        if self._math_type is None:
-            return MathObject.NO_MATH_TYPE
-        else:
-            return self._math_type
-
-    @math_type.setter
-    def math_type(self, math_type: Any):
-        self._math_type = math_type
-
-    def is_no_math_type(self):
-        return self is self.NO_MATH_TYPE
-
     @classmethod
     def clear(cls):
         """Re-initialise various class variables, in particular the
@@ -444,6 +426,26 @@ class MathObject:
         new_math_object = cls(node=self.node, info=new_info,
                               children=new_children, math_type=new_math_type)
         return new_math_object
+
+##################################
+# Some particular instantiations #
+##################################
+    @classmethod
+    def application(cls, function, var):
+        """
+        Construct a MathObject obtained by applying function to var.
+        """
+        return cls(node="APPLICATION",
+                   info={},
+                   children=[function, var],
+                   math_type=function.math_type.children[1])
+
+    @classmethod
+    def FALSE(cls):
+        """
+        The constant FALSE as a MathObject.
+        """
+        return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
 
     @classmethod
     def negate(cls, math_object):
@@ -603,32 +605,6 @@ class MathObject:
 
                 child.set_local_context(new_local_context)
 
-    # def is_unnamed(self):
-    #     return self.display_name == "NO NAME" \
-    #            or self.display_name == '*no_name*'
-
-    # def unnamed_bound_vars(self):
-    #     """
-    #     Only unnamed bound vars, tested by is_unnamed method.
-    #     """
-    #     return [var for var in self.bound_vars() if var.is_unnamed()]
-
-    # def remove_names_of_bound_vars(self, include_sequences=False):
-    #     """
-    #     Un-name dummy variables of propositions in self.
-    #     This excludes bound vars used to display lambdas, sequences and set
-    #     families.
-    #     @param include_sequences:
-    #     """
-    #
-    #     if self.node == "LOCAL_CONSTANT" and not include_sequences:
-    #         return
-    #     elif self.is_bound_var:
-    #         self.set_unnamed_bound_var()
-    #     else:
-    #         for child in self.children:
-    #             child.remove_names_of_bound_vars(include_sequences)
-
 #######################
 # Properties and like #
 #######################
@@ -685,42 +661,6 @@ class MathObject:
             return child.display_name
         else:
             return '*no_name*'
-
-    # def nb_implicit_children(self):
-    #     """
-    #     e.g. APP(APP(...APP(x0,x1),...),xn) has (n+1) implicit children.
-    #     cf self.implicit_children().
-    #     """
-    #     if not self.is_application():
-    #         return 0
-    #
-    #     if self.children[0].is_application():
-    #         return 1 + self.children[0].nb_implicit_children()
-    #     else:
-    #         return 2
-    #
-    # def implicit_children(self, nb):
-    #     """
-    #     Only when self.is_application().
-    #     e.g. APP(APP(...APP(x0,x1),...),xn) is considered equivalent to
-    #          APP(x0, x1, ..., xn)
-    #     and x0, ... , xn are the (n+1) implicit children.
-    #     """
-    #     # FIXME: obsolete
-    #     if not self.is_application():
-    #         return None
-    #
-    #     # From now on self is_application(), and so has exactly 2 children
-    #     nb_children = self.nb_implicit_children()
-    #     if nb < 0:
-    #         nb = nb_children + nb
-    #
-    #     if nb == nb_children - 1:
-    #         return self.children[1]
-    #     elif nb_children == 2 and nb == 0:  # APP(x0, x1)
-    #         return self.children[0]
-    #     else:
-    #         return self.children[0].implicit_children(nb)
 
     def descendant(self, line_of_descent):
         """
@@ -865,7 +805,7 @@ class MathObject:
     def substitute(cls, old_var, new_var, math_object):
         """
         Return a new MathObject instance by replacing old_var by new_var inside
-        math_object.
+        math_object. There is no side effect on math_object.
         """
         if math_object is old_var:
             return new_var
@@ -908,7 +848,7 @@ class MathObject:
         contain_right = other.contains(right)
         decision = {(False, False): '',
                     (True, False): '>',
-                    (False, True): '>',
+                    (False, True): '<',
                     (True, True): 'both'
                     }
         return decision[contain_left, contain_right]
@@ -1027,7 +967,7 @@ class MathObject:
 
     def is_atomic_belong(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a function.
+        Test if (math_type of) self is belongs.
         """
         if is_math_type:
             math_type = self
@@ -1243,8 +1183,8 @@ class MathObject:
 
     def body_of_negation(self):
         """
-        Assuming self is "not P", return P. Handle special cases of not
-        belong, not equal.
+        Assuming self is "not P", return a new MathObject equal to P. Handle
+        special cases of not belong, not equal.
         """
         body = None
         if self.node == "PROP_NOT":
