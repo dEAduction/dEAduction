@@ -168,8 +168,11 @@ class ActionButton(QPushButton):
         name = self.action.name
         symbol = button_symbol(name)
         if self.in_demo_or_use_line:
-            # Remove ugly prefix, '_use' or '_prove'
-            symbol = symbol[-1]
+            # Remove ugly prefix, 'use_' or 'prove_'
+            if symbol.startswith('use'):
+                symbol = symbol[4:]
+            elif symbol.startswith('prove'):
+                symbol = symbol[6:]
         symbol = _(symbol)  # Translate, finally!
         self.setText(symbol)
 
