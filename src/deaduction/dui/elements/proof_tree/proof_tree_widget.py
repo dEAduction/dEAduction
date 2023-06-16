@@ -979,7 +979,10 @@ class ProofTreeWindow(QWidget):
         # RawLabelMathObject.highlight_in_tree.connect(self.highlight)
         RawLabelMathObject.highlight_in_tree = self.highlight_from_math_wdg
 
-        if bool(settings.value("proof_tree/isVisible")):
+        if settings.value("proof_tree/isVisible") in (True, 'true', None,
+                                                      'none'):
+            # This is crazy: the value is sometimes set to True and sometimes
+            #  to 'true'!!!!
             self.show()
 
     def set_main_block(self, block: WidgetGoalBlock):
@@ -993,7 +996,7 @@ class ProofTreeWindow(QWidget):
         # Save window geometry
         settings = QSettings("deaduction")
         settings.setValue("proof_tree/geometry", self.saveGeometry())
-        settings.setValue("proof_tree/isVisible", self.isVisible())
+        # settings.setValue("proof_tree/isVisible", self.isVisible())
         event.accept()
 
         # self.hide()

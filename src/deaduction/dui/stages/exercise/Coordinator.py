@@ -202,7 +202,8 @@ class Coordinator(QObject):
 
         # Active outline_window
         outline_window = self.emw.proof_outline_window
-        outline_window.show()
+        if not outline_window.isVisible():
+            outline_window.toggle()
         outline_window.activateWindow()
 
     def __exit_history_mode(self):

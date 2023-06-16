@@ -360,24 +360,27 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
+
         log.info("Closing ExerciseMainWindow")
+        settings = QSettings("deaduction")
 
         # Close children
         self.lean_editor.close()
         self.proof_outline_window.close()
-        self.proof_tree_window.close()
         self.help_window.close()
+        settings.setValue("proof_tree/isVisible",
+                          self.proof_tree_window.isVisible())
+        self.proof_tree_window.close()
 
         # Save window geometry
         # FIXME: does not work
-        settings = QSettings("deaduction")
         is_maximised = self.isMaximized()
         log.debug(f"Maximised: {is_maximised}")
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
-        settings.setValue("emw/ShowProofTree",
-                          self.proof_tree_window.isVisible())
+        # settings.setValue("emw/ShowProofTree",
+        #                   self.proof_tree_window.isVisible())
 
         if self.close_coordinator:
             # Set up by Coordinator

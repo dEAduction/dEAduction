@@ -347,6 +347,8 @@ class ProofOutlineWindow(QWidget):
     @Slot()
     def toggle(self):
         self.setVisible(not self.isVisible())
+        if self.action:
+            self.action.setChecked(self.isVisible())
 
     @Slot()
     def history_goto_btn(self, *args):
