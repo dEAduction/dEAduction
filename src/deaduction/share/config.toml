@@ -98,8 +98,12 @@ log_to_file = true
 [course]
 # Absolute path or relative to a Deaduction reference dir
 # (home, .deaduction, or lean_exercises_dir)
-preset_courses = ["Tutoriel.lean", "Ensembles_et_applications.lean",
-                  "Logique_et_inegalites.lean", "Logique_propositionnelle.lean"]
+preset_courses = ["Tutoriel.lean",
+    "Logique_propositionnelle.lean",
+    "Quantificateurs_et_nombres.lean",
+    "Logique_et_inegalites.lean",
+    "Ensembles_et_applications.lean",
+    "experimental/exercices_limite_continuite.lean"]
 recent_courses = []  # Absolute paths
 recent_courses_titles = []
 exercises_numbers = []
