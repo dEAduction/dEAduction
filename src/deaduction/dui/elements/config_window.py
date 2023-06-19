@@ -261,7 +261,7 @@ class ConfigMainWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.set_math_fonts_list()
-        self.setModal(True)
+        # self.setModal(True)
         self.__windows = []  # List of sub-windows, one for each tab
 
         self.setWindowTitle(_("Preferences"))
