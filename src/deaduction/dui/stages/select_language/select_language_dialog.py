@@ -50,26 +50,28 @@ def select_language():
     if language in available_languages:
         log.debug(f"Found default language {language}")
         return language, True
-    elif language and len(language) >= 2:
-        log.debug("Choosing language")
-        for lang in available_languages:
-            log.debug(f"Trying {lang}")
-            if lang[:2] == language[:2]:
-                return lang, True
-    pretty_languages_list = [PRETTY_NAMES[setting] if setting in PRETTY_NAMES
-                             else setting for setting in available_languages]
-    # app = QApplication()  # Fixed: there is already one
-    parent = QWidget()
-    log.debug("Start Dialog:")
-    language, ok = QInputDialog.getItem(parent,
-                                        "Select language",
-                                        "Available languages:",
-                                        pretty_languages_list,
-                                        0,
-                                        False)
-    for key in PRETTY_NAMES:
-        if PRETTY_NAMES[key] == language:
-            return key, ok
+    else:
+        language, ok = 'en', True
+    # elif language and len(language) >= 2:
+    #     log.debug("Choosing language")
+    #     for lang in available_languages:
+    #         log.debug(f"Trying {lang}")
+    #         if lang[:2] == language[:2]:
+    #             return lang, True
+    # pretty_languages_list = [PRETTY_NAMES[setting] if setting in PRETTY_NAMES
+    #                          else setting for setting in available_languages]
+    # # app = QApplication()  # Fixed: there is already one
+    # parent = QWidget()
+    # log.debug("Start Dialog:")
+    # language, ok = QInputDialog.getItem(parent,
+    #                                     "Select language",
+    #                                     "Available languages:",
+    #                                     pretty_languages_list,
+    #                                     0,
+    #                                     False)
+    # for key in PRETTY_NAMES:
+    #     if PRETTY_NAMES[key] == language:
+    #         return key, ok
 
     return language, ok
 
