@@ -664,13 +664,14 @@ async def main():
     """
 
     async with trio.open_nursery() as nursery:
+        # Check language
+        language_check()
+
         # Check Lean and mathlib install
         ok = await site_installation_check()
         # print(f"ok={ok}")
         if not ok:
             nursery.cancel_scope.cancel()
-        # Check language
-        language_check()
 
         # Check if version has changed. Anyway, add lean_src if not exist.
         adapt_to_new_version()
