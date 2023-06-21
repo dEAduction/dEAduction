@@ -121,7 +121,7 @@ class Course:
                    + '.lean'
 
         check_dir(cdirs.history, create=True)
-        abs_path = cdirs.home / filename
+        abs_path = cdirs.history / filename
         # print(f"Abs history path:{abs_path}")
         return abs_path
 
