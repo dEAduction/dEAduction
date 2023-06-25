@@ -67,9 +67,10 @@ class ProofMethods:
     current settings.
 
     To add the new proof method blabla:
-    add the function method_blabla(),
+    add the function method_blabla() at the right place below with the
+    @add_to_proof_methods decorator,
     update the pretty_names dict,
-    update the functionality.proof_methods list in config.toml,
+    (update the functionality.proof_methods list in config.toml).
     .
     """
 
