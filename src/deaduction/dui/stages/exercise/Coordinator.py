@@ -862,6 +862,8 @@ class Coordinator(QObject):
                                                         e.title,
                                                         e.output)
                 if ok:
+                    # Convert to global choice value
+                    choice = e.local_to_complete_nb(choice)
                     self.emw.user_input.append(choice)
                 else:
                     self.emw.user_input = []

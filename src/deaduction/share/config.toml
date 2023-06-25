@@ -69,7 +69,13 @@ use_bounded_quantification_notation = true
 [functionality]
 # Beginner, Intermediata, Advanced, Expert,
 default_functionality_level = "Beginner"
-allow_proof_by_sorry = true
+proof_methods = ["case_based", "contraposition", "contradiction", "induction",
+"sorry"]
+allow_case_based = true
+allow_contraposition = true
+allow_contradiction = true
+allow_induction = false
+allow_sorry = true
 automatic_intro_of_exists = true
 target_selected_by_default = false
 allow_implicit_use_of_definitions = false
