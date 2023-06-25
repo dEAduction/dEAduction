@@ -69,8 +69,8 @@ use_bounded_quantification_notation = true
 [functionality]
 # Beginner, Intermediata, Advanced, Expert,
 default_functionality_level = "Beginner"
-proof_methods = ["case_based", "contraposition", "contradiction", "induction",
-"sorry"]
+# Proof methods available default list:
+#proof_methods = ["case_based", "contraposition", "contradiction", "induction", "sorry"]
 allow_case_based = true
 allow_contraposition = true
 allow_contradiction = true

@@ -65,6 +65,12 @@ class ProofMethods:
     The nb stored in user_input must refer to the complete list, not to the
     local list of available proof methods, so that it is not dependent on
     current settings.
+
+    To add the new proof method blabla:
+    add the function method_blabla(),
+    update the pretty_names dict,
+    update the functionality.proof_methods list in config.toml,
+    .
     """
 
     # "case_based", "contraposition", "contradiction", "induction", "sorry"
