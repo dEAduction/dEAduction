@@ -547,7 +547,7 @@ class ProofStep:
         if not self.parent_goal_node:
             return False
         target = self.parent_goal_node.goal.target
-        tests = [self.button_name == "implies",
+        tests = [self.button_name.endswith("implies"),
                  not self.selection,
                  target.is_implication(implicit=True),
                  not self.is_error()]
@@ -556,7 +556,7 @@ class ProofStep:
     def is_intro_forall(self):
         if not self.parent_goal_node:
             return False
-        tests = [self.button_name == "forall",
+        tests = [self.button_name.endswith("forall"),
                  not self.selection,
                  self.parent_goal_node.goal.target.is_for_all(implicit=True),
                  not self.is_error()]
@@ -569,7 +569,7 @@ class ProofStep:
         return not self.selection
 
     def is_and(self):
-        return self.button_name == "and"
+        return self.button_name.endswith("and")
 
     def is_iff(self):
         return self.button_name == "iff"
