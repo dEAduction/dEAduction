@@ -300,8 +300,9 @@ def method_induction(proof_step,
 
     name = proof_step.goal.provide_good_name(math_type,
                                              var.preferred_letter())
-    h = get_new_hyp(proof_step)
-    code_s = f"intro {name}, induction {name} with {name} {h}"
+    # h = get_new_hyp(proof_step)
+    # code_s = f"intro {name}, induction {name} with {name} {h}"
+    code_s = "apply induction.simple_induction"
     code = CodeForLean.from_string(code_s)
     code.add_success_msg(f"Proof by induction on {name}")
     return code
