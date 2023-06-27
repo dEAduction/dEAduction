@@ -74,8 +74,12 @@ class ProofMethods:
     .
     """
 
-    # "case_based", "contraposition", "contradiction", "induction", "sorry"
-    complete_list = []
+    # Items may be added here, but order changes should be avoided
+    # (or propagated). Order should not affect UI.
+    # Nbs in user_input refer to index in this reference_list.
+    reference_list = ["case_based", "contraposition", "contradiction",
+                      "induction", "sorry"]
+    ordered_list = []
     callables = []
 
     @staticmethod
@@ -93,7 +97,7 @@ class ProofMethods:
         List of available proof methods in the current settings context.
         """
         proof_methods = cvars.get('functionality.proof_methods',
-                                  default_value=cls.complete_list)
+                                  default_value=cls.ordered_list)
         local_methods = [m for m in proof_methods
                          if cvars.get('functionality.allow_' + m)]
 
@@ -116,21 +120,25 @@ class ProofMethods:
         return choices
 
     @classmethod
-    def local_to_complete_nb(cls, nb):
+    def local_to_absolute_nb(cls, nb):
+        """
+        Convert the index in the local list to the index of the same item in
+        the reference list, that should be stored in user_input.
+        """
         name = cls.local_list()[nb]
-        idx = cls.complete_list.index(name)
+        idx = cls.reference_list.index(name)
         return idx
 
 
 def add_to_proof_methods() -> callable:
     """
-    Decorator that add function to the ProofMethods callable list.    
+    Decorator that add function to the ProofMethods lists.
     """
     
     def proof_method(func):
         if func not in ProofMethods.callables:
             name = func.__name__[len('method_'):]
-            ProofMethods.complete_list.append(name)
+            ProofMethods.ordered_list.append(name)
             ProofMethods.callables.append(func)
         return func
 
