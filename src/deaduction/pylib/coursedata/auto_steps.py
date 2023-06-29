@@ -280,7 +280,8 @@ class AutoStep(UserAction):
         items = [item.strip() for item in string.split(' ') if item]
         for item in items:
             if item.startswith('definition') \
-                    or item.startswith('theorem'):
+                    or item.startswith('theorem') \
+                    or item.startswith('exercise'):
                 statement_name = item
                 button_or_statement_rank = items.index(item)
             # elif item in BUTTONS_SYMBOLS:
