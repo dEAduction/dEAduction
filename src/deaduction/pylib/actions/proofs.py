@@ -77,8 +77,9 @@ class ProofMethods:
     # Items may be added here, but order changes should be avoided
     # (or propagated). Order should not affect UI.
     # Nbs in user_input refer to index in this reference_list.
+    # Name of callable must be 'method_' + <name in list>
     reference_list = ["case_based", "contraposition", "contradiction",
-                      "induction", "sorry"]
+                      "sorry", "induction"]
     ordered_list = []
     callables = []
 
@@ -129,6 +130,17 @@ class ProofMethods:
         idx = cls.reference_list.index(name)
         return idx
 
+    @classmethod
+    def callable_method_from_name(cls, name):
+        for cal in cls.callables:
+            if cal.__name__.endswith(name):
+                return cal
+
+    @classmethod
+    def callable_from_abs_nb(cls, nb):
+        name = cls.reference_list[nb]
+        return cls.callable_method_from_name(name)
+
 
 def add_to_proof_methods() -> callable:
     """
@@ -168,11 +180,11 @@ def action_proof_methods(proof_step) -> CodeForLean:
                                      choices,
                                      title=_("Choose proof method"),
                                      output=_("Which proof method?"),
-                                     converter=ProofMethods.local_to_complete_nb
+                                     converter=ProofMethods.local_to_absolute_nb
                                      )
     # 2nd call, call the adequate proof method. len(user_input) = 1.
     else:
-        method = ProofMethods.callables[user_input[0]]
+        method = ProofMethods.callable_from_abs_nb(user_input[0])
         return method(proof_step, selected_objects, user_input)
         # method = int(user_input[0]) + 1
         # if method == 1:
@@ -306,13 +318,17 @@ def method_induction(proof_step,
                   f"not apply")
         raise WrongUserInput(error)
 
-    name = proof_step.goal.provide_good_name(math_type,
+    var_name = proof_step.goal.provide_good_name(math_type,
                                              var.preferred_letter())
     # h = get_new_hyp(proof_step)
     # code_s = f"intro {name}, induction {name} with {name} {h}"
-    code_s = "apply induction.simple_induction"
-    code = CodeForLean.from_string(code_s)
-    code.add_success_msg(f"Proof by induction on {name}")
+
+    # code_s = "apply induction.simple_induction"
+    # code = CodeForLean.from_string(code_s)
+    # code.add_success_msg(f"Proof by induction on {name}")
+
+    code = CodeForLean.induction(var_name)
+
     return code
 
 
