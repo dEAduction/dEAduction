@@ -1438,7 +1438,9 @@ class Coordinator(QObject):
 
         # ─────── Name all bound vars ─────── #
         log.info("** Naming dummy vars **")
-        self.proof_step.goal.smart_name_bound_vars()
+        if proof_state:
+            for goal in proof_state.goals:
+                goal.smart_name_bound_vars()
 
         # ─────── Update proof_step ─────── #
         # From here, self.proof_step is replaced by a new proof_step!
