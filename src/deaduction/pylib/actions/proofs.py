@@ -302,8 +302,8 @@ def method_induction(proof_step,
 
     target = proof_step.goal.target
     if not target.is_for_all(implicit=True):
-        error = _("Proof by induction only applies to target that are "
-                  "universal properties '∀n, P(n)'")
+        error = _("Proof by induction only applies to prove "
+                  "a universal property '∀n∈ℕ, P(n)'")
         raise WrongUserInput(error)
 
     if not target.is_for_all(is_math_type=False):
@@ -314,8 +314,8 @@ def method_induction(proof_step,
 
     math_type, var, body = math_object.children
     if not var.is_nat():
-        error = _(f"{var} is not a natural number, proof by induction does "
-                  f"not apply")
+        error = _(f"{var} is not a natural number") + ", " + \ 
+                _("proof by induction does not apply")
         raise WrongUserInput(error)
 
     var_name = proof_step.goal.provide_good_name(math_type,

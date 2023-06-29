@@ -564,6 +564,12 @@ class GoalNode:
         elif self.parent.is_by_contradiction():
             html_msg = _("Proof by contradiction")
 
+        elif self.parent.is_by_induction():
+            if self.brother_number == 0:
+                html_msg = _("Base case")
+            elif self.brother_number == 1:
+                html_msg = _("Induction step")
+
         elif self.goal.target.math_type is MathObject.NO_MORE_GOALS:
             msg = self.goal.target.math_type.to_display(format_="utf8")
             html_msg = self.goal.target.math_type.to_display(format_="html")
@@ -806,7 +812,8 @@ class VirtualBrotherAuxGoalNode(GoalNode):
     and is accessed via self.outcome_operator.
 
     More generally, this should work when applying theorem (P, P', ...) => Q
-    generating sub-goals P P', ....
+    generating sub-goals P, P', ... ; e.g. when applying the induction
+    principle.
     """
     def __init__(self, parent: ProofStep, type_: str):
         super().__init__(parent, goal=None, is_solved=(type_ == "operator"))

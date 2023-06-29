@@ -855,7 +855,7 @@ class CodeForLean:
         ins = SingleCode.apply_statement("induction.simple_induction")
         code = cls(instructions=[ins])
         code.add_success_msg(_(f"Proof by induction on {var_name}"))
-        code.outcome_operator = _("Induction principle")
+        code.outcome_operator = _("Principle of induction")
         return code
 
 # class Induction(CodeForLean):

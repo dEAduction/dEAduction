@@ -66,7 +66,7 @@ def even (a: nat) := ∃ b, a = 2*b
 
 def odd (a: nat) := ∃ b, a = 2*b + 1 
 
-def divise (a b:ℤ) := ∃ c, b = a * c
+def divides (a b:ℤ) := ∃ c, b = a * c
 
 
 lemma theorem.induction {P: nat → Prop} (H0: P 0)
@@ -78,8 +78,10 @@ begin
 end 
 
 
-lemma definition.pair {a:nat} : (even a) ↔ ∃ b, a = 2*b :=
+lemma definition.even {a:nat} : (even a) ↔ ∃ b, a = 2*b :=
 /- dEAduction
+PrettyName
+  Pair
 ImplicitUse
   True
 -/
@@ -87,8 +89,10 @@ begin
   refl
 end
 
-lemma definition.impair {a:nat} : (odd a) ↔ ∃ b, a = 2*b + 1 :=
+lemma definition.odd {a:nat} : (odd a) ↔ ∃ b, a = 2*b + 1 :=
 /- dEAduction
+PrettyName
+  Impair
 ImplicitUse
   True
 -/
@@ -96,8 +100,10 @@ begin
   refl
 end
 
-lemma definition.divise {a b : ℤ} : (divise a b) ↔ (∃ c, b = a * c) :=
+lemma definition.divides {a b : ℤ} : (divides a b) ↔ (∃ c, b = a * c) :=
 /- dEAduction
+PrettyName
+  Divise
 ImplicitUse
   True
 -/
@@ -107,6 +113,10 @@ end
 
 
 lemma exercise.even_or_odd : ∀n: nat, (even n or odd n) :=
+/- dEAduction
+PrettyName
+  Pair ou impair
+-/
 begin
     -- intro n, induction n with n H1,
     -- apply induction.simple_induction,
@@ -114,10 +124,15 @@ begin
     -- rotate, intros n HR1,
     -- targets_analysis,
     -- all_goals {hypo_analysis2 2},
+    todo
 end
 
 
-lemma exercise.mul_divise {a b c : ℤ} : divise a b → divise a (b*c) :=
+lemma exercise.mul_divides {a b c : ℤ} : divides a b → divides a (b*c) :=
+/- dEAduction
+PrettyName
+  Diviseurs d'un multiple
+-/
 begin
   todo
   -- intro H2,
@@ -127,8 +142,22 @@ begin
   -- cc, -- ring
 end
 
-lemma exercise.divisent_egal {a b : ℤ} :
-(divise a b and divise b a) → (a = b or a = -b) :=
+lemma theorem.divides_one {a b : ℤ} :
+a * b = 1 → (a=1 ∧ b=1) ∨ (a=-1 ∧ b=-1) :=
+/- dEAduction
+PrettyName
+  Diviseurs de 1
+-/
+begin
+  todo
+end
+
+lemma exercise.mutual_divisors {a b : ℤ} :
+(divides a b and divides b a) → (a = b or a = -b) :=
+/- dEAduction
+PrettyName
+  Diviseurs mutuels
+-/
 begin
   rintro ⟨H1 , H2⟩,
   cases H1 with d H1,

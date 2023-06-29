@@ -599,6 +599,10 @@ class ProofStep:
         if self.button_name == "proof_methods" and self.user_input:
             return self.user_input[0] == 2
 
+    def is_by_induction(self):
+        if self.button_name == "proof_methods" and self.user_input:
+            return self.user_input[0] == 4
+
     def is_sorry(self):
         if self.button_name == "proof_methods" and self.user_input:
             return self.user_input[0] == 3
