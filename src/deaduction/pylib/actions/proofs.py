@@ -314,7 +314,7 @@ def method_induction(proof_step,
 
     math_type, var, body = math_object.children
     if not var.is_nat():
-        error = _(f"{var} is not a natural number") + ", " + \ 
+        error = _(f"{var} is not a natural number") + ", " + \
                 _("proof by induction does not apply")
         raise WrongUserInput(error)
 
