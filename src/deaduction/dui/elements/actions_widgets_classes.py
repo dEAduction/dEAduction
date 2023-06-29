@@ -140,17 +140,23 @@ class ActionButton(QPushButton):
 
         super().__init__()
 
+        self.action = action
+
         # Modify button default color
         if cvars.get('others.os') == "linux":
-            palette = self.palette()
-            background_color = cvars.get("display.color_for_selection",
-                                         "limegreen")
-            highlight_color = QColor(background_color)
-            palette.setBrush(palette.Normal, palette.Button, highlight_color)
-            palette.setBrush(palette.Inactive, palette.Button, highlight_color)
-            self.setPalette(palette)
 
-        self.action = action
+            if self.name.startswith('use'):
+                background_color = '#CC31CC'
+            else:
+                background_color = cvars.get("display.color_for_selection",
+                                             "limegreen")
+            self.set_color(background_color)
+            # palette = self.palette()
+            # highlight_color = QColor(background_color)
+            # palette.setBrush(palette.Normal, palette.Button, highlight_color)
+            # palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+            # self.setPalette(palette)
+
         self.in_demo_or_use_line = in_demo_or_use_line
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
@@ -159,6 +165,13 @@ class ActionButton(QPushButton):
         # Update dictionary:
         # self.from_name[action.symbol] = self
         self.from_name[action.name] = self
+
+    def set_color(self, color):
+        palette = self.palette()
+        highlight_color = QColor(color)
+        palette.setBrush(palette.Normal, palette.Button, highlight_color)
+        palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+        self.setPalette(palette)
 
     def update(self):
         """

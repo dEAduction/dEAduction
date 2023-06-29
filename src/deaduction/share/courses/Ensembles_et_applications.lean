@@ -636,6 +636,12 @@ PrettyName
   Image directe et intersection (ii)
 -/
 begin
+  -- intros A B y H,
+  -- cases H with HA HB,
+  -- rw definitions.applications.definition.image_directe at HA HB,
+  -- cases HA with x,
+  -- cases HB with x,
+  -- have H: ∃ x: X, ∀ x: Y, x =x ,
   todo
 end
 

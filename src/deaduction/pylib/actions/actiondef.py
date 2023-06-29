@@ -85,15 +85,23 @@ def action():
     mod = inspect.getmodule(frm[0])
 
     def wrap_action(func):
-        act = Action(func)
+        action = Action(func)
 
         # Init the __actions__ object in the corresponding module if not
         # existing, then add the Action object.
         # Identifier is taken from the function name.
         if "__actions__" not in mod.__dict__:
             mod.__actions__ = dict()
-        mod.__actions__[func.__name__] = act
+        mod.__actions__[func.__name__] = action
 
-        return func
+        def new_func(proof_step, **kwargs):
+            """
+            Just as func, except that action name is stored in
+            proof_step.action.
+            """
+            proof_step.action = action
+            return func(proof_step, kwargs)
+
+        return new_func
 
     return wrap_action

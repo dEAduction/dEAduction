@@ -69,7 +69,13 @@ use_bounded_quantification_notation = true
 [functionality]
 # Beginner, Intermediata, Advanced, Expert,
 default_functionality_level = "Beginner"
-allow_proof_by_sorry = true
+# Proof methods available default list:
+#proof_methods = ["case_based", "contraposition", "contradiction", "induction", "sorry"]
+allow_case_based = true
+allow_contraposition = true
+allow_contradiction = true
+allow_induction = true
+allow_sorry = true
 automatic_intro_of_exists = true
 target_selected_by_default = false
 allow_implicit_use_of_definitions = false
@@ -114,7 +120,7 @@ exercises_numbers = []
 Lean_request_method = "normal"
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.35001"
+version_nb = "0.350001"
 os = ""  # Let this to "" except for debugging
 
 #########################

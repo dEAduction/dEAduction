@@ -41,12 +41,22 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Any, Union, List, Optional
 from logging import getLogger
 
 from deaduction.pylib.utils import injective_union, intersection_list
 
 log = getLogger(__name__)
+
+global _
+
+# class CodeNature(IntEnum):
+#     """
+#     Different types of codes.
+#     """
+#
+#     induction = 0
 
 
 class LeanCombinator(str):
@@ -108,6 +118,20 @@ class SingleCode:
             return self.string.format(*names)
         else:
             return self.string
+
+
+    @classmethod
+    def apply_statement(cls, statement_name):
+        return cls(string = f"apply {statement_name}")
+
+# class ApplyStatement(SingleCode):
+#
+#     def __init__(self, statement_name):
+#         self.statement_name = statement_name
+#         super().__init__("")
+#
+#     def string(self):
+#         return f"apply {self.statement_name}"
 
 
 class CodeForLean:
@@ -825,6 +849,21 @@ class CodeForLean:
         simp = CodeForLean.simp_only(lemmas=lemmas, location=location)
         code = self.and_then(simp.try_())
         return code
+
+    @classmethod
+    def induction(cls, var_name):
+        ins = SingleCode.apply_statement("induction.simple_induction")
+        code = cls(instructions=[ins])
+        code.add_success_msg(_(f"Proof by induction on {var_name}"))
+        code.outcome_operator = _("Principle of induction")
+        return code
+
+# class Induction(CodeForLean):
+#
+#     def __init__(self, var_name):
+#         ins = ApplyStatement("induction.simple_induction")
+#         super().__init__(instructions=[ins])
+#         self.add_success_msg(f"Proof by induction on {var_name}")
 
 
 # _VAR_NB = 0

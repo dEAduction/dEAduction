@@ -229,6 +229,16 @@ class GoalNode:
             return self.parent_node.children_goal_nodes[1-self.brother_number]
 
     @property
+    def brothers_including_self(self):
+        parent = self.parent_node
+        if parent:
+            return parent.children_goal_nodes
+
+    @property
+    def is_last_brother(self):
+        return self.brother_number == len(self.brothers_including_self) -1
+
+    @property
     def target_has_changed(self) -> bool:
         """
         True if self's target differs from parent_node's target.
@@ -488,7 +498,8 @@ class GoalNode:
         CodeForLean.outcome_operator is not None.
         """
         proof_step = self.parent
-        return proof_step and proof_step.outcome_operator
+        if proof_step:
+            return self.is_last_brother and proof_step.outcome_operator
 
     def __msg(self, format_, use_color=True, bf=False):
         """
@@ -552,6 +563,12 @@ class GoalNode:
 
         elif self.parent.is_by_contradiction():
             html_msg = _("Proof by contradiction")
+
+        elif self.parent.is_by_induction():
+            if self.brother_number == 0:
+                html_msg = _("Base case")
+            elif self.brother_number == 1:
+                html_msg = _("Induction step")
 
         elif self.goal.target.math_type is MathObject.NO_MORE_GOALS:
             msg = self.goal.target.math_type.to_display(format_="utf8")
@@ -790,9 +807,13 @@ class VirtualBrotherAuxGoalNode(GoalNode):
     P
     P --> P => Q --> Q.
 
-    Note that P is the target of self.brother, Q is the target of
+    Note that P is the target of the child of self.parent, Q is the target of
     self.parent_node, and P => Q should have been stored in the CodeForLean,
     and is accessed via self.outcome_operator.
+
+    More generally, this should work when applying theorem (P, P', ...) => Q
+    generating sub-goals P, P', ... ; e.g. when applying the induction
+    principle.
     """
     def __init__(self, parent: ProofStep, type_: str):
         super().__init__(parent, goal=None, is_solved=(type_ == "operator"))
@@ -821,8 +842,9 @@ class VirtualBrotherAuxGoalNode(GoalNode):
             premises = [obj for obj in selection
                         if obj != self.outcome_operator]
         else:
-            premises = []
-        premises.append(self.main_premise)
+            premises = [child.goal.target
+                        for child in self.parent.children_goal_nodes]
+            # premises.append(self.main_premise)
         return premises
 
     @property
@@ -1014,9 +1036,10 @@ class ProofTree:
         elif self.current_goal_node.is_suffices_to:
             proof_step = self.current_goal_node.parent
             # goal = proof_step.proof_state.goals[0]
-            brothers = [VirtualBrotherAuxGoalNode(parent=proof_step,
-                                                  # goal=goal,
-                                                  type_='premise'),
+            brothers = [
+                        # VirtualBrotherAuxGoalNode(parent=proof_step,
+                        #                           # goal=goal,
+                        #                           type_='premise'),
                         VirtualBrotherAuxGoalNode(parent=proof_step,
                                                   # goal=goal,
                                                   type_='operator')]

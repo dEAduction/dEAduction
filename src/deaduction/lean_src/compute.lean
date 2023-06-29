@@ -67,8 +67,7 @@ meta def make_ineq' : expr → expr → tactic unit
 
 meta def extract_gt : list expr → tactic (list (expr × expr × expr))
 /- Extract from list of expr the couples (H, a,b)
-where the expr H of type "a ≤ b" in is the list -/
--- match hypos with
+where the expr H of type "a ≤ b" is in the list -/
 | []                    := return []
 | (hypo :: less_hypos)  := do
     {
