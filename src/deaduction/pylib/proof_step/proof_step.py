@@ -203,6 +203,7 @@ class ProofStep:
     # button_name    = None  # str, e.g. "exists" or "history_undo".
     # statement      = None  # Statement
     user_action: UserAction = None
+    action = None
     is_automatic   = False
     drag_n_drop    = None  # DragNDrop
 
@@ -544,7 +545,7 @@ class ProofStep:
         return self.statement and self.statement.is_theorem()
 
     def is_intro_implies(self):
-        if not self.parent_goal_node:
+        if not self.parent_goal_node or not self.button_name:
             return False
         target = self.parent_goal_node.goal.target
         tests = [self.button_name.endswith("implies"),
@@ -554,7 +555,7 @@ class ProofStep:
         return all(tests)
 
     def is_intro_forall(self):
-        if not self.parent_goal_node:
+        if not self.parent_goal_node or not self.button_name:
             return False
         tests = [self.button_name.endswith("forall"),
                  not self.selection,
@@ -569,7 +570,10 @@ class ProofStep:
         return not self.selection
 
     def is_and(self):
-        return self.button_name.endswith("and")
+        if not self.button_name:
+            return False
+        else:
+            return self.button_name.endswith("and")
 
     def is_iff(self):
         return self.button_name == "iff"
