@@ -319,7 +319,7 @@ def method_induction(proof_step,
         raise WrongUserInput(error)
 
     var_name = proof_step.goal.provide_good_name(math_type,
-                                             var.preferred_letter())
+                                                 var.preferred_letter())
     # h = get_new_hyp(proof_step)
     # code_s = f"intro {name}, induction {name} with {name} {h}"
 

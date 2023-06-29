@@ -95,8 +95,12 @@ def action():
         mod.__actions__[func.__name__] = action
 
         def new_func(proof_step, **kwargs):
+            """
+            Just as func, except that action name is stored in
+            proof_step.action.
+            """
             proof_step.action = action
-            func(proof_step, kwargs)
+            return func(proof_step, kwargs)
 
         return new_func
 

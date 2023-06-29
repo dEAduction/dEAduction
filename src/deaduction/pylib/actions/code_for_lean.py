@@ -49,6 +49,7 @@ from deaduction.pylib.utils import injective_union, intersection_list
 
 log = getLogger(__name__)
 
+global _
 
 # class CodeNature(IntEnum):
 #     """
@@ -853,7 +854,8 @@ class CodeForLean:
     def induction(cls, var_name):
         ins = SingleCode.apply_statement("induction.simple_induction")
         code = cls(instructions=[ins])
-        code.add_success_msg(f"Proof by induction on {var_name}")
+        code.add_success_msg(_(f"Proof by induction on {var_name}"))
+        code.outcome_operator = _("Induction principle")
         return code
 
 # class Induction(CodeForLean):
