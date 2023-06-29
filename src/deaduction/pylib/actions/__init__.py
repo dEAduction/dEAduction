@@ -52,7 +52,7 @@ from .logic import (action_forall,
                     action_equal,
                     action_map)
 
-from .proofs import action_proof_methods, introduce_new_subgoal
+from .proofs import action_proof_methods, introduce_new_subgoal, ProofMethods
 from .magic import action_assumption, context_obj_solving_target
 from .special_actions import drag_n_drop
 

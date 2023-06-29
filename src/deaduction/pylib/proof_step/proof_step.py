@@ -38,6 +38,7 @@ import logging
 from deaduction.pylib.text.tooltips import button_symbol
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.coursedata.auto_steps import UserAction
+from deaduction.pylib.actions import ProofMethods
 # from deaduction.pylib.proof_state import LeanResponse
 
 log = logging.getLogger(__name__)
@@ -593,19 +594,23 @@ class ProofStep:
 
     def is_by_contraposition(self):
         if self.button_name == "proof_methods" and self.user_input:
-            return self.user_input[0] == 1
+            idx = ProofMethods.reference_list.index('contraposition')
+            return self.user_input[0] == idx
 
     def is_by_contradiction(self):
         if self.button_name == "proof_methods" and self.user_input:
-            return self.user_input[0] == 2
+            idx = ProofMethods.reference_list.index('contradiction')
+            return self.user_input[0] == idx
 
     def is_by_induction(self):
         if self.button_name == "proof_methods" and self.user_input:
-            return self.user_input[0] == 4
+            idx = ProofMethods.reference_list.index('induction')
+            return self.user_input[0] == idx
 
     def is_sorry(self):
         if self.button_name == "proof_methods" and self.user_input:
-            return self.user_input[0] == 3
+            idx = ProofMethods.reference_list.index('sorry')
+            return self.user_input[0] == idx
 
     def compare(self, auto_test) -> (str, bool):
         """
