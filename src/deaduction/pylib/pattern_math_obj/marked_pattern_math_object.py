@@ -41,11 +41,13 @@ class MarkedTree:
     mark_first_mvar() should be called on creation of the tree (but not of
     every node, obviously).
     """
-    
+
+    # Fixme: we need children as an attribute, but whose value is set by the
+    # main class
     _children = []
     matched_math_object = None
     is_marked = False
-    
+    _has_marked_descendant = False
     # @classmethod
     # def from_pattern_math_object(cls, pmo):
     #     marked_children = [cls.from_pattern_math_object(child)
@@ -55,12 +57,18 @@ class MarkedTree:
     #     return marked_pmo
 
     def __init__(self, children=None, is_marked=False):
+        # Fixme: useless?
         if children:
             self._children = children
         self.is_marked = is_marked
-        self._has_marked_descendant = False
 
     # FIXME
+    @property
+    def children(self):
+        """
+        Fake children, this should be overriden by all subclasses.
+        """
+        return []
     # @property
     # def children(self):
     #     if self.is_metavar() and self.matched_math_object:
@@ -142,7 +150,7 @@ class MarkedTree:
         if self.is_metavar():
             return bool(self.matched_math_object)
         else:
-            return any([child.has_mvar(unmatched) for child in self.children])
+            return any([child.has_mvar(unmatched) for child in self._children])
     
     def move_right(self, to_unmatched_mvar=True):
         """
@@ -150,18 +158,23 @@ class MarkedTree:
         new marked metavar, or None. If to_unmatched_mvar then the new marked
         mvar must be unmatched.
         """
-        
+
+        new_marked_mvar = None
         if not self.has_marked_descendant or not self.children:
             return None
-        
+
         # (1) Search new mvar in child with marked descendant
-        marked_index = self.index_child_with_marked_descendant()
-        marked_child = self.children[marked_index]
-        new_marked_mvar = marked_child.move_right()
+        elif self.is_marked:
+            marked_child = self
+            marked_index = -1
+        else:
+            marked_index = self.index_child_with_marked_descendant()
+            marked_child = self.children[marked_index]
+            new_marked_mvar = marked_child.move_right()
         
         # (2) If failed, search new mvar in next children
         if not new_marked_mvar:
-            for child in self.children[marked_index:]:
+            for child in self.children[marked_index+1:]:
                 new_marked_mvar = child.mark_first_mvar(unmatched=to_unmatched_mvar)
                 if new_marked_mvar:
                     break
@@ -205,8 +218,11 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         children = [MarkedMetavar.from_mvar(child) if isinstance(child, MetaVar)
                     else cls.from_pattern_math_object(child)
                     for child in pmo.children]
+        # NO_MATH_TYPE should be kept identical
+        marked_type = (pmo.math_type if pmo.math_type.is_no_math_type()
+                       else copy(pmo.math_type))
         marked_pmo = cls(pmo.node, pmo.info, children,
-                         copy(pmo.math_type), pmo.imperative_matching)
+                         marked_type, pmo.imperative_matching)
         return marked_pmo
 
     @classmethod
@@ -215,13 +231,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mpmo = cls.from_pattern_math_object(pmo)
         return mpmo
 
-    def insert(self, pmo: PatternMathObject) -> bool:
+    def insert_at_marked_mvar(self, pmo: PatternMathObject) -> bool:
         """
         Try to insert math_object in self's marked mvar. Return True in case
         of success, False otherwise. If the marked mvar has a new unmatched
         mvar, mark it.
         """
-        marked_mvar = self.marked_descendant()
+        marked_mvar: MarkedMetavar = self.marked_descendant()
         if not marked_mvar:
             return False
 
@@ -229,18 +245,42 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if not success:
             return False
 
-        new_mvar = marked_mvar.first_mvar(unmatched=True)
-        if new_mvar:
-            self.unmark()
-            new_mvar.mark()
+        # new_mvar = marked_mvar.first_mvar(unmatched=True)
+        # if new_mvar:
+        #     self.unmark()
+        #     new_mvar.mark()
 
         return True
 
 
-class MarkedMetavar(MetaVar, MarkedTree):
+class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     """
     A Metavar which can be marked.
     """
+
+    def __repr__(self):
+        rep = super().__repr__()
+        if self.is_marked:
+            rep = 'marked ' + rep
+        return rep
+
+    @property
+    def node(self):
+        """
+        Override super().node.
+        """
+        node = (self.matched_math_object._node
+                if self.matched_math_object else self._node)
+        return node
+
+    @property
+    def info(self):
+        """
+        Override super().children in case self has a matched_math_object.
+        """
+        info = (self.matched_math_object._info
+                if self.matched_math_object else self._info)
+        return info
 
     @property
     def children(self):
@@ -285,6 +325,7 @@ class MarkedMetavar(MetaVar, MarkedTree):
         (to be improved: try automatic matching?)
         """
 
+        math_object = math_object.deep_copy(math_object)
         if not self.matched_math_object:
             match = self.match(math_object)
             if match:
@@ -296,6 +337,9 @@ class MarkedMetavar(MetaVar, MarkedTree):
         else:
             return self.insert_over_matched_math_object(math_object)
 
+    def insert_at_marked(self, math_object: PatternMathObject):
+        self.marked_descendant().insert(math_object)
+
     def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False,
                    used_in_proof=False):
@@ -304,13 +348,13 @@ class MarkedMetavar(MetaVar, MarkedTree):
                                         is_type=is_type)
         mmo = self.matched_math_object
         if mmo:
-            display = mmo.to_display(self, format_=format_, text=text,
-                                        use_color=use_color, bf=bf,
-                                        is_type=is_type)
+            display = mmo.to_display(format_=format_, text=text,
+                                     use_color=use_color, bf=bf,
+                                     is_type=is_type)
         if not self.is_marked:
-            return '?=' + display
+            return '?_=' + display
         else:
-            return '??=' + display
+            return '?=' + display
 
 
 if __name__ == "__main__":

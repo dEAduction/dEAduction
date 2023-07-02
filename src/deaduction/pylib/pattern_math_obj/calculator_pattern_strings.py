@@ -47,10 +47,10 @@ calculator_pattern_strings = {     # NUMBERS
                    '2': 'NUMBER/value=2',
                    '3': 'NUMBER/value=2',
                    '4': 'NUMBER/value=2',
-                   '+': 'ADD(?0: ?2, ?1: ?2)',
+                   '+': 'SUM(?0: ?2, ?1: ?2)',  # pb = real + int ?
                    '()': 'PARENTHESES(?0)',
                         # LOGIC
-                   '∀': 'PROP_FORALL(?0, ?1, ?2)',
+                   '∀': 'QUANT_∀(?0, ?1, ?2)',  # FIXME: bound_var
                    '⇒': 'PROP_IMPLIES(?0, ?1)',
                    '∧': 'PROP_AND(?0, ?1)',
                         # SET THEORY

@@ -95,7 +95,7 @@ class PatternMathObject(MathObject):
 
     @classmethod
     def new_metavar(cls, math_type):
-        return MetaVar(math_type)
+        return MetaVar(math_type=math_type)
 
     @classmethod
     def from_tree(cls, tree, metavars):
@@ -250,6 +250,9 @@ class PatternMathObject(MathObject):
 
     def is_metavar(self):
         return isinstance(self, MetaVar)
+
+    def is_no_math_type(self):
+        return self is self.NO_MATH_TYPE
 
     def match(self, math_object: MathObject) -> bool:
         """
@@ -502,7 +505,7 @@ class PatternMathObject(MathObject):
             return self
         else:
             for child in self.children:
-                mvar = child.firs_mvar(unmatched)
+                mvar = child.first_mvar(unmatched)
                 if mvar:
                     return mvar
 
@@ -523,9 +526,12 @@ class MetaVar(PatternMathObject):
 
     metavar_nb: int = 0  # Class attribute (counter)
 
-    def __init__(self, math_type):
+    def __init__(self, node='METAVAR', info=None, children=None,
+                 math_type=None):
         """
         To init a metavar we just need its math_type.
+        Nevertheless, we include the other parameters for compatibility with
+        MathObject __init__, e.g. for the deepcopy() method.
         """
         MetaVar.metavar_nb += 1
         super().__init__(node='METAVAR',
@@ -548,7 +554,8 @@ class MetaVar(PatternMathObject):
     def deep_copy(cls, self):
         new_mvar = super().deep_copy(self)
         mmo = self.matched_math_object
-        new_mvar.matched_math_object = mmo.deep_copy(mmo)
+        if mmo:
+            new_mvar.matched_math_object = mmo.deep_copy(mmo)
         return new_mvar
 
     @property

@@ -143,7 +143,7 @@ class CalculatorController:
     various buttons groups.
     """
 
-    def __init__(self, target: MarkedPatternMathObject = None,
+    def __init__(self, target: MarkedPatternMathObject,
                  context=None,
                  calculator_groups=None):
         self.target = target
@@ -164,11 +164,14 @@ class CalculatorController:
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
         # print('cloc')
-        ok = self.target.insert(pattern_s)
+        ok = self.target.insert_at_marked_mvar(pattern_s)
         if ok:
             self.calculator_ui.set_target(self.target)
+            self.target.move_right(to_unmatched_mvar=True)
 
         print(ok)
+        print(self.target)
+        print(self.target.math_type)
 
 
 def main():

@@ -169,7 +169,7 @@ class MathObject:
         Create a MathObject.
         """
         self._node = node
-        self.info = info
+        self._info = info
         self._children = children
         self._math_type = math_type
 
@@ -200,20 +200,28 @@ class MathObject:
         return self.debug_repr('MO')
 
     @property
-    def children(self):
-        return self._children
-
-    @children.setter
-    def children(self, children):
-        self._children = children
-
-    @property
     def node(self):
         return self._node
 
     @node.setter
     def node(self, node):
         self._node = node
+
+    @property
+    def info(self):
+        return self._info
+
+    @info.setter
+    def info(self, info):
+        self._info = info
+
+    @property
+    def children(self):
+        return self._children
+
+    @children.setter
+    def children(self, children):
+        self._children = children
 
     @property
     def math_type(self) -> Any:
