@@ -128,7 +128,7 @@ CONFIGS["Logic"] = {
         _("Display properties using bounded quantification"))}
 
 CONFIGS['Functionalities'] = {
-    'functionality.allow_proof_by_sorry': (None, True,
+    'functionality.allow_sorry': (None, True,
         _("'Admit current sub-goal!' is available with the Proof methods "
           "button")),
     'functionality.automatic_intro_of_exists': (None, True,
