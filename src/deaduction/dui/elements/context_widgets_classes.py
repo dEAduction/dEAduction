@@ -628,10 +628,10 @@ class TargetLabel(MathLabel):
         self.setTextFormat(Qt.RichText)
         self.set_target(target)
 
-    def set_target(self, target):
+    def set_target(self, target, format_='utf8'):
         if target:
             self.math_object = target
-            text = target.math_type_to_display()
+            text = target.math_type_to_display(format_=format_)
         else:
             text = '…'
         self.setText(text)

@@ -41,15 +41,22 @@ global _
 # "POWER": (0, [r'\super', 1]),
 # "SQRT": ('√', -1),
 
+# NUMBERS
+numbers = {str(n): f'NUMBER/value={n}' for n in range(11)}
 calculator_pattern_strings = {     # NUMBERS
-                   '0': 'NUMBER/value=0',  # Unspecified math_type...
-                   '1': 'NUMBER/value=1',
-                   '2': 'NUMBER/value=2',
-                   '3': 'NUMBER/value=2',
-                   '4': 'NUMBER/value=2',
+                   # '0': 'NUMBER/value=0',  # Unspecified math_type...
+                   # '1': 'NUMBER/value=1',
+                   # '2': 'NUMBER/value=2',
+                   # '3': 'NUMBER/value=3',
+                   # '4': 'NUMBER/value=4',
                    '+': 'SUM(?0: ?2, ?1: ?2)',  # pb = real + int ?
-                   '()': 'PARENTHESES(?0)',
-                        # LOGIC
+                   '-': 'MINUS(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '*': 'MULT(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '÷': 'DIV(?0: ?2, ?1: ?2)',  # pb = real + int ?
+
+                   '(': 'OPEN_PARENTHESES(?0)',
+                   ')': 'CLOSE_PARENTHESES(...)',
+                   # LOGIC
                    '∀': 'QUANT_∀(?0, ?1, ?2)',  # FIXME: bound_var
                    '⇒': 'PROP_IMPLIES(?0, ?1)',
                    '∧': 'PROP_AND(?0, ?1)',
@@ -57,7 +64,7 @@ calculator_pattern_strings = {     # NUMBERS
                    '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                    '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))'
 }
-
+calculator_pattern_strings.update(numbers)
 
 automatic_matching_patterns = {
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
@@ -106,9 +113,12 @@ class CalculatorPatternLines:
         return pattern
 
 
-calculator_group = CalculatorPatternLines(_('Calculator'), [['1', '+', '()'],
-                                                     ['2', '3', '4']
-                                                     ])
+calculator_group = CalculatorPatternLines(_('Calculator'),
+                                          [['7', '8', '9', '÷'],
+                                           ['4', '5', '6', '*'],
+                                           ['1', '2', '3', '-'],
+                                           ['0', '(', ')', '+'],
+                                           ])
 logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
 set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
 

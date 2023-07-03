@@ -111,6 +111,8 @@ class CalculatorMainWindow(QWidget):
 
         self.target_label = TargetLabel(None)
         main_lyt.addWidget(self.target_label)
+        self.lean_target_label = TargetLabel(None)
+        main_lyt.addWidget(self.lean_target_label)
 
         self.setLayout(main_lyt)
 
@@ -127,6 +129,7 @@ class CalculatorMainWindow(QWidget):
         target = PatternMathObject(node='MVAR', info={}, children=[],
                                    math_type=target)
         self.target_label.set_target(target)
+        # self.lean_target_label.set_target(target, format_='lean')
 
     @Slot()
     def process_clic(self, pattern):
