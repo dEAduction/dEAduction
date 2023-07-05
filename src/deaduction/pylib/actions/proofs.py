@@ -195,7 +195,6 @@ def action_proof_methods(proof_step) -> CodeForLean:
         #     return method_contradiction(proof_step, selected_objects)
         # if method == 4:
         #     return method_sorry(proof_step, selected_objects)
-    raise WrongUserInput
 
 
 @add_to_proof_methods()
@@ -327,7 +326,18 @@ def method_induction(proof_step,
     # code = CodeForLean.from_string(code_s)
     # code.add_success_msg(f"Proof by induction on {name}")
 
-    code = CodeForLean.induction(var_name)
+    code = CodeForLean.empty_code()
+    if len(user_input) < 2:
+        choices = [('1', _('Base case')), ('2', _('Induction step'))]
+        raise MissingParametersError(
+            InputType.Choice,
+            choices,
+            title=_("Choose sub-goal"),
+            output=_("Which property to prove first?"))
+    elif user_input[1] == 0:
+        code = CodeForLean.induction(var_name)
+    elif user_input[1] == 1:
+        code = CodeForLean.induction(var_name).and_then('rotate')
 
     return code
 

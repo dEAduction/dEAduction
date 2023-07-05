@@ -565,9 +565,16 @@ class GoalNode:
             html_msg = _("Proof by contradiction")
 
         elif self.parent.is_by_induction():
-            if self.brother_number == 0:
+            if len(self.parent.user_input) >= 2:
+                bc_nb = self.parent.user_input[1]
+                is_nb = 1 - bc_nb
+            else:  # Default values
+                bc_nb = 0
+                is_nb = 1
+
+            if self.brother_number == bc_nb:
                 html_msg = _("Base case")
-            elif self.brother_number == 1:
+            elif self.brother_number == is_nb:
                 html_msg = _("Induction step")
 
         elif self.goal.target.math_type is MathObject.NO_MORE_GOALS:
