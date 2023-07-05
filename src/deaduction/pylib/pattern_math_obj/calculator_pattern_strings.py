@@ -50,17 +50,21 @@ calculator_pattern_strings = {     # NUMBERS
                    # '3': 'NUMBER/value=3',
                    # '4': 'NUMBER/value=4',
                    '+': 'SUM(?0: ?2, ?1: ?2)',  # pb = real + int ?
-                   '-': 'MINUS(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '-': 'DIFFERENCE(?0: ?2, ?1: ?2)',  # Pb =  or MINUS(?0)
+                    # '-': ('MINUS(?0)', 'DIFFERENCE(?0: ?2, ?1: ?2)'),
                    '*': 'MULT(?0: ?2, ?1: ?2)',  # pb = real + int ?
                    '÷': 'DIV(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '.': 'POINT(?0, ?1)',
+                   'sin': 'APP(CONSTANT/name=sin, ?0: CONSTANT/name=ℝ)',
 
                    '(': 'OPEN_PARENTHESES(?0)',
                    ')': 'CLOSE_PARENTHESES(...)',
                    # LOGIC
                    '∀': 'QUANT_∀(?0, ?1, ?2)',  # FIXME: bound_var
-                   '⇒': 'PROP_IMPLIES(?0, ?1)',
-                   '∧': 'PROP_AND(?0, ?1)',
-                        # SET THEORY
+                   '⇒': 'PROP_IMPLIES(?0: PROP, ?1: PROP)',
+                   '∧': 'PROP_AND(?0: PROP, ?1: PROP)',
+                   '∨': 'PROP_OR(?0: PROP, ?1: PROP)',
+                   # SET THEORY
                    '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                    '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))'
 }
@@ -117,8 +121,10 @@ calculator_group = CalculatorPatternLines(_('Calculator'),
                                           [['7', '8', '9', '÷'],
                                            ['4', '5', '6', '*'],
                                            ['1', '2', '3', '-'],
-                                           ['0', '(', ')', '+'],
+                                           ['0', '.', '+'],
                                            ])
+sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
+                                        [['sin']])
 logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
 set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
 

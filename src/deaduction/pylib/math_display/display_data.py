@@ -160,7 +160,8 @@ latex_from_node = {
     "LOCAL_CONSTANT": ('self.local_constant_shape',),
     "APPLICATION": (0, r'\parentheses', 1),
     "LAMBDA": (1, r"\mapsto", 2),
-    "METAVAR": ('?', )
+    "METAVAR": ('?', ),
+    "POINT": (0, '.', 1),
     }
 
 # --------------------------------------------------------- #

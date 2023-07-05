@@ -28,4 +28,5 @@ from .pattern_math_objects import PatternMathObject, MetaVar
 from .definition_math_object import DefinitionMathObject
 from .marked_pattern_math_object import MarkedPatternMathObject, MarkedMetavar
 from .calculator_pattern_strings import (CalculatorPatternLines, calculator_group,
-                                         logic_group, set_theory_group)
+                                         logic_group, set_theory_group,
+                                         sci_calc_group)

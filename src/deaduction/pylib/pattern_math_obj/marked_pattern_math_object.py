@@ -90,7 +90,7 @@ class MarkedTree:
             marked_descendant = child.marked_descendant()
             if marked_descendant:
                 self._has_marked_descendant = True
-                return child
+                return marked_descendant
 
     @property
     def has_marked_descendant(self) -> bool:
@@ -241,16 +241,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if not marked_mvar:
             return False
 
-        success = marked_mvar.insert(pmo)
-        if not success:
-            return False
+        return marked_mvar.insert(pmo)
 
-        # new_mvar = marked_mvar.first_mvar(unmatched=True)
-        # if new_mvar:
-        #     self.unmark()
-        #     new_mvar.mark()
-
-        return True
+    def delete(self):
+        """
+        'Delete' current marked metavar, i.e. remove matched_math_object.
+        """
+        return self.marked_descendant().delete()
 
 
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):
@@ -261,7 +258,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     def __repr__(self):
         rep = super().__repr__()
         if self.is_marked:
-            rep = 'marked ' + rep
+            rep = '--> ' + rep
         return rep
 
     @property
@@ -301,6 +298,25 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         """
         See next method's doc.
         """
+
+        # Special cases
+        self_object = self.matched_math_object
+        if self_object.math_type.is_number() or self_object.node == 'NUMBER':
+            value = str(self_object.value)
+            if pmo.math_type.is_number() or pmo.node == 'NUMBER':
+                units = str(pmo.value)
+                self_object.value = value + units
+                return True
+            elif pmo.node == 'POINT':
+                if '.' not in value:
+                    self_object.value = value + '.'
+                    return True
+                else:
+                    return False
+
+        # Fixme: if self_object and pmo both have children and have the same
+        #  nb of children, try to replace.
+
         mvar = pmo.first_mvar()
         if not mvar:
             return False
@@ -337,8 +353,13 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         else:
             return self.insert_over_matched_math_object(math_object)
 
-    def insert_at_marked(self, math_object: PatternMathObject):
-        self.marked_descendant().insert(math_object)
+    def delete(self):
+        """
+        FIXME: what is the desired behavior?
+        """
+        if self.matched_math_object:
+            self.matched_math_object = None
+            return True
 
     def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False,

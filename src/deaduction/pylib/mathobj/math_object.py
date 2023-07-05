@@ -624,6 +624,10 @@ class MathObject:
     def value(self):
         return self.info.get('value')
 
+    @value.setter
+    def value(self, new_value):
+        self.info['value'] = new_value
+
     @property
     def binder_info(self):
         return self.info.get('binder_info')

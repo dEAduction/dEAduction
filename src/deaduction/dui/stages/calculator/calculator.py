@@ -34,15 +34,20 @@ import logging
 from typing import Union, List
 
 from PySide2.QtCore import Signal, Slot
-
+from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QApplication, QWidget, QPushButton, QToolButton,
-                               QHBoxLayout, QVBoxLayout, QLabel)
+                               QHBoxLayout, QVBoxLayout, QLabel, QToolBar,
+                               QAction)
+
+import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.utils.filesystem as fs
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
                                                MarkedMetavar,
                                                CalculatorPatternLines,
                                                calculator_group,
+                                               sci_calc_group,
                                                logic_group,
                                                set_theory_group)
 
@@ -98,8 +103,17 @@ class CalculatorMainWindow(QWidget):
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
-        self.buttons_groups = []
+        self.toolbar = QToolBar()
+        self.rewind = None
+        self.undo_action = None
+        self.redo_action = None
+        self.go_to_end = None
+        self.__init_toolbar()
+
         main_lyt = QVBoxLayout()
+        main_lyt.addWidget(self.toolbar)
+
+        self.buttons_groups = []
         for calc_pattern in calc_patterns:
             title = calc_pattern.title
             main_lyt.addWidget(QLabel(calc_pattern.title + _(':')))
@@ -134,7 +148,36 @@ class CalculatorMainWindow(QWidget):
     @Slot()
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
-        # print('clac')
+
+    def __init_toolbar(self):
+        icons_base_dir = cvars.get("icons.path")
+        icons_dir = fs.path_helper(icons_base_dir)
+        toolbar = self.toolbar
+
+        self.rewind = QAction(QIcon(str((icons_dir /
+                                     'goback-begining.png').resolve())),
+                _('Undo all'), toolbar)
+        self.undo_action = QAction(QIcon(str((icons_dir /
+                                          'undo_action.png').resolve())),
+                _('Undo'), toolbar)
+        self.redo_action = QAction(QIcon(str((icons_dir /
+                                          'redo_action.png').resolve())),
+                _('Redo'), toolbar)
+        self.go_to_end = QAction(QIcon(str((icons_dir /
+                                            'go-end-96.png').resolve())),
+                _('Redo all'), toolbar)
+
+        self.delete = QAction(_('Delete'), toolbar)
+        toolbar.addAction(self.rewind)
+        toolbar.addAction(self.undo_action)
+        toolbar.addAction(self.redo_action)
+        toolbar.addAction(self.go_to_end)
+        toolbar.addSeparator()
+        toolbar.addAction(self.delete)
+
+        self.undo_action.setShortcut(QKeySequence.Undo)
+        self.redo_action.setShortcut(QKeySequence.Redo)
+        self.delete.setShortcut(QKeySequence.Delete)
 
 
 class CalculatorController:
@@ -150,31 +193,91 @@ class CalculatorController:
                  context=None,
                  calculator_groups=None):
         self.target = target
+        self.history: [MarkedPatternMathObject] = []
+        self.history_idx = 0
         if calculator_groups:
             self.calculator_groups = calculator_groups
         else:  # Standard groups
-            self.calculator_groups = [calculator_group, logic_group,
+            self.calculator_groups = [calculator_group, sci_calc_group,
+                                      logic_group,
                                       set_theory_group]
 
         self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
-        self.calculator_ui.set_target(target)
+        # self.calculator_ui.set_target(target)
         self.calculator_ui.send_pattern.connect(self.insert_pattern)
+
+        self.__init_signals()
+        self.update()  # Display target and create first history entry
+
+    def __init_signals(self):
+        calc_ui = self.calculator_ui
+        calc_ui.rewind.triggered.connect(self.history_to_beginning)
+        calc_ui.undo_action.triggered.connect(self.history_undo)
+        calc_ui.redo_action.triggered.connect(self.history_redo)
+        calc_ui.go_to_end.triggered.connect(self.history_to_end)
+        calc_ui.delete.triggered.connect(self.delete)
 
     def show(self):
         self.calculator_ui.show()
 
+    def update(self):
+        """
+        Update target display, and store it in history.
+        Delete the end of history if any.
+        """
+        self.calculator_ui.set_target(self.target)
+        self.history = self.history[:self.history_idx]
+        self.history.append(self.target.deep_copy(self.target))
+        self.history_idx += 1
+        self.calculator_ui.target_label.setFocus()
+
     @Slot()
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
-        # print('cloc')
+        # Fixme: insertion does not work after history undo.
         ok = self.target.insert_at_marked_mvar(pattern_s)
         if ok:
-            self.calculator_ui.set_target(self.target)
             self.target.move_right(to_unmatched_mvar=True)
+            self.update()
 
         print(ok)
         print(self.target)
         print(self.target.math_type)
+
+    def history_update(self):
+        """
+        Update after a history move.
+        """
+        self.target = self.history[self.history_idx]
+        self.calculator_ui.set_target(self.target)
+
+    @Slot()
+    def history_undo(self):
+        if self.history_idx > 0:
+            self.history_idx -= 1
+            self.history_update()
+
+    @Slot()
+    def history_redo(self):
+        if self.history_idx < len(self.history) -1:
+            self.history_idx += 1
+            self.history_update()
+
+    @Slot()
+    def history_to_beginning(self):
+        self.history_idx = 0
+        self.history_update()
+
+    @Slot()
+    def history_to_end(self):
+        self.history_idx = len(self.history) - 1
+        self.history_update()
+
+    @Slot()
+    def delete(self):
+        success = self.target.delete()
+        if success:
+            self.update()
 
 
 def main():
