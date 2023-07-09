@@ -1146,7 +1146,8 @@ class AbstractStartCoEx(QDialog):
         """
         Go to the exercise tab.
         """
-        self.__tabwidget.setCurrentIndex(1)
+        if self.__tabwidget.isTabEnabled(1):
+            self.__tabwidget.setCurrentIndex(1)
 
     def __goto_courses(self):
         """
