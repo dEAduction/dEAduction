@@ -71,7 +71,6 @@ class NavigationBar(QToolBar):
         self.up_action = QAction(_('Move Up'), self)
         self.right_action = QAction(_('Move right'), self)
 
-
         # self.undo_action = QAction(QIcon(str((icons_dir /
         #                                   'undo_action.png').resolve())),
         #         _('Undo'), toolbar)
@@ -82,6 +81,8 @@ class NavigationBar(QToolBar):
         self.left_action.setShortcut(QKeySequence.MoveToPreviousChar)
         self.up_action.setShortcut(QKeySequence.MoveToPreviousLine)
         self.right_action.setShortcut(QKeySequence.MoveToNextChar)
+
+        # TODO: connect
 
 
 class CalculatorButton(QToolButton):
@@ -101,6 +102,12 @@ class CalculatorButton(QToolButton):
         self.pattern_s = CalculatorPatternLines.marked_patterns[symbol]
         self.setText(symbol)
         self.clicked.connect(self.process_click)
+        self.add_shortcut(symbol)
+
+    def add_shortcut(self, symbol):
+        """
+        Automatically add the first letter as a shortcut.
+        """
         letter = symbol[0]
         if letter not in self.shortcuts_dic:
             self.setShortcut(QKeySequence(letter))
