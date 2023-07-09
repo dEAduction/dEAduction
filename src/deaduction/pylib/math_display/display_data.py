@@ -162,7 +162,10 @@ latex_from_node = {
     "LAMBDA": (1, r"\mapsto", 2),
     "METAVAR": ('?', ),
     "POINT": (0, '.', 1),
-    }
+    "COMMA": (0, ', ', 1),
+    "PARENTHESES": ('(', 0, ')'),
+    # "CLOSED_PARENTHESIS": (0,)
+}
 
 # --------------------------------------------------------- #
 # The latex_from_node dict will be updated by the following #
@@ -493,6 +496,8 @@ def needs_paren(parent, child, child_number) -> bool:
 
     p_node = parent.node
     c_node = child.node if child is not None else "NONE"
+    if p_node == 'PARENTHESES':
+        return False
     if c_node == 'COE':  # Act as if COE node was replaced by its child
         c_node = child.children[0].node
     if p_node == 'COE':  # Should be treated at the previous level, see above

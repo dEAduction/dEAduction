@@ -79,6 +79,16 @@ class MarkedTree:
     def is_metavar(self):
         pass
 
+    def parent_of_marked_descendant(self):
+        """
+        Return the immediate parent of self.marked_descendant, if any.
+        """
+        for child in self.children:
+            if child.is_marked:
+                return self
+            elif child.parent_of_marked_descendant():
+                return child.parent_of_marked_descendant()
+
     def marked_descendant(self):
         """
         Return the marked descendant of self, if any.        
@@ -200,6 +210,38 @@ class MarkedTree:
     #     """
 
 
+# decreasing precedence
+priorities = [
+              {'MULT', 'DIV'},
+              {'SUM', 'DIFFERENCE'},
+              {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
+              {'PARENTHESES'}
+              ]
+
+
+def priority(self: str, other: str) -> str:
+    """
+    Return '=' if self and other have the same priority level,
+    '>' or '<' if they have distinct comparable priority levels,
+    None otherwise.
+    """
+    self_found = False
+    other_found = False
+    for nodes in priorities:
+        if self in nodes:
+            if other_found:
+                return '<'
+            if other in nodes:
+                return '='
+            else:
+                self_found = True
+        elif other in nodes:
+            if self_found:
+                return '>'
+            else:
+                other_found = True
+
+
 class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     """
     A PatternMathObject with a marked node.
@@ -215,7 +257,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if isinstance(pmo, MetaVar):
             return MarkedMetavar.from_mvar(pmo)
 
-        children = [MarkedMetavar.from_mvar(child) if isinstance(child, MetaVar)
+        children = [MarkedMetavar.from_mvar(child, parent=pmo)
+                    if isinstance(child, MetaVar)
                     else cls.from_pattern_math_object(child)
                     for child in pmo.children]
         # NO_MATH_TYPE should be kept identical
@@ -241,7 +284,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if not marked_mvar:
             return False
 
-        return marked_mvar.insert(pmo)
+        parent = self.parent_of_marked_descendant()
+        return marked_mvar.insert(pmo, parent)
 
     def delete(self):
         """
@@ -260,6 +304,13 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         if self.is_marked:
             rep = '--> ' + rep
         return rep
+
+    @classmethod
+    def deep_copy(cls, self):
+        new_mvar: MarkedMetavar = super().deep_copy(self)
+        if self.is_marked:
+            new_mvar.mark()
+        return new_mvar
 
     @property
     def node(self):
@@ -289,17 +340,19 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         return children
 
     @classmethod
-    def from_mvar(cls, mvar: MetaVar):
+    def from_mvar(cls, mvar: MetaVar, parent=None):
         marked_mvar = cls(math_type=mvar.math_type)
+        marked_mvar.parent = parent
         marked_mvar.matched_math_object = mvar.matched_math_object
         return marked_mvar
 
-    def insert_over_matched_math_object(self, pmo: PatternMathObject) -> bool:
+    def insert_over_matched_math_object(self, pmo: PatternMathObject,
+                                        parent=None) -> bool:
         """
         See next method's doc.
         """
 
-        # Special cases
+        # (1) Special cases
         self_object = self.matched_math_object
         if self_object.math_type.is_number() or self_object.node == 'NUMBER':
             value = str(self_object.value)
@@ -314,22 +367,47 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                 else:
                     return False
 
-        # Fixme: if self_object and pmo both have children and have the same
+        # (2) If self_object and pmo both have children and have the same
         #  nb of children, try to replace.
+        # if self_object.children and \
+        #         len(self_object.children) == len(pmo.children):
+        #     tests = [self.match(pmo)]
+        #     for child, child_mvar in zip(self_object.children, pmo.children):
+        #         if isinstance(child_mvar, MetaVar):
+        #             tests.append(child_mvar.match(child))
+        #     if all(tests):
+        #         self.matched_math_object = pmo
+        #         for child, child_mvar in zip(self_object.children,
+        #                                      pmo.children):
+        #             child_mvar.matched_math_object = child
+        #         return True
 
+        # (3) Try to insert
         mvar = pmo.first_mvar()
         if not mvar:
             return False
-        else:
-            match = mvar.match(self.matched_math_object)
-            if match:
-                mvar.matched_math_object = self.matched_math_object
-                self.matched_math_object = pmo
-                return True
-            else:
-                return False
 
-    def insert(self, math_object: PatternMathObject) -> bool:
+        # (3a) Check parent priority, and maybe insert at parent
+        elif parent and hasattr(parent, "insert_over_matched_math_object"):
+            # Compare priority of pmo and parent
+            self_node = parent.node
+            other_node = pmo.node
+            prior = priority(self_node, other_node)
+            if prior in ('=', '>'):
+                success = parent.insert_over_matched_math_object(pmo)
+                if success:
+                    return True
+
+        # (3b) Insert at self
+        match = mvar.match(self.matched_math_object)
+        if match:
+            mvar.matched_math_object = self.matched_math_object
+            self.matched_math_object = pmo
+            return True
+        else:
+            return False
+
+    def insert(self, math_object: PatternMathObject, parent=None) -> bool:
         """
         Try to insert math_object in self. Return True in case of success,
         False otherwise.
@@ -341,17 +419,21 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         (to be improved: try automatic matching?)
         """
 
+        # Crucial: deepcopy math_object!!
         math_object = math_object.deep_copy(math_object)
+
         if not self.matched_math_object:
             match = self.match(math_object)
             if match:
                 self.matched_math_object = math_object
                 return True
             else:
+                # FIXME: insert an MVAR with math_object as first child?
                 return False
 
         else:
-            return self.insert_over_matched_math_object(math_object)
+            return self.insert_over_matched_math_object(math_object,
+                                                        parent=parent)
 
     def delete(self):
         """
@@ -359,23 +441,28 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         """
         if self.matched_math_object:
             self.matched_math_object = None
+            if isinstance(self.math_type, MetaVar):
+                self.math_type.matched_math_object = None
             return True
 
     def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False,
                    used_in_proof=False):
-        display = MathObject.to_display(self, format_=format_, text=text,
-                                        use_color=use_color, bf=bf,
-                                        is_type=is_type)
         mmo = self.matched_math_object
         if mmo:
             display = mmo.to_display(format_=format_, text=text,
                                      use_color=use_color, bf=bf,
                                      is_type=is_type)
-        if not self.is_marked:
-            return '?_=' + display
         else:
-            return '?=' + display
+            display = MathObject.to_display(self, format_=format_, text=text,
+                                            use_color=use_color, bf=bf,
+                                            is_type=is_type)
+
+        # if not self.is_marked:
+        #     return '?_=' + display
+        # else:
+        #     return '?=' + display
+        return display
 
 
 if __name__ == "__main__":

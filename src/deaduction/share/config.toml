@@ -110,7 +110,7 @@ exercises_numbers = []
 Lean_request_method = "normal"
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3514"
+version_nb = "0.35141"
 os = ""  # Let this to "" except for debugging
 
 #########################

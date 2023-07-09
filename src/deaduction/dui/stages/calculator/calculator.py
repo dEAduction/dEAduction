@@ -33,13 +33,14 @@ import sys
 import logging
 from typing import Union, List
 
-from PySide2.QtCore import Signal, Slot
+from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QApplication, QWidget, QPushButton, QToolButton,
                                QHBoxLayout, QVBoxLayout, QLabel, QToolBar,
-                               QAction)
+                               QAction, QDialog, QDialogButtonBox)
 
 import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.utils.filesystem as fs
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
@@ -57,6 +58,32 @@ global _
 log = logging.getLogger(__name__)
 
 
+class NavigationBar(QToolBar):
+    """
+    A toolbar with navigation buttons: left, up, right arrow.
+    """
+    def __init__(self):
+        super().__init__()
+
+        icons_dir = cdirs.icons
+
+        self.left_action = QAction(_('Move left'), self)
+        self.up_action = QAction(_('Move Up'), self)
+        self.right_action = QAction(_('Move right'), self)
+
+
+        # self.undo_action = QAction(QIcon(str((icons_dir /
+        #                                   'undo_action.png').resolve())),
+        #         _('Undo'), toolbar)
+        self.addAction(self.left_action)
+        self.addAction(self.up_action)
+        self.addAction(self.right_action)
+
+        self.left_action.setShortcut(QKeySequence.MoveToPreviousChar)
+        self.up_action.setShortcut(QKeySequence.MoveToPreviousLine)
+        self.right_action.setShortcut(QKeySequence.MoveToNextChar)
+
+
 class CalculatorButton(QToolButton):
     """
     A class to display a button associated to a (list of)
@@ -67,11 +94,17 @@ class CalculatorButton(QToolButton):
 
     send_pattern = Signal(MarkedPatternMathObject)
 
+    shortcuts_dic = dict()
+
     def __init__(self, symbol):
         super().__init__()
         self.pattern_s = CalculatorPatternLines.marked_patterns[symbol]
         self.setText(symbol)
         self.clicked.connect(self.process_click)
+        letter = symbol[0]
+        if letter not in self.shortcuts_dic:
+            self.setShortcut(QKeySequence(letter))
+            self.shortcuts_dic[letter] = self
 
     @Slot()
     def process_click(self):
@@ -93,7 +126,7 @@ class CalculatorButtons(QHBoxLayout):
             self.addWidget(button)
 
 
-class CalculatorMainWindow(QWidget):
+class CalculatorMainWindow(QDialog):
     """
     A class to display a "calculator", i.e. a QWidget that enables usr to
     build a new MathObject (a new mathematical object or property).
@@ -109,6 +142,7 @@ class CalculatorMainWindow(QWidget):
         self.redo_action = None
         self.go_to_end = None
         self.__init_toolbar()
+        self.navigation_bar = NavigationBar()
 
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
@@ -133,6 +167,16 @@ class CalculatorMainWindow(QWidget):
         for btn in self.buttons():
             btn.send_pattern.connect(self.process_clic)
 
+        # Navigation btns
+        main_lyt.addWidget(self.navigation_bar)
+
+        # OK / Cancel btns
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok
+                                          | QDialogButtonBox.Cancel)
+        main_lyt.addWidget(self.button_box)
+        # self.buttonBox.accepted.connect(self.accept)
+        # self.buttonBox.rejected.connect(self.reject)
+
     def buttons(self) -> [CalculatorButton]:
         btns = []
         for buttons_group in self.buttons_groups:
@@ -150,8 +194,9 @@ class CalculatorMainWindow(QWidget):
         self.send_pattern.emit(pattern)
 
     def __init_toolbar(self):
-        icons_base_dir = cvars.get("icons.path")
-        icons_dir = fs.path_helper(icons_base_dir)
+        # icons_base_dir = cvars.get("icons.path")
+        # icons_dir = fs.path_helper(icons_base_dir)
+        icons_dir = cdirs.icons
         toolbar = self.toolbar
 
         self.rewind = QAction(QIcon(str((icons_dir /
@@ -167,7 +212,9 @@ class CalculatorMainWindow(QWidget):
                                             'go-end-96.png').resolve())),
                 _('Redo all'), toolbar)
 
-        self.delete = QAction(_('Delete'), toolbar)
+        self.delete = QAction(QIcon(str((icons_dir /
+                                         'cancel.png').resolve())),
+            _('Delete'), toolbar)
         toolbar.addAction(self.rewind)
         toolbar.addAction(self.undo_action)
         toolbar.addAction(self.redo_action)
@@ -194,7 +241,7 @@ class CalculatorController:
                  calculator_groups=None):
         self.target = target
         self.history: [MarkedPatternMathObject] = []
-        self.history_idx = 0
+        self.history_idx = -1
         if calculator_groups:
             self.calculator_groups = calculator_groups
         else:  # Standard groups
@@ -225,18 +272,21 @@ class CalculatorController:
         Update target display, and store it in history.
         Delete the end of history if any.
         """
+
+        self.history_idx += 1
         self.calculator_ui.set_target(self.target)
         self.history = self.history[:self.history_idx]
-        self.history.append(self.target.deep_copy(self.target))
-        self.history_idx += 1
+        self.history.append(self.target)
         self.calculator_ui.target_label.setFocus()
 
     @Slot()
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
-        # Fixme: insertion does not work after history undo.
-        ok = self.target.insert_at_marked_mvar(pattern_s)
+        new_target = self.target.deep_copy(self.target)
+        ok = new_target.insert_at_marked_mvar(pattern_s)
+        print(new_target)
         if ok:
+            self.target = new_target
             self.target.move_right(to_unmatched_mvar=True)
             self.update()
 
@@ -259,7 +309,7 @@ class CalculatorController:
 
     @Slot()
     def history_redo(self):
-        if self.history_idx < len(self.history) -1:
+        if self.history_idx < len(self.history) - 1:
             self.history_idx += 1
             self.history_update()
 

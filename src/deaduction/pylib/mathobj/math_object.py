@@ -128,8 +128,8 @@ class MathObject:
     instances of MathObject (except for the constant NO_MATH_TYPE)
     """
 
-    node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
-    info              : dict  # e.g. "name", "id", "pp_type"
+    _node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
+    _info              : dict  # e.g. "name", "id", "pp_type"
     _children          : list  # List of MathObjects
 
     Variables = {}  # Containing every element having an identifier,

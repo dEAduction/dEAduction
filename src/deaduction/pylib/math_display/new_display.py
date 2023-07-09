@@ -341,6 +341,7 @@ def math_type_to_display(self, format_="html",
 # Add methods to MathObject #
 #############################
 MathObject.to_display = to_display
-
+MathObject.latex_shape = latex_shape
+MathObject.lean_shape = lean_shape
 MathObject.math_type_to_display = math_type_to_display
 

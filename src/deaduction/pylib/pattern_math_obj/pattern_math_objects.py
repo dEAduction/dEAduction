@@ -547,7 +547,7 @@ class MetaVar(PatternMathObject):
 
     def __repr__(self):
         math_obj = self.matched_math_object
-        rep = f"MV n°{self.nb}" if not math_obj else f"MV, matched = {math_obj}"
+        rep = f"MV n°{self.nb}" if not math_obj else f"matched MV = {math_obj}"
         return rep
 
     @classmethod
