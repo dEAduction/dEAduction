@@ -164,6 +164,7 @@ latex_from_node = {
     "POINT": (0, '.', 1),
     "COMMA": (0, ', ', 1),
     "PARENTHESES": ('(', 0, ')'),
+    # "CURSOR": ('_', ),
     # "CLOSED_PARENTHESIS": (0,)
 }
 

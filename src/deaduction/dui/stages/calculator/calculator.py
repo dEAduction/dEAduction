@@ -82,7 +82,7 @@ class NavigationBar(QToolBar):
         self.up_action.setShortcut(QKeySequence.MoveToPreviousLine)
         self.right_action.setShortcut(QKeySequence.MoveToNextChar)
 
-        # TODO: connect
+        # TODO: connect / add Icons
 
 
 class CalculatorButton(QToolButton):
@@ -111,7 +111,11 @@ class CalculatorButton(QToolButton):
         letter = symbol[0]
         if letter not in self.shortcuts_dic:
             self.setShortcut(QKeySequence(letter))
+            # if letter in ('1', '2', '3'):
+            #     self.setShortcut(QKeySequence('a'))
+            #     self.setShortcut(QKeySequence('\\, a'))
             self.shortcuts_dic[letter] = self
+            # TODO: add latex shortcuts based on main symbol.
 
     @Slot()
     def process_click(self):
