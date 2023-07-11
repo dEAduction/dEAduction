@@ -4,10 +4,9 @@ import logging
 
 from deaduction.pylib.mathobj import MathObject, ContextMathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject
-from deaduction.pylib.math_display.display_data import (latex_from_node,
-                                                        latex_from_quant_node,
-                                                        lean_from_node,
-                                                        needs_paren)
+from deaduction.pylib.math_display.display_data import MathDisplay
+                                                        # lean_from_node,
+                                                        # needs_paren)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_lean,
                                                         pattern_text,
@@ -18,7 +17,11 @@ from deaduction.pylib.math_display.display_math import (shallow_latex_to_text,
 
 log = logging.getLogger(__name__)
 
-latex_from_node.update(latex_from_quant_node)
+# latex_from_node.update(latex_from_quant_node)
+
+# latex_from_node = MathDisplay.latex_from_node
+# lean_from_node = MathDisplay.lean_from_node
+# needs_paren = MathDisplay.needs_paren
 
 
 def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
@@ -126,8 +129,8 @@ def lean_shape(self: MathObject) -> []:
                           for item in pre_shape)
             break
     if not shape:
-        if self.node in lean_from_node:
-            shape = list(lean_from_node[self.node])
+        if self.node in MathDisplay.lean_from_node:
+            shape = list(MathDisplay.lean_from_node[self.node])
 
             shape = [process_shape_macro(self, item) if isinstance(item, str)
                      else item for item in shape]
@@ -164,7 +167,7 @@ def latex_shape(self: MathObject, is_type=False, text=False,
     shape = None
 
     if lean_format:
-        shape = lean_shape(self)
+        shape = self.lean_shape()
         if shape:  # Really, no more processing??
             return shape
 
@@ -204,8 +207,8 @@ def latex_shape(self: MathObject, is_type=False, text=False,
 
     # (2) Generic cases: use only node
     if not shape:
-        if self.node in latex_from_node:
-            shape = list(latex_from_node[self.node])
+        if self.node in MathDisplay.latex_from_node:
+            shape = list(MathDisplay.latex_from_node[self.node])
         else:
             shape = ["***"]  # Default
 
@@ -227,7 +230,7 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
     """
 
     if not shape:
-        shape = latex_shape(math_object, text=text, lean_format=lean_format)
+        shape = math_object.latex_shape(text=text, lean_format=lean_format)
 
     # This is not pertinent : no_text will be processed in to_display()
     #  when calling shallow_text_to_text()
@@ -264,7 +267,7 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
         child = math_object.descendant(item)
         new_item = expanded_latex_shape(math_object=child, text=text,
                                         lean_format=lean_format)
-        if needs_paren(math_object, child, item):
+        if MathDisplay.needs_paren(math_object, child, item):
             new_item = [r'\parentheses', new_item]
 
     elif isinstance(item, list):
@@ -306,8 +309,8 @@ def to_display(self: MathObject, format_="html", text=False,
     lean_format = (format_ == "lean")
 
     # (1) Compute expanded shape
-    shape = latex_shape(self, is_type=is_type, text=text,
-                        lean_format=lean_format)
+    shape = self.latex_shape(is_type=is_type, text=text,
+                             lean_format=lean_format)
     if used_in_proof:
         shape = [r'\used_property'] + shape
     abstract_string = expanded_latex_shape(math_object=self, shape=shape,

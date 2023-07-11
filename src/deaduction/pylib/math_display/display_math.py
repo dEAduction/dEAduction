@@ -58,7 +58,11 @@ Copyright (c) 2020 the dEAduction team
 
 
 import logging
-from typing import Any, Union
+from typing import Union
+
+from deaduction.pylib.math_display import MathDisplay
+
+# latex_to_text = MathDisplay.latex_to_text
 
 # from deaduction.pylib.math_display.display_data \
 #                                         import (latex_from_quant_node,
@@ -747,14 +751,14 @@ def latex_to_text_func(string: str) -> (str, bool):
     the selected language is applied even if it has changed since the launch
     of deaduction.
     """
-    from .display_data import latex_to_text
+    # from .display_data import latex_to_text  # FIXME: done in settings
     # for macro in latex_to_text:
     #     if macro in string:
     #         text_string = string.replace(macro, latex_to_text[macro])
     #         return text_string, True
     striped_string = string.strip()  # Remove spaces
-    if striped_string in latex_to_text:
-        text_stripped = latex_to_text[striped_string]
+    if striped_string in MathDisplay.latex_to_text:
+        text_stripped = MathDisplay.latex_to_text[striped_string]
         text_string = string.replace(striped_string, text_stripped)
         return text_string, True
     return string, False

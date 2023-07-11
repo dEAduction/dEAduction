@@ -26,7 +26,10 @@ This file is part of d∃∀duction.
 from typing import Union
 from .utf8_display import utf8_display, lean_display
 from .html_display import html_display
-from deaduction.pylib.math_display import latex_to_utf8, latex_to_lean
+from deaduction.pylib.math_display import MathDisplay
+
+# latex_to_utf8 = MathDisplay.latex_to_utf8
+# latex_to_lean = MathDisplay.latex_to_lean
 
 
 def abstract_string_to_string(abstract_string: Union[list, str], format_,
@@ -39,10 +42,10 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
     display = ""
     # (1) Replace latex macro by utf8/lean versions
     if format_ == 'lean':
-        abstract_string = latex_to_lean(abstract_string)
+        abstract_string = MathDisplay.latex_to_lean(abstract_string)
 
     if format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by utf8:
-        abstract_string = latex_to_utf8(abstract_string)
+        abstract_string = MathDisplay.latex_to_utf8(abstract_string)
     else:
         raise ValueError("Wrong format_ type, must be one of 'lean', 'utf8', "
                          "'html'")

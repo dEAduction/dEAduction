@@ -1605,6 +1605,18 @@ class MathObject:
         """
         return self
 
+    def latex_shape(self, is_type=False, text=False, lean_format=False):
+        """
+        This method is actually defined in math_display/new_display.
+        """
+        return self
+
+    def lean_shape(self, is_type=False, text=False, lean_format=False):
+        """
+        This method is actually defined in math_display/new_display.
+        """
+        return self
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},

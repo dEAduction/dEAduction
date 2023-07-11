@@ -45,6 +45,7 @@ import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import MathObject
 from deaduction.pylib.proof_step        import ProofStep
+from deaduction.pylib.math_display      import MathDisplay
 from deaduction.pylib.math_display.pattern_init import pattern_init
 
 from deaduction.dui.primitives          import deaduction_fonts
@@ -447,6 +448,9 @@ class ExerciseMainWindow(QMainWindow):
             elif setting == "logic.use_bounded_quantification_notation":
                 pattern_init()
                 update_ecw_display = True
+            # elif setting == "i18n.select_language":
+            #     MathDisplay.update_dict()
+            #     update_ecw_display = True
             else:  # Setting has not been handled, force update display
                 update_ecw_display = True
                 # break
