@@ -39,6 +39,9 @@ from typing import Union
 
 global _
 
+if __name__ == "__main__":
+    def _(s):
+        return s
 
 # _ = lambda x: x  # Just for debugging:
 
@@ -111,7 +114,7 @@ class MathDisplay:
          # NB: negation has a special treatment in recursive_display!
          "PROP_NOT": (r"\not", 0),  # Macro to be defined.
          # '\if' is just here for text mode:
-         "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),
+         "PROP_IMPLIES": (r'\if', 0, r" \Rightarrow ", 1),  # Fixme main symb
          # "∃ (H : P), Q" is treated as "P and Q",
          # and also handled by the 'AND' button
          "PROP_∃": (0, r"\and", 1),
@@ -134,7 +137,7 @@ class MathDisplay:
          "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
          "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
          "SET_FAMILY": (
-             0, r" \to ", r'\set_of_subsets', r'\parentheses', 1),
+             0, r" \to ", r'\set_of_subsets', r'\parentheses', 1),  # Fixme ms
          # "SET_IMAGE": (0, "(", 1, ")"),
          # "SET_INVERSE": (0, [r'^', '-1'], '(', 1, ')'),  # LEAVE the list as is!
          "SET_IMAGE": (0, r'\set_image', r'\parentheses', 1),
@@ -153,7 +156,7 @@ class MathDisplay:
          "PROP_EQUAL": (r"\no_text", 0, r" \equal ", 1),  # influence text
          # conversion
          "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
-         "PROP_<": (0, " < ", 1),
+         "PROP_<": (0, " < ", 1),  # Fixme ms: <>+-*....
          "PROP_>": (0, " > ", 1),
          "PROP_≤": (0, r" \leq ", 1),
          "PROP_≥": (0, r" \geq ", 1),
@@ -630,7 +633,65 @@ class MathDisplay:
         else:
             return string
 
+    @classmethod
+    def main_symbol(cls, node):
+        """
+        Return the main symbol of the node, e.g.
+        'PROP_AND'  --> r'\and'.
+        The main symbol is the str item that startswith '&&' if any,
+        or the first item that startswith '\'.
+        """
 
+        latex_tuple = cls.latex_from_node.get(node)
+        if not latex_tuple:
+            return
+
+        # (1) First try
+        symbol = None
+        for item in latex_tuple:
+            if not isinstance(item, str):
+                continue
+            elif item.startswith('&&'):
+                return item[2:]
+            elif (not symbol and item != r"\no_text"
+                  and (item.startswith('\\') or item.startswith(' \\'))):
+                symbol = item
+        if symbol:
+            return symbol
+
+        # (2) Second try: symbol is first str
+        for symbol in latex_tuple:
+            if isinstance(symbol, str):
+                return symbol
+
+    @classmethod
+    def left_right_children(cls, node):
+        """
+        Return the list of children nbs that are before/after main symbol in
+        latex tuple.
+        """
+
+        main_symbol = cls.main_symbol(node)
+
+        latex_tuple = cls.latex_from_node.get(node)
+        if not latex_tuple:
+            return
+
+        left, right = [], []
+        is_left = True
+        for item in latex_tuple:
+            if item == main_symbol:
+                is_left = False
+            elif isinstance(item, int):
+                if is_left:
+                    left.append(item)
+                else:
+                    right.append(item)
+
+        return left, right
+
+
+# Init MathDIsplay dictionaries
 MathDisplay.update_dict()
 
 
@@ -657,3 +718,15 @@ new_objects = _("Examples of syntax:") + "\n \n" + \
     And also f(x) ; x+1/2 ; 2*n, max m n, abs x, epsilon...
 """) + "\n \n" + \
               _("In case of error, try with more parentheses.")
+
+
+if __name__ == '__main__':
+    l, r = MathDisplay.left_right_children('QUANT_∀')
+    print(MathDisplay.main_symbol('QUANT_∀'))
+    print(l, r)
+    l, r = MathDisplay.left_right_children('PROP_AND')
+    print(MathDisplay.main_symbol('PROP_AND'))
+    print(l, r)
+    l, r = MathDisplay.left_right_children('SUM')
+    print(MathDisplay.main_symbol('SUM'))
+    print(l, r)

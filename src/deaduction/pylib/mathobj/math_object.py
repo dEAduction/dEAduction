@@ -53,7 +53,6 @@ import logging
 from functools import partial
 
 import deaduction.pylib.config.vars as cvars
-
 log = logging.getLogger(__name__)
 global _
 
@@ -66,6 +65,8 @@ def allow_implicit_use(test_: callable) -> callable:
     Modify the function test to allow implicit use of the definitions
     whose patterns are in MathObject.definition_patterns.
     'test' is typically 'is_and', 'is_or', 'is_forall', ...
+    And if an implicit definition is actually used, store it in
+    MathObject.last_used_implicit_definition.
     """
 
     def test_implicit(math_object,
