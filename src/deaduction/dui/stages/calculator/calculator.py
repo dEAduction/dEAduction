@@ -275,6 +275,10 @@ class CalculatorController:
         calc_ui.go_to_end.triggered.connect(self.history_to_end)
         calc_ui.delete.triggered.connect(self.delete)
 
+        calc_ui.navigation_bar.left_action.triggered.connect(self.move_left)
+        calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
+        calc_ui.navigation_bar.right_action.triggered.connect(self.move_right)
+
     def show(self):
         self.calculator_ui.show()
 
@@ -298,7 +302,7 @@ class CalculatorController:
         print(new_target)
         if ok:
             self.target = new_target
-            self.target.move_right(to_unmatched_mvar=True)
+            self.target.move_after_insert()
             self.update()
 
         print(ok)
@@ -311,6 +315,9 @@ class CalculatorController:
         """
         self.target = self.history[self.history_idx]
         self.calculator_ui.set_target(self.target)
+        print(self.target)
+        print(self.target.math_type)
+        # TODO: enable/disable buttons
 
     @Slot()
     def history_undo(self):
@@ -339,6 +346,27 @@ class CalculatorController:
         success = self.target.delete()
         if success:
             self.update()
+
+    @Slot()
+    def move_right(self):
+        self.target.move_right()
+        self.calculator_ui.set_target(self.target)
+        print(self.target)
+        print(self.target.math_type)
+
+    @Slot()
+    def move_left(self):
+        self.target.move_left()
+        self.calculator_ui.set_target(self.target)
+        print(self.target)
+        print(self.target.math_type)
+
+    @Slot()
+    def move_up(self):
+        if self.target.move_up():
+            self.calculator_ui.set_target(self.target)
+            print(self.target)
+            print(self.target.math_type)
 
 
 def main():

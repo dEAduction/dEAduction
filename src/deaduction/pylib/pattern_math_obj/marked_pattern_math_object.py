@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
+from deaduction.pylib.math_display import MathDisplay
 
 
 class MarkedTree:
@@ -40,6 +41,9 @@ class MarkedTree:
     with a marked node, which may be thought of as some sort of cursor.
     mark_first_mvar() should be called on creation of the tree (but not of
     every node, obviously).
+
+    Every node in the tree is assumed to have a list of left and right
+    children, which induces an infix order.
     """
 
     # Fixme: we need children as an attribute, but whose value is set by the
@@ -76,8 +80,20 @@ class MarkedTree:
     #     else:
     #         return self._children
 
+    @property
+    def left_children(self):
+        return []
+
+    @property
+    def right_children(self):
+        return []
+
     def is_metavar(self):
         pass
+
+    @property
+    def is_matched(self):
+        return bool(self.matched_math_object)
 
     def parent_of_marked_descendant(self):
         """
@@ -109,27 +125,6 @@ class MarkedTree:
 
         return self._has_marked_descendant
 
-    def mark_first_mvar(self, unmatched=True):
-        """
-        Mark first (unmatched) mvar and return it. If self already has a marked
-        descendant, just return it.
-        """
-
-        marked_descendant = self.marked_descendant()
-        if marked_descendant:
-            return marked_descendant
-
-        elif self.is_metavar() and (not unmatched or
-                                    not self.matched_math_object):
-            self.is_marked = True
-            return self
-        
-        else:
-            for child in self.children:
-                marked = child.mark_first_mvar(unmatched=unmatched)
-                if marked:
-                    return marked
-
     def index_child_with_marked_descendant(self):
         i = 0
         for child in self.children:
@@ -156,58 +151,197 @@ class MarkedTree:
             if child:
                 child.unmark()
 
-    def has_mvar(self, unmatched=True):
-        if self.is_metavar():
-            return bool(self.matched_math_object)
-        else:
-            return any([child.has_mvar(unmatched) for child in self._children])
-    
-    def move_right(self, to_unmatched_mvar=True):
+    # def first_infix_mvar(self, unmatched=True):
+    #     """
+    #     Return first (unmatched) mvar in the tree whose root is self, if any.
+    #     """
+    #
+    #     # (1) Try left children:
+    #     if self.left_children:
+    #         child = self.left_children[0]
+    #         mvar = child.first_infix_mvar(self, unmatched=unmatched)
+    #         if mvar:
+    #             return mvar
+    #
+    #     # (2) Try self:
+    #     elif self.is_metavar() and not self.is_matched or not unmatched:
+    #         return self
+    #
+    #     # (3) Try right children
+    #     else:
+    #         for child in self.right_children:
+    #             mvar = child.first_infix_mvar(unmatched=unmatched)
+    #             if mvar:
+    #                 return mvar
+
+    def infix_list(self):
+        """
+        Return the list of all nodes in self's tree in the infix order.
+        """
+
+        i_list = []
+        for child in self.left_children:
+            i_list.extend(child.infix_list())
+
+        i_list.append(self)
+
+        for child in self.right_children:
+            i_list.extend(child.infix_list())
+
+        return list(i_list)
+
+    # def next_infix_mvar(self, unmatched=False):
+    #     """
+    #     Return first mvar in the tree under self and after self, if any. This
+    #     uses the right children.
+    #     """
+    #
+    #     # l_children = self.left_children
+    #     r_children = self.right_children
+    #     if not r_children:
+    #         return None
+    #     else:
+    #         return r_children[0].first_infix_mvar(unmatched=unmatched)
+
+    def move_right(self, unmatched=False):
         """
         Move the marked node to the next metavar in self if any. Return the 
-        new marked metavar, or None. If to_unmatched_mvar then the new marked
-        mvar must be unmatched.
+        new marked metavar, or None.
         """
 
-        new_marked_mvar = None
-        if not self.has_marked_descendant or not self.children:
-            return None
+        i_list = self.infix_list()
+        marked_mvar = self.marked_descendant()
+        idx = i_list.index(marked_mvar)
+        new_mvar = None
 
-        # (1) Search new mvar in child with marked descendant
-        elif self.is_marked:
-            marked_child = self
-            marked_index = -1
+        if not unmatched:
+            if idx < len(i_list) - 1:
+                new_mvar = i_list[idx+1]
         else:
-            marked_index = self.index_child_with_marked_descendant()
-            marked_child = self.children[marked_index]
-            new_marked_mvar = marked_child.move_right()
-        
-        # (2) If failed, search new mvar in next children
-        if not new_marked_mvar:
-            for child in self.children[marked_index+1:]:
-                new_marked_mvar = child.mark_first_mvar(unmatched=to_unmatched_mvar)
-                if new_marked_mvar:
-                    break
+            while idx < len(i_list) - 1 and i_list[idx].is_matched:
+                idx += 1
+            if not i_list[idx].is_matched:
+                new_mvar = i_list[idx]
 
-        # (3) Success?
-        if new_marked_mvar:
-            marked_child.unmark()
-            new_marked_mvar.mark()
-            return new_marked_mvar
+        if new_mvar:
+            marked_mvar.unmark()
+            new_mvar.mark()
+            return new_mvar
+
+        # new_marked_mvar = None
+        # if not self.has_marked_descendant or not self.children:
+        #     return None
+        #
+        # # (1) Search new mvar in child with marked descendant
+        # elif self.is_marked:
+        #     gmarked_child = self
+        #     marked_index = -1  # FIXME: only right children
+        # else:
+        #     marked_index = self.index_child_with_marked_descendant()
+        #     gmarked_child = self.children[marked_index]
+        #     new_marked_mvar = gmarked_child.move_right()
+        #
+        # # (2) If failed, search new mvar in next children
+        # if not new_marked_mvar:
+        #     for child in self.children[marked_index+1:]:
+        #         new_marked_mvar = child.first_infix_mvar(unmatched=False)
+        #         if new_marked_mvar:
+        #             break
+        #
+        # # (3) Success?
+        # if new_marked_mvar:
+        #     gmarked_child.unmark()
+        #     new_marked_mvar.mark()
+        #     return new_marked_mvar
 
     def move_left(self):
-        pass
+        """
+        Move the marked node to the previous metavar.
+        """
+
+        i_list = self.infix_list()
+        marked_mvar = self.marked_descendant()
+        idx = i_list.index(marked_mvar)
+
+        if idx > 0:
+            new_mvar = i_list[idx - 1]
+            marked_mvar.unmark()
+            new_mvar.mark()
+            return new_mvar
+
+        # # Case 1: self has a marked child?
+        # # 1.1: in left_children? Return previous child, if any.
+        # previous_child = None
+        # for child in self.left_children:
+        #     if child.is_marked:
+        #         if isinstance(previous_child, MarkedTree):
+        #             previous_child.mark()
+        #             child.unmark()
+        #             return previous_child
+        #         else:
+        #             return None
+        #     previous_child = child
+        # # 1.1: in right_children? Return previous child, or self.
+        # previous_child = None
+        # for child in self.right_children:
+        #     if child.is_marked:
+        #         child.unmark()
+        #         if isinstance(previous_child, MarkedTree):
+        #             previous_child.mark()
+        #             return previous_child
+        #         else:  # First right child ! return self
+        #             self.mark()
+        #             return self
+        #     previous_child = child
+
+        # 2: not among children: try down.
 
     def move_up(self):
-        pass
+        if self.is_marked:
+            return None
+        elif self.has_marked_descendant:
+            marked_child = self.child_with_marked_descendant()
+            if marked_child:
+                if marked_child.is_marked:
+                    marked_child.unmark()
+                    self.mark()
+                    return self
+                else:
+                    return marked_child.move_up()
 
-    def move_down(self):
-        pass
+    def move_right_to_next_unmatched(self):
+        """
+        Move the marked node to the next unmatched mvar, if any.
+        """
 
-    # def insert(self, pmo):
-    #     """
-    #     Try to insert pmo as matched_math_object for the current marked node.
-    #     """
+        return self.move_right(unmatched=True)
+        # mvar = self
+        # while mvar and mvar.is_matched:
+        #     mvar = self.move_right()
+        # return mvar
+
+    def move_after_insert(self):
+        """
+        This method is supposed to be called just after an insertion involving
+        the marked node. It tries to move the marked node down to the first
+        unmatched mvar, or else to the next unmatched mvar. It returns the
+        new marked mvar if any.
+        """
+
+        # (1) Try marked_mvar:
+        marked_mvar = self.marked_descendant()
+        if marked_mvar and not marked_mvar.is_matched:
+            return marked_mvar
+
+        # (2) Try ALL children of marked mvar:
+        for child in marked_mvar.children:
+            if child.is_metavar and not child.is_matched:
+                marked_mvar.unmark()
+                child.mark()
+                return child
+
+        # (3) Move right
+        return self.move_right_to_next_unmatched()
 
 
 # decreasing precedence
@@ -339,6 +473,22 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                     if self.matched_math_object else self._children)
         return children
 
+    @property
+    def left_children(self):
+        node = self.node
+        l_nb, r_nb = MathDisplay.left_right_children(node)
+        l_children = [self.children[i] for i in l_nb]
+        # r_children = [self.children[i] for i in r_nb]
+        return l_children
+
+    @property
+    def right_children(self):
+        node = self.node
+        l_nb, r_nb = MathDisplay.left_right_children(node)
+        # l_children = [self.children[i] for i in l_nb]
+        r_children = [self.children[i] for i in r_nb]
+        return r_children
+
     @classmethod
     def from_mvar(cls, mvar: MetaVar, parent=None):
         marked_mvar = cls(math_type=mvar.math_type)
@@ -458,11 +608,31 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                                             use_color=use_color, bf=bf,
                                             is_type=is_type)
 
-        # if not self.is_marked:
-        #     return '?_=' + display
-        # else:
-        #     return '?=' + display
         return display
+
+    def latex_shape(self, is_type=False, text=False, lean_format=False):
+        """
+        Modify the latex shape to mark the main symbol, if self.is_marked.
+        """
+        shape = super().latex_shape(is_type=False,
+                                    text=False,
+                                    lean_format=False)
+        if not self.is_marked:
+            return shape
+
+        marked_shape = tuple(marked(item) for item in shape)
+        return marked_shape
+
+
+def marked(item):
+    """
+    This method add a tag to the main symbol of a tuple representing a latex
+    shape.
+    FIXME: criterium and marking to be modified.
+    """
+    marked_item = ('*' + item if isinstance(item, str)
+                   else item)
+    return marked_item
 
 
 if __name__ == "__main__":
