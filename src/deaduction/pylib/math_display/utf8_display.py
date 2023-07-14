@@ -158,7 +158,7 @@ def recursive_lean_display(l: list, depth) -> str:
     elif head == r'\super' or head == '^':
         return superscript(recursive_lean_display(l[1:], depth))
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
-                  r'\text', r'\no_text'):
+                  r'\text', r'\no_text', r'\marked'):
         return recursive_lean_display(l[1:], depth)
 
     else:  # Generic case
