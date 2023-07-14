@@ -122,7 +122,7 @@ def recursive_utf8_display(l: list, depth) -> str:
         return superscript(recursive_utf8_display(l[1:], depth))
     # No color in utf8 :-(
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
-                  r'\text', r'\no_text'):
+                  r'\text', r'\no_text', r'\marked'):
         return recursive_utf8_display(l[1:], depth)
 
     else:  # Generic case
