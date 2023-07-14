@@ -610,6 +610,10 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
 
         return display
 
+    @classmethod
+    def mark_cursor(cls, yes=True):
+        MathDisplay.mark_cursor = yes
+
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
         Modify the latex shape to mark the main symbol, if self.is_marked.
@@ -620,19 +624,19 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         if not self.is_marked:
             return shape
 
-        marked_shape = tuple(marked(item) for item in shape)
+        marked_shape = MathDisplay.marked_latex_shape(self.node, shape)
         return marked_shape
 
 
-def marked(item):
-    """
-    This method add a tag to the main symbol of a tuple representing a latex
-    shape.
-    FIXME: criterium and marking to be modified.
-    """
-    marked_item = ('*' + item if isinstance(item, str)
-                   else item)
-    return marked_item
+# def marked(item):
+#     """
+#     This method add a tag to the main symbol of a tuple representing a latex
+#     shape.
+#     FIXME: criterium and marking to be modified.
+#     """
+#     marked_item = ('*' + item if isinstance(item, str)
+#                    else item)
+#     return marked_item
 
 
 if __name__ == "__main__":

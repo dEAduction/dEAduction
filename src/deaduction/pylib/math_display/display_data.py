@@ -106,6 +106,12 @@ class MathDisplay:
     numbers = dict()
     latex_to_utf8_dic = dict()
 
+    # Tags to mark the position just before and just after a marked node:
+    marked_tag = r'\marked'
+    cursor_tag = r'\DeadCursor'
+    # Set to True if the cursor position should be markd by the cursor tag:
+    mark_cursor = False
+
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
          "PROP_OR": (0, r"\or", 1),
@@ -648,21 +654,28 @@ class MathDisplay:
 
         # (1) First try
         symbol = None
+        counter = 0
         for item in latex_tuple:
             if not isinstance(item, str):
-                continue
+                pass
             elif item.startswith('&&'):
-                return item[2:]
+                symbol = item[2:]
+                break
             elif (not symbol and item != r"\no_text"
                   and (item.startswith('\\') or item.startswith(' \\'))):
                 symbol = item
+            counter += 1
         if symbol:
-            return symbol
+            return counter, symbol
 
         # (2) Second try: symbol is first str
+        counter = 0
         for symbol in latex_tuple:
             if isinstance(symbol, str):
-                return symbol
+                return counter, symbol
+            counter += 1
+
+        return len(latex_tuple) - 1, None
 
     @classmethod
     def left_right_children(cls, node):
@@ -671,24 +684,39 @@ class MathDisplay:
         latex tuple.
         """
 
-        main_symbol = cls.main_symbol(node)
+        ms_idx, main_symbol = cls.main_symbol(node)
 
         latex_tuple = cls.latex_from_node.get(node)
         if not latex_tuple:
             return
 
-        left, right = [], []
-        is_left = True
-        for item in latex_tuple:
-            if item == main_symbol:
-                is_left = False
-            elif isinstance(item, int):
-                if is_left:
-                    left.append(item)
-                else:
-                    right.append(item)
+        left = [item for item in latex_tuple[:ms_idx]
+                if isinstance(item, int)]
+
+        right = [item for item in latex_tuple[ms_idx+1:]
+                 if isinstance(item, int)]
+
+        # left, right = [], []
+        # is_left = True
+        # for item in latex_tuple:
+        #     if item == main_symbol:
+        #         is_left = False
+        #     elif isinstance(item, int):
+        #         if is_left:
+        #             left.append(item)
+        #         else:
+        #             right.append(item)
 
         return left, right
+
+    @classmethod
+    def marked_latex_shape(cls, node, latex_shape):
+        idx, main_symbol = cls.main_symbol(node)
+        m_latex_shape = list(latex_shape)
+        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
+        if cls.mark_cursor:
+            m_latex_shape.insert(idx+1, cls.cursor_tag)
+        return m_latex_shape
 
 
 # Init MathDIsplay dictionaries
