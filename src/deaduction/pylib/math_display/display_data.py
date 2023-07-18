@@ -172,7 +172,7 @@ class MathDisplay:
          "PRODUCT": (0, r" \times ", 1),
          "DIV": (0, r"/", 1),
          "MINUS": ("-", 0),
-         "POWER": (0, [r'\super', 1]),
+         "POWER": (0, [r'\super', 1]),  # FIXME: remove list??
          "SQRT": ('√', -1),
          ##################
          # GENERAL TYPES: #
@@ -192,6 +192,8 @@ class MathDisplay:
          "POINT": (0, '.', 1),
          "COMMA": (0, ', ', 1),
          "PARENTHESES": ('(', 0, ')'),
+         "OPEN_PARENTHESIS": ('(', 0),
+         "CLOSE_PARENTHESIS": (0, ')'),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
          }
@@ -273,7 +275,7 @@ class MathDisplay:
         cls.latex_from_node.update(latex_from_quant_node)
 
     @classmethod
-    def update_latex_tp_utf8(cls):
+    def update_latex_to_utf8(cls):
         """
         Convert Latex command into utf8 symbols.
         """
@@ -470,7 +472,7 @@ class MathDisplay:
     @classmethod
     def update_dict(cls):
         cls.update_latex_node()
-        cls.update_latex_tp_utf8()
+        cls.update_latex_to_utf8()
         cls.update_text_dict()
         cls.update_plurals()
 

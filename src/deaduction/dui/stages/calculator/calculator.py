@@ -61,6 +61,12 @@ from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
 global _
 log = logging.getLogger(__name__)
 
+if __name__ == "__main__":
+    from deaduction.pylib import logger
+    logger.configure(domains="deaduction",
+                     display_level="debug",
+                     filename=None)
+
 
 class CalculatorTarget(MathTextWidget):
 
@@ -80,17 +86,17 @@ class CalculatorTarget(MathTextWidget):
         """
         event.ignore()
 
-    def go_to_marked(self):
-        text = self.document().toPlainText()
-        cursor = self.textCursor()
-        position = cursor.position()
-        star = text.find('*')
-        if star != -1:
-            # self.moveCursor(self.textCursor().)
-            cursor.movePosition(cursor.NextCharacter,
-                                cursor.MoveAnchor,
-                                star-position)
-            self.setTextCursor(cursor)
+    # def go_to_marked(self):
+    #     text = self.document().toPlainText()
+    #     cursor = self.textCursor()
+    #     position = cursor.position()
+    #     star = text.find('*')
+    #     if star != -1:
+    #         # self.moveCursor(self.textCursor().)
+    #         cursor.movePosition(cursor.NextCharacter,
+    #                             cursor.MoveAnchor,
+    #                             star-position)
+    #         self.setTextCursor(cursor)
 
     def go_to_position(self, new_position):
         cursor = self.textCursor()
@@ -147,9 +153,17 @@ class CalculatorButton(QToolButton):
     def __init__(self, symbol):
         super().__init__()
         self.pattern_s = CalculatorPatternLines.marked_patterns[symbol]
-        self.setText(symbol)
-        self.clicked.connect(self.process_click)
+        # self.setText(symbol)
+        # self.clicked.connect(self.process_click)
         # self.add_shortcut(symbol)
+
+        action = QAction(symbol)
+        action.triggered.connect(self.process_click)
+        letter = symbol[0]
+        action.setShortcut(QKeySequence(letter))
+        # action.setShortcutContext(action.shortcutContext().ApplicationShortcut)
+        print(action.shortcutContext())
+        self.setDefaultAction(action)
 
     def add_shortcut(self, parent):
         """
@@ -159,13 +173,13 @@ class CalculatorButton(QToolButton):
 
         letter = self.text()[0]
         if letter not in self.shortcuts_dic:
-            # shortcut = QShortcut(QKeySequence(letter), parent)
-            # shortcut.activated.connect(self.click)
-            self.setShortcut(QKeySequence(letter))
-            # shortcut.setContext(Qt.WidgetWithChildrenShortcut)
-            # if letter in ('1', '2', '3'):
-            #     self.setShortcut(QKeySequence('a'))
-            #     self.setShortcut(QKeySequence('\\, a'))
+            ## shortcut = QShortcut(QKeySequence(letter), parent)
+            ## shortcut.activated.connect(self.click)
+            # self.setShortcut(QKeySequence(letter))
+            ## shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+            ## if letter in ('1', '2', '3'):
+            ##     self.setShortcut(QKeySequence('a'))
+            ##     self.setShortcut(QKeySequence('\\, a'))
             self.shortcuts_dic[letter] = self
             # TODO: add latex shortcuts based on main symbol.
 
@@ -189,8 +203,10 @@ class CalculatorButtons(QHBoxLayout):
         self.title = title
         self.line = line
         self.buttons = [CalculatorButton(symbol) for symbol in line]
+        self.addStretch()
         for button in self.buttons:
             self.addWidget(button)
+        self.addStretch()
 
 
 class CalculatorMainWindow(QDialog):
@@ -258,13 +274,14 @@ class CalculatorMainWindow(QDialog):
         # self.buttonBox.rejected.connect(self.reject)
 
     def keyPressEvent(self, event):
+        """
+        Take focus (from calculator_target) so that shortcuts to buttons
+        work.
+        """
         print("key")
         self.setFocus()
         super().keyPressEvent(event)
-        # for btn in self.buttons():
-        #     if
-        # event.accept()
-        # QCoreApplication.postEvent(self.btns_wgt, event)
+        # TODO: add timer singleshot --> calculator_target.setFocus()
 
     def keyReleaseEvent(self, event):
         # self.calculator_target.setFocus()
@@ -390,6 +407,11 @@ class CalculatorController:
         MathDisplay.mark_cursor = False
         return position
 
+    def update_cursor(self):
+        self.calculator_ui.calculator_target.setFocus()
+        position = self.virtual_cursor_position()
+        self.calculator_ui.calculator_target.go_to_position(position)
+
     def update(self):
         """
         Update target display, and store it in history.
@@ -402,9 +424,7 @@ class CalculatorController:
         self.calculator_ui.set_html(self.html_target)
         self.history.append(self.target)
 
-        self.calculator_ui.calculator_target.setFocus()
-        position = self.virtual_cursor_position()
-        self.calculator_ui.calculator_target.go_to_position(position)
+        self.update_cursor()
         # print(self.calculator_ui.calculator_target.document().toHtml())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
@@ -413,7 +433,7 @@ class CalculatorController:
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
         new_target = self.target.deep_copy(self.target)
-        ok = new_target.insert_at_marked_mvar(pattern_s)
+        ok = new_target.insert(pattern_s)
         print(new_target)
         if ok:
             self.target = new_target
@@ -433,7 +453,7 @@ class CalculatorController:
         print(self.target)
         print(self.target.math_type)
 
-        self.calculator_ui.calculator_target.setFocus()
+        self.update_cursor()
 
         # TODO: enable/disable buttons
 
@@ -469,22 +489,25 @@ class CalculatorController:
     def move_right(self):
         self.target.move_right()
         self.calculator_ui.set_target(self.target)
-        print(self.target)
-        print(self.target.math_type)
+        # print(self.target)
+        # print(self.target.math_type)
+        self.update_cursor()
 
     @Slot()
     def move_left(self):
         self.target.move_left()
         self.calculator_ui.set_target(self.target)
-        print(self.target)
-        print(self.target.math_type)
+        # print(self.target)
+        # print(self.target.math_type)
+        self.update_cursor()
 
     @Slot()
     def move_up(self):
         if self.target.move_up():
             self.calculator_ui.set_target(self.target)
-            print(self.target)
-            print(self.target.math_type)
+            # print(self.target)
+            # print(self.target.math_type)
+        self.update_cursor()
 
 
 def main():

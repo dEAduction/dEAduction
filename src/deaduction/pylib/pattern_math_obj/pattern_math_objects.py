@@ -522,7 +522,7 @@ class MetaVar(PatternMathObject):
     is that MVAR can be affected to a MathObject. This modifies their display.
     """
 
-    matched_math_object: Optional[MathObject] = None
+    _matched_math_object: Optional[MathObject] = None
 
     metavar_nb: int = 0  # Class attribute (counter)
 
@@ -549,6 +549,14 @@ class MetaVar(PatternMathObject):
         math_obj = self.matched_math_object
         rep = f"MV n°{self.nb}" if not math_obj else f"matched MV = {math_obj}"
         return rep
+
+    @property
+    def matched_math_object(self):
+        return self._matched_math_object
+
+    @matched_math_object.setter
+    def matched_math_object(self, math_object):
+        self._matched_math_object = math_object
 
     @classmethod
     def deep_copy(cls, self):

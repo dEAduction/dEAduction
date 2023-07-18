@@ -1,6 +1,49 @@
 """
 marked_pattern_math_objects.py : provide the MarkedPatternMathObject class.
 
+The trickiest thing here is an insertion algorithm in an expression tree.
+In such a tree, every node has an ordered list of left and right children.
+Here this list is induced by the latex_shape, with a choice of a main symbol.
+
+Two cases:
+(1) insertion at a non assigned metavar.
+(2) insertion after a matched metavar.
+ In any case, after a successful insertion, the marked node should
+    - move to the first non assigned metavar of the inserted object,
+    if any,
+    - otherwise, stay in place. The cursor will indicate the place just after
+    the (main symbol of) the inserted object.
+
+Case (1) is easy: just check that types match.
+
+Case (2) splits into the following sub-cases. Let (MO) denotes the matched
+object after which the insertion takes place.
+
+    (2a) The new node (NN) has a metavar left of its main symbol. Let (MVL)
+    be the first metavar left of (NN). If (MVL) matches (MO), then (NN) be
+    inserted at (MO)'s place, with (MO) becoming (MVL)'s matched object.
+    Precedence rule, involving MO's father, should also be checked here (?).
+    If the insertion fails, then it should be tried on the next place in the
+    tree path from the mvar to the next node in the infix order (?).
+
+    (2b) If (NN) has no left child, or if (2a) fails, then automatic insertion
+    are tried: operators in the automatic list are tried one by one, until one
+    matches (MO) as its left child and (NN) as its right child.
+    Automatic operators includes
+    f, x --> f(x)
+    f, A --> f(A)
+    f, g --> f circ g ?
+    1, 2 --> INT (1, 2)
+    ...
+
+    (2c) If (2a) and (2b) fails, then the symmetric right insertion trials
+    should be performed.
+
+Then precedence rules must be checked: if the edge between (NN) and its
+parent do not bind dy the rule, then a precedence move must be performed.
+This operation is repeated until the precedence rules are satisfied.
+
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 06 2023 (creation)
@@ -25,6 +68,7 @@ This file is part of d∃∀duction.
 """
 
 from copy import copy
+import logging
 
 if __name__ == '__main__':
     from deaduction.dui.__main__ import language_check
@@ -33,6 +77,8 @@ if __name__ == '__main__':
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
+
+log = logging.getLogger(__name__)
 
 
 class MarkedTree:
@@ -52,13 +98,6 @@ class MarkedTree:
     matched_math_object = None
     is_marked = False
     _has_marked_descendant = False
-    # @classmethod
-    # def from_pattern_math_object(cls, pmo):
-    #     marked_children = [cls.from_pattern_math_object(child)
-    #                        for child in pmo.children]
-    #     marked_pmo = cls(pmo.node, pmo.info, marked_children,
-    #                      copy(pmo.math_type), pmo.imperative_matching)
-    #     return marked_pmo
 
     def __init__(self, children=None, is_marked=False):
         # Fixme: useless?
@@ -73,12 +112,6 @@ class MarkedTree:
         Fake children, this should be overriden by all subclasses.
         """
         return []
-    # @property
-    # def children(self):
-    #     if self.is_metavar() and self.matched_math_object:
-    #         return self.matched_math_object.children
-    #     else:
-    #         return self._children
 
     @property
     def left_children(self):
@@ -95,15 +128,15 @@ class MarkedTree:
     def is_matched(self):
         return bool(self.matched_math_object)
 
-    def parent_of_marked_descendant(self):
-        """
-        Return the immediate parent of self.marked_descendant, if any.
-        """
-        for child in self.children:
-            if child.is_marked:
-                return self
-            elif child.parent_of_marked_descendant():
-                return child.parent_of_marked_descendant()
+    # def parent_of_marked_descendant(self):
+    #     """
+    #     Return the immediate parent of self.marked_descendant, if any.
+    #     """
+    #     for child in self.children:
+    #         if child.is_marked:
+    #             return self
+    #         elif child.parent_of_marked_descendant():
+    #             return child.parent_of_marked_descendant()
 
     def marked_descendant(self):
         """
@@ -117,6 +150,52 @@ class MarkedTree:
             if marked_descendant:
                 self._has_marked_descendant = True
                 return marked_descendant
+
+    def left_descendants(self, only_unmatched=False):
+        """
+        Return the list of descendants of self.left_children, in infix order.
+        """
+        l_list = []
+        for child in self.left_children:
+            l_list.extend(child.infix_list(only_unmatched=only_unmatched))
+        return l_list
+
+    def right_descendants(self, only_unmatched=False):
+        """
+        Return the list of descendants of self.right_children, in infix
+        order.
+        """
+        r_list = []
+        for child in self.right_children:
+            r_list.extend(child.infix_list(only_unmatched=only_unmatched))
+        return r_list
+
+    def infix_list(self, only_unmatched=False):
+        """
+        Return the list of all nodes in self's tree in the infix order.
+        """
+
+        maybe_self = [] if self.is_matched and only_unmatched else [self]
+
+        i_list = (self.left_descendants(only_unmatched=only_unmatched)
+                  + maybe_self
+                  + self.right_descendants(only_unmatched=only_unmatched))
+
+        return list(i_list)
+
+    # def marked_infix_idx(self):
+    #     if self.marked_descendant():
+    #         return self.infix_list().index(self.marked_descendant())
+
+    def right_of_marked_element(self, other):
+        """
+        True iff other is right of marked element in self.infix list.
+        """
+        l = self.infix_list()
+        if self.marked_descendant():
+            m_idx = l.index(self.marked_descendant())
+            o_idx = l.index(other)
+            return m_idx < o_idx
 
     @property
     def has_marked_descendant(self) -> bool:
@@ -151,57 +230,27 @@ class MarkedTree:
             if child:
                 child.unmark()
 
-    # def first_infix_mvar(self, unmatched=True):
-    #     """
-    #     Return first (unmatched) mvar in the tree whose root is self, if any.
-    #     """
-    #
-    #     # (1) Try left children:
-    #     if self.left_children:
-    #         child = self.left_children[0]
-    #         mvar = child.first_infix_mvar(self, unmatched=unmatched)
-    #         if mvar:
-    #             return mvar
-    #
-    #     # (2) Try self:
-    #     elif self.is_metavar() and not self.is_matched or not unmatched:
-    #         return self
-    #
-    #     # (3) Try right children
-    #     else:
-    #         for child in self.right_children:
-    #             mvar = child.first_infix_mvar(unmatched=unmatched)
-    #             if mvar:
-    #                 return mvar
-
-    def infix_list(self):
+    def next_from_marked(self, unmatched=False):
         """
-        Return the list of all nodes in self's tree in the infix order.
+        Return the next node from marked descendant in the infix order.
         """
+        i_list = self.infix_list()
+        marked_mvar = self.marked_descendant()
+        if not marked_mvar:
+            return None
 
-        i_list = []
-        for child in self.left_children:
-            i_list.extend(child.infix_list())
+        idx = i_list.index(marked_mvar)
+        next_mvar = None
+        if not unmatched:
+            if idx < len(i_list) - 1:
+                next_mvar = i_list[idx + 1]
+        else:
+            while idx < len(i_list) - 1 and i_list[idx].is_matched:
+                idx += 1
+            if not i_list[idx].is_matched:
+                next_mvar = i_list[idx]
 
-        i_list.append(self)
-
-        for child in self.right_children:
-            i_list.extend(child.infix_list())
-
-        return list(i_list)
-
-    # def next_infix_mvar(self, unmatched=False):
-    #     """
-    #     Return first mvar in the tree under self and after self, if any. This
-    #     uses the right children.
-    #     """
-    #
-    #     # l_children = self.left_children
-    #     r_children = self.right_children
-    #     if not r_children:
-    #         return None
-    #     else:
-    #         return r_children[0].first_infix_mvar(unmatched=unmatched)
+        return next_mvar
 
     def move_right(self, unmatched=False):
         """
@@ -209,24 +258,12 @@ class MarkedTree:
         new marked metavar, or None.
         """
 
-        i_list = self.infix_list()
+        next_mvar = self.next_from_marked(unmatched=unmatched)
         marked_mvar = self.marked_descendant()
-        idx = i_list.index(marked_mvar)
-        new_mvar = None
-
-        if not unmatched:
-            if idx < len(i_list) - 1:
-                new_mvar = i_list[idx+1]
-        else:
-            while idx < len(i_list) - 1 and i_list[idx].is_matched:
-                idx += 1
-            if not i_list[idx].is_matched:
-                new_mvar = i_list[idx]
-
-        if new_mvar:
+        if marked_mvar and next_mvar:
             marked_mvar.unmark()
-            new_mvar.mark()
-            return new_mvar
+            next_mvar.mark()
+            return next_mvar
 
         # new_marked_mvar = None
         # if not self.has_marked_descendant or not self.children:
@@ -343,13 +380,55 @@ class MarkedTree:
         # (3) Move right
         return self.move_right_to_next_unmatched()
 
+    def lineage_from(self, descendant) -> []:
+        if self is descendant:
+            return [self]
+        else:
+            for child in self.children:
+                child_lineage = child.lineage_from(descendant)
+                if child_lineage:
+                    return child_lineage + [self]
+
+    def marked_lineage_from(self) -> []:
+        if self.is_marked:
+            return [self]
+        else:
+            for child in self.children:
+                child_lineage = child.marked_lineage_from()
+                if child_lineage:
+                    return child_lineage + [self]
+
+    def path_from_marked_to_next(self) -> ():
+        """
+        Return the two components of the path from the unique marked
+        descendant to the next node in the infix order, more precisely both
+        upward paths from node to the common ancestor. The common ancestor is
+        included in both paths.
+        """
+        marked_l = self.marked_lineage_from()
+        if not marked_l:
+            return [], []
+        next_ = self.next_from_marked()
+        if not next_:
+            path = marked_l, [marked_l[-1]]
+        else:
+            next_l = self.lineage_from(next_)
+            common_ancestor = self  # Useless
+            while next_l and marked_l and next_l[-1] is marked_l[-1]:
+                common_ancestor = marked_l.pop()
+                next_l.pop()
+            # next_l.reverse()
+            path = marked_l + [common_ancestor],  next_l + [common_ancestor]
+
+        return path
+
 
 # decreasing precedence
 priorities = [
               {'MULT', 'DIV'},
               {'SUM', 'DIFFERENCE'},
               {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
-              {'PARENTHESES'}
+              {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
               ]
 
 
@@ -359,6 +438,9 @@ def priority(self: str, other: str) -> str:
     '>' or '<' if they have distinct comparable priority levels,
     None otherwise.
     """
+
+    if not self or not other:
+        return None
     self_found = False
     other_found = False
     for nodes in priorities:
@@ -374,6 +456,28 @@ def priority(self: str, other: str) -> str:
                 return '>'
             else:
                 other_found = True
+
+def in_this_order(self, other, list_):
+    """
+    Return True if self and other are in this order in list_, False if they
+    are in the reverse order.
+    """
+    yes = None
+    both_in = False
+    for item in list_:
+        if item is self:
+            if yes is None:  # self is first
+                yes = True
+            elif yes is False:  # self is second
+                both_in = True
+        elif item is other:
+            if yes:  # other is second
+                both_in = True
+            else:  # other is first
+                yes = False
+
+    if both_in:
+        return yes
 
 
 class MarkedPatternMathObject(PatternMathObject, MarkedTree):
@@ -408,18 +512,169 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mpmo = cls.from_pattern_math_object(pmo)
         return mpmo
 
-    def insert_at_marked_mvar(self, pmo: PatternMathObject) -> bool:
+    # def insert_at_marked_mvar(self, pmo: PatternMathObject) -> bool:
+    #     """
+    #     Try to insert math_object in self's marked mvar. Return True in case
+    #     of success, False otherwise. If the marked mvar has a new unmatched
+    #     mvar, mark it.
+    #     """
+    #     marked_mvar: MarkedMetavar = self.marked_descendant()
+    #     if not marked_mvar:
+    #         return False
+    #
+    #     # parent = self.parent_of_marked_descendant()
+    #     # return marked_mvar.insert(pmo, parent)
+    #
+    #     # todo: send lineage
+    #     marked_lineage = self.marked_lineage_from()
+    #     marked_mvar: MarkedMetavar = marked_lineage.pop()
+    #     return marked_mvar.insert(pmo, marked_lineage)
+
+    @property
+    def left_children(self):
+        node = self.node
+        l_nb, r_nb = MathDisplay.left_right_children(node)
+        l_children = [self.children[i] for i in l_nb]
+        # r_children = [self.children[i] for i in r_nb]
+        return l_children
+
+    @property
+    def right_children(self):
+        node = self.node
+        l_nb, r_nb = MathDisplay.left_right_children(node)
+        # l_children = [self.children[i] for i in l_nb]
+        r_children = [self.children[i] for i in r_nb]
+        return r_children
+
+    def clear_all_matchings(self):
+        for mvar in self.left_descendants() + self.right_descendants():
+            mvar.clear_matching()
+
+    def can_be_inserted_at(self, mvar, new_pmo, left_path, right_path,
+                           left=True, do_insert=True):
         """
-        Try to insert math_object in self's marked mvar. Return True in case
-        of success, False otherwise. If the marked mvar has a new unmatched
-        mvar, mark it.
+        Try to insert pmo at mvar.
+        mvar is either a term of left_path or a term of right_path.
+        In the first case it is not the last term, in the second not the first.
         """
-        marked_mvar: MarkedMetavar = self.marked_descendant()
-        if not marked_mvar:
+
+        # Beware that match() method do assign the matched object.
+        # do_insert=False not implemented
+
+        log.debug(f"Trying to insert {new_pmo} at {mvar}")
+
+        # First test: if mvar.is_matched, its matched object must match
+        #  a descendant of new_pmo, on the adequate side.
+        if left:
+            idx = left_path.index(mvar)
+            parent_mvar = left_path[idx+1] if idx < len(left_path) - 1 else None
+        else:
+            idx = right_path.index(mvar)  # idx always >0
+            parent_mvar = left_path[idx-1]
+
+        # Priority test (no priority test for common ancestor)
+        if parent_mvar:
+            priority_test = (priority(parent_mvar.node, new_pmo.node)
+                             not in ('=', '>'))
+            log.debug(f"Priority test: {parent_mvar} {priority_test} {new_pmo}")
+            if not priority_test:
+                return False
+
+        if mvar.is_matched:
+            log.debug(f"Trying to match {mvar.matched_math_object}")
+            match_child_test = False
+            if left:
+                for child_new_pmo in new_pmo.left_descendants(
+                        only_unmatched=True):
+                    log.debug(f"{child_new_pmo} match?")
+                    if child_new_pmo.match(mvar.matched_math_object):
+                        # NB: matched_math_object now assigned to child_new_pmo
+                        match_child_test = True
+                        break
+            else:
+                for child_new_pmo in new_pmo.right_descendants(
+                        only_unmatched=True):
+                    log.debug(f"{child_new_pmo} match?")
+                    if child_new_pmo.match(mvar.matched_math_object):
+                        match_child_test = True
+                        break
+            if not match_child_test:
+                return False
+
+        # Additional refactoring for common ancestor:
+        # Some of its children may be at the wrong side of new_pmo in the
+        # infix order
+        if not parent_mvar:  # i.e. mvar is the common ancestor
+            dubious_children = mvar.matched_math_object.children
+
+            if left:
+                # mvar.matched_mo has been inserted on the left of new_pmo
+                # move bad children of this to the right mvar of new_pmo,
+                # trying successively all right descendant of new_pmo
+                mvars = new_pmo.right_descendants(only_unmatched=True)
+                bad_children = [child for child in dubious_children
+                                if self.right_of_marked_element(child)]
+                while bad_children:
+                    child = bad_children.pop(0)
+                    while mvars:
+                        mvar = mvars.pop(0)
+                        if mvar.match(child):  # Success for this child!
+                            break
+                    if not mvar.is_matched:  # last mvar did not match
+                        return False
+            else:
+                mvars = new_pmo.left_descendants(only_unmatched=True)
+                bad_children = [child for child in dubious_children
+                                if not self.right_of_marked_element(child)]
+                while bad_children:
+                    child = bad_children.pop(0)
+                    while mvars:
+                        mvar = mvars.pop(0)
+                        if mvar.match(child):  # Success for this child!
+                            break
+                    if not mvar.is_matched:  # last mvar did not match
+                        return False
+
+        # Last test: new_pmo match mvar?
+        log.debug(f"Last test: {new_pmo} match {mvar}?")
+        match_mvar_test = mvar.match(new_pmo)
+        if not match_mvar_test:
             return False
 
-        parent = self.parent_of_marked_descendant()
-        return marked_mvar.insert(pmo, parent)
+        return True
+
+    def insert(self, new_pmo: PatternMathObject) -> bool:
+        """
+        Try to insert pmo in self's tree, so that pmo is just after the
+        marked node in the infix order.
+        """
+
+        left_path, right_path = self.path_from_marked_to_next()
+        right_path.reverse()
+        # tree = self.deep_copy(self)
+
+        # TODO: successively call can_be_inserted(mvar, pmo)
+        #  with mvar in left_path, then in right_path.reverse.
+        # success = False
+        # if len(left_path) == 1:
+        # left_path.append(None)  # Artificially add a parent
+        for left in (True, False):
+            # Crucial: deepcopy pmo!!
+            new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+            for mvar in (left_path if left else right_path[1:]):
+                success = self.can_be_inserted_at(mvar, new_pmo_copy,
+                                                  left_path, right_path,
+                                                  left)
+                if success:
+                    return True
+                else:
+                    new_pmo_copy.clear_all_matchings()
+
+        # TODO: try at common ancestor (but we need its parent)
+
+        # TODO: try automatic patterns
+
+        # TODO: handle multiple patterns
 
     def delete(self):
         """
@@ -438,6 +693,14 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         if self.is_marked:
             rep = '--> ' + rep
         return rep
+
+    @property
+    def matched_math_object(self):
+        return self._matched_math_object
+
+    @matched_math_object.setter
+    def matched_math_object(self, math_object):
+        self._matched_math_object = math_object
 
     @classmethod
     def deep_copy(cls, self):
@@ -473,22 +736,6 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                     if self.matched_math_object else self._children)
         return children
 
-    @property
-    def left_children(self):
-        node = self.node
-        l_nb, r_nb = MathDisplay.left_right_children(node)
-        l_children = [self.children[i] for i in l_nb]
-        # r_children = [self.children[i] for i in r_nb]
-        return l_children
-
-    @property
-    def right_children(self):
-        node = self.node
-        l_nb, r_nb = MathDisplay.left_right_children(node)
-        # l_children = [self.children[i] for i in l_nb]
-        r_children = [self.children[i] for i in r_nb]
-        return r_children
-
     @classmethod
     def from_mvar(cls, mvar: MetaVar, parent=None):
         marked_mvar = cls(math_type=mvar.math_type)
@@ -496,26 +743,26 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         marked_mvar.matched_math_object = mvar.matched_math_object
         return marked_mvar
 
-    def insert_over_matched_math_object(self, pmo: PatternMathObject,
-                                        parent=None) -> bool:
-        """
-        See next method's doc.
-        """
-
-        # (1) Special cases
-        self_object = self.matched_math_object
-        if self_object.math_type.is_number() or self_object.node == 'NUMBER':
-            value = str(self_object.value)
-            if pmo.math_type.is_number() or pmo.node == 'NUMBER':
-                units = str(pmo.value)
-                self_object.value = value + units
-                return True
-            elif pmo.node == 'POINT':
-                if '.' not in value:
-                    self_object.value = value + '.'
-                    return True
-                else:
-                    return False
+    # def insert_over_matched_math_object(self, pmo: PatternMathObject,
+    #                                     lineage=None) -> bool:
+    #     """
+    #     See next method's doc.
+    #     """
+    #
+    #     # (1) Special cases
+    #     self_object = self.matched_math_object
+    #     if self_object.math_type.is_number() or self_object.node == 'NUMBER':
+    #         value = str(self_object.value)
+    #         if pmo.math_type.is_number() or pmo.node == 'NUMBER':
+    #             units = str(pmo.value)
+    #             self_object.value = value + units
+    #             return True
+    #         elif pmo.node == 'POINT':
+    #             if '.' not in value:
+    #                 self_object.value = value + '.'
+    #                 return True
+    #             else:
+    #                 return False
 
         # (2) If self_object and pmo both have children and have the same
         #  nb of children, try to replace.
@@ -532,58 +779,63 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         #             child_mvar.matched_math_object = child
         #         return True
 
-        # (3) Try to insert
-        mvar = pmo.first_mvar()
-        if not mvar:
-            return False
+        # # (3) Try to insert
+        # mvar = pmo.first_mvar()
+        # if not mvar:
+        #     return False
+        #
+        # # (3a) Check parent priority, and maybe insert at parent
+        # else:
+        #     # FIXME: left or right children????
+        #     if lineage:
+        #         parent = lineage.pop()
+        #         if hasattr(parent, "insert_over_matched_math_object"):
+        #             # TODO: if not, try parent's parent
+        #             # Compare priority of pmo and parent
+        #             self_node = parent.node
+        #             other_node = pmo.node
+        #             prior = priority(self_node, other_node)
+        #             if prior in ('=', '>'):
+        #                 success = parent.insert_over_matched_math_object(pmo,
+        #                                                                  lineage)
+        #                 if success:
+        #                     return True
+        #
+        # # (3b) Insert at self
+        # match = mvar.match(self.matched_math_object)
+        # if match:
+        #     mvar.matched_math_object = self.matched_math_object
+        #     self.matched_math_object = pmo
+        #     return True
+        # else:
+        #     return False
 
-        # (3a) Check parent priority, and maybe insert at parent
-        elif parent and hasattr(parent, "insert_over_matched_math_object"):
-            # Compare priority of pmo and parent
-            self_node = parent.node
-            other_node = pmo.node
-            prior = priority(self_node, other_node)
-            if prior in ('=', '>'):
-                success = parent.insert_over_matched_math_object(pmo)
-                if success:
-                    return True
-
-        # (3b) Insert at self
-        match = mvar.match(self.matched_math_object)
-        if match:
-            mvar.matched_math_object = self.matched_math_object
-            self.matched_math_object = pmo
-            return True
-        else:
-            return False
-
-    def insert(self, math_object: PatternMathObject, parent=None) -> bool:
-        """
-        Try to insert math_object in self. Return True in case of success,
-        False otherwise.
-        - If self does not have matched_math_object, just check that
-        math_types match (to be improved: try automatic matching, e.g.
-            f --> f(.) );
-        - Otherwise, try to substitute matched_math_object with math_object
-        by matching the matched_math_obj with the first mvar of math_object
-        (to be improved: try automatic matching?)
-        """
-
-        # Crucial: deepcopy math_object!!
-        math_object = math_object.deep_copy(math_object)
-
-        if not self.matched_math_object:
-            match = self.match(math_object)
-            if match:
-                self.matched_math_object = math_object
-                return True
-            else:
-                # FIXME: insert an MVAR with math_object as first child?
-                return False
-
-        else:
-            return self.insert_over_matched_math_object(math_object,
-                                                        parent=parent)
+    # def insert(self, math_object: PatternMathObject, lineage=None) -> bool:
+    #     """
+    #     Try to insert math_object in self. Return True in case of success,
+    #     False otherwise.
+    #     - If self does not have matched_math_object, just check that
+    #     math_types match (to be improved: try automatic matching, e.g.
+    #         f --> f(.) );
+    #     - Otherwise, try to substitute matched_math_object with math_object
+    #     by matching the matched_math_obj with the first mvar of math_object
+    #     (to be improved: try automatic matching?)
+    #     """
+    #
+    #     # Crucial: deepcopy math_object!!
+    #     math_object = math_object.deep_copy(math_object)
+    #
+    #     if not self.matched_math_object:
+    #         match = self.match(math_object)
+    #         if match:
+    #             self.matched_math_object = math_object
+    #             return True
+    #         else:
+    #             # FIXME: insert an MVAR with math_object as first child?
+    #             return False
+    #
+    #     else:
+    #         return self.insert_over_matched_math_object(math_object, lineage)
 
     def delete(self):
         """
