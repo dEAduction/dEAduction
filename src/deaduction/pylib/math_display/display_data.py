@@ -662,13 +662,12 @@ class MathDisplay:
                 pass
             elif item.startswith('&&'):
                 symbol = item[2:]
-                break
             elif (not symbol and item != r"\no_text"
-                  and (item.startswith('\\') or item.startswith(' \\'))):
+                  and item.strip().startswith('\\')):
                 symbol = item
+            if symbol:
+                return counter, symbol
             counter += 1
-        if symbol:
-            return counter, symbol
 
         # (2) Second try: symbol is first str
         counter = 0
@@ -760,3 +759,5 @@ if __name__ == '__main__':
     l, r = MathDisplay.left_right_children('SUM')
     print(MathDisplay.main_symbol('SUM'))
     print(l, r)
+
+    print(MathDisplay.main_symbol("MULT"))
