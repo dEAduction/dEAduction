@@ -33,7 +33,7 @@ import sys
 import logging
 from typing import Union, List
 
-from PySide2.QtCore import Signal, Slot, Qt, QCoreApplication
+from PySide2.QtCore import Signal, Slot, Qt, QTimer
 from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
 from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
                                QHBoxLayout, QVBoxLayout, QLabel, QToolBar,
@@ -50,6 +50,7 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
                                                MarkedMetavar,
                                                CalculatorPatternLines,
+                                               calc_shortcuts,
                                                calculator_group,
                                                sci_calc_group,
                                                logic_group,
@@ -81,6 +82,9 @@ class CalculatorTarget(MathTextWidget):
         self.navigation_bar = None
         self.toolbar = None
 
+        self.key_buffer_timer = QTimer()
+        self.key_buffer_timer.setSingleShot(True)
+        self.key_buffer_timer.timeout.connect(self.clear_key_buffer)
         # self.cursorForPosition()
         # self.cursorPositionChanged()  (signal)
 
@@ -90,10 +94,10 @@ class CalculatorTarget(MathTextWidget):
     #     """
     #     event.ignore()
 
-    def set_shortcuts(self):
-        action = QAction()
-        action.setShortcut(QKeySequence.Undo)
-        action.triggered.connect(self.toolbar.undo_action.trigger)
+    # def set_shortcuts(self):
+    #     action = QAction()
+    #     action.setShortcut(QKeySequence.Undo)
+    #     action.triggered.connect(self.toolbar.undo_action.trigger)
         # shortcut = QShortcut(QKeySequence.Undo, self)
         # shortcut.activated.connect(self.toolbar.undo_action)
 
@@ -105,6 +109,10 @@ class CalculatorTarget(MathTextWidget):
         Take focus (from calculator_target) so that shortcuts to buttons
         work.
         """
+
+        self.key_buffer_timer.setInterval(1000)
+        self.key_buffer_timer.start()
+
         key = event.key()
         if event.modifiers() & Qt.ControlModifier:
             key += Qt.CTRL
@@ -121,28 +129,45 @@ class CalculatorTarget(MathTextWidget):
         # print(key_sequence == QKeySequence.Undo)
 
         # QAction key sequences
+        action = None
+        bar = None
+        # Navigation
         if key_sequence == QKeySequence.MoveToPreviousChar:
-            self.navigation_bar.left_action.trigger()
-            print("LEFT!")
+            bar = self.navigation_bar
+            action = bar.left_action
         elif key_sequence == QKeySequence.MoveToNextChar:
-            self.navigation_bar.right_action.trigger()
-            print("RIGHT!")
+            bar = self.navigation_bar
+            action = bar.right_action
+
+        # Main toolbar
         elif key_sequence == QKeySequence.Undo:
-            self.toolbar.undo_action.trigger()
-            print("UNDO !!")
+            bar = self.toolbar
+            action = bar.undo_action
         elif key_sequence == QKeySequence.Redo:
-            self.toolbar.redo_action.trigger()
+            bar = self.toolbar
+            action = bar.redo_action
+        elif key_sequence == QKeySequence.Delete:
+            bar = self.toolbar
+            action = bar.delete
+
+        if bar and action:
+            bar.animate_click(action)
 
         # Text shortcuts
         text = event.text()
         if text:
             # FIXME: process more complex sequences (i.e. more than one letter)
             self.key_event_buffer += text
+            # print(self.key_event_buffer, self.key_buffer_timer)
             yes = CalculatorButton.process_key_events(self.key_event_buffer)
-            # if yes:
-            self.key_event_buffer = ""
+            if yes:
+                self.clear_key_buffer()
 
         event.ignore()
+
+    @Slot()
+    def clear_key_buffer(self):
+        self.key_event_buffer = ""
 
     def go_to_position(self, new_position):
         cursor = self.textCursor()
@@ -157,7 +182,17 @@ class CalculatorTarget(MathTextWidget):
             self.setTextCursor(cursor)
 
 
-class CalculatorToolbar(QToolBar):
+class AbstractToolBar(QToolBar):
+
+    def animate_click(self, action: QAction):
+        """
+        Simulate a click on the tool button corresponding to the QAction.
+        """
+        button = self.widgetForAction(action)
+        button.animateClick(100)
+
+
+class CalculatorToolbar(AbstractToolBar):
     def __init__(self):
         super().__init__()
         icons_dir = cdirs.icons
@@ -186,12 +221,8 @@ class CalculatorToolbar(QToolBar):
         self.addSeparator()
         self.addAction(self.delete)
 
-        # self.undo_action.setShortcut(QKeySequence.Undo)
-        # self.redo_action.setShortcut(QKeySequence.Redo)
-        # self.delete.setShortcut(QKeySequence.Delete)
 
-
-class NavigationBar(QToolBar):
+class NavigationBar(AbstractToolBar):
     """
     A toolbar with navigation buttons: left, up, right arrow.
     """
@@ -200,15 +231,15 @@ class NavigationBar(QToolBar):
 
         icons_dir = cdirs.icons
 
-        self.left_action = QAction(_('Move left'), self)
-        self.up_action = QAction(_('Move Up'), self)
-        self.right_action = QAction(_('Move right'), self)
+        self.left_action = QAction(_('←'), self)
+        self.up_action = QAction(_('↑'), self)
+        self.right_action = QAction(_('→'), self)
 
         # self.undo_action = QAction(QIcon(str((icons_dir /
         #                                   'undo_action.png').resolve())),
         #         _('Undo'), toolbar)
         self.addAction(self.left_action)
-        self.addAction(self.up_action)
+        # self.addAction(self.up_action)
         self.addAction(self.right_action)
 
         # self.left_action.setShortcut(QKeySequence.MoveToPreviousChar)
@@ -239,33 +270,44 @@ class CalculatorButton(QToolButton):
 
         action = QAction(symbol)
         action.triggered.connect(self.process_click)
-        letter = symbol[0]
-        action.setShortcut(QKeySequence(letter))
+        # letter = symbol[0]
+        # action.setShortcut(QKeySequence(letter))
         # action.setShortcutContext(action.shortcutContext().ApplicationShortcut)
-        print(action.shortcutContext())
         self.setDefaultAction(action)
+        self.add_shortcut()
 
-    def add_shortcut(self, parent):
+    def add_shortcut(self):
         """
         Automatically add the first letter as a shortcut which is a child of
         parent.
         """
 
-        letter = self.text()[0]
-        if letter not in self.shortcuts_dic:
-            ## shortcut = QShortcut(QKeySequence(letter), parent)
-            ## shortcut.activated.connect(self.click)
-            # self.setShortcut(QKeySequence(letter))
-            ## shortcut.setContext(Qt.WidgetWithChildrenShortcut)
-            ## if letter in ('1', '2', '3'):
-            ##     self.setShortcut(QKeySequence('a'))
-            ##     self.setShortcut(QKeySequence('\\, a'))
-            self.shortcuts_dic[letter] = self
-            # TODO: add latex shortcuts based on main symbol.
+        self.shortcuts_dic[self.text()] = self
+        # letter = self.text()[0]
+        # if letter not in self.shortcuts_dic:
+        #     ## shortcut = QShortcut(QKeySequence(letter), parent)
+        #     ## shortcut.activated.connect(self.click)
+        #     # self.setShortcut(QKeySequence(letter))
+        #     ## shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        #     ## if letter in ('1', '2', '3'):
+        #     ##     self.setShortcut(QKeySequence('a'))
+        #     ##     self.setShortcut(QKeySequence('\\, a'))
+        #     self.shortcuts_dic[letter] = self
+        #     # TODO: add latex shortcuts based on main symbol.
 
     # @Slot()
     # def click(self):
     #     self.animateClick(100)
+
+    @classmethod
+    def find_shortcut(cls, text_buffer):
+        # FIXME: not optimal
+        match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
+        more_match = [calc_shortcuts[key] for key in calc_shortcuts
+                      if key.startswith(text_buffer)]
+        match += more_match
+        if len(match) == 1:
+            return cls.shortcuts_dic[match[0]]
 
     @Slot()
     def process_click(self):
@@ -274,7 +316,8 @@ class CalculatorButton(QToolButton):
 
     @classmethod
     def process_key_events(cls, key_event_buffer):
-        button = cls.shortcuts_dic.get(key_event_buffer)
+        # button = cls.shortcuts_dic.get(key_event_buffer)
+        button = cls.find_shortcut(key_event_buffer)
         if button:
             button.animateClick(100)
             return True
@@ -321,7 +364,6 @@ class CalculatorMainWindow(QDialog):
         self.calculator_target = CalculatorTarget()
         self.calculator_target.navigation_bar = self.navigation_bar
         self.calculator_target.toolbar = self.toolbar
-        self.calculator_target.set_shortcuts()
 
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
@@ -339,8 +381,6 @@ class CalculatorMainWindow(QDialog):
                 # main_lyt.addLayout(buttons_lyt)
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
-                for btn in buttons_lyt.buttons:
-                    btn.add_shortcut(parent=self)
 
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)

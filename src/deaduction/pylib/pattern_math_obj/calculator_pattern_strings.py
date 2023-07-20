@@ -53,7 +53,7 @@ calculator_pattern_strings = {     # NUMBERS
                    '-': 'DIFFERENCE(?0: ?2, ?1: ?2)',  # Pb =  or MINUS(?0)
                     # '-': ('MINUS(?0)', 'DIFFERENCE(?0: ?2, ?1: ?2)'),
                    '*': 'MULT(?0: ?2, ?1: ?2)',  # pb = real + int ?
-                   '÷': 'DIV(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '/': 'DIV(?0: ?2, ?1: ?2)',  # pb = real + int ?
                    '.': 'POINT(?0, ?1)',
                     # Useful for set extension:
                    ',': 'COMMA(?0, ?1)',
@@ -62,7 +62,8 @@ calculator_pattern_strings = {     # NUMBERS
                    '()': 'CLOSE_PARENTHESIS(OPEN_PARENTHESIS(?0))',
                    # ')': 'CLOSE_PARENTHESIS(...)',
                    # LOGIC
-                   '∀': 'QUANT_∀(?0, ?1, ?2)',  # FIXME: bound_var
+                   # FIXME: bound_var
+                   '∀': 'QUANT_∀(LOCAL_CONSTANT/name=x, ?1, ?2)',
                    '⇒': 'PROP_IMPLIES(?0: PROP, ?1: PROP)',
                    '∧': 'PROP_AND(?0: PROP, ?1: PROP)',
                    '∨': 'PROP_OR(?0: PROP, ?1: PROP)',
@@ -81,6 +82,22 @@ automatic_matching_patterns = {
     "SEVERAL(?0, ?1)": (0, ' ', 1),
     "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
 }
+
+
+calc_shortcuts = {'\\forall': '∀',
+                  '\\to': '⇒',
+                  '\\implies': '⇒',
+                  '\\and': '∧',
+                  '\\or': '',
+                  '\\cap': '∩',
+                  '\\cup': '∪'}
+
+
+def translate_calc_shortcuts():
+    """
+    TODO
+    """
+    pass
 
 
 class CalculatorPatternLines:
@@ -123,7 +140,7 @@ class CalculatorPatternLines:
 
 
 calculator_group = CalculatorPatternLines(_('Calculator'),
-                                          [['7', '8', '9', '÷'],
+                                          [['7', '8', '9', '/'],
                                            ['4', '5', '6', '*'],
                                            ['1', '2', '3', '-'],
                                            ['0', '.', '()', '+'],

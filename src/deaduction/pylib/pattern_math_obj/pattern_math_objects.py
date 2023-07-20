@@ -582,12 +582,13 @@ class MetaVar(PatternMathObject):
         return (self.matched_math_object if self.matched_math_object
                 else MathObject.NO_MATH_TYPE)
 
-    def to_display(self: MathObject, format_="html", text=False,
-                   use_color=True, bf=False, is_type=False):
-        display = MathObject.to_display(self, format_="html", text=False,
-                                        use_color=True, bf=False, is_type=False)
-
-        return "?=" + display
+    # def to_display(self: MathObject, format_="html", text=False,
+    #                use_color=True, bf=False, is_type=False):
+    #     display = MathObject.to_display(self, format_="html", text=False,
+    #                                     use_color=True, bf=False, is_type=False)
+    #
+    #     # return "?=" + display
+    #     return display
 
 
 POMPOMPOM = PatternMathObject(node="...", info={}, children=[])

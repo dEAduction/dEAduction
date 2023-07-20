@@ -175,7 +175,13 @@ class MarkedTree:
         Return the list of all nodes in self's tree in the infix order.
         """
 
-        maybe_self = [] if self.is_matched and only_unmatched else [self]
+        if only_unmatched:
+            if self.is_metavar() and not self.is_matched:
+                maybe_self = [self]
+            else:
+                maybe_self = []
+        else:
+            maybe_self = [self]
 
         i_list = (self.left_descendants(only_unmatched=only_unmatched)
                   + maybe_self
@@ -186,7 +192,6 @@ class MarkedTree:
     def left_mvar(self, only_unmatched=False):
         # TODO
         pass
-
 
     # def marked_infix_idx(self):
     #     if self.marked_descendant():
@@ -554,7 +559,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     def clear_all_matchings(self):
         for mvar in self.left_descendants() + self.right_descendants():
-            mvar.clear_matching()
+            if mvar.is_metavar():
+                mvar.clear_matching()
 
     def can_be_inserted_at(self, mvar, new_pmo, left_path, right_path,
                            left=True, do_insert=True):
