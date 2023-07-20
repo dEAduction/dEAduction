@@ -183,6 +183,11 @@ class MarkedTree:
 
         return list(i_list)
 
+    def left_mvar(self, only_unmatched=False):
+        # TODO
+        pass
+
+
     # def marked_infix_idx(self):
     #     if self.marked_descendant():
     #         return self.infix_list().index(self.marked_descendant())
@@ -457,6 +462,7 @@ def priority(self: str, other: str) -> str:
             else:
                 other_found = True
 
+
 def in_this_order(self, other, list_):
     """
     Return True if self and other are in this order in list_, False if they
@@ -604,7 +610,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # Additional refactoring for common ancestor:
         # Some of its children may be at the wrong side of new_pmo in the
         # infix order
-        if not parent_mvar:  # i.e. mvar is the common ancestor
+        if not parent_mvar and mvar.is_matched:  # (mvar is the common ancestor)
             dubious_children = mvar.matched_math_object.children
 
             if left:
@@ -681,6 +687,19 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         'Delete' current marked metavar, i.e. remove matched_math_object.
         """
         return self.marked_descendant().delete()
+
+    def latex_shape(self, is_type=False, text=False, lean_format=False):
+        """
+        Modify the latex shape to mark the main symbol, if self.is_marked.
+        """
+        shape = super().latex_shape(is_type=False,
+                                    text=False,
+                                    lean_format=False)
+        if not self.is_marked:
+            return shape
+
+        marked_shape = MathDisplay.marked_latex_shape(self.node, shape)
+        return marked_shape
 
 
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):
@@ -847,38 +866,46 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                 self.math_type.matched_math_object = None
             return True
 
-    def to_display(self, format_="html", text=False,
-                   use_color=True, bf=False, is_type=False,
-                   used_in_proof=False):
-        mmo = self.matched_math_object
-        if mmo:
-            display = mmo.to_display(format_=format_, text=text,
-                                     use_color=use_color, bf=bf,
-                                     is_type=is_type)
-        else:
-            display = MathObject.to_display(self, format_=format_, text=text,
-                                            use_color=use_color, bf=bf,
-                                            is_type=is_type)
+    # def to_display(self, format_="html", text=False,
+    #                use_color=True, bf=False, is_type=False,
+    #                used_in_proof=False):
+    #     # mmo = self.matched_math_object
+    #     unmark = False
+    #     mmo = None
+    #     if mmo:
+    #         assert isinstance(mmo, MarkedPatternMathObject)
+    #         if self.is_marked and not mmo.is_marked:
+    #             mmo.mark()
+    #             unmark = True
+    #         display = mmo.to_display(format_=format_, text=text,
+    #                                  use_color=use_color, bf=bf,
+    #                                  is_type=is_type)
+    #         if unmark:
+    #             mmo.unmark()
+    #     else:
+    #         display = MathObject.to_display(self, format_=format_, text=text,
+    #                                         use_color=use_color, bf=bf,
+    #                                         is_type=is_type)
+    #
+    #     return display
 
-        return display
+    # @classmethod
+    # def mark_cursor(cls, yes=True):
+    #     MathDisplay.mark_cursor = yes
 
-    @classmethod
-    def mark_cursor(cls, yes=True):
-        MathDisplay.mark_cursor = yes
-
-    def latex_shape(self, is_type=False, text=False, lean_format=False):
-        """
-        Modify the latex shape to mark the main symbol, if self.is_marked.
-        """
-        shape = super().latex_shape(is_type=False,
-                                    text=False,
-                                    lean_format=False)
-        if not self.is_marked:
-            return shape
-
-        marked_shape = MathDisplay.marked_latex_shape(self.node, shape)
-        return marked_shape
-
+    # def latex_shape(self, is_type=False, text=False, lean_format=False):
+    #     """
+    #     Modify the latex shape to mark the main symbol, if self.is_marked.
+    #     """
+    #     shape = super().latex_shape(is_type=False,
+    #                                 text=False,
+    #                                 lean_format=False)
+    #     if not self.is_marked:
+    #         return shape
+    #
+    #     marked_shape = MathDisplay.marked_latex_shape(self.node, shape)
+    #     return marked_shape
+    #
 
 # def marked(item):
 #     """

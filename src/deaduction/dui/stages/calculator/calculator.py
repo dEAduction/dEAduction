@@ -77,26 +77,72 @@ class CalculatorTarget(MathTextWidget):
         self.setLineWrapMode(QTextEdit.NoWrap)
         # self.setLineWrapColumnOrWidth(10000)
 
+        self.key_event_buffer = ""
+        self.navigation_bar = None
+        self.toolbar = None
+
         # self.cursorForPosition()
         # self.cursorPositionChanged()  (signal)
 
+    # def keyPressEvent(self, event):
+    #     """
+    #     No direct text input!
+    #     """
+    #     event.ignore()
+
+    def set_shortcuts(self):
+        action = QAction()
+        action.setShortcut(QKeySequence.Undo)
+        action.triggered.connect(self.toolbar.undo_action.trigger)
+        # shortcut = QShortcut(QKeySequence.Undo, self)
+        # shortcut.activated.connect(self.toolbar.undo_action)
+
+        # shortcut = QShortcut(QKeySequence.Undo, self)
+        # shortcut.activated.connect(self.toolbar.undo_action.trigger)
+
     def keyPressEvent(self, event):
         """
-        No direct text input!
+        Take focus (from calculator_target) so that shortcuts to buttons
+        work.
         """
-        event.ignore()
+        key = event.key()
+        if event.modifiers() & Qt.ControlModifier:
+            key += Qt.CTRL
+            # print(key_sqc)
+            # print(key_sqc == QKeySequence.Undo)
+        if event.modifiers() & Qt.ShiftModifier:
+            key += Qt.SHIFT
+        if event.modifiers() & Qt.AltModifier:
+            key += Qt.ALT
+        if event.modifiers() & Qt.MetaModifier:
+            key += Qt.META
 
-    # def go_to_marked(self):
-    #     text = self.document().toPlainText()
-    #     cursor = self.textCursor()
-    #     position = cursor.position()
-    #     star = text.find('*')
-    #     if star != -1:
-    #         # self.moveCursor(self.textCursor().)
-    #         cursor.movePosition(cursor.NextCharacter,
-    #                             cursor.MoveAnchor,
-    #                             star-position)
-    #         self.setTextCursor(cursor)
+        key_sequence = QKeySequence(key)
+        # print(key_sequence == QKeySequence.Undo)
+
+        # QAction key sequences
+        if key_sequence == QKeySequence.MoveToPreviousChar:
+            self.navigation_bar.left_action.trigger()
+            print("LEFT!")
+        elif key_sequence == QKeySequence.MoveToNextChar:
+            self.navigation_bar.right_action.trigger()
+            print("RIGHT!")
+        elif key_sequence == QKeySequence.Undo:
+            self.toolbar.undo_action.trigger()
+            print("UNDO !!")
+        elif key_sequence == QKeySequence.Redo:
+            self.toolbar.redo_action.trigger()
+
+        # Text shortcuts
+        text = event.text()
+        if text:
+            # FIXME: process more complex sequences (i.e. more than one letter)
+            self.key_event_buffer += text
+            yes = CalculatorButton.process_key_events(self.key_event_buffer)
+            # if yes:
+            self.key_event_buffer = ""
+
+        event.ignore()
 
     def go_to_position(self, new_position):
         cursor = self.textCursor()
@@ -109,6 +155,40 @@ class CalculatorTarget(MathTextWidget):
                                 cursor.MoveAnchor,
                                 new_position - old_position)
             self.setTextCursor(cursor)
+
+
+class CalculatorToolbar(QToolBar):
+    def __init__(self):
+        super().__init__()
+        icons_dir = cdirs.icons
+
+        self.rewind = QAction(QIcon(str((icons_dir /
+                                     'goback-begining.png').resolve())),
+                _('Undo all'), self)
+        self.undo_action = QAction(QIcon(str((icons_dir /
+                                          'undo_action.png').resolve())),
+                _('Undo'), self)
+        self.redo_action = QAction(QIcon(str((icons_dir /
+                                          'redo_action.png').resolve())),
+                _('Redo'), self)
+        self.go_to_end = QAction(QIcon(str((icons_dir /
+                                            'go-end-96.png').resolve())),
+                _('Redo all'), self)
+
+        self.delete = QAction(QIcon(str((icons_dir /
+                                         'cancel.png').resolve())),
+            _('Delete'), self)
+
+        self.addAction(self.rewind)
+        self.addAction(self.undo_action)
+        self.addAction(self.redo_action)
+        self.addAction(self.go_to_end)
+        self.addSeparator()
+        self.addAction(self.delete)
+
+        # self.undo_action.setShortcut(QKeySequence.Undo)
+        # self.redo_action.setShortcut(QKeySequence.Redo)
+        # self.delete.setShortcut(QKeySequence.Delete)
 
 
 class NavigationBar(QToolBar):
@@ -131,9 +211,9 @@ class NavigationBar(QToolBar):
         self.addAction(self.up_action)
         self.addAction(self.right_action)
 
-        self.left_action.setShortcut(QKeySequence.MoveToPreviousChar)
-        self.up_action.setShortcut(QKeySequence.MoveToPreviousLine)
-        self.right_action.setShortcut(QKeySequence.MoveToNextChar)
+        # self.left_action.setShortcut(QKeySequence.MoveToPreviousChar)
+        # self.up_action.setShortcut(QKeySequence.MoveToPreviousLine)
+        # self.right_action.setShortcut(QKeySequence.MoveToNextChar)
 
         # TODO: connect / add Icons
 
@@ -192,6 +272,13 @@ class CalculatorButton(QToolButton):
         # print('clic')
         self.send_pattern.emit(self.pattern_s)
 
+    @classmethod
+    def process_key_events(cls, key_event_buffer):
+        button = cls.shortcuts_dic.get(key_event_buffer)
+        if button:
+            button.animateClick(100)
+            return True
+
 
 class CalculatorButtons(QHBoxLayout):
     """
@@ -219,20 +306,28 @@ class CalculatorMainWindow(QDialog):
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
-        self.toolbar = QToolBar()
-        self.rewind = None
-        self.undo_action = None
-        self.redo_action = None
-        self.go_to_end = None
-        self.__init_toolbar()
+
+        self.key_event_buffer = ""
+
+        self.toolbar = CalculatorToolbar()
+
+        # self.rewind = None
+        # self.undo_action = None
+        # self.redo_action = None
+        # self.go_to_end = None
+        # self.__init_toolbar()
         self.navigation_bar = NavigationBar()
 
         self.calculator_target = CalculatorTarget()
+        self.calculator_target.navigation_bar = self.navigation_bar
+        self.calculator_target.toolbar = self.toolbar
+        self.calculator_target.set_shortcuts()
 
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
 
         self.buttons_groups = []
+        CalculatorButton.shortcuts_dic = {}
         self.btns_wgt = QWidget()
         btns_lyt = QVBoxLayout()
         for calc_pattern in calc_patterns:
@@ -273,19 +368,26 @@ class CalculatorMainWindow(QDialog):
         # self.buttonBox.accepted.connect(self.accept)
         # self.buttonBox.rejected.connect(self.reject)
 
-    def keyPressEvent(self, event):
-        """
-        Take focus (from calculator_target) so that shortcuts to buttons
-        work.
-        """
-        print("key")
-        self.setFocus()
-        super().keyPressEvent(event)
-        # TODO: add timer singleshot --> calculator_target.setFocus()
-
-    def keyReleaseEvent(self, event):
-        # self.calculator_target.setFocus()
-        pass
+    # def keyPressEvent(self, event):
+    #     """
+    #     Take focus (from calculator_target) so that shortcuts to buttons
+    #     work.
+    #     """
+    #     # self.setFocus()
+    #     # super().keyPressEvent(event)
+    #     # TODO: add timer singleshot --> calculator_target.setFocus()
+    #     # event.ignore()
+    #     text = event.text()
+    #     if text:
+    #         self.key_event_buffer += text
+    #         yes = CalculatorButton.process_key_events(self.key_event_buffer)
+    #         # if yes:
+    #         self.key_event_buffer = ""
+    #     elif event.key() == Qt.Key_Left:
+    #         self.navigation_bar.left_action.trigger()
+    #     if event.modifiers() & Qt.ControlModifier:
+    #         if event.key() == Qt.Key_Undo:
+    #         self.undo_action.trigger()
 
     def buttons(self) -> [CalculatorButton]:
         btns = []
@@ -293,12 +395,12 @@ class CalculatorMainWindow(QDialog):
             btns.extend(buttons_group.buttons)
         return btns
 
-    def set_target(self, target):
-        target = PatternMathObject(node='MVAR', info={}, children=[],
-                                   math_type=target)
-        text = target.math_type_to_display(format_='html')
-
-        self.calculator_target.setHtml(text)
+    # def set_target(self, target):
+    #     target = PatternMathObject(node='MVAR', info={}, children=[],
+    #                                math_type=target)
+    #     text = target.math_type_to_display(format_='html')
+    #
+    #     self.calculator_target.setHtml(text)
         # self.lean_target_label.set_target(target, format_='lean')
 
     def set_html(self, text):
@@ -308,38 +410,39 @@ class CalculatorMainWindow(QDialog):
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
 
-    def __init_toolbar(self):
+    # def __init_toolbar(self):
         # icons_base_dir = cvars.get("icons.path")
         # icons_dir = fs.path_helper(icons_base_dir)
-        icons_dir = cdirs.icons
-        toolbar = self.toolbar
-
-        self.rewind = QAction(QIcon(str((icons_dir /
-                                     'goback-begining.png').resolve())),
-                _('Undo all'), toolbar)
-        self.undo_action = QAction(QIcon(str((icons_dir /
-                                          'undo_action.png').resolve())),
-                _('Undo'), toolbar)
-        self.redo_action = QAction(QIcon(str((icons_dir /
-                                          'redo_action.png').resolve())),
-                _('Redo'), toolbar)
-        self.go_to_end = QAction(QIcon(str((icons_dir /
-                                            'go-end-96.png').resolve())),
-                _('Redo all'), toolbar)
-
-        self.delete = QAction(QIcon(str((icons_dir /
-                                         'cancel.png').resolve())),
-            _('Delete'), toolbar)
-        toolbar.addAction(self.rewind)
-        toolbar.addAction(self.undo_action)
-        toolbar.addAction(self.redo_action)
-        toolbar.addAction(self.go_to_end)
-        toolbar.addSeparator()
-        toolbar.addAction(self.delete)
-
-        self.undo_action.setShortcut(QKeySequence.Undo)
-        self.redo_action.setShortcut(QKeySequence.Redo)
-        self.delete.setShortcut(QKeySequence.Delete)
+        # icons_dir = cdirs.icons
+        # toolbar = self.toolbar
+        #
+        # self.rewind = QAction(QIcon(str((icons_dir /
+        #                              'goback-begining.png').resolve())),
+        #         _('Undo all'), toolbar)
+        # self.undo_action = QAction(QIcon(str((icons_dir /
+        #                                   'undo_action.png').resolve())),
+        #         _('Undo'), toolbar)
+        # self.redo_action = QAction(QIcon(str((icons_dir /
+        #                                   'redo_action.png').resolve())),
+        #         _('Redo'), toolbar)
+        # self.go_to_end = QAction(QIcon(str((icons_dir /
+        #                                     'go-end-96.png').resolve())),
+        #         _('Redo all'), toolbar)
+        #
+        # self.delete = QAction(QIcon(str((icons_dir /
+        #                                  'cancel.png').resolve())),
+        #     _('Delete'), toolbar)
+        # toolbar.addAction(self.rewind)
+        # toolbar.addAction(self.undo_action)
+        # toolbar.addAction(self.redo_action)
+        # toolbar.addAction(self.go_to_end)
+        # toolbar.addSeparator()
+        # toolbar.addAction(self.delete)
+        #
+        # # self.undo_action.setShortcut(QKeySequence.Undo)
+        # # self.redo_action.setShortcut(QKeySequence.Redo)
+        # # self.delete.setShortcut(QKeySequence.Delete)
+        #
 
 
 class CalculatorController:
@@ -373,11 +476,11 @@ class CalculatorController:
 
     def __init_signals(self):
         calc_ui = self.calculator_ui
-        calc_ui.rewind.triggered.connect(self.history_to_beginning)
-        calc_ui.undo_action.triggered.connect(self.history_undo)
-        calc_ui.redo_action.triggered.connect(self.history_redo)
-        calc_ui.go_to_end.triggered.connect(self.history_to_end)
-        calc_ui.delete.triggered.connect(self.delete)
+        calc_ui.toolbar.rewind.triggered.connect(self.history_to_beginning)
+        calc_ui.toolbar.undo_action.triggered.connect(self.history_undo)
+        calc_ui.toolbar.redo_action.triggered.connect(self.history_redo)
+        calc_ui.toolbar.go_to_end.triggered.connect(self.history_to_end)
+        calc_ui.toolbar.delete.triggered.connect(self.delete)
 
         calc_ui.navigation_bar.left_action.triggered.connect(self.move_left)
         calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
@@ -408,7 +511,7 @@ class CalculatorController:
         return position
 
     def update_cursor(self):
-        self.calculator_ui.calculator_target.setFocus()
+        # self.calculator_ui.calculator_target.setFocus()
         position = self.virtual_cursor_position()
         self.calculator_ui.calculator_target.go_to_position(position)
 
@@ -421,9 +524,9 @@ class CalculatorController:
         self.history_idx += 1
         # self.calculator_ui.set_target(self.target)
         self.history = self.history[:self.history_idx]
-        self.calculator_ui.set_html(self.html_target)
         self.history.append(self.target)
 
+        self.calculator_ui.set_html(self.html_target)
         self.update_cursor()
         # print(self.calculator_ui.calculator_target.document().toHtml())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
@@ -442,16 +545,16 @@ class CalculatorController:
 
         print(ok)
         print(self.target)
-        print(self.target.math_type)
+        # print(self.target.math_type)
 
     def history_update(self):
         """
         Update after a history move.
         """
         self.target = self.history[self.history_idx]
-        self.calculator_ui.set_target(self.target)
+        self.calculator_ui.set_html(self.html_target)
         print(self.target)
-        print(self.target.math_type)
+        # print(self.target.math_type)
 
         self.update_cursor()
 
@@ -488,23 +591,23 @@ class CalculatorController:
     @Slot()
     def move_right(self):
         self.target.move_right()
-        self.calculator_ui.set_target(self.target)
+        self.calculator_ui.set_html(self.html_target)
         # print(self.target)
-        # print(self.target.math_type)
+        print(self.target)
         self.update_cursor()
 
     @Slot()
     def move_left(self):
         self.target.move_left()
-        self.calculator_ui.set_target(self.target)
+        self.calculator_ui.set_html(self.html_target)
         # print(self.target)
-        # print(self.target.math_type)
+        print(self.target)
         self.update_cursor()
 
     @Slot()
     def move_up(self):
         if self.target.move_up():
-            self.calculator_ui.set_target(self.target)
+            self.calculator_ui.set_html(self.html_target)
             # print(self.target)
             # print(self.target.math_type)
         self.update_cursor()

@@ -204,6 +204,8 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True,
                                       class_name="used_prop")
         else:
             return recursive_html_display(l[1:], depth, use_color, no_text)
+    elif head == r'\marked':
+        return recursive_html_display(l[1:], depth, use_color, no_text)
 
     else:
         # handle "\parentheses":
