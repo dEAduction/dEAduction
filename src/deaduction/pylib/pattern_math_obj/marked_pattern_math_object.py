@@ -197,7 +197,7 @@ class MarkedTree:
     #     if self.marked_descendant():
     #         return self.infix_list().index(self.marked_descendant())
 
-    def right_of_marked_element(self, other):
+    def right_of_marked_element(self, other) -> bool:
         """
         True iff other is right of marked element in self.infix list.
         """
