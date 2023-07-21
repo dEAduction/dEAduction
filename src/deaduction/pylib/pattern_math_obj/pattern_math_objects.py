@@ -577,6 +577,8 @@ class MetaVar(PatternMathObject):
 
     def clear_matching(self):
         self.matched_math_object = None
+        if self.math_type.is_metavar():
+            self.math_type.clear_matching()
 
     def math_object_from_metavar(self):
         return (self.matched_math_object if self.matched_math_object

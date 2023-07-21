@@ -124,6 +124,9 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.MoveToNextChar:
             bar = self.navigation_bar
             action = bar.right_action
+        elif key_sequence == QKeySequence.Delete:
+            bar = self.navigation_bar
+            action = bar.delete
 
         # Main toolbar
         elif key_sequence == QKeySequence.Undo:
@@ -132,9 +135,9 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.Redo:
             bar = self.toolbar
             action = bar.redo_action
-        elif key_sequence == QKeySequence.Delete:
-            bar = self.toolbar
-            action = bar.delete
+        # elif key_sequence == QKeySequence.Delete:
+        #     bar = self.toolbar
+        #     action = bar.delete
 
         if bar and action:
             bar.animate_click(action)
@@ -196,16 +199,16 @@ class CalculatorToolbar(AbstractToolBar):
                                             'go-end-96.png').resolve())),
                 _('Redo all'), self)
 
-        self.delete = QAction(QIcon(str((icons_dir /
-                                         'cancel.png').resolve())),
-            _('Delete'), self)
+        # self.delete = QAction(QIcon(str((icons_dir /
+        #                                  'cancel.png').resolve())),
+        #     _('Delete'), self)
 
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.go_to_end)
-        self.addSeparator()
-        self.addAction(self.delete)
+        # self.addSeparator()
+        # self.addAction(self.delete)
 
 
 class NavigationBar(AbstractToolBar):
@@ -226,10 +229,14 @@ class NavigationBar(AbstractToolBar):
         self.left_action = QAction(_('←'), self)
         self.up_action = QAction(_('↑'), self)
         self.right_action = QAction(_('→'), self)
+        self.delete = QAction(QIcon(str((icons_dir /
+                                         'cancel.png').resolve())),
+            _('Delete'), self)
 
-        self.addAction(self.left_action)
+        self.addAction(self.delete)
         # self.addAction(self.up_action)
         self.addAction(self.right_action)
+        self.addAction(self.left_action)
 
 
 class CalculatorButton(QToolButton):
@@ -412,12 +419,12 @@ class CalculatorController:
         calc_ui.toolbar.undo_action.triggered.connect(self.history_undo)
         calc_ui.toolbar.redo_action.triggered.connect(self.history_redo)
         calc_ui.toolbar.go_to_end.triggered.connect(self.history_to_end)
-        calc_ui.toolbar.delete.triggered.connect(self.delete)
 
         calc_ui.navigation_bar.left_action.triggered.connect(self.move_left)
-        calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
+        # calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
         calc_ui.navigation_bar.right_action.triggered.connect(self.move_right)
         calc_ui.navigation_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
+        calc_ui.navigation_bar.delete.triggered.connect(self.delete)
 
     def show(self):
         self.calculator_ui.show()
@@ -434,6 +441,22 @@ class CalculatorController:
         else:
             text = self.target.to_display(format_='html')
         return text
+
+    @property
+    def right_action(self):
+        return self.calculator_ui.navigation_bar.right_action
+
+    @property
+    def left_action(self):
+        return self.calculator_ui.navigation_bar.left_action
+
+    @property
+    def undo_action(self):
+        return self.calculator_ui.toolbar.undo_action
+
+    @property
+    def redo_action(self):
+        return self.calculator_ui.toolbar.redo_action
 
     @Slot()
     def set_target(self):
@@ -459,6 +482,11 @@ class CalculatorController:
         position = self.virtual_cursor_position()
         self.calculator_ui.calculator_target.go_to_position(position)
 
+    def enable_actions(self):
+        self.right_action.setEnabled(not self.target.is_at_end())
+        self.undo_action.setEnabled(self.history_idx > 0)
+        self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
+
     def update(self):
         """
         Update target display, and store it in history.
@@ -472,6 +500,7 @@ class CalculatorController:
 
         self.set_target()
         self.update_cursor()
+        self.enable_actions()
         # print(self.calculator_ui.calculator_target.document().toHtml())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
@@ -501,6 +530,7 @@ class CalculatorController:
         # print(self.target.math_type)
 
         self.update_cursor()
+        self.enable_actions()
 
         # TODO: enable/disable buttons
 
@@ -528,33 +558,40 @@ class CalculatorController:
 
     @Slot()
     def delete(self):
-        success = self.target.delete()
+        new_target = self.target.deep_copy(self.target)
+        success = new_target.clear_marked_mvar()
+        print(new_target)
         if success:
+            self.target = new_target
             self.update()
 
     @Slot()
     def move_right(self):
-        self.target.move_right()
-        self.calculator_ui.set_html(self.html_target)
-        # print(self.target)
-        print(self.target)
-        self.update_cursor()
+        ok = self.target.move_right()
+        if ok:
+            self.calculator_ui.set_html(self.html_target)
+            # print(self.target)
+            print(self.target)
+            self.update_cursor()
+            self.enable_actions()
 
     @Slot()
     def move_left(self):
-        self.target.move_left()
-        self.calculator_ui.set_html(self.html_target)
-        # print(self.target)
-        print(self.target)
-        self.update_cursor()
-
-    @Slot()
-    def move_up(self):
-        if self.target.move_up():
+        new_mvar = self.target.move_left()
+        if new_mvar:
             self.calculator_ui.set_html(self.html_target)
             # print(self.target)
-            # print(self.target.math_type)
-        self.update_cursor()
+            print(self.target)
+            self.update_cursor()
+            self.enable_actions()
+
+    # @Slot()
+    # def move_up(self):
+    #     if self.target.move_up():
+    #         self.calculator_ui.set_html(self.html_target)
+    #         # print(self.target)
+    #         # print(self.target.math_type)
+    #     self.update_cursor()
 
 
 def main():
