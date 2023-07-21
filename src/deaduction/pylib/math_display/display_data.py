@@ -194,6 +194,7 @@ class MathDisplay:
          "PARENTHESES": ('(', 0, ')'),
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
+         "META_NODE": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
          }
@@ -541,7 +542,9 @@ class MathDisplay:
 
         p_node = parent.node
         c_node = child.node if child is not None else "NONE"
-        if p_node == 'PARENTHESES':
+        if p_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'):
+            return False
+        if c_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'):
             return False
         if c_node == 'COE':  # Act as if COE node was replaced by its child
             c_node = child.children[0].node

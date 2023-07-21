@@ -381,11 +381,12 @@ class MarkedTree:
 
 
 # decreasing precedence
-priorities = [
+priorities = [{'COMPOSITE_NUMBER'},
+              {'POINT'},  # FIXME: DECIMAL?
               {'MULT', 'DIV'},
               {'SUM', 'DIFFERENCE'},
               {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
-              {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
+              # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
               ]
 
 
@@ -491,7 +492,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             if mvar.is_metavar():
                 mvar.clear_matching()
 
-    def can_be_inserted_at(self, mvar, new_pmo, parent_mvar):
+    def insert_if_you_can(self, new_pmo, mvar, parent_mvar):
         """
         Try to insert new_pmo at mvar, as a left child if
         mvar is either a term of left_path or a term of right_path.
@@ -503,7 +504,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         assert isinstance(new_pmo, MarkedPatternMathObject)
         assert isinstance(mvar, MarkedMetavar)
         if parent_mvar:
-            assert isinstance(parent_mvar, MarkedMetavar)
+            assert isinstance(parent_mvar, MarkedPatternMathObject)
 
         left = not (self.right_of_marked_element(mvar))
 
@@ -512,7 +513,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         log.debug(f"left = {left}")
         log.debug(f"Parent mvar = {parent_mvar}")
 
-        # Priority test (no priority test for common ancestor):
+        # Priority test I (no priority test for common ancestor):
         #  Can new_pmo be a child of parent_mvar?
         if parent_mvar:
             if mvar in parent_mvar.left_children:
@@ -540,6 +541,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         else:
             log.debug("--> Priority test II passed")
 
+        # Try to insert mvar as a left/right descendant of new_pmo
         if mvar.is_matched:
             match_child_test = False
             if left:
@@ -568,7 +570,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 log.debug("-->Child don't match.")
                 return False
 
-        # Additional refactoring for common ancestor:
+        # Additional refactoring for common ancestor only (?):
         # Some of its children may be at the wrong side of new_pmo in the
         # infix order
         if not parent_mvar and mvar.is_matched:  # (mvar is the common ancestor)
@@ -638,26 +640,38 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         left_path, right_path = self.path_from_marked_to_next()
         # right_path.reverse()
 
-        # Crucial: deepcopy pmo!!
-        for idx in range(len(left_path)):
-            mvar = left_path[idx]
-            parent_mvar = left_path[idx+1] if idx < len(left_path) - 1 else None
-            new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
-            success = self.can_be_inserted_at(mvar, new_pmo_copy, parent_mvar)
-            if success:
-                return True
-            else:
-                new_pmo_copy.clear_all_matchings()
+        for (sub_path, path) in [(left_path, left_path),
+                                 (right_path[:-1], right_path)]:
+            for idx in range(len(sub_path)):
+                mvar = path[idx]
+                if not mvar.is_metavar():
+                    continue
+                parent_mvar = path[idx+1] if idx < len(path) - 1 else None
+                # Crucial: deepcopy pmo!!
+                new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+                success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+                if success:
+                    return True
+                else:
+                    new_pmo_copy.clear_all_matchings()
 
-        for idx in range(len(right_path[:-1])):
-            mvar = right_path[idx]
-            parent_mvar = right_path[idx+1]
-            new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
-            success = self.can_be_inserted_at(mvar, new_pmo_copy, parent_mvar)
-            if success:
-                return True
-            else:
-                new_pmo_copy.clear_all_matchings()
+        # for idx in range(len(right_path[:-1])):
+        #     mvar = right_path[idx]
+        #     if not mvar.is_metavar():
+        #         continue
+        #     parent_mvar = right_path[idx+1]
+        #     new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+        #     success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+        #     if success:
+        #         return True
+        #     else:
+        #         new_pmo_copy.clear_all_matchings()
+
+        # Try this:
+        next_ = self.next_from_marked()
+        if next_.is_metavar() and not next_.is_matched:
+            pass
+            # TODO: try next!
 
         # TODO: try automatic patterns
 

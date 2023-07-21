@@ -43,12 +43,7 @@ global _
 
 # NUMBERS
 numbers = {str(n): f'NUMBER/value={n}' for n in range(11)}
-calculator_pattern_strings = {     # NUMBERS
-                   # '0': 'NUMBER/value=0',  # Unspecified math_type...
-                   # '1': 'NUMBER/value=1',
-                   # '2': 'NUMBER/value=2',
-                   # '3': 'NUMBER/value=3',
-                   # '4': 'NUMBER/value=4',
+calculator_pattern_strings = {
                    '+': 'SUM(?0: ?2, ?1: ?2)',  # pb = real + int ?
                    '-': 'DIFFERENCE(?0: ?2, ?1: ?2)',  # Pb =  or MINUS(?0)
                     # '-': ('MINUS(?0)', 'DIFFERENCE(?0: ?2, ?1: ?2)'),
@@ -63,7 +58,9 @@ calculator_pattern_strings = {     # NUMBERS
                    # ')': 'CLOSE_PARENTHESIS(...)',
                    # LOGIC
                    # FIXME: bound_var
-                   '∀': 'QUANT_∀(LOCAL_CONSTANT/name=x, ?1, ?2)',
+                   '∀': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, ?2)',
+                   '∀>': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, '
+                         'PROP_IMPLIES(PROP_>()))',
                    '⇒': 'PROP_IMPLIES(?0: PROP, ?1: PROP)',
                    '∧': 'PROP_AND(?0: PROP, ?1: PROP)',
                    '∨': 'PROP_OR(?0: PROP, ?1: PROP)',
@@ -79,8 +76,9 @@ calculator_pattern_strings.update(numbers)
 automatic_matching_patterns = {
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
     "COMPOSITE_NUMBER(...)": (0, 1),  # FIXME: could have more children
-    "SEVERAL(?0, ?1)": (0, ' ', 1),
-    "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
+    # "SEVERAL(?0, ?1)": (0, ' ', 1),
+    # "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
+    "META_NODE": (0, 1)
 }
 
 

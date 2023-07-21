@@ -564,6 +564,7 @@ class CalculatorController:
         if success:
             self.target = new_target
             self.update()
+            self.move_left()
 
     @Slot()
     def move_right(self):
