@@ -70,6 +70,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidgetItem,
                                                 TargetWidget)
 from deaduction.dui.primitives          import deaduction_fonts
+from deaduction.dui.stages.calculator import CalculatorController
 
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.proof_state       import   Goal
@@ -527,6 +528,10 @@ class ExerciseCentralWidget(QWidget):
         just display the nb of pending goals.
         """
 
+        # # FIXME!!!!!
+        # self.calculator = CalculatorController(context=new_goal.context_objects)
+        # self.calculator.show()
+        #
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         new_target     = new_goal.target

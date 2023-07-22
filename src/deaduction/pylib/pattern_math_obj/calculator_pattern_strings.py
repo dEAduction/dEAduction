@@ -59,8 +59,8 @@ calculator_pattern_strings = {
                    # LOGIC
                    # FIXME: bound_var
                    '∀': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, ?2)',
-                   '∀>': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, '
-                         'PROP_IMPLIES(PROP_>()))',
+                   # '∀>': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, '
+                   #       'PROP_IMPLIES(PROP_>()))',
                    '⇒': 'PROP_IMPLIES(?0: PROP, ?1: PROP)',
                    '∧': 'PROP_AND(?0: PROP, ?1: PROP)',
                    '∨': 'PROP_OR(?0: PROP, ?1: PROP)',
@@ -119,6 +119,7 @@ class CalculatorPatternLines:
         self.lines = lines
         if patterns:
             self.marked_patterns = patterns
+            # CalculatorPatternLines.marked_patterns.update(patterns)
 
     @classmethod
     def from_context(cls, context_math_objects: [ContextMathObject]):

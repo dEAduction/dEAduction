@@ -669,7 +669,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # Try this:
         next_ = self.next_from_marked()
-        if next_.is_metavar() and not next_.is_matched:
+        if next_ and next_.is_metavar() and not next_.is_matched:
             pass
             # TODO: try next!
 

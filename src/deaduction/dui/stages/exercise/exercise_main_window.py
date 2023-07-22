@@ -67,6 +67,8 @@ from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseToolBar,
                                                 GlobalToolbar)
 
+# from deaduction.dui.stages.calculator import CalculatorController
+
 log = logging.getLogger(__name__)
 global _
 
@@ -265,7 +267,7 @@ class ExerciseMainWindow(QMainWindow):
 
     def __connect_signals(self):
         """
-        Connect all signals. Called at init. SOme signals are connected in
+        Connect all signals. Called at init. Some signals are connected in
         update_goal.
         """
         log.debug("EMW: connect signals")

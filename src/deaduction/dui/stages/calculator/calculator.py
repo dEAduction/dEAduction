@@ -49,6 +49,7 @@ from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
                                                MarkedMetavar,
+                                               MetaVar,
                                                CalculatorPatternLines,
                                                calc_shortcuts,
                                                calculator_group,
@@ -81,6 +82,7 @@ class CalculatorTarget(MathTextWidget):
         self.key_event_buffer = ""
         self.navigation_bar = None
         self.toolbar = None
+        self.button_box = None
 
         self.key_buffer_timer = QTimer()
         self.key_buffer_timer.setSingleShot(True)
@@ -113,6 +115,13 @@ class CalculatorTarget(MathTextWidget):
 
         key_sequence = QKeySequence(key)
         # print(key_sequence == QKeySequence.Undo)
+        if key_sequence == QKeySequence("Return"):
+            print("enter")
+            self.button_box.button(QDialogButtonBox.Ok).animateClick()
+            # event.ignore()
+        # elif key_sequence == QKeySequence("Cancel"):
+        #     print("cancel")
+        #     self.button_box.button(QDialogButtonBox.Cancel).animateClick()
 
         # QAction key sequences
         action = None
@@ -329,14 +338,12 @@ class CalculatorMainWindow(QDialog):
         # Init target as a QTextedit
         # calculator_target will process key events and send them to the
         # toolbars
-        self.calculator_target = CalculatorTarget()
-        self.calculator_target.navigation_bar = self.navigation_bar
-        self.calculator_target.toolbar = self.toolbar
 
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
 
         self.buttons_groups = []
+        # Clear ancient shortcuts!!
         CalculatorButton.shortcuts_dic = {}
         self.btns_wgt = QWidget()
         btns_lyt = QVBoxLayout()
@@ -353,6 +360,8 @@ class CalculatorMainWindow(QDialog):
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)
 
+        # CalculatorTarget
+        self.calculator_target = CalculatorTarget()
         main_lyt.addWidget(self.calculator_target)
 
         self.setLayout(main_lyt)
@@ -364,10 +373,15 @@ class CalculatorMainWindow(QDialog):
         main_lyt.addWidget(self.navigation_bar)
 
         # OK / Cancel btns
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok
-                                          | QDialogButtonBox.Cancel)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+                                           # | QDialogButtonBox.Cancel)
+        self.button_box.accepted.connect(self.accept)
         main_lyt.addWidget(self.button_box)
 
+        # Connect calculator_target
+        self.calculator_target.navigation_bar = self.navigation_bar
+        self.calculator_target.toolbar = self.toolbar
+        self.calculator_target.button_box = self.button_box
         self.calculator_target.setFocus()
 
     def buttons(self) -> [CalculatorButton]:
@@ -383,6 +397,10 @@ class CalculatorMainWindow(QDialog):
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
 
+    # @Slot()
+    # def process_ok_button(self, pattern):
+    #     self.accept()
+
 
 class CalculatorController:
     """
@@ -393,18 +411,30 @@ class CalculatorController:
     various buttons groups.
     """
 
-    def __init__(self, target: MarkedPatternMathObject,
+    def __init__(self, target: MarkedPatternMathObject = None,
                  context=None,
                  calculator_groups=None):
-        self.target = target
+        if target:
+            self.target = target
+        else:
+            self.target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
+        self.target.mark()
+
+
+        self.calculator_groups = []
+        if context:
+            context_line = CalculatorPatternLines.from_context(context)
+            self.calculator_groups.append(context_line)
+
+        if calculator_groups:
+            self.calculator_groups.extend(calculator_groups)
+        else:  # Standard groups
+            self.calculator_groups.extend([calculator_group, sci_calc_group,
+                                           logic_group,
+                                           set_theory_group])
+
         self.history: [MarkedPatternMathObject] = []
         self.history_idx = -1
-        if calculator_groups:
-            self.calculator_groups = calculator_groups
-        else:  # Standard groups
-            self.calculator_groups = [calculator_group, sci_calc_group,
-                                      logic_group,
-                                      set_theory_group]
 
         self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
         # self.calculator_ui.set_target(target)
@@ -428,6 +458,20 @@ class CalculatorController:
 
     def show(self):
         self.calculator_ui.show()
+
+    @classmethod
+    def get_item(cls, context, target_type):
+        """
+        Execute a CalculatorController and send the choice.
+        """
+        target_mvar = MetaVar(math_type=target_type)
+        target = MarkedMetavar.from_mvar(target_mvar)
+
+        calculator_controller = cls(context=context, target=target)
+        # Execute the ButtonsDialog and wait for results
+        OK = calculator_controller.calculator_ui.exec()
+        choice = calculator_controller.target
+        return choice, OK
 
     @property
     def lean_mode(self) -> bool:
@@ -598,13 +642,19 @@ class CalculatorController:
 def main():
 
     target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
-    target = MarkedPatternMathObject.from_string('?0: SET(?0)')
-    target.mark()
+    target = MarkedPatternMathObject.from_string('?0: SET(?1)')
+    # target.mark()
     app = QApplication([])
-    calculator = CalculatorController(target=target)
+    # calculator = CalculatorController(target=target)
+    # calculator.show()
 
-    calculator.show()
-    sys.exit(app.exec_())
+    target_type = MarkedPatternMathObject.from_string('SET(?1)')
+    choice, ok = CalculatorController.get_item(context=None,
+                                               target_type=target_type)
+
+    # sys.exit(app.exec_())
+    print(ok, choice)
+    print(choice.to_display(format_='lean'))
 
 
 if __name__ == '__main__':
