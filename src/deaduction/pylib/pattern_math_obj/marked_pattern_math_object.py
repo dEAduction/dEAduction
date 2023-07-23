@@ -466,6 +466,18 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return marked_pmo
 
     @classmethod
+    def from_math_object(cls, math_object: MathObject,
+                         turn_lc_into_mvar=False):
+        """
+        Construct an instance of cls by first constructing an instance of
+        PatternMathObject, but not turning local constants into metavars.
+        """
+        pmo = super().from_math_object(math_object,
+                                       turn_lc_into_mvar=turn_lc_into_mvar)
+        marked_pmo = cls.from_pattern_math_object(pmo)
+        return marked_pmo
+
+    @classmethod
     def from_string(cls, s: str, metavars=None):
         pmo = super().from_string(s, metavars)
         mpmo = cls.from_pattern_math_object(pmo)

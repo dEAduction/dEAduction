@@ -166,10 +166,12 @@ class PatternMathObject(MathObject):
         return pmo
 
     @classmethod
-    def from_math_object(cls, math_object: MathObject):
+    def from_math_object(cls, math_object: MathObject,
+                         turn_lc_into_mvar=True):
         cls.__tmp_loc_csts_for_metavars = []
         cls.__tmp_metavars_csts         = []
-        pattern = cls.__from_math_object(math_object)
+        pattern = cls.__from_math_object(math_object,
+                                         turn_lc_into_mvar=turn_lc_into_mvar)
         pattern.metavars = cls.__tmp_metavars_csts
         return pattern
 
@@ -196,7 +198,8 @@ class PatternMathObject(MathObject):
             if loc_constant.math_type is MathObject.NO_MATH_TYPE:
                 math_type = PatternMathObject.NO_MATH_TYPE
             else:
-                math_type = cls.__from_math_object(loc_constant.math_type)
+                math_type = cls.__from_math_object(loc_constant.math_type,
+                                                   turn_lc_into_mvar=True)
             new_metavar = cls.new_metavar(math_type)
             metavars.append(new_metavar)
             cls.metavars_csts.append(new_metavar)
@@ -205,7 +208,8 @@ class PatternMathObject(MathObject):
             return new_metavar
 
     @classmethod
-    def __from_math_object(cls, math_object: MathObject):
+    def __from_math_object(cls, math_object: MathObject,
+                           turn_lc_into_mvar):
         """
         Produce a PatterMathObject from math_object by replacing all local
         constants which are not bound variables by fresh metavars.
@@ -224,7 +228,7 @@ class PatternMathObject(MathObject):
         #     # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
         #     return metavar
 
-        if math_object.is_local_constant():
+        if math_object.is_local_constant() and turn_lc_into_mvar:
             return cls.metavar_from_loc_constant(math_object)
             # if math_object.is_bound_var:
             #     return copy(math_object)
@@ -251,13 +255,15 @@ class PatternMathObject(MathObject):
             # log.debug("   ->Children:")
             children = []
             for child in math_object.children:
-                new_child = cls.__from_math_object(child)
+                new_child = cls.__from_math_object(child,
+                                                   turn_lc_into_mvar=turn_lc_into_mvar)
                 children.append(new_child)
             if math_object.math_type is MathObject.NO_MATH_TYPE:
                 math_type = PatternMathObject.NO_MATH_TYPE
             else:
                 # log.debug("   ->Math type:")
-                math_type = cls.__from_math_object(math_object.math_type)
+                math_type = cls.__from_math_object(math_object.math_type,
+                                                   turn_lc_into_mvar=turn_lc_into_mvar)
 
             pattern_math_object = cls(node=node,
                                       info=info,
@@ -601,11 +607,6 @@ class MetaVar(PatternMathObject):
     @property
     def nb(self):
         return self.info['nb']
-
-    # def to_display(self, format_="html", text_depth=0,
-    #                use_color=True, bf=False) -> str:
-    #     # TODO
-    #     return super().to_display(self, format_, text_depth, use_color, bf)
 
     def clear_matching(self):
         self.matched_math_object = None

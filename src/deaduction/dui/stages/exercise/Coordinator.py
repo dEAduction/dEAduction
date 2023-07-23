@@ -54,6 +54,7 @@ import deaduction.pylib.text.text as text
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
+from deaduction.dui.stages.calculator import    CalculatorController
 
 # Server
 from deaduction.pylib.server import             ServerInterface, Task
@@ -860,6 +861,12 @@ class Coordinator(QObject):
                     choice, ok = ButtonsDialog.get_item(e.choices,
                                                         e.title,
                                                         e.output)
+
+                elif e.input_type == InputType.Calculator:
+                    target = e.input_target
+                    context = self.proof_step.goal.context_objects
+                    choice, ok = CalculatorController.get_item(context, target)
+
                 if ok:
                     self.emw.user_input.append(choice)
                 else:

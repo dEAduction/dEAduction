@@ -387,13 +387,20 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
     """
 
     proof_step.prove_or_use = "prove"
-
+    target: MathObject = proof_step.goal.target.math_type
     if not user_input:
-        output = _("Enter element you want to use:") + "\n \n \n" + new_objects
-        raise MissingParametersError(InputType.Text,
+        # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
+        # raise MissingParametersError(InputType.Text,
+        #                              title=_("Exist"),
+        #                              output=output)
+        # if not goal.target.is_exists(implicit=False):
+        #     # implicit exists
+        input_target = target.type_of_explicit_quant()
+        raise MissingParametersError(InputType.Calculator,
                                      title=_("Exist"),
-                                     output=output)
-    x = pre_process_lean_code(str(user_input[0]))
+                                     target=input_target)
+    x = user_input[0].to_display(format_='lean')
+    # x = pre_process_lean_code(str(user_input[0]))
     code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
     # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
@@ -552,7 +559,8 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             else:
                 return use_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            witness = selected_objects[0].info.get("name")
+            # witness = selected_objects[0].info.get("name")
+            witness = selected_objects[0]
             return prove_exists_with_selected_witness(prove, witness,
                                                       proof_step)
     elif len(selected_objects) == 2:

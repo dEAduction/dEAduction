@@ -119,7 +119,7 @@ class CalculatorPatternLines:
         self.lines = lines
         if patterns:
             self.marked_patterns = patterns
-            # CalculatorPatternLines.marked_patterns.update(patterns)
+            CalculatorPatternLines.marked_patterns.update(patterns)
 
     @classmethod
     def from_context(cls, context_math_objects: [ContextMathObject]):
@@ -127,9 +127,10 @@ class CalculatorPatternLines:
         patterns = {}
         for obj in context_math_objects:
             symbol = obj.to_display(format_='utf8')
-            patterns[symbol] = obj
+            marked_pmo = MarkedPatternMathObject.from_math_object(obj)
+            patterns[symbol] = marked_pmo
         cpl = cls(title=title,
-                  lines=list(patterns.keys()),
+                  lines=[list(patterns.keys())],
                   patterns=patterns)
         return cpl
 

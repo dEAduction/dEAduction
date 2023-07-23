@@ -1087,6 +1087,28 @@ class MathObject:
         return (math_type.is_exists(is_math_type=True)
                 or math_type.is_for_all(is_math_type=True))
 
+    def explicit_quant(self):
+        """
+        Return self if self is_forall or self is_exists,
+        of self after unfolding definition if self is implicitly so.
+        """
+        if (self.is_for_all(is_math_type=True, implicit=False)
+                or self.is_exists(is_math_type=True, implicit=False)):
+            return self
+        elif (self.is_for_all(is_math_type=True, implicit=True)
+                or self.is_exists(is_math_type=True, implicit=True)):
+            return self.last_rw_object
+
+    def type_of_explicit_quant(self):
+        quant = self.explicit_quant()
+        if quant:
+            return quant.children[0]
+
+    def body_of_explicit_quant(self):
+        quant = self.explicit_quant()
+        if quant:
+            return quant.children[2]
+
     def is_equality(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an equality.

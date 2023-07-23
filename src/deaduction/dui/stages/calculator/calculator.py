@@ -318,6 +318,9 @@ class CalculatorButtons(QHBoxLayout):
             self.addWidget(button)
         self.addStretch()
 
+    def from_calculator_pattern_lines(self):
+        pass
+
 
 class CalculatorMainWindow(QDialog):
     """
@@ -464,7 +467,8 @@ class CalculatorController:
         """
         Execute a CalculatorController and send the choice.
         """
-        target_mvar = MetaVar(math_type=target_type)
+        p_target_type = MarkedPatternMathObject.from_math_object(target_type)
+        target_mvar = MetaVar(math_type=p_target_type)
         target = MarkedMetavar.from_mvar(target_mvar)
 
         calculator_controller = cls(context=context, target=target)
