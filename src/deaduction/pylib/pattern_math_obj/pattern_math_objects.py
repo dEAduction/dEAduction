@@ -174,6 +174,37 @@ class PatternMathObject(MathObject):
         return pattern
 
     @classmethod
+    def metavar_from_loc_constant(cls, loc_constant: MathObject):
+        """
+        Return a metavar that replaces loc_constant.
+        """
+
+        assert loc_constant.is_local_constant()
+        metavars = cls.__tmp_metavars_csts
+        loc_csts = cls.__tmp_loc_csts_for_metavars
+
+        if loc_constant in loc_csts:
+            metavar = metavars[loc_csts.index(loc_constant)]
+            # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
+            return metavar
+
+        elif loc_constant.is_bound_var:
+            return copy(loc_constant)
+        else:
+            # Turn math_type into a PatternMathObject,
+            # then create a new metavar.
+            if loc_constant.math_type is MathObject.NO_MATH_TYPE:
+                math_type = PatternMathObject.NO_MATH_TYPE
+            else:
+                math_type = cls.__from_math_object(loc_constant.math_type)
+            new_metavar = cls.new_metavar(math_type)
+            metavars.append(new_metavar)
+            cls.metavars_csts.append(new_metavar)
+            loc_csts.append(loc_constant)
+            cls.loc_csts_for_metavars.append(loc_constant)
+            return new_metavar
+
+    @classmethod
     def __from_math_object(cls, math_object: MathObject):
         """
         Produce a PatterMathObject from math_object by replacing all local
@@ -185,32 +216,33 @@ class PatternMathObject(MathObject):
         constants that have been previously replaced and the metavars.
         """
         # log.debug(f"Patterning mo {math_object.to_display()}")
-        metavars = cls.__tmp_metavars_csts
-        loc_csts = cls.__tmp_loc_csts_for_metavars
+        # metavars = cls.__tmp_metavars_csts
+        # loc_csts = cls.__tmp_loc_csts_for_metavars
 
-        if math_object in loc_csts:
-            metavar = metavars[loc_csts.index(math_object)]
-            # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
-            return metavar
+        # if math_object in loc_csts:
+        #     metavar = metavars[loc_csts.index(math_object)]
+        #     # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
+        #     return metavar
 
-        elif math_object.node == 'LOCAL_CONSTANT':
-            if math_object.is_bound_var:
-                return copy(math_object)
-            else:
-                # Turn math_type into a PatternMathObject,
-                # then create a new metavar.
-                if math_object.math_type is MathObject.NO_MATH_TYPE:
-                    math_type = PatternMathObject.NO_MATH_TYPE
-                else:
-                    math_type = cls.__from_math_object(math_object.math_type)
-                new_metavar = cls.new_metavar(math_type)
-                metavars.append(new_metavar)
-                cls.metavars_csts.append(new_metavar)
-                loc_csts.append(math_object)
-                cls.loc_csts_for_metavars.append(math_object)
-                # metavar_list[math_object] = new_metavar
-                # log.debug(f"   Creating metavar n°{new_metavar.info['nb']}")
-                return new_metavar
+        if math_object.is_local_constant():
+            return cls.metavar_from_loc_constant(math_object)
+            # if math_object.is_bound_var:
+            #     return copy(math_object)
+            # else:
+            #     # Turn math_type into a PatternMathObject,
+            #     # then create a new metavar.
+            #     if math_object.math_type is MathObject.NO_MATH_TYPE:
+            #         math_type = PatternMathObject.NO_MATH_TYPE
+            #     else:
+            #         math_type = cls.__from_math_object(math_object.math_type)
+            #     new_metavar = cls.new_metavar(math_type)
+            #     metavars.append(new_metavar)
+            #     cls.metavars_csts.append(new_metavar)
+            #     loc_csts.append(math_object)
+            #     cls.loc_csts_for_metavars.append(math_object)
+            #     # metavar_list[math_object] = new_metavar
+            #     # log.debug(f"   Creating metavar n°{new_metavar.info['nb']}")
+            #     return new_metavar
 
         else:
             node = math_object.node
