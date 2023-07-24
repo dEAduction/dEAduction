@@ -112,6 +112,8 @@ latex_from_constant_name = {
     "even":  (-1,  r'\text_is', " " + _("even")),
     "odd":  (-1,  r'\text_is', " " + _("odd")),
     "divides": (-2, ' | ', -1),
+    "connexe": (-2, r'\text_is', " " + _("connected")),
+    "connexePartie": (-1, r'\text_is', " " + _("connected")),
 }
 
 # TODO: use latex_from_constant_names, éventuellement les transformer

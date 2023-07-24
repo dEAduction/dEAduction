@@ -271,6 +271,7 @@ latex_from_pattern_string_for_type = {
     "TYPE": (r'\set',),
     "SET_INDEX": (r'\set',),
     "CONSTANT/name=MetricSpace": (r'\metric_space',),
+    "CONSTANT/name=EspaceTopologique": (r'\topological_space',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),

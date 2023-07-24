@@ -221,6 +221,7 @@ latex_to_utf8_dic = {
     r'\proposition': _("proposition"),
     r'\set': _("set"),
     r'\metric_space': _('metric space'),
+    r'\topological_space': _('topological space'),
     r'\not': " " + _("not") + " ",
     r'\set_image': "",
     r'\set_inverse': [r'^', '-1'],
@@ -267,6 +268,7 @@ latex_to_text = {
     r'\proposition': _("a proposition"),
     r'\set': _("a set"),
     r'\metric_space': _('a metric space'),
+    r'\topological_space': _('a topological space'),
     r'\such_that': " " + _("such that") + " ",
 
     r'\forall': _("for every") + " ",
