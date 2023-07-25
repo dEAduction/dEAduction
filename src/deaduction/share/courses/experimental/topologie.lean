@@ -79,7 +79,7 @@ PrettyName
     Théorie des ensembles
 -/
 
-variables (X Y : Type)
+variables {X Y Z: Type}
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
@@ -188,6 +188,13 @@ begin
     todo
 end
 
+lemma definition.surjective (f: X → Y):
+surjective f ↔ ∀ y, ∃ x, f x = y
+:=
+begin
+  todo
+end
+
 lemma theorem.image_reciproque_union (f: X → Y):
 ∀ B B' : set Y, f ⁻¹' ( B ∪ B') = f ⁻¹' (B) ∪ f ⁻¹' (B')
 :=
@@ -242,6 +249,36 @@ PrettyName
 -/
 begin
   todo
+end
+
+-- example (f: X → Y) (H: surjective f)
+-- (A: set Y):
+-- (A ≠ ∅ → f ⁻¹' A ≠ ∅) :=
+-- begin
+-- intro H1,
+-- have H := exercise.image_reciproque_non_vide _ _ _ H A H1,
+-- end
+
+def constant_ (f: X → Y) := ∃ y, ∀ x, f x = y
+
+lemma definition.application_constante (f: X → Y) :
+(constant_ f) ↔ ∃ y, ∀ x, f x = y
+:=
+begin
+  refl
+end
+
+
+lemma exercise.composition_image_reciproque
+(f: X→ Y) (g: Y → Z) (C: set Z) : 
+(composition g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
+:=
+/- dEAduction
+PrettyName
+    Image réciproque par une composition
+-/
+begin
+    todo
 end
 
 
@@ -303,25 +340,68 @@ def connexe (X : EspaceTopologique) [topologie X] :=
 
 
 lemma definition.connexe : connexe X ↔ 
-∀ U V : set X, ouvert U → ouvert V → U ∩ V = ∅ → U ∪ V = univ → U ≠ ∅ → V = ∅
+(∀ U V : set X, (ouvert U ∧ ouvert V ∧ U ∩ V = ∅ ∧ U ∪ V = univ ∧ U ≠ ∅) → V = ∅)
 :=
 /- dEAduction
 ImplicitUse
     True
 -/
 begin
-  refl
+  todo
 end
+
+
+inductive TypePair : Type
+  | zero : TypePair
+  | un : TypePair
+
+instance pair_has_zero : has_zero TypePair := ⟨ TypePair.zero ⟩ 
+instance pair_has_one : has_one TypePair := ⟨ TypePair.un ⟩ 
+
+instance topologie_pair : topologie TypePair :=
+{ ouvert := (λ O, true),
+  vide_ :=
+    begin
+      todo 
+    end,
+  intersec :=
+    begin
+      todo 
+    end,
+  union_top :=
+    begin
+      todo 
+    end,
+  total :=
+    begin
+      todo 
+    end,
+}
+
 
 end definitions
 
 namespace exercices
 open definitions
+open theorie_des_ensembles
 
-variables {X Y : EspaceTopologique} [topologie X] [topologie Y]
+variables {X Y Z : EspaceTopologique} [topologie X] [topologie Y] [topologie Z]
+
+lemma exercise.compo_continue (f : X → Y) (g : Y → Z) (H1 : continue f) (H2 : continue g):
+continue (composition g f) :=
+begin
+  todo
+end
+
+lemma exercise.caract_connex : 
+connexe X ↔ ∀ f : X → TypePair, continue f → constant_ f
+:=
+begin
+  todo
+end
 
 
-lemma exercise.imageConnexe (f : X → Y) (h1 : continue f) (h2 : connexe X) (h3 : surjective f):
+lemma exercise.imageConnexe (f : X → Y) (H1 : continue f) (H2 : connexe X) (H3 : surjective f):
 connexe Y :=
 begin
   todo
@@ -336,12 +416,7 @@ begin
   todo
 end
 
---lemma exercice.caractConnex (f : X → {0, 1}) 
 
-
-inductive TypePair : Type
-  | zero : TypePair
-  | un : TypePair
 
 end exercices
 
