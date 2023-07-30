@@ -111,6 +111,7 @@ class MathDisplay:
     cursor_tag = r'\DeadCursor'
     # Set to True if the cursor position should be markd by the cursor tag:
     mark_cursor = False
+    cursor_pos = None
 
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
@@ -644,8 +645,8 @@ class MathDisplay:
         else:
             return string
 
-    @classmethod
-    def main_symbol(cls, node):
+    @staticmethod
+    def main_symbol_from_shape(shape) -> (int, str):
         """
         Return the main symbol of the node, e.g.
         'PROP_AND'  --> r'\and'.
@@ -653,14 +654,10 @@ class MathDisplay:
         or the first item that startswith '\'.
         """
 
-        latex_tuple = cls.latex_from_node.get(node)
-        if not latex_tuple:
-            return
-
         # (1) First try
         symbol = None
         counter = 0
-        for item in latex_tuple:
+        for item in shape:
             if not isinstance(item, str):
                 pass
             elif item.startswith('&&'):
@@ -674,50 +671,57 @@ class MathDisplay:
 
         # (2) Second try: symbol is first str
         counter = 0
-        for symbol in latex_tuple:
+        for symbol in shape:
             if isinstance(symbol, str):
                 return counter, symbol
             counter += 1
 
-        return len(latex_tuple) - 1, None
+        return len(shape)-1, None
 
     @classmethod
-    def left_right_children(cls, node):
+    def main_symbol_from_node(cls, node) -> (int, str):
+        """
+        Return the main symbol of the node, e.g.
+        'PROP_AND'  --> r'\and'.
+        The main symbol is the str item that startswith '&&' if any,
+        or the first item that startswith '\'.
+        """
+
+        shape = cls.latex_from_node.get(node)
+        if not shape:
+            return
+
+        return cls.main_symbol_from_shape(shape)
+
+    @classmethod
+    def left_right_children(cls, shape):
         """
         Return the list of children nbs that are before/after main symbol in
         latex tuple.
         """
 
-        ms_idx, main_symbol = cls.main_symbol(node)
+        ms_idx, main_symbol = cls.main_symbol_from_shape(shape)
 
-        latex_tuple = cls.latex_from_node.get(node)
-        if not latex_tuple:
-            return
+        left = [item for item in shape[:ms_idx]
+                if isinstance(item, int)
+                or isinstance(item, tuple)]
 
-        left = [item for item in latex_tuple[:ms_idx]
-                if isinstance(item, int)]
-
-        right = [item for item in latex_tuple[ms_idx+1:]
-                 if isinstance(item, int)]
-
-        # left, right = [], []
-        # is_left = True
-        # for item in latex_tuple:
-        #     if item == main_symbol:
-        #         is_left = False
-        #     elif isinstance(item, int):
-        #         if is_left:
-        #             left.append(item)
-        #         else:
-        #             right.append(item)
+        right = [item for item in shape[ms_idx+1:]
+                 if isinstance(item, int)
+                 or isinstance(item, tuple)]
 
         return left, right
 
     @classmethod
-    def marked_latex_shape(cls, node, latex_shape):
-        idx, main_symbol = cls.main_symbol(node)
+    def marked_latex_shape(cls, latex_shape):
+        if cls.cursor_pos is None:
+            idx, main_symbol = cls.main_symbol_from_shape(latex_shape)
+        else:
+            idx = cls.cursor_pos
         m_latex_shape = list(latex_shape)
-        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
+        # print(f"Marking latex shape {m_latex_shape}")
+        # print(f" at index {idx-1}")
+        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx-1]]
         if cls.mark_cursor:
             m_latex_shape.insert(idx+1, cls.cursor_tag)
         return m_latex_shape
@@ -754,13 +758,13 @@ new_objects = _("Examples of syntax:") + "\n \n" + \
 
 if __name__ == '__main__':
     l, r = MathDisplay.left_right_children('QUANT_∀')
-    print(MathDisplay.main_symbol('QUANT_∀'))
+    print(MathDisplay.main_symbol_from_node('QUANT_∀'))
     print(l, r)
     l, r = MathDisplay.left_right_children('PROP_AND')
-    print(MathDisplay.main_symbol('PROP_AND'))
+    print(MathDisplay.main_symbol_from_node('PROP_AND'))
     print(l, r)
     l, r = MathDisplay.left_right_children('SUM')
-    print(MathDisplay.main_symbol('SUM'))
+    print(MathDisplay.main_symbol_from_node('SUM'))
     print(l, r)
 
-    print(MathDisplay.main_symbol("MULT"))
+    print(MathDisplay.main_symbol_from_node("MULT"))

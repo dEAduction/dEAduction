@@ -136,6 +136,9 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.Delete:
             bar = self.navigation_bar
             action = bar.delete
+        elif key_sequence == QKeySequence.NextChild:
+            bar = self.navigation_bar
+            action = bar.right_unmatched_action
 
         # Main toolbar
         elif key_sequence == QKeySequence.Undo:
@@ -150,6 +153,8 @@ class CalculatorTarget(MathTextWidget):
 
         if bar and action:
             bar.animate_click(action)
+            self.clear_key_buffer()
+            return
 
         # Text shortcuts
         text = event.text()
@@ -238,12 +243,14 @@ class NavigationBar(AbstractToolBar):
         self.left_action = QAction(_('←'), self)
         self.up_action = QAction(_('↑'), self)
         self.right_action = QAction(_('→'), self)
+        self.right_unmatched_action = QAction(_('→?'), self)
         self.delete = QAction(QIcon(str((icons_dir /
                                          'cancel.png').resolve())),
             _('Delete'), self)
 
         self.addAction(self.delete)
         # self.addAction(self.up_action)
+        self.addAction(self.right_unmatched_action)
         self.addAction(self.right_action)
         self.addAction(self.left_action)
 
@@ -417,12 +424,14 @@ class CalculatorController:
     def __init__(self, target: MarkedPatternMathObject = None,
                  context=None,
                  calculator_groups=None):
+
         if target:
             self.target = target
         else:
             self.target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
         self.target.mark()
-
+        self.target.set_cursor_at_beginning()
+        # self.cursor_pos = self.target.max_cursor()
 
         self.calculator_groups = []
         if context:
@@ -456,6 +465,8 @@ class CalculatorController:
         calc_ui.navigation_bar.left_action.triggered.connect(self.move_left)
         # calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
         calc_ui.navigation_bar.right_action.triggered.connect(self.move_right)
+        calc_ui.navigation_bar.right_unmatched_action.triggered.connect(
+            self.move_to_next_unmatched)
         calc_ui.navigation_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
         calc_ui.navigation_bar.delete.triggered.connect(self.delete)
 
@@ -516,13 +527,16 @@ class CalculatorController:
         the current marked node of self.target, if any, or the end.
         FIXME: probably not accurate, e.g. with subscript?
         """
+        # Fixme: take cursor pos into account
         doc = QTextDocument()
         MathDisplay.mark_cursor = True
+        # MathDisplay.cursor_pos = self.target.marked_descendant().cursor_pos
         doc.setHtml(self.html_target)
         text = doc.toPlainText()
         position = text.find(MathDisplay.cursor_tag)
 
         MathDisplay.mark_cursor = False
+        MathDisplay.cursor_pos = None
         return position
 
     def update_cursor(self):
@@ -531,7 +545,7 @@ class CalculatorController:
         self.calculator_ui.calculator_target.go_to_position(position)
 
     def enable_actions(self):
-        self.right_action.setEnabled(not self.target.is_at_end())
+        self.right_action.setEnabled(not self.target.marked_is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
 
@@ -557,15 +571,21 @@ class CalculatorController:
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
         new_target = self.target.deep_copy(self.target)
-        ok = new_target.insert(pattern_s)
-        print(new_target)
-        if ok:
+        inserted_mvar = new_target.insert(pattern_s)
+        # Alternative: dos not work
+        # ok = new_target.insert_after_marked(pattern_s)
+        print(f"New target: {new_target}")
+        if inserted_mvar:
             self.target = new_target
-            self.target.move_after_insert()
+            self.target.move_after_insert(inserted_mvar)
             self.update()
 
-        print(ok)
-        print(self.target)
+        print(f"New target after move: {new_target}")
+        l = self.target.infix_list()
+        print("Infix list:")
+        print(l)
+        print("Cursor pos:")
+        print([item.cursor_pos for item in l])
         # print(self.target.math_type)
 
     def history_update(self):
@@ -616,8 +636,8 @@ class CalculatorController:
 
     @Slot()
     def move_right(self):
-        ok = self.target.move_right()
-        if ok:
+        new_mvar = self.target.increase_cursor_pos()
+        if new_mvar:
             self.calculator_ui.set_html(self.html_target)
             # print(self.target)
             print(self.target)
@@ -626,13 +646,22 @@ class CalculatorController:
 
     @Slot()
     def move_left(self):
-        new_mvar = self.target.move_left()
+        new_mvar = self.target.decrease_cursor_pos()
+        # pos = self.cursor_pos - 1
+        # if pos == 0:
+        #     new_mvar = self.target.move_left()
+        # else:
+        #     new_mvar = self.target.move_to_cursor_pos(pos)
         if new_mvar:
             self.calculator_ui.set_html(self.html_target)
             # print(self.target)
             print(self.target)
             self.update_cursor()
             self.enable_actions()
+
+    @Slot()
+    def move_to_next_unmatched(self):
+        success = self.target.move_right_to_next_unmatched()
 
     # @Slot()
     # def move_up(self):
