@@ -192,7 +192,7 @@ class MathDisplay:
          "METAVAR": ('?',),
          "POINT": (0, '.', 1),
          "COMMA": (0, ', ', 1),
-         "PARENTHESES": ('(', 0, ')'),
+         "GENERIC_PARENTHESES": ('(', 0, ')'),
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
          "META_NODE": (0, 1),
@@ -700,6 +700,7 @@ class MathDisplay:
         latex tuple.
         """
 
+        # FIXME: look into sub-lists
         ms_idx, main_symbol = cls.main_symbol_from_shape(shape)
 
         left = [item for item in shape[:ms_idx]
@@ -713,7 +714,26 @@ class MathDisplay:
         return left, right
 
     @classmethod
-    def marked_latex_shape(cls, latex_shape):
+    def ordered_children(cls, shape) -> list:
+        """
+        Return the list of children or descendants nbs corresponding to shape,
+        with string items replaced by None.
+        """
+
+        children = []
+        for item in shape:
+            if isinstance(item, int) or isinstance(item, tuple):
+                children.append(item)
+            elif isinstance(item, list):
+                children.extend(cls.ordered_children(item))
+            else:
+                children.append(None)
+
+        return children
+
+    @classmethod
+    def marked_latex_shape(cls, latex_shape, cursor_pos):
+        # FIXME: composite cursors, e.g. (3, 2)
         if cls.cursor_pos is None:
             idx, main_symbol = cls.main_symbol_from_shape(latex_shape)
         else:
@@ -723,6 +743,8 @@ class MathDisplay:
         # print(f" at index {idx-1}")
         m_latex_shape[idx] = [r'\marked', m_latex_shape[idx-1]]
         if cls.mark_cursor:
+            if cursor_pos is not None:
+                idx = cursor_pos-1
             m_latex_shape.insert(idx+1, cls.cursor_tag)
         return m_latex_shape
 

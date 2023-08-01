@@ -547,6 +547,19 @@ class PatternMathObject(MathObject):
                 if mvar:
                     return mvar
 
+    def all_mvars(self, unmatched=False):
+        """
+        Return the ordered list of all [unmatched] mvars appearing in self.
+        """
+
+        if self.is_metavar() and not (unmatched and self.matched_math_object):
+            return [self]
+        else:
+            mvars = []
+            for child in self.children:
+                mvars.extend(child.all_mvars(unmatched=unmatched))
+            return mvars
+
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},

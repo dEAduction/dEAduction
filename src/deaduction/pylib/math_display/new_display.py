@@ -38,15 +38,7 @@ def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
     the to_display() method. (Beware of infinite recursion).
     """
 
-    # index = shape_item.find('.')
-    # if index == -1:
-    #     return shape_item
-    #
-    # root, attribute = shape_item[:index], shape_item[index+1:]
-
     attributes = shape_item.split('.')
-    # if len(attributes) == 1:
-    #     return shape_item
 
     root = attributes.pop(0)
 

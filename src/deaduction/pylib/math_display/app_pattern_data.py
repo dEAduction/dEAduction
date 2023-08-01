@@ -51,7 +51,7 @@ latex_from_app_pattern = {
     # TODO: sequences and set families
     # u_n:
     "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3)(...), ?1: ?2)":
-        ('(0, ).name', ["_", (1, )]),
+        ('(0, ).name', ['_', (1, )]),
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
     "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
@@ -102,7 +102,7 @@ latex_from_constant_name = {
     "product": (-2, ".", -1),
     "image": (-1, " = ", -3, "(", -2, ")"),
     "relation_equivalence": (-1, r'\text_is', _("an equivalence relation")),
-    "classe_equivalence": (r"\[", (-1, ), r"\]", ["_", (1, )]),
+    "classe_equivalence": (r"\[", (-1, ), r"\]", ['_', (1, )]),
     "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
     "powerset": (r'\set_of_subsets', [r"\parentheses", (-1, )]),
     "partition": (-1, r'\text_is', _("a partition of") + " ", -2),
@@ -112,11 +112,6 @@ latex_from_constant_name = {
     "even":  (-1,  r'\text_is', " " + _("even")),
     "divise": (-2, ' | ', -1),
 }
-
-# TODO: use latex_from_constant_names, éventuellement les transformer
-#  automatiquement en pattern
-#  ex:     "symmetric_difference": (-2, r'\Delta', -1),
-#  --> "APP(CONSTANT/name=symmetric_difference, ...)": ...
 
 generic_app_dict = {
     # The following works only for some constant, do not use:

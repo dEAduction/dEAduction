@@ -136,7 +136,7 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.Delete:
             bar = self.navigation_bar
             action = bar.delete
-        elif key_sequence == QKeySequence.NextChild:
+        elif key_sequence == QKeySequence("Tab"):
             bar = self.navigation_bar
             action = bar.right_unmatched_action
 
@@ -154,6 +154,7 @@ class CalculatorTarget(MathTextWidget):
         if bar and action:
             bar.animate_click(action)
             self.clear_key_buffer()
+            event.ignore()
             return
 
         # Text shortcuts
@@ -430,7 +431,7 @@ class CalculatorController:
         else:
             self.target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
         self.target.mark()
-        self.target.set_cursor_at_beginning()
+        # self.target.set_cursor_at(target)
         # self.cursor_pos = self.target.max_cursor()
 
         self.calculator_groups = []
@@ -540,12 +541,14 @@ class CalculatorController:
         return position
 
     def update_cursor(self):
+        # self.target.adjust_cursor_pos()
         # self.calculator_ui.calculator_target.setFocus()
         position = self.virtual_cursor_position()
         self.calculator_ui.calculator_target.go_to_position(position)
 
     def enable_actions(self):
-        self.right_action.setEnabled(not self.target.marked_is_at_end())
+        self.right_action.setEnabled(not self.target.is_at_end())
+        self.left_action.setEnabled(not self.target.is_at_beginning())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
 
@@ -571,21 +574,25 @@ class CalculatorController:
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
         new_target = self.target.deep_copy(self.target)
-        inserted_mvar = new_target.insert(pattern_s)
+        matched_mvar = new_target.insert(pattern_s)
         # Alternative: dos not work
         # ok = new_target.insert_after_marked(pattern_s)
         print(f"New target: {new_target}")
-        if inserted_mvar:
+        if matched_mvar:
             self.target = new_target
-            self.target.move_after_insert(inserted_mvar)
+            self.target.move_after_insert(matched_mvar)
             self.update()
 
         print(f"New target after move: {new_target}")
         l = self.target.infix_list()
+        total, cursor = self.target.total_and_cursor_list()
         print("Infix list:")
         print(l)
         print("Cursor pos:")
         print([item.cursor_pos for item in l])
+        print("Total and cursor lists:")
+        print(total)
+        print(cursor)
         # print(self.target.math_type)
 
     def history_update(self):
@@ -593,7 +600,8 @@ class CalculatorController:
         Update after a history move.
         """
         self.target = self.history[self.history_idx]
-        self.calculator_ui.set_html(self.html_target)
+        # self.calculator_ui.set_html(self.html_target)
+        self.set_target()
         print(self.target)
         # print(self.target.math_type)
 
@@ -636,28 +644,22 @@ class CalculatorController:
 
     @Slot()
     def move_right(self):
-        new_mvar = self.target.increase_cursor_pos()
-        if new_mvar:
-            self.calculator_ui.set_html(self.html_target)
-            # print(self.target)
-            print(self.target)
-            self.update_cursor()
-            self.enable_actions()
+        # TODO: repeat if actual cursor do not move
+        self.target.increase_cursor_pos()
+        self.calculator_ui.set_html(self.html_target)
+        # print(self.target)
+        print(self.target)
+        self.update_cursor()
+        self.enable_actions()
 
     @Slot()
     def move_left(self):
-        new_mvar = self.target.decrease_cursor_pos()
-        # pos = self.cursor_pos - 1
-        # if pos == 0:
-        #     new_mvar = self.target.move_left()
-        # else:
-        #     new_mvar = self.target.move_to_cursor_pos(pos)
-        if new_mvar:
-            self.calculator_ui.set_html(self.html_target)
-            # print(self.target)
-            print(self.target)
-            self.update_cursor()
-            self.enable_actions()
+        self.target.decrease_cursor_pos()
+        self.calculator_ui.set_html(self.html_target)
+        # print(self.target)
+        print(self.target)
+        self.update_cursor()
+        self.enable_actions()
 
     @Slot()
     def move_to_next_unmatched(self):

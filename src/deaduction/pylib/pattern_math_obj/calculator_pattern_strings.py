@@ -54,7 +54,7 @@ calculator_pattern_strings = {
                    ',': 'COMMA(?0, ?1)',
                    'sin': 'APP(CONSTANT/name=sin, ?0: CONSTANT/name=ℝ)',
 
-                   '()': 'CLOSE_PARENTHESIS(OPEN_PARENTHESIS(?0))',
+                   '()': 'GENERIC_PARENTHESES(?0)',
                    # ')': 'CLOSE_PARENTHESIS(...)',
                    # LOGIC
                    # FIXME: bound_var
