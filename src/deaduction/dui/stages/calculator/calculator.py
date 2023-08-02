@@ -116,27 +116,31 @@ class CalculatorTarget(MathTextWidget):
         key_sequence = QKeySequence(key)
         # print(key_sequence == QKeySequence.Undo)
         if key_sequence == QKeySequence("Return"):
-            print("enter")
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
-            # event.ignore()
-        # elif key_sequence == QKeySequence("Cancel"):
-        #     print("cancel")
-        #     self.button_box.button(QDialogButtonBox.Cancel).animateClick()
 
         # QAction key sequences
         action = None
         bar = None
         # Navigation
-        if key_sequence == QKeySequence.MoveToPreviousChar:
+        if key_sequence == QKeySequence.MoveToPreviousWord:
+            bar = self.navigation_bar
+            action = bar.beginning_action
+        elif key_sequence == QKeySequence.MoveToPreviousChar:
             bar = self.navigation_bar
             action = bar.left_action
         elif key_sequence == QKeySequence.MoveToNextChar:
             bar = self.navigation_bar
             action = bar.right_action
+        elif key_sequence == QKeySequence.MoveToNextWord:
+            bar = self.navigation_bar
+            action = bar.end_action
+        elif key_sequence == QKeySequence.MoveToPreviousLine:
+            bar = self.navigation_bar
+            action = bar.up_action
         elif key_sequence == QKeySequence.Delete:
             bar = self.navigation_bar
             action = bar.delete
-        elif key_sequence == QKeySequence("Tab"):
+        elif key_sequence == QKeySequence.NextChild:
             bar = self.navigation_bar
             action = bar.right_unmatched_action
 
@@ -241,19 +245,25 @@ class NavigationBar(AbstractToolBar):
         icons_dir = cdirs.icons
         # TODO: add icons
 
+        self.beginning_action = QAction(_('←←'), self)
+        self.left_unmatched_action = QAction(_('?←'), self)
         self.left_action = QAction(_('←'), self)
         self.up_action = QAction(_('↑'), self)
         self.right_action = QAction(_('→'), self)
         self.right_unmatched_action = QAction(_('→?'), self)
+        self.end_action = QAction(_('→→'), self)
         self.delete = QAction(QIcon(str((icons_dir /
                                          'cancel.png').resolve())),
             _('Delete'), self)
 
         self.addAction(self.delete)
-        # self.addAction(self.up_action)
+        self.addAction(self.end_action)
         self.addAction(self.right_unmatched_action)
         self.addAction(self.right_action)
+        self.addAction(self.up_action)
         self.addAction(self.left_action)
+        self.addAction(self.left_unmatched_action)
+        self.addAction(self.beginning_action)
 
 
 class CalculatorButton(QToolButton):
@@ -458,18 +468,26 @@ class CalculatorController:
 
     def __init_signals(self):
         calc_ui = self.calculator_ui
-        calc_ui.toolbar.rewind.triggered.connect(self.history_to_beginning)
-        calc_ui.toolbar.undo_action.triggered.connect(self.history_undo)
-        calc_ui.toolbar.redo_action.triggered.connect(self.history_redo)
-        calc_ui.toolbar.go_to_end.triggered.connect(self.history_to_end)
 
-        calc_ui.navigation_bar.left_action.triggered.connect(self.move_left)
-        # calc_ui.navigation_bar.up_action.triggered.connect(self.move_up)
-        calc_ui.navigation_bar.right_action.triggered.connect(self.move_right)
-        calc_ui.navigation_bar.right_unmatched_action.triggered.connect(
+        t_bar = calc_ui.toolbar
+        t_bar.rewind.triggered.connect(self.history_to_beginning)
+        t_bar.undo_action.triggered.connect(self.history_undo)
+        t_bar.redo_action.triggered.connect(self.history_redo)
+        t_bar.go_to_end.triggered.connect(self.history_to_end)
+
+        n_bar = calc_ui.navigation_bar
+        n_bar.beginning_action.triggered.connect(self.go_to_beginning)
+        n_bar.left_unmatched_action.triggered.connect(
+            self.move_to_previous_unmatched)
+        n_bar.left_action.triggered.connect(self.move_left)
+        n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.right_action.triggered.connect(self.move_right)
+        n_bar.right_unmatched_action.triggered.connect(
             self.move_to_next_unmatched)
-        calc_ui.navigation_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
-        calc_ui.navigation_bar.delete.triggered.connect(self.delete)
+        n_bar.end_action.triggered.connect(self.go_to_end)
+        n_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
+        n_bar.delete.triggered.connect(self.delete)
+
 
     def show(self):
         self.calculator_ui.show()
@@ -503,12 +521,32 @@ class CalculatorController:
         return text
 
     @property
-    def right_action(self):
-        return self.calculator_ui.navigation_bar.right_action
+    def beginning_action(self):
+        return self.calculator_ui.navigation_bar.beginning_action
+
+    @property
+    def left_unmatched_action(self):
+        return self.calculator_ui.navigation_bar.left_unmatched_action
 
     @property
     def left_action(self):
         return self.calculator_ui.navigation_bar.left_action
+
+    @property
+    def up_action(self):
+        return self.calculator_ui.navigation_bar.up_action
+
+    @property
+    def right_action(self):
+        return self.calculator_ui.navigation_bar.right_action
+
+    @property
+    def right_unmatched_action(self):
+        return self.calculator_ui.navigation_bar.right_unmatched_action
+
+    @property
+    def end_action(self):
+        return self.calculator_ui.navigation_bar.end_action
 
     @property
     def undo_action(self):
@@ -547,26 +585,43 @@ class CalculatorController:
         self.calculator_ui.calculator_target.go_to_position(position)
 
     def enable_actions(self):
-        self.right_action.setEnabled(not self.target.is_at_end())
-        self.left_action.setEnabled(not self.target.is_at_beginning())
+        target = self.target
+        self.beginning_action.setEnabled(not target.is_at_beginning())
+        self.left_unmatched_action.setEnabled(bool(target.previous_unmatched()))
+        self.left_action.setEnabled(not target.is_at_beginning())
+        self.up_action.setEnabled(bool(target.parent_of_marked()))
+        self.right_action.setEnabled(not target.is_at_end())
+        self.right_unmatched_action.setEnabled(bool(target.next_unmatched()))
+        self.end_action.setEnabled(not target.is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
+
+    def update_cursor_and_enable_actions(self):
+        self.update_cursor()
+        self.enable_actions()
+        print(self.target)
+
+    def set_target_and_update(self):
+        self.set_target()
+        self.update_cursor_and_enable_actions()
+
+    ##################
+    # Target editing #
+    ##################
 
     def update(self):
         """
         Update target display, and store it in history.
         Delete the end of history if any.
+        This is called after insert_pattern() and delete() methods.
         """
 
         self.history_idx += 1
         # self.calculator_ui.set_target(self.target)
         self.history = self.history[:self.history_idx]
         self.history.append(self.target)
-
-        self.set_target()
-        self.update_cursor()
-        self.enable_actions()
-        # print(self.calculator_ui.calculator_target.document().toHtml())
+        self.set_target_and_update()
+        # print( self.calculator_ui.calculator_target.document().toHtml())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
 
@@ -584,30 +639,32 @@ class CalculatorController:
             self.update()
 
         print(f"New target after move: {new_target}")
-        l = self.target.infix_list()
         total, cursor = self.target.total_and_cursor_list()
-        print("Infix list:")
-        print(l)
-        print("Cursor pos:")
-        print([item.cursor_pos for item in l])
         print("Total and cursor lists:")
         print(total)
         print(cursor)
         # print(self.target.math_type)
+
+    @Slot()
+    def delete(self):
+        new_target = self.target.deep_copy(self.target)
+        success = new_target.clear_marked_mvar()
+        print(new_target)
+        if success:
+            self.target = new_target
+            self.update()
+            self.target.decrease_cursor_pos()
+
+    #################
+    # History moves #
+    #################
 
     def history_update(self):
         """
         Update after a history move.
         """
         self.target = self.history[self.history_idx]
-        # self.calculator_ui.set_html(self.html_target)
-        self.set_target()
-        print(self.target)
-        # print(self.target.math_type)
-
-        self.update_cursor()
-        self.enable_actions()
-
+        self.set_target_and_update()
         # TODO: enable/disable buttons
 
     @Slot()
@@ -632,46 +689,49 @@ class CalculatorController:
         self.history_idx = len(self.history) - 1
         self.history_update()
 
-    @Slot()
-    def delete(self):
-        new_target = self.target.deep_copy(self.target)
-        success = new_target.clear_marked_mvar()
-        print(new_target)
-        if success:
-            self.target = new_target
-            self.update()
-            self.move_left()
+    ################
+    # Cursor moves #
+    ################
 
     @Slot()
     def move_right(self):
         # TODO: repeat if actual cursor do not move
         self.target.increase_cursor_pos()
-        self.calculator_ui.set_html(self.html_target)
-        # print(self.target)
-        print(self.target)
-        self.update_cursor()
-        self.enable_actions()
+        self.set_target_and_update()
 
     @Slot()
     def move_left(self):
         self.target.decrease_cursor_pos()
-        self.calculator_ui.set_html(self.html_target)
-        # print(self.target)
-        print(self.target)
-        self.update_cursor()
-        self.enable_actions()
+        self.set_target_and_update()
+
+    @Slot()
+    def go_to_beginning(self):
+        self.target.go_to_beginning()
+        self.set_target_and_update()
+
+    @Slot()
+    def go_to_end(self):
+        self.target.go_to_end()
+        self.set_target_and_update()
 
     @Slot()
     def move_to_next_unmatched(self):
         success = self.target.move_right_to_next_unmatched()
+        if success:
+            self.calculator_ui.set_html(self.html_target)
+            self.set_target_and_update()
 
-    # @Slot()
-    # def move_up(self):
-    #     if self.target.move_up():
-    #         self.calculator_ui.set_html(self.html_target)
-    #         # print(self.target)
-    #         # print(self.target.math_type)
-    #     self.update_cursor()
+    @Slot()
+    def move_to_previous_unmatched(self):
+        success = self.target.move_left_to_previous_unmatched()
+        if success:
+            self.set_target_and_update()
+
+    @Slot()
+    def move_up(self):
+        success = self.target.move_up()
+        if success:
+            self.set_target_and_update()
 
 
 def main():

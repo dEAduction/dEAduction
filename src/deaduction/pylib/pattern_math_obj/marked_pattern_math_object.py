@@ -93,21 +93,16 @@ class MarkedTree:
     """
 
     matched_math_object = None
-    # is_marked = False
     # cursor_pos is the rank of current selected item in self.latex_shape,
     # solely for the marked node.
     cursor_pos = None
     marked_nb = None
 
-    # def __init__(self, children=None, is_marked=False):
-    #     # Fixme: useless?
-    #     if children:
-    #         self._children = children
-    #     self.is_marked = is_marked
-
     @property
     def is_marked(self):
         return self.cursor_pos is not None
+
+    # Most of the following properties should be handled by derived classes #
 
     @property
     def min_cursor_pos(self):
@@ -119,13 +114,7 @@ class MarkedTree:
 
     @property
     def children(self):
-        """
-        Fake children, this should be overriden by all subclasses.
-        """
         return []
-
-    # def cursor_pos_for_child(self, child):
-    #     return None
 
     def ordered_children(self):
         return []
@@ -144,96 +133,13 @@ class MarkedTree:
     def is_metavar(self):
         pass
 
-    # def descendant_at_cursor_pos(self):
-    #     pass
-
     @property
     def is_matched(self):
         return bool(self.matched_math_object)
 
-    # def parent_of_marked_descendant(self):
-    #     """
-    #     Return the immediate parent of self.marked_descendant, if any.
-    #     """
-    #     for child in self.children:
-    #         if child.is_marked:
-    #             return self
-    #         elif child.parent_of_marked_descendant():
-    #             return child.parent_of_marked_descendant()
-
-    def total_and_cursor_list(self) -> (list, list):
-        """
-        Return a non-injective list of self's node, where each item
-        corresponds to an unbreakable block of string in the display of self.
-        Also return the list of cursor numbers, i.e. index of item's
-        appearance in the latex_shape.
-        e.g. if self is generic_parentheses, with one child mv0,
-        then total list is (self, mv0, self)
-        and cursor_list is (0, 0, 2).
-
-        This makes use of self.ordered_children.
-        """
-
-        total_list = []
-        cursor_list = []
-        cursor_counter = 0
-        for item in self.ordered_children():
-            if item is self:
-                total_list.append(self)
-                cursor_list.append(cursor_counter)
-            else:
-                i_t_list, i_c_list = item.total_and_cursor_list()
-                total_list.extend(i_t_list)
-                cursor_list.extend(i_c_list)
-
-            cursor_counter += 1
-
-        return total_list, cursor_list
-
-    def current_index_in_total_list(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
-        idx = list(zip(total_list, cursor_list)).index(pair)
-        return idx
-
-    def set_cursor_at(self, mvar, pos=None):
-        self.marked_descendant().unmark()
-        if pos is None:
-            mvar.set_cursor_at_main_symbol()
-        else:
-            mvar.cursor_pos = pos
-
-    def is_at_beginning(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        test1 = self.marked_descendant() is total_list[0]
-        test2 = self.marked_descendant().cursor_pos == cursor_list[0]
-        return test1 and test2
-
-    def is_at_end(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        test1 = self.marked_descendant() is total_list[-1]
-        test2 = self.marked_descendant().cursor_pos >= cursor_list[-1]
-        return test1 and test2
-
-    def decrease_cursor_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        if idx > 0:
-            mvar = total_list[idx-1]
-            cursor_pos = cursor_list[idx-1]
-            self.set_cursor_at(mvar, cursor_pos)
-        else:
-            self.set_cursor_at(self, -1)
-
-    def increase_cursor_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        if idx < len(total_list) - 1:
-            mvar = total_list[idx+1]
-            cursor_pos = cursor_list[idx+1]
-            self.set_cursor_at(mvar, cursor_pos)
-        else:
-            pass
+    #####################
+    # Marked descendant #
+    #####################
 
     def marked_descendant(self):
         """
@@ -276,23 +182,155 @@ class MarkedTree:
             if child:
                 child.unmark()
 
-    def appears_right_of_cursor(self, other) -> bool:
-        """
-        True iff other is right of last appearance of marked element in
-        self.total_list.
-        """
-        l, _ = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        return other in l[idx+1:]
+    #######################
+    # Total list of nodes #
+    #######################
 
-    def appears_left_of_cursor(self, other) -> bool:
+    def total_and_cursor_list(self) -> (list, list):
         """
-        True iff other is left of the first appearance of marked element in
-        self.total_list.
+        Return a non-injective list of self's node, where each item
+        corresponds to an unbreakable block of string in the display of self.
+        Also return the list of cursor numbers, i.e. index of item's
+        appearance in the latex_shape.
+        e.g. if self is generic_parentheses, with one child mv0,
+        then total list is (self, mv0, self)
+        and cursor_list is (0, 0, 2).
+
+        This makes use of self.ordered_children.
         """
-        l, _ = self.total_and_cursor_list()
+
+        total_list = []
+        cursor_list = []
+        cursor_counter = 0
+        for item in self.ordered_children():
+            if item is self:
+                total_list.append(self)
+                cursor_list.append(cursor_counter)
+            else:
+                i_t_list, i_c_list = item.total_and_cursor_list()
+                total_list.extend(i_t_list)
+                cursor_list.extend(i_c_list)
+
+            cursor_counter += 1
+
+        return total_list, cursor_list
+
+    def current_index_in_total_list(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
+        idx = list(zip(total_list, cursor_list)).index(pair)
+        return idx
+
+    ######################
+    # Moving in the tree #
+    ######################
+
+    def first_pos(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        first_mvar = total_list[0]
+        first_cursor = cursor_list[0]
+        return first_mvar, first_cursor
+
+    def is_at_beginning(self):
+        # total_list, cursor_list = self.total_and_cursor_list()
+        # test1 = self.marked_descendant() is total_list[0]
+        # test2 = self.marked_descendant().cursor_pos == cursor_list[0]
+        current = self.marked_descendant(), self.marked_descendant().cursor_pos
+        return current == self.first_pos()
+
+    def last_pos(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        last_mvar = total_list[-1]
+        last_cursor = cursor_list[-1]
+        return last_mvar, last_cursor
+
+    def is_at_end(self):
+        # total_list, cursor_list = self.total_and_cursor_list()
+        # test1 = self.marked_descendant() is total_list[-1]
+        # test2 = self.marked_descendant().cursor_pos >= cursor_list[-1]
+        # return test1 and test2
+        current = self.marked_descendant(), self.marked_descendant().cursor_pos
+        return current == self.last_pos()
+
+    def set_cursor_at(self, mvar, pos=None):
+        self.marked_descendant().unmark()
+        if pos is None:
+            mvar.set_cursor_at_main_symbol()
+        else:
+            mvar.cursor_pos = pos
+
+    def go_to_beginning(self):
+        first_mvar, first_cursor = self.first_pos()
+        self.set_cursor_at(first_mvar, first_cursor)
+
+    def go_to_end(self):
+        last_mvar, last_cursor = self.last_pos()
+        self.set_cursor_at(last_mvar, last_cursor)
+
+    def decrease_cursor_pos(self):
+        total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
-        return other in l[:idx+1]
+        if idx > 0:
+            mvar = total_list[idx-1]
+            cursor_pos = cursor_list[idx-1]
+            self.set_cursor_at(mvar, cursor_pos)
+        else:
+            self.set_cursor_at(self, -1)
+
+    def increase_cursor_pos(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        if idx < len(total_list) - 1:
+            mvar = total_list[idx+1]
+            cursor_pos = cursor_list[idx+1]
+            self.set_cursor_at(mvar, cursor_pos)
+        else:
+            pass
+
+    def parent_of_marked(self):
+        mvar = self.marked_descendant()
+        if mvar:
+            return self.parent_of(mvar)
+
+    def move_up(self):
+        parent = self.parent_of_marked()
+        if parent:
+            self.set_cursor_at(parent)
+            return parent
+
+    def next_unmatched(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        mvars = [mvar for mvar in total_list[idx+1:] if not mvar.is_matched]
+        if mvars:
+            return mvars[0]
+
+    def previous_unmatched(self):
+        total_list, cursor_list = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        mvars = [mvar for mvar in total_list[:idx] if not mvar.is_matched]
+        if mvars:
+            return mvars[-1]
+
+    def move_right_to_next_unmatched(self):
+        """
+        Move the marked node to the next unmatched mvar, if any.
+        """
+
+        mvar = self.next_unmatched()
+        if mvar:
+            self.set_cursor_at(mvar)
+            return mvar
+
+    def move_left_to_previous_unmatched(self):
+        """
+        Move the marked node to the previous unmatched mvar, if any.
+        """
+
+        mvar = self.previous_unmatched()
+        if mvar:
+            self.set_cursor_at(mvar)
+            return mvar
 
     def move_after_insert(self, matched_mvar):
         """
@@ -319,6 +357,24 @@ class MarkedTree:
         # (3) Stay just after matched_mvar!
         self.set_cursor_at(matched_mvar)
         return matched_mvar
+
+    def appears_right_of_cursor(self, other) -> bool:
+        """
+        True iff other is right of last appearance of marked element in
+        self.total_list.
+        """
+        l, _ = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        return other in l[idx+1:]
+
+    def appears_left_of_cursor(self, other) -> bool:
+        """
+        True iff other is left of the first appearance of marked element in
+        self.total_list.
+        """
+        l, _ = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        return other in l[:idx+1]
 
     def parent_of(self, descendant):
         """
@@ -446,32 +502,6 @@ class MarkedTree:
     #         marked_mvar.unmark()
     #         new_mvar.mark()
     #         return new_mvar
-
-    def move_up(self):
-        mvar = self.marked_descendant()
-        parent = self.parent_of(mvar)
-        if parent:
-            self.set_cursor_at(parent)
-            return parent
-
-    def move_right_to_next_unmatched(self):
-        """
-        Move the marked node to the next unmatched mvar, if any.
-        """
-
-        # FIXME
-        pass
-        # i_list = self.infix_list()
-        # idx = i_list.index(self)
-        # r_list = i_list[idx:]
-        # unmatched = [item for item in r_list if not item.is_matched]
-        # if not unmatched:
-        #     # No unmarked mvar  right of self
-        #     return
-        #
-        # self.move_marked_right()
-        # while self.marked_descendant().is_matched:
-        #     self.move_marked_right()
 
     # def cursor_is_at_end(self):
     #     """

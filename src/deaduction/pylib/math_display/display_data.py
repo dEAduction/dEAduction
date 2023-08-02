@@ -813,6 +813,7 @@ def insert_str_in_shape_at_pos(string: str, shape: [], idx: int):
     for item in shape:
         pass
 
+
 # Init MathDIsplay dictionaries
 MathDisplay.update_dict()
 
