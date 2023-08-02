@@ -470,6 +470,7 @@ class MarkedTree:
         Move the marked node to the next unmatched mvar, if any.
         """
 
+        # FIXME
         i_list = self.infix_list()
         idx = i_list.index(self)
         r_list = i_list[idx:]
@@ -963,6 +964,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return True is self can be a left/right child of parent
         (left iff left_children=True).        
         """
+
+        # FIXME: use MathDisplay.priority_test
         if left_children:
             # self can be a left child of parent?
             test = (priority(parent.node, self.node) != '>')

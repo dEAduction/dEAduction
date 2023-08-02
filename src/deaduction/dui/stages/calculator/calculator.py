@@ -537,7 +537,7 @@ class CalculatorController:
         position = text.find(MathDisplay.cursor_tag)
 
         MathDisplay.mark_cursor = False
-        MathDisplay.cursor_pos = None
+        # MathDisplay.cursor_pos = None
         return position
 
     def update_cursor(self):

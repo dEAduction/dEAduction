@@ -111,7 +111,7 @@ class MathDisplay:
     cursor_tag = r'\DeadCursor'
     # Set to True if the cursor position should be markd by the cursor tag:
     mark_cursor = False
-    cursor_pos = None
+    # cursor_pos = None
 
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
@@ -523,6 +523,59 @@ class MathDisplay:
                           "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
                           "CONSTANT", "LOCAL_CONSTANT", "NONE")
 
+    # needs_paren_couples = [('MULT', 'SUM')]
+    # dont_need_paren_couples = [('SUM', 'MULT'), ()]
+
+    priorities = [{'COMPOSITE_NUMBER'},
+                  {'POINT'},  # FIXME: DECIMAL?
+                  {'MULT', 'DIV'},
+                  {'SUM', 'DIFFERENCE'},
+                  {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
+                  # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
+                  ]
+
+    @classmethod
+    def priority(cls, self: str, other: str) -> str:
+        """
+        Return '=' if self and other have the same priority level,
+        '>' or '<' if they have distinct comparable priority levels,
+        None otherwise.
+        """
+
+        if not self or not other:
+            return None
+        self_found = False
+        other_found = False
+        for nodes in cls.priorities:
+            if self in nodes:
+                if other_found:
+                    return '<'
+                if other in nodes:
+                    return '='
+                else:
+                    self_found = True
+            elif other in nodes:
+                if self_found:
+                    return '>'
+                else:
+                    other_found = True
+
+    @classmethod
+    def priority_test(cls, child_node, parent_node, child_number):
+        """
+        return True is self can be a left/right child of parent
+        (left iff left_children=True), with no parentheses.
+        """
+        if not cls.priority(parent_node, child_node):
+            return None
+        if child_number == 0:
+            # self can be a left child of parent?
+            test = (cls.priority(parent_node, child_node) != '>')
+        else:
+            # self can be a right child of parent?
+            test = (cls.priority(parent_node, child_node) not in ('=', '>'))
+        return test
+
     @classmethod
     def needs_paren(cls, parent, child, child_number) -> bool:
         """
@@ -543,9 +596,17 @@ class MathDisplay:
 
         p_node = parent.node
         c_node = child.node if child is not None else "NONE"
-        if p_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'):
+
+        # Priority operator rules
+        pt = cls.priority_test(c_node, p_node, child_number)
+        if pt is not None:
+            return not pt
+
+        if p_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS',
+                      'GENERIC_PARENTHESES'):
             return False
-        if c_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'):
+        if c_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS',
+                      'GENERIC_PARENTHESES'):
             return False
         if c_node == 'COE':  # Act as if COE node was replaced by its child
             c_node = child.children[0].node
@@ -733,21 +794,24 @@ class MathDisplay:
 
     @classmethod
     def marked_latex_shape(cls, latex_shape, cursor_pos):
-        # FIXME: composite cursors, e.g. (3, 2)
-        if cls.cursor_pos is None:
+        if cursor_pos is None:
             idx, main_symbol = cls.main_symbol_from_shape(latex_shape)
         else:
-            idx = cls.cursor_pos
+            idx = cursor_pos
         m_latex_shape = list(latex_shape)
         # print(f"Marking latex shape {m_latex_shape}")
         # print(f" at index {idx-1}")
-        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx-1]]
+        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
         if cls.mark_cursor:
-            if cursor_pos is not None:
-                idx = cursor_pos-1
+            # FIXME: take into account items that are lists
             m_latex_shape.insert(idx+1, cls.cursor_tag)
         return m_latex_shape
 
+
+def insert_str_in_shape_at_pos(string: str, shape: [], idx: int):
+    counter = 0
+    for item in shape:
+        pass
 
 # Init MathDIsplay dictionaries
 MathDisplay.update_dict()
