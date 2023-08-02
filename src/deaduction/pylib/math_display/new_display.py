@@ -53,7 +53,7 @@ def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
         descent = tuple(int(item) for item in chain if item.isdigit())
         math_object = self.descendant(line_of_descent=descent)
 
-    else:
+    else:#############################
         return shape_item
 
     # B - Apply attributes iteratively:

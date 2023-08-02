@@ -987,6 +987,15 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             test = (priority(parent.node, self.node) not in ('=', '>'))
         return test
 
+    def automatic_insert(self, new_pmo, mvar):
+        """
+        Try to insert new_pmo at mvar by first inserting an automatic
+        pattern, and then inserting mvar.math_object (if any) and new_pmo as a
+        child.
+        """
+        # TODO
+        pass
+
     def insert_if_you_can(self, new_pmo, mvar, parent_mvar):
         """
         Try to insert new_pmo at mvar, as a left child if

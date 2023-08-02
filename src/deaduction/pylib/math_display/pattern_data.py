@@ -95,8 +95,13 @@ global _
 ###############
 ###############
 metanodes = {'*INEQUALITY': ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥",
-                             "PROP_EQUAL_NOT")}
-
+                             "PROP_EQUAL_NOT"),
+             '*NUMBER_TYPES': ("CONSTANT/name=ℕ",
+                               "CONSTANT/name=ℤ",
+                               "CONSTANT/name=ℚ",
+                               "CONSTANT/name=ℝ"
+                               )}
+_
 quant_pattern = dict()
 
 

@@ -42,28 +42,28 @@ global _
 # "SQRT": ('√', -1),
 
 # NUMBERS
-numbers = {str(n): f'NUMBER/value={n}' for n in range(11)}
+numbers = {str(n): f'NUMBER/value={n}: *NUMBER_TYPES' for n in range(11)}
 calculator_pattern_strings = {
-                   '+': 'SUM(?0: ?2, ?1: ?2)',  # pb = real + int ?
-                   '-': 'DIFFERENCE(?0: ?2, ?1: ?2)',  # Pb =  or MINUS(?0)
-                    # '-': ('MINUS(?0)', 'DIFFERENCE(?0: ?2, ?1: ?2)'),
-                   '*': 'MULT(?0: ?2, ?1: ?2)',  # pb = real + int ?
-                   '/': 'DIV(?0: ?2, ?1: ?2)',  # pb = real + int ?
+                   '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                   '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                   '*': 'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',  # pb = real + int ?
+                   '/': 'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                    '.': 'POINT(?0, ?1)',
                     # Useful for set extension:
                    ',': 'COMMA(?0, ?1)',
-                   'sin': 'APP(CONSTANT/name=sin, ?0: CONSTANT/name=ℝ)',
-
+                   # 'sin': 'APP(CONSTANT/name=sin, ?0: CONSTANT/name=ℝ)',
+                   'sin': 'CONSTANT/name=sin: FUNCTION(*NUMBER_TYPES, *NUMBER_TYPES)',
+                   'max': 'CONSTANT/name=max: FUNCTION(*NUMBER_TYPES, FUNCTION(*NUMBER_TYPES,*NUMBER_TYPES))',
                    '()': 'GENERIC_PARENTHESES(?0)',
                    # ')': 'CLOSE_PARENTHESIS(...)',
                    # LOGIC
                    # FIXME: bound_var
-                   '∀': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, ?2)',
+                   '∀': 'QUANT_∀: PROP()(?0, LOCAL_CONSTANT/name=x, ?2)',
                    # '∀>': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, '
                    #       'PROP_IMPLIES(PROP_>()))',
-                   '⇒': 'PROP_IMPLIES(?0: PROP, ?1: PROP)',
-                   '∧': 'PROP_AND(?0: PROP, ?1: PROP)',
-                   '∨': 'PROP_OR(?0: PROP, ?1: PROP)',
+                   '⇒': 'PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)',
+                   '∧': 'PROP_AND: PROP()(?0: PROP, ?1: PROP)',
+                   '∨': 'PROP_OR: PROP()(?0: PROP, ?1: PROP)',
                    # SET THEORY
                    '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                    '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))',
@@ -74,11 +74,12 @@ calculator_pattern_strings = {
 calculator_pattern_strings.update(numbers)
 
 automatic_matching_patterns = {
-    "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
-    "COMPOSITE_NUMBER(...)": (0, 1),  # FIXME: could have more children
+    "APP(?0: !FUNCTION(?1, ?2), ?3: ?1): ?2"  # : ((0,), r"\parentheses", (1,)),
+    "COMPOSITE_NUMBER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)"
+    # : (0, 1),
     # "SEVERAL(?0, ?1)": (0, ' ', 1),
     # "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
-    "META_NODE": (0, 1)
+    "META_NODE(?0, ?1)" #: (0, 1)
 }
 
 

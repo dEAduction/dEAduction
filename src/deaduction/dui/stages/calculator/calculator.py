@@ -737,14 +737,15 @@ class CalculatorController:
 
 def main():
 
-    target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
     target = MarkedPatternMathObject.from_string('?0: SET(?1)')
+    target = MarkedPatternMathObject.from_string('?0: *NUMBER_TYPES')
     # target.mark()
     app = QApplication([])
     # calculator = CalculatorController(target=target)
     # calculator.show()
 
     target_type = MarkedPatternMathObject.from_string('SET(?1)')
+    target_type = MarkedPatternMathObject.from_string('*NUMBER_TYPES')
     choice, ok = CalculatorController.get_item(context=None,
                                                target_type=target_type)
 

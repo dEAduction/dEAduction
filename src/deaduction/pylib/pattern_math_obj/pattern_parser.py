@@ -45,7 +45,7 @@ structure = """
     node = node_name info_type?
     info_type = type_sep expr
     node_name = ~"[a-z A-Z 0-9 *?_∀∃+<>≥≤!.'/= - ℕℤℚℝ]"+
-    children = (open_paren expr more_expr closed_paren)?
+    children = (open_paren (expr more_expr)? closed_paren)?
     more_expr = (comma expr)*
     """
 separators = """
@@ -129,8 +129,12 @@ class PatternEntryVisitor(NodeVisitor):
         """
         if not visited_children:
             return []
-        [[_, first_child, other_children, _]] = visited_children
-        return [first_child] + other_children
+        [[_, children, _]] = visited_children
+        if children:
+            [[first_child, other_children]] = children
+            return [first_child] + other_children
+        else:
+            return []
 
     def visit_more_expr(self, _, visited_children) -> [Tree]:
         """
