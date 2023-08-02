@@ -138,6 +138,9 @@ class MarkedTree:
     def right_children(self):
         return []
 
+    def set_cursor_at_main_symbol(self) -> bool:
+        pass
+
     def is_metavar(self):
         pass
 
@@ -317,15 +320,6 @@ class MarkedTree:
         self.set_cursor_at(matched_mvar)
         return matched_mvar
 
-    # def index_child_with_marked_descendant(self):
-    #     i = 0
-    #     for child in self.children:
-    #         if child.has_marked_descendant:
-    #             return i
-    #         i += 1
-
-    # FIXME: OBSOLETE?
-
     def parent_of(self, descendant):
         """
         If descendant in self's subtree,return its parent.
@@ -342,128 +336,123 @@ class MarkedTree:
     # def father_of_marked_descendant(self):
     #     pass
 
-    def left_descendants(self):
-        """
-        Return the list of descendants of self.left_children, in infix order.
-        """
-        l_list = []
-        for child in self.left_children:
-            l_list.extend(child.infix_list())
-        return l_list
+    # FIXME: OBSOLETE?
 
-    def left_unmatched_descendants(self):
-        left_d = self.left_descendants()
-        lud = [mvar for mvar in left_d if mvar.is_metavar and
-               not mvar.is_matched]
-        return lud
+    # def left_descendants(self):
+    #     """
+    #     Return the list of descendants of self.left_children, in infix order.
+    #     """
+    #     l_list = []
+    #     for child in self.left_children:
+    #         l_list.extend(child.infix_list())
+    #     return l_list
+    #
+    # def left_unmatched_descendants(self):
+    #     left_d = self.left_descendants()
+    #     lud = [mvar for mvar in left_d if mvar.is_metavar and
+    #            not mvar.is_matched]
+    #     return lud
+    #
+    # def right_unmatched_descendants(self):
+    #     right_d = self.right_descendants()
+    #     rud = [mvar for mvar in right_d if mvar.is_metavar and
+    #            not mvar.is_matched]
+    #     return rud
 
-    def right_unmatched_descendants(self):
-        right_d = self.right_descendants()
-        rud = [mvar for mvar in right_d if mvar.is_metavar and
-               not mvar.is_matched]
-        return rud
+    # def right_descendants(self):
+    #     """
+    #     Return the list of descendants of self.right_children, in infix
+    #     order.
+    #     """
+    #     r_list = []
+    #     for child in self.right_children:
+    #         r_list.extend(child.infix_list())
+    #     return r_list
 
-    def right_descendants(self):
-        """
-        Return the list of descendants of self.right_children, in infix
-        order.
-        """
-        r_list = []
-        for child in self.right_children:
-            r_list.extend(child.infix_list())
-        return r_list
-
-    def infix_list(self):
-        """
-        Return the list of all nodes in self's tree in the infix order.
-        """
-
-        # if only_unmatched:
-        #     if self.is_metavar() and not self.is_matched:
-        #         maybe_self = [self]
-        #     else:
-        #         maybe_self = []
-        # else:
-        #     maybe_self = [self]
-
-        i_list = (self.left_descendants()
-                  + [self]
-                  + self.right_descendants())
-
-        return list(i_list)
+    # def infix_list(self):
+    #     """
+    #     Return the list of all nodes in self's tree in the infix order.
+    #     """
+    #
+    #     # if only_unmatched:
+    #     #     if self.is_metavar() and not self.is_matched:
+    #     #         maybe_self = [self]
+    #     #     else:
+    #     #         maybe_self = []
+    #     # else:
+    #     #     maybe_self = [self]
+    #
+    #     i_list = (self.left_descendants()
+    #               + [self]
+    #               + self.right_descendants())
+    #
+    #     return list(i_list)
 
     # def marked_infix_idx(self):
     #     if self.marked_descendant():
     #         return self.infix_list().index(self.marked_descendant())
 
-    def next_from_marked(self):
-        """
-        Return the next node from marked descendant in the infix order.
-        """
-        i_list = self.infix_list()
-        # print(i_list)
-        marked_mvar = self.marked_descendant()
-        if not marked_mvar:
-            return None
+    # def next_from_marked(self):
+    #     """
+    #     Return the next node from marked descendant in the infix order.
+    #     """
+    #     i_list = self.infix_list()
+    #     # print(i_list)
+    #     marked_mvar = self.marked_descendant()
+    #     if not marked_mvar:
+    #         return None
+    #
+    #     idx = i_list.index(marked_mvar)
+    #     next_mvar = None
+    #     # if not unmatched:
+    #     if idx < len(i_list) - 1:
+    #         next_mvar = i_list[idx + 1]
+    #     # else:
+    #     #     while idx < len(i_list) - 1 and i_list[idx].is_matched:
+    #     #         idx += 1
+    #     #     if not i_list[idx].is_matched:
+    #     #         next_mvar = i_list[idx]
+    #
+    #     return next_mvar
 
-        idx = i_list.index(marked_mvar)
-        next_mvar = None
-        # if not unmatched:
-        if idx < len(i_list) - 1:
-            next_mvar = i_list[idx + 1]
-        # else:
-        #     while idx < len(i_list) - 1 and i_list[idx].is_matched:
-        #         idx += 1
-        #     if not i_list[idx].is_matched:
-        #         next_mvar = i_list[idx]
-
-        return next_mvar
-
-    def marked_is_at_end(self):
-        il = self.infix_list()
-        return self.marked_descendant() is il[-1]
-
-    def move_marked_right(self):
-        """
-        Move the marked node to the next metavar in self if any. Return the 
-        new marked metavar, or None.
-        """
-
-        next_mvar = self.next_from_marked()
-        marked_mvar = self.marked_descendant()
-        if marked_mvar and next_mvar:
-            marked_mvar.unmark()
-            next_mvar.mark()
-            return next_mvar
-
-    def move_marked_left(self):
-        """
-        Move the marked node to the previous metavar.
-        """
-
-        i_list = self.infix_list()
-        marked_mvar = self.marked_descendant()
-        idx = i_list.index(marked_mvar)
-
-        if idx > 0:
-            new_mvar = i_list[idx - 1]
-            marked_mvar.unmark()
-            new_mvar.mark()
-            return new_mvar
+    # def marked_is_at_end(self):
+    #     il = self.infix_list()
+    #     return self.marked_descendant() is il[-1]
+    #
+    # def move_marked_right(self):
+    #     """
+    #     Move the marked node to the next metavar in self if any. Return the
+    #     new marked metavar, or None.
+    #     """
+    #
+    #     next_mvar = self.next_from_marked()
+    #     marked_mvar = self.marked_descendant()
+    #     if marked_mvar and next_mvar:
+    #         marked_mvar.unmark()
+    #         next_mvar.mark()
+    #         return next_mvar
+    #
+    # def move_marked_left(self):
+    #     """
+    #     Move the marked node to the previous metavar.
+    #     """
+    #
+    #     i_list = self.infix_list()
+    #     marked_mvar = self.marked_descendant()
+    #     idx = i_list.index(marked_mvar)
+    #
+    #     if idx > 0:
+    #         new_mvar = i_list[idx - 1]
+    #         marked_mvar.unmark()
+    #         new_mvar.mark()
+    #         return new_mvar
 
     def move_up(self):
-        # FIXME
-        if self.is_marked:
-            return None
-        elif self.has_marked_descendant:
-            marked_child = self.child_with_marked_descendant()
-            if marked_child:
-                if marked_child.is_marked:
-                    marked_child.unmark()
-                    self.mark()
-                    return self
-                else:
-                    return marked_child.move_up()
+        mvar = self.marked_descendant()
+        parent = self.parent_of(mvar)
+        if parent:
+            self.set_cursor_at(parent)
+            return parent
 
     def move_right_to_next_unmatched(self):
         """
@@ -471,17 +460,18 @@ class MarkedTree:
         """
 
         # FIXME
-        i_list = self.infix_list()
-        idx = i_list.index(self)
-        r_list = i_list[idx:]
-        unmatched = [item for item in r_list if not item.is_matched]
-        if not unmatched:
-            # No unmarked mvar  right of self
-            return
-
-        self.move_marked_right()
-        while self.marked_descendant().is_matched:
-            self.move_marked_right()
+        pass
+        # i_list = self.infix_list()
+        # idx = i_list.index(self)
+        # r_list = i_list[idx:]
+        # unmatched = [item for item in r_list if not item.is_matched]
+        # if not unmatched:
+        #     # No unmarked mvar  right of self
+        #     return
+        #
+        # self.move_marked_right()
+        # while self.marked_descendant().is_matched:
+        #     self.move_marked_right()
 
     # def cursor_is_at_end(self):
     #     """
@@ -618,10 +608,6 @@ class MarkedTree:
     #     self.set_cursor_pos_at_child(child)
     #     child.mark()
 
-    def set_cursor_at_main_symbol(self) -> bool:
-        # TODO in derived classes
-        pass
-
     # def set_cursor_at_main_symbol_of(self, mvar) -> bool:
     #     """
     #     Mark mvar, and recursively set cursor at main symbol of mvar (or at
@@ -644,47 +630,47 @@ class MarkedTree:
     #
     #     print(f"Unable to set cursor at ms of {mvar}")
 
-    def lineage_from(self, descendant) -> []:
-        if self is descendant:
-            return [self]
-        else:
-            for child in self.children:
-                child_lineage = child.lineage_from(descendant)
-                if child_lineage:
-                    return child_lineage + [self]
-
-    def marked_lineage_from(self) -> []:
-        if self.is_marked:
-            return [self]
-        else:
-            for child in self.children:
-                child_lineage = child.marked_lineage_from()
-                if child_lineage:
-                    return child_lineage + [self]
-
-    def path_from_marked_to_next(self) -> ():
-        """
-        Return the two components of the path from the unique marked
-        descendant to the next node in the infix order, more precisely both
-        upward paths from node to the common ancestor. The common ancestor is
-        included in both paths.
-        """
-        marked_l = self.marked_lineage_from()
-        if not marked_l:
-            return [], []
-        next_ = self.next_from_marked()
-        if not next_:
-            path = marked_l, [marked_l[-1]]
-        else:
-            next_l = self.lineage_from(next_)
-            common_ancestor = self  # Useless
-            while next_l and marked_l and next_l[-1] is marked_l[-1]:
-                common_ancestor = marked_l.pop()
-                next_l.pop()
-            # next_l.reverse()
-            path = marked_l + [common_ancestor],  next_l + [common_ancestor]
-
-        return path
+    # def lineage_from(self, descendant) -> []:
+    #     if self is descendant:
+    #         return [self]
+    #     else:
+    #         for child in self.children:
+    #             child_lineage = child.lineage_from(descendant)
+    #             if child_lineage:
+    #                 return child_lineage + [self]
+    #
+    # def marked_lineage_from(self) -> []:
+    #     if self.is_marked:
+    #         return [self]
+    #     else:
+    #         for child in self.children:
+    #             child_lineage = child.marked_lineage_from()
+    #             if child_lineage:
+    #                 return child_lineage + [self]
+    #
+    # def path_from_marked_to_next(self) -> ():
+    #     """
+    #     Return the two components of the path from the unique marked
+    #     descendant to the next node in the infix order, more precisely both
+    #     upward paths from node to the common ancestor. The common ancestor is
+    #     included in both paths.
+    #     """
+    #     marked_l = self.marked_lineage_from()
+    #     if not marked_l:
+    #         return [], []
+    #     next_ = self.next_from_marked()
+    #     if not next_:
+    #         path = marked_l, [marked_l[-1]]
+    #     else:
+    #         next_l = self.lineage_from(next_)
+    #         common_ancestor = self  # Useless
+    #         while next_l and marked_l and next_l[-1] is marked_l[-1]:
+    #             common_ancestor = marked_l.pop()
+    #             next_l.pop()
+    #         # next_l.reverse()
+    #         path = marked_l + [common_ancestor],  next_l + [common_ancestor]
+    #
+    #     return path
 
     # def check_all_cursor_pos(self):
     #     """
@@ -716,39 +702,36 @@ class MarkedTree:
     #     child.check_cursor_pos()
 
 
-class RootedMarkedTree(MarkedTree):
-    """
-    A class for the root of a MarkedTree, with methods that keep track of
-    global coherence.
-    """
+# class RootedMarkedTree(MarkedTree):
+#     """
+#     A class for the root of a MarkedTree, with methods that keep track of
+#     global coherence.
+#     """
+#
+#     def decrease_cursor_pos(self):
+#
+#         m_descendant = self.marked_descendant()
+#
+#         if m_descendant.cursor_pos > m_descendant.min_cursor_pos:
+#             m_descendant.cursor_pos -= 1
+#             return m_descendant
+#
+#         m_descendant.cursor_pos = None
+#         father = self.parent_of(m_descendant)
 
-    def decrease_cursor_pos(self):
-
-        m_descendant = self.marked_descendant()
-
-        if m_descendant.cursor_pos > m_descendant.min_cursor_pos:
-            m_descendant.cursor_pos -= 1
-            return m_descendant
-
-        m_descendant.cursor_pos = None
-        father = self.parent_of(m_descendant)
-
-
-
-
-    def mark_descendant(self, descendant):
-        """
-        Mark descendant and check all cursor_pos.
-        """
-
-        if self.marked_descendant() \
-                and self.marked_descendant()is not descendant:
-            self.marked_descendant().unmark()
-
-        if not descendant.is_marked():
-            descendant.mark()
-
-        self.check_all_cursor_pos()
+    # def mark_descendant(self, descendant):
+    #     """
+    #     Mark descendant and check all cursor_pos.
+    #     """
+    #
+    #     if self.marked_descendant() \
+    #             and self.marked_descendant()is not descendant:
+    #         self.marked_descendant().unmark()
+    #
+    #     if not descendant.is_marked():
+    #         descendant.mark()
+    #
+    #     self.check_all_cursor_pos()
 
 
 # decreasing precedence
@@ -1310,18 +1293,18 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     def max_cursor_pos(self):
         return len(self.latex_shape())
 
-    def cursor_pos_for_child(self, child):
-        shape = self.latex_shape()
-        if child in self.children:
-            child_nb = self.children.index(child)
-            if child_nb in shape:
-                idx = shape.index(child_nb)
-                return idx+1
+    # def cursor_pos_for_child(self, child):
+    #     shape = self.latex_shape()
+    #     if child in self.children:
+    #         child_nb = self.children.index(child)
+    #         if child_nb in shape:
+    #             idx = shape.index(child_nb)
+    #             return idx+1
 
-    def adjust_cursor_pos(self):
-        mvar = self.marked_descendant()
-        if mvar.cursor_pos == 0:
-            self.decrease_cursor_pos()
+    # def adjust_cursor_pos(self):
+    #     mvar = self.marked_descendant()
+    #     if mvar.cursor_pos == 0:
+    #         self.decrease_cursor_pos()
 
     # def move_right(self):
     #     """
