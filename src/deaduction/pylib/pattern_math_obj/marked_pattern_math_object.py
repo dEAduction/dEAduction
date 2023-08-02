@@ -1268,7 +1268,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         'Delete' current marked metavar, i.e. remove matched_math_object.
         """
-        return self.marked_descendant().delete()
+        success = self.marked_descendant().delete()
+        if success:
+            self.set_cursor_at(self.marked_descendant(), 0)
+            return True
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """

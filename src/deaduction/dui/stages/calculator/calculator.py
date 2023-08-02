@@ -652,8 +652,9 @@ class CalculatorController:
         print(new_target)
         if success:
             self.target = new_target
+            # if not self.target.is_at_beginning():
+            #     self.target.decrease_cursor_pos()
             self.update()
-            self.target.decrease_cursor_pos()
 
     #################
     # History moves #

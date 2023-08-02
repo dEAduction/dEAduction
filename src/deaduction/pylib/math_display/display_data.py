@@ -521,7 +521,7 @@ class MathDisplay:
     NATURE_LEAVES_LIST = ("PROP", "TYPE", "SET_UNIVERSE", "SET", "ELEMENT",
                           "FUNCTION", "SEQUENCE", "SET_FAMILY",
                           "TYPE_NUMBER", "NUMBER", "VAR", "SET_EMPTY",
-                          "CONSTANT", "LOCAL_CONSTANT", "NONE")
+                          "CONSTANT", "LOCAL_CONSTANT", "NONE", "METAVAR")
 
     # needs_paren_couples = [('MULT', 'SUM')]
     # dont_need_paren_couples = [('SUM', 'MULT'), ()]
