@@ -341,16 +341,22 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
                       "P(x)'")
             raise WrongUserInput(error)
         elif not user_input:
-            raise MissingParametersError(InputType.Text,
-                                         title=_("Use a universal property"),
-                                         output=_(
-                                             "Enter element on which you "
-                                             "want to use this property:"))
+            quant = selected_objects[0].math_type
+            input_target = quant.type_of_explicit_quant()
+            raise MissingParametersError(InputType.Calculator,
+                                         title=_("For ALL"),
+                                         target=input_target)
+        # raise MissingParametersError(InputType.Text,
+        #                                  title=_("Use a universal property"),
+        #                                  output=_(
+        #                                      "Enter element on which you "
+        #                                      "want to use this property:"))
         else:
-            item = pre_process_lean_code(user_input[0])
-            item = add_type_indication(item)  # e.g. (0:ℝ)
-            if item[0] != '(':
-                item = '(' + item + ')'
+            # item = pre_process_lean_code(user_input[0])
+            # item = add_type_indication(item)  # e.g. (0:ℝ)
+            # if item[0] != '(':
+            #     item = '(' + item + ')'
+            item = user_input[0].to_display(format_='lean')
             potential_var = MathObject(node="LOCAL_CONSTANT",
                                        info={'name': item, 'user_input': True},
                                        children=[],

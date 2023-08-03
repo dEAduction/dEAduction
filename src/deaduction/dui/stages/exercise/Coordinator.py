@@ -865,7 +865,9 @@ class Coordinator(QObject):
                 elif e.input_type == InputType.Calculator:
                     target = e.input_target
                     context = self.proof_step.goal.context_objects
-                    choice, ok = CalculatorController.get_item(context, target)
+                    choice, ok = CalculatorController.get_item(context,
+                                                               target,
+                                                               e.title)
 
                 if ok:
                     self.emw.user_input.append(choice)

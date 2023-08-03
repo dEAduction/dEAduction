@@ -110,7 +110,7 @@ def set_logger():
         # log_domains = ["deaduction", "__main__",  # 'lean',
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
-                       'ServerInterface',
+                       # 'ServerInterface',
                        # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
@@ -119,10 +119,11 @@ def set_logger():
                        'deaduction.dui.elements',
                        'deaduction.pylib.actions',
                        # 'deaduction.pylib.coursedata',
-                       'deaduction.pylib.editing',
+                       # 'deaduction.pylib.editing',
+                       'deaduction.pylib.pattern_math_obj',
                        # 'logic',
                        # 'magic',
-                       'coursedata',
+                       # 'coursedata',
                        # 'deaduction.pylib',
                        # 'patterns'
                        # 'math_object'

@@ -383,6 +383,8 @@ class CalculatorMainWindow(QDialog):
 
         # CalculatorTarget
         self.calculator_target = CalculatorTarget()
+        self.calculator_target_title = QLabel()
+        main_lyt.addWidget(self.calculator_target_title)
         main_lyt.addWidget(self.calculator_target)
 
         self.setLayout(main_lyt)
@@ -404,6 +406,9 @@ class CalculatorMainWindow(QDialog):
         self.calculator_target.toolbar = self.toolbar
         self.calculator_target.button_box = self.button_box
         self.calculator_target.setFocus()
+
+    def set_target_title(self, title):
+        self.calculator_target_title.setText(title)
 
     def buttons(self) -> [CalculatorButton]:
         btns = []
@@ -432,17 +437,25 @@ class CalculatorController:
     various buttons groups.
     """
 
-    def __init__(self, target: MarkedPatternMathObject = None,
+    def __init__(self, target_type=None,
                  context=None,
-                 calculator_groups=None):
+                 calculator_groups=None,
+                 title="Calculator"):
 
-        if target:
-            self.target = target
+        if not target_type:
+            target_type = MetaVar()
+            p_target_type = MarkedPatternMathObject.from_pattern_math_object(
+                target_type)
         else:
-            self.target = MarkedPatternMathObject.from_string('?0: CONSTANT/name=ℝ')
+            p_target_type = MarkedPatternMathObject.from_math_object(target_type)
+
+        target_mvar = MetaVar(math_type=p_target_type)
+        self.target = MarkedMetavar.from_mvar(target_mvar)
         self.target.mark()
-        # self.target.set_cursor_at(target)
-        # self.cursor_pos = self.target.max_cursor()
+        display_type = target_type.math_type_to_display(format_="utf8",
+                                                        is_math_type=True,
+                                                        text=True)
+        self.target_title = _("Enter") + " " + display_type
 
         self.calculator_groups = []
         if context:
@@ -460,6 +473,8 @@ class CalculatorController:
         self.history_idx = -1
 
         self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
+        self.calculator_ui.setWindowTitle(title)
+        self.calculator_ui.set_target_title(self.target_title)
         # self.calculator_ui.set_target(target)
         self.calculator_ui.send_pattern.connect(self.insert_pattern)
 
@@ -488,20 +503,20 @@ class CalculatorController:
         n_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
         n_bar.delete.triggered.connect(self.delete)
 
-
     def show(self):
         self.calculator_ui.show()
 
     @classmethod
-    def get_item(cls, context, target_type):
+    def get_item(cls, context, target_type, title):
         """
         Execute a CalculatorController and send the choice.
         """
-        p_target_type = MarkedPatternMathObject.from_math_object(target_type)
-        target_mvar = MetaVar(math_type=p_target_type)
-        target = MarkedMetavar.from_mvar(target_mvar)
 
-        calculator_controller = cls(context=context, target=target)
+        log.debug(f"Calculator with target type = "
+                  f"{target_type.to_display(format_='utf8')}")
+        calculator_controller = cls(context=context,
+                                    target_type=target_type,
+                                    title=title)
         # Execute the ButtonsDialog and wait for results
         OK = calculator_controller.calculator_ui.exec()
         choice = calculator_controller.target
@@ -746,8 +761,10 @@ def main():
 
     target_type = MarkedPatternMathObject.from_string('SET(?1)')
     target_type = MarkedPatternMathObject.from_string('*NUMBER_TYPES')
+    target_type = MarkedPatternMathObject.from_string('CONSTANT/name=ℝ')
     choice, ok = CalculatorController.get_item(context=None,
-                                               target_type=target_type)
+                                               target_type=target_type,
+                                               title = 'Essai')
 
     # sys.exit(app.exec_())
     print(ok, choice)

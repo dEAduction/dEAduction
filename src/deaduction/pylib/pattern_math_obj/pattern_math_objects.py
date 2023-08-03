@@ -292,7 +292,7 @@ class PatternMathObject(MathObject):
     def is_no_math_type(self):
         return self is self.NO_MATH_TYPE
 
-    def match(self, math_object: MathObject) -> bool:
+    def match(self, math_object: MathObject, debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list PatternMathObject.metavars contains the metavars that have
@@ -306,7 +306,8 @@ class PatternMathObject(MathObject):
 
         metavars = []
         metavar_objects = []
-        match = self.recursive_match(math_object, metavars, metavar_objects)
+        match = self.recursive_match(math_object, metavars, metavar_objects,
+                                     debug)
         if match:
             PatternMathObject._metavars = metavars
             PatternMathObject._metavar_objects = metavar_objects
@@ -318,7 +319,8 @@ class PatternMathObject(MathObject):
         return match
 
     def recursive_match(self, math_object: MathObject,
-                        metavars, metavar_objects) -> bool:
+                        metavars, metavar_objects,
+                        debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list metavars contains the metavars that have already been
@@ -326,17 +328,9 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
-        # metavars = PatternMathObject._metavars
-        # metavar_objects = PatternMathObject._metavar_objects
         children = self.children
-
         node = self.node
-
-        # if math_object:
-        #     log.debug(f"Matching {self} and {math_object}...")
-
-        # if metavars:
-        #     pass
+        math_type = self.math_type
 
         # -----------------------------------------------
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
@@ -344,7 +338,13 @@ class PatternMathObject(MathObject):
         if self.is_no_math_type():
             return True
         elif math_object.is_no_math_type():
-            return False if self.imperative_matching else True
+            if self.imperative_matching:
+                if debug:
+                    log.debug(f"Types mismatch: imperative matching")
+
+                return False
+            else:
+                return True
 
         # --------------------- METAVARS --------------------------
         elif isinstance(self, MetaVar):
@@ -366,24 +366,26 @@ class PatternMathObject(MathObject):
                     metavar_objects.append(math_object)
                     # FIXME: make a PMO deep_copy?
                     self.matched_math_object = math_object
+                elif debug:
+                    log.debug(f"Types mismatch: mvar {self} vs {math_object}")
             return match
 
         #############
         # Test node #
         #############
         elif node != math_object.node:
-            if node not in metanodes:  # e.g. '*INEQUALITIES'
+            if node in metanodes and metanodes[node](math_object):
+                # e.g. metanodes[*INEQUALITIES] is a callable
+                pass
+            elif (math_object.node in metanodes
+                    and metanodes[math_object.node](self)):
+                # (NB: math_object could be a PatternMathObject)
+                pass
+            else:
+                if debug:
+                    log.debug(f"Nodes mismatch: {self.node} vs {math_object.node}")
                 return False
-            elif math_object.node not in metanodes[node]:
-                # Groups of nodes, e.g. '*INEQUALITIES"
-                return False
-        # if node == "QUANT_∀":
-        #     print("toto")
-        # if node == '*INEQUALITY':
-        #     print("toto")
-        #     pass  # debug
-        # if node == 'PROP_IMPLIES':
-        #     pass  # debug
+
         ###############################
         # Test bound var, name, value #
         ###############################
@@ -393,36 +395,35 @@ class PatternMathObject(MathObject):
         # but self.is_bound_var fails.
         # NB: '?' is a joker (match any name, any value)
         elif self.name and self.name != '?' and self.name != math_object.name:
+            if debug:
+                log.debug(f"Names mismatch: {self} vs {math_object}")
             return False
         elif self.value and self.value != '?' \
                 and self.value != math_object.value:
+            if debug:
+                log.debug(f"Values mismatch: {self} vs {math_object}")
             return False
         elif self.binder_info and self.binder_info != '?' \
                 and self.binder_info != math_object.binder_info:
+            if debug:
+                log.debug(f"Binder mismatch: {self} vs {math_object}")
             return False
-        # elif any(self_item != '?' and self_item != math_object_item
-        #          for self_item, math_object_item in
-        #          # [(self.is_bound_var, math_object.is_bound_var),
-        #          #  (self.name, math_object.name),
-        #          #  (self.value, math_object.value)]):
-        #          [(self.name, math_object.name),
-        #           (self.value, math_object.value)]):
-        #     return False
 
         ##################################
         # Recursively test for math_type #
         ##################################
         elif not self.math_type.recursive_match(math_object.math_type,
                                                 metavars, metavar_objects):
-            # log.debug(f"distinct types {self.math_type}")
-            # log.debug(f"math_object type     "
-            #           f"{math_object.math_type.to_display()}")
+            if debug:
+                log.debug(f"Types mismatch: {self} vs {math_object}")
             return False
 
         #################################
         # Recursively test for children #
         #################################
         elif len(children) >= len(math_object.children) + 2:
+            if debug:
+                log.debug(f"Children nb mismatch: {self} vs {math_object}")
             return False
         elif len(children) < len(math_object.children) + 2:
             nb_c = len(children)
@@ -437,12 +438,9 @@ class PatternMathObject(MathObject):
                 children = (children[:index]
                             + more_children
                             + children[index+1:])
-                # self.children.pop(index)
-                # for i in range(nb_c_mo + 1 - nb_c):
-                #     mvar = PatternMathObject.new_metavar(
-                #         PatternMathObject.NO_MATH_TYPE)
-                #     self.children.insert(index + i, mvar)
             elif nb_c != nb_c_mo:
+                if debug:
+                    log.debug(f"Children nb mismatch: {self} vs {math_object}")
                 return False
 
         match = True
@@ -467,11 +465,10 @@ class PatternMathObject(MathObject):
         ############
         # Children #
         ############
-        # if self.node == 'LOCAL_CONSTANT' and len(children) == 3:
-        #     print(self)
-        #     print(math_object)
         for child0, child1 in zip(children, math_object.children):
             if not child0.recursive_match(child1, metavars, metavar_objects):
+                if debug:
+                    log.debug(f"Children mismatch: {self} vs {math_object}")
                 match = False
 
         # Unmark bound_vars

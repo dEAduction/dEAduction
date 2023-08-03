@@ -1143,7 +1143,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # Last test: new_pmo match mvar?
         mvar.clear_matching()
         log.debug(f"Last test: try to match {pmo_display} with {mvar}")
-        match_mvar_test = mvar.match(new_pmo)
+        match_mvar_test = mvar.match(new_pmo, debug=True)
         if not match_mvar_test:
             return False
 
@@ -1288,8 +1288,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         In particular, insert a tag at the place where a cursor should be 
         displayed.
         """
-        shape = super().latex_shape(is_type=False,
-                                    text=False,
+        shape = super().latex_shape(is_type=is_type,
+                                    text=text,
                                     lean_format=False)
         if not self.is_marked:
             return shape

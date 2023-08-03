@@ -59,12 +59,22 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
 
     # (B) User enter sub-goal
     elif len(user_input) == 1:
-        output = new_properties
-        raise MissingParametersError(InputType.Text,
+        # output = new_properties
+        # raise MissingParametersError(InputType.Text,
+        #                              title=_("Introduce a new subgoal"),
+        #                              output=output)
+        raise MissingParametersError(InputType.Calculator,
                                      title=_("Introduce a new subgoal"),
-                                     output=output)
+                                     target=MathObject.PROP)  # FIXME
+        # raise MissingParametersError(InputType.Text,
+        #                                  title=_("Introduce a new object"),
+        #                                  output=output)
+        # else:  # Send code
+        #     name = pre_process_lean_code(user_input[1])
+        #     new_hypo_name = get_new_hyp(proof_step, name='Def')
+        #     new_object = user_input[2].to_display(format_='lean')
     elif len(user_input) == 2:
-        sub_goal = pre_process_lean_code(user_input[1])
+        sub_goal = user_input[1].to_display(format_='lean')
 
     # (C) Code:
     if sub_goal:

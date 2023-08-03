@@ -94,14 +94,18 @@ global _
 # QUANTIFIERS #
 ###############
 ###############
-metanodes = {'*INEQUALITY': ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥",
-                             "PROP_EQUAL_NOT"),
-             '*NUMBER_TYPES': ("CONSTANT/name=ℕ",
-                               "CONSTANT/name=ℤ",
-                               "CONSTANT/name=ℚ",
-                               "CONSTANT/name=ℝ"
-                               )}
-_
+def is_number_type(math_object):
+    return math_object.is_number()
+
+
+def is_inequality(math_object):
+    return math_object.is_inequality(is_math_type=True)
+
+
+metanodes = {'*INEQUALITY': is_inequality,
+             '*NUMBER_TYPES': is_number_type}
+
+
 quant_pattern = dict()
 
 

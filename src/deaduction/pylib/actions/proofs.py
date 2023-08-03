@@ -289,7 +289,8 @@ def action_new_object(proof_step) -> CodeForLean:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
                                          title="+",
-                                         output=_("Name your object:"))
+                                         output=_("Give a name for your "
+                                                  "new object:"))
         elif len(user_input) == 2:
             # Check name does not already exists
             name = pre_process_lean_code(user_input[1])
@@ -301,14 +302,17 @@ def action_new_object(proof_step) -> CodeForLean:
                                              title="+",
                                              output=output)
             else:  # Ask for new object
-                output = new_objects
-                raise MissingParametersError(InputType.Text,
+                # output = new_objects
+                raise MissingParametersError(InputType.Calculator,
                                              title=_("Introduce a new object"),
-                                             output=output)
+                                             target=None)
+                # raise MissingParametersError(InputType.Text,
+                #                                  title=_("Introduce a new object"),
+                #                                  output=output)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
             new_hypo_name = get_new_hyp(proof_step, name='Def')
-            new_object = pre_process_lean_code(user_input[2])
+            new_object = user_input[2].to_display(format_='lean')
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
