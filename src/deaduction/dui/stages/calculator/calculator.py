@@ -92,11 +92,29 @@ class CalculatorTarget(MathTextWidget):
 
         self.lean_mode = False  # TODO: change behavior in Lean mode
 
+    def mousePressEvent(self, event):
+        if self.lean_mode:
+            super().mousePressEvent(event)
+        else:
+            self.setFocus()
+            event.ignore()
+
+    def mouseDoubleClickEvent(self, event):
+        if self.lean_mode:
+            super().mouseDoubleClickEvent(event)
+        else:
+            self.setFocus()
+            event.ignore()
+
     def keyPressEvent(self, event):
         """
         Take focus (from calculator_target) so that shortcuts to buttons
         work.
         """
+
+        if self.lean_mode:
+            super().keyPressEvent(event)
+            return
 
         self.key_buffer_timer.setInterval(1000)
         self.key_buffer_timer.start()
@@ -500,7 +518,7 @@ class CalculatorController:
         n_bar.right_unmatched_action.triggered.connect(
             self.move_to_next_unmatched)
         n_bar.end_action.triggered.connect(self.go_to_end)
-        n_bar.lean_mode_wdg.stateChanged.connect(self.set_target)
+        n_bar.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
     def show(self):
@@ -519,8 +537,16 @@ class CalculatorController:
                                     title=title)
         # Execute the ButtonsDialog and wait for results
         OK = calculator_controller.calculator_ui.exec()
-        choice = calculator_controller.target
+        if not calculator_controller.lean_mode:
+            choice = calculator_controller.target
+        else:
+            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
         return choice, OK
+
+    @Slot()
+    def set_lean_mode(self):
+        self.calculator_ui.calculator_target.lean_mode = self.lean_mode
+        self.set_target()
 
     @property
     def lean_mode(self) -> bool:
@@ -752,6 +778,7 @@ class CalculatorController:
 
 def main():
 
+    from deaduction.pylib.mathobj import MathObject
     target = MarkedPatternMathObject.from_string('?0: SET(?1)')
     target = MarkedPatternMathObject.from_string('?0: *NUMBER_TYPES')
     # target.mark()
@@ -759,16 +786,29 @@ def main():
     # calculator = CalculatorController(target=target)
     # calculator.show()
 
-    target_type = MarkedPatternMathObject.from_string('SET(?1)')
-    target_type = MarkedPatternMathObject.from_string('*NUMBER_TYPES')
-    target_type = MarkedPatternMathObject.from_string('CONSTANT/name=ℝ')
+    # target_type = MarkedPatternMathObject.from_string('SET(?1)')
+    # target_type = MarkedPatternMathObject.from_string('*NUMBER_TYPES')
+    # target_type = MarkedPatternMathObject.from_string('CONSTANT/name=ℝ')
+    # target_type = MathObject(node="CONSTANT", info = {'name': 'ℝ'},
+    #                          children=[])
+
+    type_ = MathObject(node='TYPE', info={}, children=[])
+    set_ = MathObject(node='CONSTANT', info={'name': 'X'}, children=[],
+                      math_type=type_)
+    target_type = MathObject(node="SET", info={},
+                             children=[set_])
+    # target_type = MathObject(node="CONSTANT", info={'name': 'ℝ'},
+    #                          children=[])
     choice, ok = CalculatorController.get_item(context=None,
                                                target_type=target_type,
-                                               title = 'Essai')
+                                               title='Essai')
 
     # sys.exit(app.exec_())
     print(ok, choice)
-    print(choice.to_display(format_='lean'))
+    if isinstance(choice, str):
+        print(choice)
+    else:
+        print(choice.to_display(format_='lean'))
 
 
 if __name__ == '__main__':

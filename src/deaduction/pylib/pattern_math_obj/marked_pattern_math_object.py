@@ -1143,11 +1143,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # Last test: new_pmo match mvar?
         mvar.clear_matching()
         log.debug(f"Last test: try to match {pmo_display} with {mvar}")
-        match_mvar_test = mvar.match(new_pmo, debug=True)
+        match_mvar_test = mvar.match(new_pmo, debug=True, do_matching=False)
         if not match_mvar_test:
             return False
-
-        return True
+        else:
+            mvar.apply_metavars_matching()
+            return True
 
     def insert(self, new_pmo: PatternMathObject):
         """

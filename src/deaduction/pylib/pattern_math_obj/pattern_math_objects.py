@@ -292,7 +292,12 @@ class PatternMathObject(MathObject):
     def is_no_math_type(self):
         return self is self.NO_MATH_TYPE
 
-    def match(self, math_object: MathObject, debug=False) -> bool:
+    def apply_metavars_matching(self):
+        for mvar, math_object in zip(self._metavars, self._metavar_objects):
+            mvar.matched_math_object = math_object
+
+    def match(self, math_object: MathObject,
+              do_matching=True, debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The list PatternMathObject.metavars contains the metavars that have
@@ -316,6 +321,8 @@ class PatternMathObject(MathObject):
         #           PatternMathObject.__metavar_objects[idx].to_display())
         #          for idx in range(len(PatternMathObject.__metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
+            if do_matching:
+                self.apply_metavars_matching()
         return match
 
     def recursive_match(self, math_object: MathObject,
@@ -356,6 +363,9 @@ class PatternMathObject(MathObject):
                 # TODO: use only self.matched_math_object and mvar.match?
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
+                if not match and debug:
+                    log.debug(f"Mismatch: matched mvar {self} vs"
+                              f" {math_object}")
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type
@@ -365,9 +375,36 @@ class PatternMathObject(MathObject):
                     metavars.append(self)
                     metavar_objects.append(math_object)
                     # FIXME: make a PMO deep_copy?
-                    self.matched_math_object = math_object
+                    # self.matched_math_object = math_object
                 elif debug:
-                    log.debug(f"Types mismatch: mvar {self} vs {math_object}")
+                    log.debug(f"Types mismatch: type of mvar {self} vs"
+                              f" {math_object}")
+            return match
+        elif isinstance(math_object, MetaVar):
+            # If self has already been identified, math_object matches self
+            #   iff it is equal to the corresponding item in metavar_objects
+            # If not, then self matches with math_object providing their
+            #   math_types match. In this case, identify metavar.
+            if math_object in metavars:
+                # TODO: use only self.matched_math_object and mvar.match?
+                corresponding_object = math_object.math_object_from_metavar()
+                match = (self == corresponding_object)
+                if not match and debug:
+                    log.debug(f"Mismatch: matched mvar {math_object} vs"
+                              f" {self}")
+            else:
+                mvar_type = math_object.math_type
+                math_type = self.math_type
+                match = mvar_type.recursive_match(math_type,
+                                                  metavars, metavar_objects)
+                if match:
+                    metavars.append(math_object)
+                    metavar_objects.append(self)
+                    # FIXME: make a PMO deep_copy?
+                    # math_object.matched_math_object = self
+                elif debug:
+                    log.debug(f"Types mismatch: type of mvar {self} vs"
+                              f" {math_object}")
             return match
 
         #############
