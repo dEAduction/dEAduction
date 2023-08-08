@@ -3,7 +3,7 @@ from typing import Union
 import logging
 
 from deaduction.pylib.mathobj import MathObject, ContextMathObject
-from deaduction.pylib.pattern_math_obj import PatternMathObject
+from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display.display_data import MathDisplay
                                                         # lean_from_node,
                                                         # needs_paren)
@@ -93,15 +93,28 @@ def global_pre_shape_to_pre_shape(pre_shape, text=False):
     return pre_shape
 
 
-def substitute_metavars(shape, metavars: [PatternMathObject], self):
+def substitute_metavars(shape, metavars: [MetaVar], pattern):
     """
-    Recursively substitute int by the corresponding metavars in shape.
+    Recursively substitute integers by the corresponding matched math object in
+    shape.
+    The given integer is the index of the metavar in the metavars list,
+    then the matched math object is obtained from the pattern.
+    Mind that metavars is NOT equal to pattern.metavars: the lists are
+    probably equal up to a permutation, but the indices in metavars
+    correspond to the number in the pattern, e.g. ?0 is the first item in
+    metavars (but not necessarily in pattern.metavars).
     """
     if isinstance(shape, int):
         item = shape
-        return metavars[item].math_object_from_metavar()
+        if item < len(metavars):
+            mvar = metavars[item]
+            return mvar.matched_math_object(pattern.metavars,
+                                            pattern.metavar_objects)
+        else:
+            print("index out of range")
     elif isinstance(shape, list):
-        return list(substitute_metavars(item, metavars, self) for item in shape)
+        return list(substitute_metavars(item, metavars, pattern)
+                    for item in shape)
     else:  # e.g. str, MathObject
         return shape
 
@@ -114,10 +127,10 @@ def lean_shape(self: MathObject) -> []:
     for pattern, pre_shape, metavars in pattern_lean:
         # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
         #     print("debug")
-        if pattern.match(self, do_matching=False):
+        if pattern.match(self, assign=False):
             # Now metavars are matched
             # log.debug(f"Matching pattern --> {pre_shape}")
-            shape = tuple(substitute_metavars(item, metavars, self)
+            shape = tuple(substitute_metavars(item, metavars, pattern)
                           for item in pre_shape)
             break
     if not shape:
@@ -189,10 +202,10 @@ def latex_shape(self: MathObject, is_type=False, text=False,
             #             print('debug')
             # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
             #     print("debug")
-            if pattern.match(self, do_matching=False):
+            if pattern.match(self, assign=False):
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
-                shape = tuple(substitute_metavars(item, metavars, self)
+                shape = tuple(substitute_metavars(item, metavars, pattern)
                               for item in pre_shape)
                 break
         if shape:

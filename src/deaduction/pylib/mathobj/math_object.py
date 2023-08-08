@@ -102,11 +102,14 @@ def allow_implicit_use(test_: callable) -> callable:
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
                       f"...)")
-                if pattern_left.match(math_type, do_matching=False):
+                if pattern_left.match(math_type, assign=False):
                     if test(pattern_right, is_math_type=True):
                         definition = MathObject.implicit_definitions[index]
                         MathObject.last_used_implicit_definition = definition
-                        rw_math_object = pattern_right.apply_matching()
+                        metavars = pattern_left.metavars
+                        objects = pattern_left.metavar_objects
+                        rw_math_object = pattern_right.math_object_from_matching(
+                            metavars, objects)
                         MathObject.last_rw_object = rw_math_object
                         log.debug(f"Implicit definition: "
                                   f"{definition.pretty_name}")
@@ -1494,7 +1497,7 @@ class MathObject:
             if pattern_left.match(self):
                 definition = MathObject.implicit_definitions[index]
                 MathObject.last_used_implicit_definition = definition
-                rw_math_object = pattern_right.apply_matching()
+                rw_math_object = pattern_right.math_object_from_matching()
                 rw_math_objects.append(rw_math_object)
                 name = MathObject.implicit_definitions[index].pretty_name
                 # log.debug(f"Implicit definition {name} "
@@ -1539,7 +1542,8 @@ class MathObject:
         #         'SET_INTER+':
         #     print("inter")
         definitions = MathObject.definitions
-        matching_defs = [defi for defi in definitions if defi.match(math_type)]
+        matching_defs = [defi for defi in definitions
+                         if defi.match(math_type)]
         return matching_defs
 
     def glob_vars_when_proving(self):
@@ -1826,7 +1830,7 @@ class BoundVar(MathObject):
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())
 
-    def apply_matching(self):
+    def math_object_from_matching(self, metavars=None, metavars_objects=None):
         """
         Juste return a copy of self.
         """

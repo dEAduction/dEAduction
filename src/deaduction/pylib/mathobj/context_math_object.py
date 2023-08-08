@@ -337,7 +337,7 @@ class ContextMathObject(MathObject):
 
         obj = implicit_objs[0]
         definition = MathObject.last_used_implicit_definition
-        main_symbol = obj.main_symbol_from_node()
+        main_symbol = obj.main_symbol()
         # msgs_dic = help_msgs.prove if target else help_msgs.use
         msgs = get_help_msgs(main_symbol)
         main_symbol_msgs = []
@@ -363,7 +363,7 @@ class ContextMathObject(MathObject):
         def get_help_msgs(key):
             return help_msgs.get_help_msgs(key, on_target)
 
-        main_symbol = self.math_type.main_symbol_from_node()
+        main_symbol = self.math_type.main_symbol()
 
         if main_symbol == "not":
             prop = self.math_type.body_of_negation()

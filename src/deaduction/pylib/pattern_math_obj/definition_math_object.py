@@ -129,7 +129,7 @@ class DefinitionMathObject(MathObject, Definition):
         if not self.check_proof_state():
             return False
 
-        if self.lhs_pattern.match(math_object):
+        if self.lhs_pattern.match(math_object, assign=False):
             self._last_matched_math_object = math_object
             return True
         else:
@@ -144,7 +144,7 @@ class DefinitionMathObject(MathObject, Definition):
         if self._last_matched_math_object is not math_object:
             self.match(math_object)
         if self._last_matched_math_object:
-            rhs_math_object = self.rhs_pattern.apply_matching()
+            rhs_math_object = self.rhs_pattern.math_object_from_matching()
             return rhs_math_object
 
     @classmethod
