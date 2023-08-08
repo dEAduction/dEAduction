@@ -101,9 +101,10 @@ class PatternMathObject(MathObject):
     def from_tree(cls, tree, metavars):
         """
         Recursive method to create a PMO from a Tree instance,
-        with attributes node, children and type_. A dict of the metavars used in
-        self is furnished to which new metavars are appended. Keys are
-        metavar nbs.
+        with attributes node, children and type_. A list of the metavars used in
+        self is furnished to which new metavars are appended; the index of
+        the metavars in the list corresponds to the numbers in the pattern
+        string, e.g. "?0" --> metavar at index 0 in metavars.
         """
 
         # if tree.node == '*INEQUALITY':
@@ -294,7 +295,7 @@ class PatternMathObject(MathObject):
 
     def apply_metavars_matching(self):
         for mvar, math_object in zip(self._metavars, self._metavar_objects):
-            mvar.matched_math_object = math_object
+            mvar.assigned_math_object = math_object
 
     def match(self, math_object: MathObject,
               do_matching=True, debug=False) -> bool:
@@ -306,7 +307,7 @@ class PatternMathObject(MathObject):
         e.g. 'g∘f is injective' matches 'metavar_28 is injective'
         (note that math_types of metavars should also match).
         The math_object matched with some mvar is stored in the attribute
-        mvar.matched_math_object.
+        mvar.assigned_math_object.
         """
 
         metavars = []
@@ -360,7 +361,7 @@ class PatternMathObject(MathObject):
             # If not, then self matches with math_object providing their
             #   math_types match. In this case, identify metavar.
             if self in metavars:
-                # TODO: use only self.matched_math_object and mvar.match?
+                # TODO: use only self.assigned_math_object and mvar.match?
                 corresponding_object = self.math_object_from_metavar()
                 match = (math_object == corresponding_object)
                 if not match and debug:
@@ -375,7 +376,7 @@ class PatternMathObject(MathObject):
                     metavars.append(self)
                     metavar_objects.append(math_object)
                     # FIXME: make a PMO deep_copy?
-                    # self.matched_math_object = math_object
+                    # self.assigned_math_object = math_object
                 elif debug:
                     log.debug(f"Types mismatch: type of mvar {self} vs"
                               f" {math_object}")
@@ -386,7 +387,7 @@ class PatternMathObject(MathObject):
             # If not, then self matches with math_object providing their
             #   math_types match. In this case, identify metavar.
             if math_object in metavars:
-                # TODO: use only self.matched_math_object and mvar.match?
+                # TODO: use only self.assigned_math_object and mvar.match?
                 corresponding_object = math_object.math_object_from_metavar()
                 match = (self == corresponding_object)
                 if not match and debug:
@@ -401,7 +402,7 @@ class PatternMathObject(MathObject):
                     metavars.append(math_object)
                     metavar_objects.append(self)
                     # FIXME: make a PMO deep_copy?
-                    # math_object.matched_math_object = self
+                    # math_object.assigned_math_object = self
                 elif debug:
                     log.debug(f"Types mismatch: type of mvar {self} vs"
                               f" {math_object}")
@@ -517,7 +518,10 @@ class PatternMathObject(MathObject):
         return match
 
     def math_object_from_metavar(self):
-        # TODO: use MetaVar.matched_math_object
+        """
+        If some MathObject has been matched with self in the match() method,
+        then return this object.
+        """
         if self not in PatternMathObject._metavars:
             return MathObject.NO_MATH_TYPE
         else:
@@ -538,16 +542,13 @@ class PatternMathObject(MathObject):
         elif self is PatternMathObject.NO_MATH_TYPE:
             return MathObject.NO_MATH_TYPE
 
-        found_math_type = self.math_type.apply_matching()
-        found_children = []
-        for pattern_child in self.children:
-            child = pattern_child.apply_matching()
-            found_children.append(child)
+        matched_math_type = self.math_type.apply_matching()
+        matched_children = [child.apply_matching() for child in self.children]
 
         math_object = MathObject(node=self.node,
                                  info=self.info,
-                                 children=found_children,
-                                 math_type=found_math_type)
+                                 children=matched_children,
+                                 math_type=matched_math_type)
         return math_object
 
     @classmethod
@@ -568,30 +569,30 @@ class PatternMathObject(MathObject):
                 MathObject.definition_patterns.append(pattern)
                 definition.implicit_use_activated = True  # Obsolete
 
-    def first_mvar(self, unmatched=True):
+    def first_mvar(self, unassigned=True):
         """
-        Return the first (unmatched) mvar of self, if any.
+        Return the first (unassigned) mvar of self, if any.
         """
 
-        if self.is_metavar() and not (unmatched and self.matched_math_object):
+        if self.is_metavar() and not (unassigned and self.assigned_math_object):
             return self
         else:
             for child in self.children:
-                mvar = child.first_mvar(unmatched)
+                mvar = child.first_mvar(unassigned)
                 if mvar:
                     return mvar
 
-    def all_mvars(self, unmatched=False):
+    def all_mvars(self, unassigned=False):
         """
-        Return the ordered list of all [unmatched] mvars appearing in self.
+        Return the ordered list of all [unassigned] mvars appearing in self.
         """
 
-        if self.is_metavar() and not (unmatched and self.matched_math_object):
+        if self.is_metavar() and not (unassigned and self.assigned_math_object):
             return [self]
         else:
             mvars = []
             for child in self.children:
-                mvars.extend(child.all_mvars(unmatched=unmatched))
+                mvars.extend(child.all_mvars(unassigned=unassigned))
             return mvars
 
 
@@ -607,7 +608,7 @@ class MetaVar(PatternMathObject):
     is that MVAR can be affected to a MathObject. This modifies their display.
     """
 
-    _matched_math_object: Optional[MathObject] = None
+    _assigned_math_object: Optional[MathObject] = None
 
     metavar_nb: int = 0  # Class attribute (counter)
 
@@ -631,24 +632,25 @@ class MetaVar(PatternMathObject):
         return self is other
 
     def __repr__(self):
-        math_obj = self.matched_math_object
-        rep = f"MV n°{self.nb}" if not math_obj else f"matched MV = {math_obj}"
+        math_obj = self.assigned_math_object
+        rep = f"MV n°{self.nb}" if not math_obj else \
+            f"assigned MV n°{self._info.get('nb')}= {math_obj}"
         return rep
 
     @property
-    def matched_math_object(self):
-        return self._matched_math_object
+    def assigned_math_object(self):
+        return self._assigned_math_object
 
-    @matched_math_object.setter
-    def matched_math_object(self, math_object):
-        self._matched_math_object = math_object
+    @assigned_math_object.setter
+    def assigned_math_object(self, math_object):
+        self._assigned_math_object = math_object
 
     @classmethod
     def deep_copy(cls, self):
         new_mvar = super().deep_copy(self)
-        mmo = self.matched_math_object
+        mmo = self.assigned_math_object
         if mmo:
-            new_mvar.matched_math_object = mmo.deep_copy(mmo)
+            new_mvar.assigned_math_object = mmo.deep_copy(mmo)
         return new_mvar
 
     @property
@@ -656,12 +658,12 @@ class MetaVar(PatternMathObject):
         return self.info['nb']
 
     def clear_matching(self):
-        self.matched_math_object = None
+        self.assigned_math_object = None
         if self.math_type.is_metavar():
             self.math_type.clear_matching()
 
     def math_object_from_metavar(self):
-        return (self.matched_math_object if self.matched_math_object
+        return (self.assigned_math_object if self.assigned_math_object
                 else MathObject.NO_MATH_TYPE)
 
     # def to_display(self: MathObject, format_="html", text=False,

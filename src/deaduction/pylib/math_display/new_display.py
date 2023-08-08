@@ -93,13 +93,13 @@ def global_pre_shape_to_pre_shape(pre_shape, text=False):
     return pre_shape
 
 
-def substitute_metavars(shape, metavars, self):
+def substitute_metavars(shape, metavars: [PatternMathObject], self):
     """
     Recursively substitute int by the corresponding metavars in shape.
     """
     if isinstance(shape, int):
         item = shape
-        return metavars[item].matched_math_object
+        return metavars[item].math_object_from_metavar()
     elif isinstance(shape, list):
         return list(substitute_metavars(item, metavars, self) for item in shape)
     else:  # e.g. str, MathObject
@@ -114,7 +114,7 @@ def lean_shape(self: MathObject) -> []:
     for pattern, pre_shape, metavars in pattern_lean:
         # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
         #     print("debug")
-        if pattern.match(self):
+        if pattern.match(self, do_matching=False):
             # Now metavars are matched
             # log.debug(f"Matching pattern --> {pre_shape}")
             shape = tuple(substitute_metavars(item, metavars, self)
@@ -168,6 +168,7 @@ def latex_shape(self: MathObject, is_type=False, text=False,
 
     # (0) Dictionaries to be used (order matters!):
     dicts = []
+    # FIXME:
     if not isinstance(self, PatternMathObject):
         if is_type:
             dicts.append(pattern_latex_for_type)
@@ -188,7 +189,7 @@ def latex_shape(self: MathObject, is_type=False, text=False,
             #             print('debug')
             # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
             #     print("debug")
-            if pattern.match(self):
+            if pattern.match(self, do_matching=False):
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
                 shape = tuple(substitute_metavars(item, metavars, self)

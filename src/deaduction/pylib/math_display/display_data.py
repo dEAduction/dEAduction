@@ -195,7 +195,8 @@ class MathDisplay:
          "GENERIC_PARENTHESES": ('(', 0, ')'),
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
-         "META_NODE": (0, 1),
+         "GENERIC_NODE": (0, '??', 1),
+         "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
          }
@@ -778,7 +779,8 @@ class MathDisplay:
     def ordered_children(cls, shape) -> list:
         """
         Return the list of children or descendants nbs corresponding to shape,
-        with string items replaced by None.
+        with string items replaced by None. This method looks into item
+        that are lists.
         """
 
         children = []

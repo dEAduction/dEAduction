@@ -45,15 +45,21 @@ global _
 numbers = {str(n): f'NUMBER/value={n}: *NUMBER_TYPES' for n in range(11)}
 calculator_pattern_strings = {
                    '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                    # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
                    '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                    '*': 'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',  # pb = real + int ?
                    '/': 'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                    '.': 'POINT(?0, ?1)',
                     # Useful for set extension:
                    ',': 'COMMA(?0, ?1)',
-                   # 'sin': 'APP(CONSTANT/name=sin, ?0: CONSTANT/name=ℝ)',
-                   'sin': 'CONSTANT/name=sin: FUNCTION(*NUMBER_TYPES, *NUMBER_TYPES)',
-                   'max': 'CONSTANT/name=max: FUNCTION(*NUMBER_TYPES, FUNCTION(*NUMBER_TYPES,*NUMBER_TYPES))',
+                   'sin': 'APP: CONSTANT/name=ℝ()(CONSTANT/name=sin, '
+                          '?0: CONSTANT/name=ℝ)',
+                   # 'sin': 'CONSTANT/name=sin: FUNCTION(*NUMBER_TYPES, *NUMBER_TYPES)',
+                   # 'max': 'CONSTANT/name=max: FUNCTION(*NUMBER_TYPES, FUNCTION(*NUMBER_TYPES,*NUMBER_TYPES))',
+                   # 'max': 'APP: *NUMBER_TYPES()(APP(CONSTANT/name=max, ?0: *NUMBER_TYPES),'
+                   #        '?1: *NUMBER_TYPES)',
+                   'max': 'APP: *NUMBER_TYPES()(CONSTANT/name=max, ?0: *NUMBER_TYPES,'
+                          '?1: *NUMBER_TYPES)',
                    '()': 'GENERIC_PARENTHESES(?0)',
                    # ')': 'CLOSE_PARENTHESIS(...)',
                    # LOGIC
@@ -75,12 +81,19 @@ calculator_pattern_strings.update(numbers)
 
 automatic_matching_patterns = {
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1): ?2"  # : ((0,), r"\parentheses", (1,)),
+    # FIXME: a single point... a single sign...
     "COMPOSITE_NUMBER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)"
     # : (0, 1),
     # "SEVERAL(?0, ?1)": (0, ' ', 1),
     # "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
-    "META_NODE(?0, ?1)" #: (0, 1)
+    # "GENERIC_NODE(?0, ?1)" #: (0, 1)
 }
+
+
+def populate_automatic_patterns(cls):
+    for pattern_string in automatic_matching_patterns:
+        mpmo = MarkedPatternMathObject.from_string(pattern_string)
+        MarkedPatternMathObject.automatic_patterns.append(mpmo)
 
 
 calc_shortcuts = {'\\forall': '∀',
@@ -147,7 +160,7 @@ calculator_group = CalculatorPatternLines(_('Calculator'),
                                            ['0', '.', '()', '+'],
                                            ])
 sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
-                                        [['sin'],
+                                        [['sin', 'max'],
                                          # ['=', '<']
                                          ])
 logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])

@@ -160,7 +160,7 @@ class CalculatorTarget(MathTextWidget):
             action = bar.delete
         elif key_sequence == QKeySequence.NextChild:
             bar = self.navigation_bar
-            action = bar.right_unmatched_action
+            action = bar.right_unassigned_action
 
         # Main toolbar
         elif key_sequence == QKeySequence.Undo:
@@ -264,11 +264,11 @@ class NavigationBar(AbstractToolBar):
         # TODO: add icons
 
         self.beginning_action = QAction(_('←←'), self)
-        self.left_unmatched_action = QAction(_('?←'), self)
+        self.left_unassigned_action = QAction(_('?←'), self)
         self.left_action = QAction(_('←'), self)
         self.up_action = QAction(_('↑'), self)
         self.right_action = QAction(_('→'), self)
-        self.right_unmatched_action = QAction(_('→?'), self)
+        self.right_unassigned_action = QAction(_('→?'), self)
         self.end_action = QAction(_('→→'), self)
         self.delete = QAction(QIcon(str((icons_dir /
                                          'cancel.png').resolve())),
@@ -276,11 +276,11 @@ class NavigationBar(AbstractToolBar):
 
         self.addAction(self.delete)
         self.addAction(self.end_action)
-        self.addAction(self.right_unmatched_action)
+        self.addAction(self.right_unassigned_action)
         self.addAction(self.right_action)
         self.addAction(self.up_action)
         self.addAction(self.left_action)
-        self.addAction(self.left_unmatched_action)
+        self.addAction(self.left_unassigned_action)
         self.addAction(self.beginning_action)
 
 
@@ -468,7 +468,7 @@ class CalculatorController:
             p_target_type = MarkedPatternMathObject.from_math_object(target_type)
 
         target_mvar = MetaVar(math_type=p_target_type)
-        self.target = MarkedMetavar.from_mvar(target_mvar)
+        self.target = MarkedMetavar.from_mvar(target_mvar)  # FIXME!!!!!!!!
         self.target.mark()
         display_type = target_type.math_type_to_display(format_="utf8",
                                                         is_math_type=True,
@@ -510,13 +510,13 @@ class CalculatorController:
 
         n_bar = calc_ui.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-        n_bar.left_unmatched_action.triggered.connect(
-            self.move_to_previous_unmatched)
+        n_bar.left_unassigned_action.triggered.connect(
+            self.move_to_previous_unassigned)
         n_bar.left_action.triggered.connect(self.move_left)
         n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
-        n_bar.right_unmatched_action.triggered.connect(
-            self.move_to_next_unmatched)
+        n_bar.right_unassigned_action.triggered.connect(
+            self.move_to_next_unassigned)
         n_bar.end_action.triggered.connect(self.go_to_end)
         n_bar.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
@@ -566,8 +566,8 @@ class CalculatorController:
         return self.calculator_ui.navigation_bar.beginning_action
 
     @property
-    def left_unmatched_action(self):
-        return self.calculator_ui.navigation_bar.left_unmatched_action
+    def left_unassigned_action(self):
+        return self.calculator_ui.navigation_bar.left_unassigned_action
 
     @property
     def left_action(self):
@@ -582,8 +582,8 @@ class CalculatorController:
         return self.calculator_ui.navigation_bar.right_action
 
     @property
-    def right_unmatched_action(self):
-        return self.calculator_ui.navigation_bar.right_unmatched_action
+    def right_unassigned_action(self):
+        return self.calculator_ui.navigation_bar.right_unassigned_action
 
     @property
     def end_action(self):
@@ -628,11 +628,11 @@ class CalculatorController:
     def enable_actions(self):
         target = self.target
         self.beginning_action.setEnabled(not target.is_at_beginning())
-        self.left_unmatched_action.setEnabled(bool(target.previous_unmatched()))
+        self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
         self.left_action.setEnabled(not target.is_at_beginning())
         self.up_action.setEnabled(bool(target.parent_of_marked()))
         self.right_action.setEnabled(not target.is_at_end())
-        self.right_unmatched_action.setEnabled(bool(target.next_unmatched()))
+        self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
         self.end_action.setEnabled(not target.is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
@@ -670,13 +670,13 @@ class CalculatorController:
     def insert_pattern(self, pattern_s):
         # Fixme: pattern or patterns?
         new_target = self.target.deep_copy(self.target)
-        matched_mvar = new_target.insert(pattern_s)
+        assigned_mvar = new_target.insert(pattern_s)
         # Alternative: dos not work
         # ok = new_target.insert_after_marked(pattern_s)
         print(f"New target: {new_target}")
-        if matched_mvar:
+        if assigned_mvar:
             self.target = new_target
-            self.target.move_after_insert(matched_mvar)
+            self.target.move_after_insert(assigned_mvar)
             self.update()
 
         print(f"New target after move: {new_target}")
@@ -757,15 +757,15 @@ class CalculatorController:
         self.set_target_and_update()
 
     @Slot()
-    def move_to_next_unmatched(self):
-        success = self.target.move_right_to_next_unmatched()
+    def move_to_next_unassigned(self):
+        success = self.target.move_right_to_next_unassigned()
         if success:
             self.calculator_ui.set_html(self.html_target)
             self.set_target_and_update()
 
     @Slot()
-    def move_to_previous_unmatched(self):
-        success = self.target.move_left_to_previous_unmatched()
+    def move_to_previous_unassigned(self):
+        success = self.target.move_left_to_previous_unassigned()
         if success:
             self.set_target_and_update()
 
@@ -797,8 +797,8 @@ def main():
                       math_type=type_)
     target_type = MathObject(node="SET", info={},
                              children=[set_])
-    # target_type = MathObject(node="CONSTANT", info={'name': 'ℝ'},
-    #                          children=[])
+    target_type = MathObject(node="CONSTANT", info={'name': 'ℝ'},
+                             children=[])
     choice, ok = CalculatorController.get_item(context=None,
                                                target_type=target_type,
                                                title='Essai')

@@ -102,7 +102,7 @@ def allow_implicit_use(test_: callable) -> callable:
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
                       f"...)")
-                if pattern_left.match(math_type):
+                if pattern_left.match(math_type, do_matching=False):
                     if test(pattern_right, is_math_type=True):
                         definition = MathObject.implicit_definitions[index]
                         MathObject.last_used_implicit_definition = definition
