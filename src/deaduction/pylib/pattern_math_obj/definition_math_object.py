@@ -118,7 +118,7 @@ class DefinitionMathObject(MathObject, Definition):
 
     def clear_matching(self):
         for mvar in self.metavars:
-            mvar.clear_matching()
+            mvar.clear_assignment()
 
     def match(self, math_object) -> bool:
         """
@@ -129,7 +129,7 @@ class DefinitionMathObject(MathObject, Definition):
         if not self.check_proof_state():
             return False
 
-        if self.lhs_pattern.match(math_object, assign=False):
+        if self.lhs_pattern.match(math_object):
             self._last_matched_math_object = math_object
             return True
         else:

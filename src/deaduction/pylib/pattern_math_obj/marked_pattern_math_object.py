@@ -979,7 +979,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             # self appear only once: no central children
             return left, [], left_or_central
 
-    def partionned_mvars(self, unassigned=False):
+    def partionned_mvars(self, unassigned=False) -> [[PatternMathObject]]:
         lists = self.partionned_children()
         descendant_lists = ([], [], [])
         for l, new_l in zip(lists, descendant_lists):
@@ -1028,8 +1028,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mvar is either a term of left_path or a term of right_path.
         """
 
-        # Beware that match() method do assign the assigned object!
-        # do_insert=False not implemented
+        PatternMathObject.clear_cls_metavars()
 
         assert isinstance(new_pmo, MarkedPatternMathObject)
         assert isinstance(mvar, MarkedMetavar)
@@ -1096,7 +1095,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                           f" {mvar.assigned_math_object}")
                 for child_new_pmo in left_mvars:
                     log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object):
+                    if child_new_pmo.match(mvar.assigned_math_object,
+                                           use_cls_metavars=True):
                         # NB: assigned_math_object now assigned to child_new_pmo
                         log.debug("yes!")
                         left_insertion = True
@@ -1107,7 +1107,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                           f" {mvar.assigned_math_object}")
                 for child_new_pmo in right_mvars:
                     log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object):
+                    if child_new_pmo.match(mvar.assigned_math_object,
+                                           use_cls_metavars=True):
                         log.debug("yes!")
                         right_insertion = True
                         break
@@ -1117,7 +1118,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                           f"with {mvar.assigned_math_object}")
                 for child_new_pmo in central_mvars:
                     log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object):
+                    if child_new_pmo.match(mvar.assigned_math_object,
+                                           use_cls_metavars=True):
                         log.debug("yes!")
                         central_insertion = True
                         break
@@ -1155,9 +1157,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     while mvars:
                         pmo_mvar = mvars.pop(0)
                         math_child = child.assigned_math_object
-                        if math_child and pmo_mvar.match(math_child):
+                        if math_child and pmo_mvar.match(math_child,
+                                                         use_cls_metavars=True):
                             # Success for this child!
-                            child.clear_matching()
+                            child.clear_assignment()
                             break
                     if pmo_mvar and not pmo_mvar.is_assigned:
                         # last mvar did not match
@@ -1167,25 +1170,26 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # (D) Last match #
         ##################
         # Last test: new_pmo match mvar?
-        mvar.clear_matching()
+        mvar.clear_assignment()
         log.debug(f"Last test: try to match {pmo_display} with {mvar}")
-        match_mvar_test = mvar.match(new_pmo, assign=False, debug=True)
+        match_mvar_test = mvar.match(new_pmo,
+                                     # debug=True,
+                                     use_cls_metavars=True)
         if not match_mvar_test:
             return False
         else:
+            # Assign all mvars that have been matched in this method:
             mvar.assign_matched_metavars()
             return True
 
-    def insert_if_you_can_on_next_mvar(self):
-        pass
+    # def insert_if_you_can_on_next_mvar(self):
+    #     pass
 
     def generic_insert(self, new_pmo):
         """
         Force insertion of new_pmo at self.marked_descendant() by inserting
         a generic node.
         """
-
-
 
 
     def automatic_patterns(self):

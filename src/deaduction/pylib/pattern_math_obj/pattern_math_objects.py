@@ -72,8 +72,8 @@ class PatternMathObject(MathObject):
     loc_csts_for_metavars   = []  # and corresponding local constants
     __tmp_metavars_csts         = None
     __tmp_loc_csts_for_metavars = None
-    _metavars        = None  # Temporary list of mvars
-    _metavar_objects = None  # Objects matching metavars (see self.match)
+    __metavars        = None  # Temporary list of mvars
+    __metavar_objects = None  # Objects matching metavars (see self.match)
 
     def __init__(self, node, info, children,
                  math_type=None,
@@ -83,7 +83,8 @@ class PatternMathObject(MathObject):
         imperative_matching = True means self will not match a MathObject
         with unknown math_type.
         """
-        self._metavars = []
+        self.metavars = []
+        self.metavar_objects = []
         super().__init__(node=node,
                          info=info,
                          children=children,
@@ -93,13 +94,13 @@ class PatternMathObject(MathObject):
     def __repr__(self):
         return self.debug_repr('PMO')
 
-    @property
-    def metavars(self):
-        return self._metavars
-
-    @property
-    def metavar_objects(self):
-        return self._metavar_objects
+    # @property
+    # def metavars(self):
+    #     return self._metavars
+    #
+    # @property
+    # def metavar_objects(self):
+    #     return self._metavar_objects
 
     @classmethod
     def new_metavar(cls, math_type):
@@ -181,7 +182,7 @@ class PatternMathObject(MathObject):
         cls.__tmp_metavars_csts         = []
         pattern = cls.__from_math_object(math_object,
                                          turn_lc_into_mvar=turn_lc_into_mvar)
-        pattern._metavars = cls.__tmp_metavars_csts
+        pattern.metavars = cls.__tmp_metavars_csts
         return pattern
 
     @classmethod
@@ -232,31 +233,8 @@ class PatternMathObject(MathObject):
         # metavars = cls.__tmp_metavars_csts
         # loc_csts = cls.__tmp_loc_csts_for_metavars
 
-        # if math_object in loc_csts:
-        #     metavar = metavars[loc_csts.index(math_object)]
-        #     # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
-        #     return metavar
-
         if math_object.is_local_constant() and turn_lc_into_mvar:
             return cls.metavar_from_loc_constant(math_object)
-            # if math_object.is_bound_var:
-            #     return copy(math_object)
-            # else:
-            #     # Turn math_type into a PatternMathObject,
-            #     # then create a new metavar.
-            #     if math_object.math_type is MathObject.NO_MATH_TYPE:
-            #         math_type = PatternMathObject.NO_MATH_TYPE
-            #     else:
-            #         math_type = cls.__from_math_object(math_object.math_type)
-            #     new_metavar = cls.new_metavar(math_type)
-            #     metavars.append(new_metavar)
-            #     cls.metavars_csts.append(new_metavar)
-            #     loc_csts.append(math_object)
-            #     cls.loc_csts_for_metavars.append(math_object)
-            #     # metavar_list[math_object] = new_metavar
-            #     # log.debug(f"   Creating metavar n°{new_metavar.info['nb']}")
-            #     return new_metavar
-
         else:
             node = math_object.node
 
@@ -287,14 +265,6 @@ class PatternMathObject(MathObject):
         """
         return self is other
 
-    # @property
-    # def name(self):
-    #     """
-    #     If self has no name, then return "?", meaning that self should match
-    #     any name. Override MathObject.name.
-    #     """
-    #     return self.info.get('name')
-
     def is_metavar(self):
         return isinstance(self, MetaVar)
 
@@ -303,18 +273,25 @@ class PatternMathObject(MathObject):
 
     def assign_matched_metavars(self):
         """
-        Assign all metavars in self._metavars to the corresponding MathObject in
-        self._metavar_objects.
+        Assign all metavars in self.metavars to the corresponding MathObject in
+        self.metavar_objects.
         """
-        for mvar, math_object in zip(self._metavars, self._metavar_objects):
+        for mvar, math_object in zip(self.metavars, self.metavar_objects):
             mvar.assigned_math_object = math_object
 
-    def clear_matched_metavars(self):
-        self._metavars = []
-        self._metavar_objects = []
+    @classmethod
+    def clear_cls_metavars(cls):
+        cls.__metavars = []
+        cls.__metavar_objects = []
 
-    def match(self, math_object: MathObject,
-              assign=True, debug=False) -> bool:
+    # def clear_matched_metavars(self):
+    #     self._metavars = []
+    #     self._metavar_objects = []
+
+    def match(self,
+              math_object: MathObject,
+              use_cls_metavars=False,
+              debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
         The metavars list contains the metavars that have
@@ -325,23 +302,32 @@ class PatternMathObject(MathObject):
         In case of successful matching, the metavars and metavar_objects
         lists are stored as self's attributes. The corresponding MathObject
         may be obtained by applying the math_object_from_matching() method.
+        These lists are also stored in the corresponding private class
+        attributes, so that matching can be done simultaneously on several
+        objects by using the tag clear_previous_matched_metavars=False.
         """
 
-        metavars = []
-        metavar_objects = []
+        if use_cls_metavars:
+            # Swallow copy of cls metavars
+            metavars = [mvar for mvar in self.__metavars]
+            metavar_objects = [mvar for mvar in self.__metavar_objects]
+        else:
+            metavars = []
+            metavar_objects = []
+
         match = self.recursive_match(math_object, metavars, metavar_objects,
                                      debug)
         if match:
-            # FIXME: changed PMO._metavars to self._metavars:
-            self._metavars = metavars
-            self._metavar_objects = metavar_objects
+            self.metavars = metavars
+            self.metavar_objects = metavar_objects
+            if use_cls_metavars:
+                self.__metavars.extend(metavars)
+                self.__metavar_objects.extend(metavar_objects)
         # log.debug(f"Matching {self.node} and {math_object.node}...")
         # list_ = [(PatternMathObject.__metavars[idx].to_display(),
         #           PatternMathObject.__metavar_objects[idx].to_display())
         #          for idx in range(len(PatternMathObject.__metavars))]
         # log.debug(f"    Metavars, objects: {list_}")
-            if assign:
-                self.assign_matched_metavars()
         return match
 
     def recursive_match(self, math_object: MathObject,
@@ -540,15 +526,15 @@ class PatternMathObject(MathObject):
 
     def math_object_from_matching(self, metavars=None, metavars_objects=None):
         """
-        Substitute metavars in self according to self._metavars and
-        self._metavar_objects. Returns a MathObject if all
-        metavars of self are in self._metavars,
+        Substitute metavars in self according to self.metavars and
+        self.metavar_objects. Returns a MathObject if all
+        metavars of self are in self.metavars,
         else a MathObject with some metavars.
         """
 
         if metavars is None:
-            metavars = self._metavars
-            metavars_objects = self._metavar_objects
+            metavars = self.metavars
+            metavars_objects = self.metavar_objects
 
         if isinstance(self, MetaVar):
             return self.matched_math_object(metavars, metavars_objects)
@@ -685,10 +671,10 @@ class MetaVar(PatternMathObject):
             math_object = metavar_objects[index]
             return math_object
 
-    def clear_matching(self):
+    def clear_assignment(self):
         self.assigned_math_object = None
         if self.math_type.is_metavar():
-            self.math_type.clear_matching()
+            self.math_type.clear_assignment()
 
     # def math_object_from_metavar(self):
     #     return (self.assigned_math_object if self.assigned_math_object
