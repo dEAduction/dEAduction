@@ -162,6 +162,7 @@ class MathLabel(QLabel, AbstractMathHtmlText):
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
+        self.set_highlight()
 
     def setText(self, text: str):
         super().setText(self.html_style + self.preamble + text + self.postamble)
@@ -176,6 +177,7 @@ class MathItem(QStandardItem, AbstractMathHtmlText):
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
+        self.set_highlight()
 
     def setText(self, text: str):
         super().setText(self.html_style + '<div>' + text + '</div>')
