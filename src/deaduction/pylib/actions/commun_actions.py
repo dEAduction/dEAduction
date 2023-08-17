@@ -74,7 +74,9 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
         #     new_hypo_name = get_new_hyp(proof_step, name='Def')
         #     new_object = user_input[2].to_display(format_='lean')
     elif len(user_input) == 2:
-        sub_goal = user_input[1].to_display(format_='lean')
+        sub_goal = user_input[1]
+        if isinstance(sub_goal, MathObject):
+            sub_goal.to_display(format_='lean')
 
     # (C) Code:
     if sub_goal:

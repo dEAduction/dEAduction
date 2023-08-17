@@ -356,14 +356,20 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             # item = add_type_indication(item)  # e.g. (0:ℝ)
             # if item[0] != '(':
             #     item = '(' + item + ')'
-            item = user_input[0].to_display(format_='lean')
-            potential_var = MathObject(node="LOCAL_CONSTANT",
-                                       info={'name': item, 'user_input': True},
-                                       children=[],
-                                       math_type=None)
-            selected_objects.insert(0, potential_var)
-            # selection_object_added = True
-            # Now len(l) == 2
+            math_object = user_input[0]
+            if isinstance(math_object, str):
+                math_object = MathObject(node="RAW_LEAN_CODE",
+                                         info={'name': '(' + math_object + ')'},
+                                         children=[],
+                                         math_type=None)
+            elif not math_object.info.get('name'):
+                # This is a bit weird...
+                math_object.info['name'] = ('(' + math_object.to_display(
+                                                        format_='lean') + ')')
+
+            selected_objects.insert(0, math_object)
+            code = use_forall(proof_step, selected_objects)
+            return code
 
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
@@ -405,9 +411,11 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
         raise MissingParametersError(InputType.Calculator,
                                      title=_("Exist"),
                                      target=input_target)
-    x = user_input[0].to_display(format_='lean')
+    x = user_input[0]
+    if isinstance(x, MathObject):
+        x = x.to_display(format_='lean')
     # x = pre_process_lean_code(str(user_input[0]))
-    code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
+    code = CodeForLean.from_string(f'use ({x})')  # (f'use {x}, dsimp')
     # code = code.or_else(f'use {x}')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
