@@ -77,6 +77,8 @@ if __name__ == '__main__':
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
+# from deaduction.pylib.math_display.pattern_init import all_app_patterns
+from deaduction.pylib.math_display import PatternMathDisplay
 # from .calculator_pattern_strings import automatic_matching_patterns
 
 log = logging.getLogger(__name__)
@@ -343,15 +345,17 @@ class MarkedTree:
 
         # (1) Unassigned children mvar?
         for child in assigned_mvar.ordered_children():
-            if child.is_metavar and not child.is_assigned:
+            if child.is_metavar() and not child.is_assigned:
                 self.set_cursor_at(child, 0)
                 return child
+
+        # (1b) Generic node as a parent?
 
         # (2) Unassigned sisters?
         parent = self.parent_of(assigned_mvar)
         if parent:
             for child in parent.ordered_children():
-                if child.is_metavar and not child.is_assigned:
+                if child.is_metavar() and not child.is_assigned:
                     self.set_cursor_at(child, 0)
                     return child
 
@@ -834,6 +838,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     cursor_pos = None
     automatic_patterns = []  # Populated in calculator_pattern_strings.py
+    app_patterns = []
     #
     # @classmethod
     # def populate_automatic_patterns(cls):
@@ -881,20 +886,31 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return mpmo
 
     @classmethod
-    def generic_node(cls, self, other):
+    def populate_app_marked_patterns(cls):
+        patterns = PatternMathDisplay.fake_app_constant_patterns
+        cls.app_patterns = [cls.from_string(pat) for pat in patterns]
+
+    @classmethod
+    def generic_node(cls, left_child=None, right_child=None, node=None):
         """
         Create a MarkedPatternMathObject with node GENERIC_NODE and children
         self and other. This is used to force insertion when math_type is
         unknown.
         """
+        if node is None:
+            node = "GENERIC_NODE"
+        pattern = node + "(?0, ?1)"
+        generic_node = cls.from_string(pattern)
+        mvar1 = generic_node.children[0]
+        mvar2 = generic_node.children[1]
+        mvar1.assigned_math_object = left_child
+        mvar2.assigned_math_object = right_child
+        return generic_node
 
-        pattern = "GENERIC_NODE(?0, ?1)"
-        gn = cls.from_string(pattern)
-        mvar1 = gn.children[0]
-        mvar2 = gn.children[1]
-        mvar1.assigned_math_object = self
-        mvar2.assigned_math_object = other
-        return gn
+    @classmethod
+    def composite_number(cls, left_child, right_child):
+        return cls.generic_node(left_child, right_child,
+                                node="COMPOSITE_NUMBER")
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
@@ -904,7 +920,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         shape = super().latex_shape(is_type=is_type,
                                     text=text,
-                                    lean_format=False)
+                                    lean_format=lean_format)
         if not self.is_marked:
             return shape
 
@@ -1013,22 +1029,43 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             test = (priority(parent.node, self.node) not in ('=', '>'))
         return test
 
-    def automatic_insert(self, new_pmo, mvar):
-        """
-        Try to insert new_pmo at mvar by first inserting an automatic
-        pattern, and then inserting mvar.math_object (if any) and new_pmo as a
-        child.
-        """
-        # TODO
-        pass
+    # def automatic_insert(self, new_pmo, mvar):
+    #     """
+    #     Try to insert new_pmo at mvar by first inserting an automatic
+    #     pattern, and then inserting mvar.math_object (if any) and new_pmo as a
+    #     child.
+    #     """
+    #     # TODO
+    #     pass
 
-    def insert_if_you_can(self, new_pmo, mvar, parent_mvar):
+    @staticmethod
+    def assign(mvars, math_object, assignments, check_types=False):
+        for child_new_pmo in mvars:
+            log.debug(f"----> {child_new_pmo} match?")
+            if child_new_pmo.match(math_object,
+                                     use_cls_metavars=True):
+                log.debug("yes!")
+                return True
+            elif not check_types:
+                assignments.append((child_new_pmo,
+                                    math_object))
+                log.debug("Check type failed, assign anyway")
+                return True
+
+    @staticmethod
+    def do_assign(assignments):
+        for metavar, math_object in assignments:
+            metavar.assigned_math_object = math_object
+
+    def insert_if_you_can(self, new_pmo, mvar, parent_mvar=None,
+                          check_types=False):
         """
         Try to insert new_pmo at mvar, as a left child if
         mvar is either a term of left_path or a term of right_path.
         """
 
         PatternMathObject.clear_cls_metavars()
+        assignments = []
 
         assert isinstance(new_pmo, MarkedPatternMathObject)
         assert isinstance(mvar, MarkedMetavar)
@@ -1089,40 +1126,25 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             left_insertion = False
             central_insertion = False
             right_insertion = False
+            math_object = mvar.assigned_math_object
             if left:
                 log.debug(f"--> Trying to match left mvars of {pmo_display} "
-                          f"with"
-                          f" {mvar.assigned_math_object}")
-                for child_new_pmo in left_mvars:
-                    log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object,
-                                           use_cls_metavars=True):
-                        # NB: assigned_math_object now assigned to child_new_pmo
-                        log.debug("yes!")
-                        left_insertion = True
-                        break
+                          f"with {math_object}")
+                left_insertion = self.assign(left_mvars, math_object,
+                                             assignments, check_types)
 
             if not left_insertion and right:
                 log.debug(f"--> Trying to match right mvars of {pmo_display} with"
                           f" {mvar.assigned_math_object}")
-                for child_new_pmo in right_mvars:
-                    log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object,
-                                           use_cls_metavars=True):
-                        log.debug("yes!")
-                        right_insertion = True
-                        break
+                right_insertion = self.assign(right_mvars, math_object,
+                                              assignments, check_types)
 
             if not (left_insertion or right_insertion):
                 log.debug(f"--> Trying to match central mvars of {pmo_display} "
                           f"with {mvar.assigned_math_object}")
-                for child_new_pmo in central_mvars:
-                    log.debug(f"----> {child_new_pmo} match?")
-                    if child_new_pmo.match(mvar.assigned_math_object,
-                                           use_cls_metavars=True):
-                        log.debug("yes!")
-                        central_insertion = True
-                        break
+                central_insertion = self.assign(central_mvars, math_object,
+                                                assignments, check_types)
+
             insertion = (left_insertion or right_insertion or central_insertion)
             if not insertion:
                 log.debug("-->Child don't match.")
@@ -1153,18 +1175,29 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 log.debug(f"--> Bad children: {display}")
                 while bad_children:
                     child = bad_children.pop(0)
-                    pmo_mvar = None
+                    success = False
                     while mvars:
                         pmo_mvar = mvars.pop(0)
-                        math_child = child.assigned_math_object
-                        if math_child and pmo_mvar.match(math_child,
-                                                         use_cls_metavars=True):
+                        # math_child = child.assigned_math_object
+                        # if math_child:
+                        if pmo_mvar.match(child,
+                                            use_cls_metavars=True):
                             # Success for this child!
                             child.clear_assignment()
+                            success = True
                             break
-                    if pmo_mvar and not pmo_mvar.is_assigned:
+                        elif not check_types:
+                            assignments.append((pmo_mvar,
+                                                child))
+                            success = True
+                            log.debug("Failed, assigned anyway")
+                            break
+                    if not success:
                         # last mvar did not match
+                        log.debug(f"unable to assign child {child}")
                         return False
+                    else:
+                        log.debug(f"Child {child} assigned tp {pmo_mvar}")
 
         ##################
         # (D) Last match #
@@ -1176,29 +1209,23 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                                      # debug=True,
                                      use_cls_metavars=True)
         if not match_mvar_test:
-            return False
+            if not check_types:
+                assignments.append((mvar, new_pmo))
+                log.debug("--> failed, assign anyway")
+            else:
+                return False
         else:
-            # Assign all mvars that have been matched in this method:
-            mvar.assign_matched_metavars()
-            return True
+            log.debug("-->match!")
+
+        # Insertion succeeded:
+        # Assign all mvars that have been matched in this method:
+        # if check_types:
+        mvar.assign_matched_metavars()
+        self.do_assign(assignments)
+        return True
 
     # def insert_if_you_can_on_next_mvar(self):
     #     pass
-
-    def generic_insert(self, new_pmo):
-        """
-        Force insertion of new_pmo at self.marked_descendant() by inserting
-        a generic node.
-        """
-
-
-    def automatic_patterns(self):
-        """
-        Try to replace generic nodes in self sub-tree by patterns in the
-        automatic_patterns list.
-        """
-
-        pass
 
     def insert(self, new_pmo: PatternMathObject):
         """
@@ -1208,10 +1235,16 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
 
         mvar = self.marked_descendant()
+        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+
+        if mvar.node == "GENERIC_NODE":
+            success = self.substitute_generic_node(mvar, new_pmo_copy)
+            if success:
+                return mvar
+
         parent_mvar = self.parent_of(mvar)
 
         while mvar:
-            new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
             success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
             if success:
                 return mvar
@@ -1222,44 +1255,127 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # TODO: try next!
 
+        # return self.generic_insert(new_pmo)
+
         # TODO: try automatic patterns
 
         # TODO: handle multiple patterns
 
     # FIXME: obsolete?
 
-    # @property
-    # def left_children(self):
-    #     shape = self.latex_shape()
-    #     l_nb, r_nb = MathDisplay.left_right_children(shape)
-    #     l_children = [self.children[i] for i in l_nb]
-    #     # r_children = [self.children[i] for i in r_nb]
-    #     return l_children
-    #
-    # @property
-    # def right_children(self):
-    #     shape = self.latex_shape()
-    #     l_nb, r_nb = MathDisplay.left_right_children(shape)
-    #     # l_children = [self.children[i] for i in l_nb]
-    #     r_children = [self.children[i] for i in r_nb]
-    #     return r_children
+    def insert_app_parentheses(self):
+        mvar = self.marked_descendant()
+        math_object = mvar.assigned_math_object
+        if not math_object:
+            return
+        for app_pattern in self.app_patterns:
+            child = app_pattern.children[0]
+            if child.match(math_object):
+                new_pmo = app_pattern.deep_copy(app_pattern)
+                new_pmo.children[0].match(math_object)
+                new_pmo.assign_matched_metavars()
+                if mvar.match(new_pmo):
+                    mvar.assign_matched_metavars()
+                else:
+                    mvar.assigned_math_object = new_pmo
+                return mvar
 
-    # def insert_at_end(self, new_pmo: PatternMathObject) -> bool:
-    #     i_list = self.infix_list()
-    #     last_node = i_list[-1]
-    #     path = self.lineage_from(last_node)
-    #     for idx in range(len(path)):
-    #         mvar = path[idx]
-    #         if not mvar.is_metavar():
-    #             continue
-    #         parent_mvar = path[idx + 1] if idx < len(path) - 1 else None
-    #         # Crucial: deepcopy pmo!!
-    #         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
-    #         success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
-    #         if success:
-    #             return True
-    #         else:
-    #             new_pmo_copy.clear_all_matchings()
+    def substitute_generic_node(self, mvar, new_pmo, check_types=False):
+        """
+        Given an mvar whose assigned_math_object is a generic_node,
+        substitute this generic node by new_pmo.
+        """
+
+        # nb_children = len([child for child in mvar.children
+        #                    if child.assigned_math_object])
+        #
+        # if nb_children > len(new_pmo.children):
+        #     # Fail
+        #     return
+
+        assignments = []
+        [child1, child2] = mvar.children
+        mo1, mo2 = child1.assigned_math_object, child2.assigned_math_object
+        left_mvars, central_mvars, right_mvars = \
+            new_pmo.partionned_mvars(unassigned=True)
+        if mo1:
+            if left_mvars:
+                child1_mvar = left_mvars[0]
+                if not check_types:
+                    assignments.append((child1_mvar, mo1))
+                else:
+                    pass  # TODO!!
+            elif central_mvars:
+                child1_mvar = central_mvars.pop(0)
+                assignments.append((child1_mvar, mo1))
+            else:
+                return False
+        if mo2:
+            if right_mvars:
+                child2_mvar = right_mvars[0]
+                assignments.append((child2_mvar, mo2))
+            elif central_mvars:
+                child2_mvar = central_mvars.pop(0)
+                assignments.append((child2_mvar, mo2))
+            else:
+                return False
+
+        self.do_assign(assignments)
+        mvar.assigned_math_object = new_pmo
+        return True
+
+    def generic_insert(self, new_pmo: PatternMathObject):
+        """
+        Force insertion of new_pmo at self.marked_descendant() by inserting
+        a generic node.
+        """
+
+        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+
+        mvar = self.marked_descendant()
+        left_child = mvar.assigned_math_object
+        if left_child:
+            mvar.clear_assignment()
+            if left_child.node == 'NUMBER' and new_pmo_copy.node == 'NUMBER':
+                generic_node = MarkedPatternMathObject.composite_number(
+                            left_child=left_child, right_child=new_pmo_copy)
+            else:
+                generic_node = MarkedPatternMathObject.generic_node(
+                            left_child=left_child, right_child=new_pmo_copy)
+        else:
+            generic_node = MarkedPatternMathObject.generic_node(
+                left_child=new_pmo_copy)
+
+        mvar.assigned_math_object = generic_node
+        self.set_cursor_at(generic_node.children[1], 1)
+
+        return self.marked_descendant()
+
+    # def automatic_patterns(self):
+    #     """
+    #     Try to replace generic nodes in self sub-tree by patterns in the
+    #     automatic_patterns list.
+    #     """
+
+    def post_process(self):
+        new_children = [child.post_process() for child in self.children]
+
+        if self.node == "COMPOSITE_NUMBER":
+            child0 = new_children[0]
+            child1 = new_children[1]
+            if child0.node == 'NUMBER' and child1.node == 'NUMBER':
+                # Concatenate
+                new_child = child0.value() + child1.value()
+                return new_child
+        elif self.node == "POINT":
+            child0 = new_children[0]
+            child1 = new_children[1]
+            if child0.node == 'NUMBER' and child1.node == 'NUMBER':
+                # Concatenate
+                new_child = child0.value() + '.' + child1.value()
+                return new_child
+
+        return self
 
     @classmethod
     def tree_from_list(cls, i_list: []):
@@ -1374,100 +1490,6 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         marked_mvar.assigned_math_object = mvar.assigned_math_object
         return marked_mvar
 
-    # def insert_over_assigned_math_object(self, pmo: PatternMathObject,
-    #                                     lineage=None) -> bool:
-    #     """
-    #     See next method's doc.
-    #     """
-    #
-    #     # (1) Special cases
-    #     self_object = self.assigned_math_object
-    #     if self_object.math_type.is_number() or self_object.node == 'NUMBER':
-    #         value = str(self_object.value)
-    #         if pmo.math_type.is_number() or pmo.node == 'NUMBER':
-    #             units = str(pmo.value)
-    #             self_object.value = value + units
-    #             return True
-    #         elif pmo.node == 'POINT':
-    #             if '.' not in value:
-    #                 self_object.value = value + '.'
-    #                 return True
-    #             else:
-    #                 return False
-
-        # (2) If self_object and pmo both have children and have the same
-        #  nb of children, try to replace.
-        # if self_object.children and \
-        #         len(self_object.children) == len(pmo.children):
-        #     tests = [self.match(pmo)]
-        #     for child, child_mvar in zip(self_object.children, pmo.children):
-        #         if isinstance(child_mvar, MetaVar):
-        #             tests.append(child_mvar.match(child))
-        #     if all(tests):
-        #         self.assigned_math_object = pmo
-        #         for child, child_mvar in zip(self_object.children,
-        #                                      pmo.children):
-        #             child_mvar.assigned_math_object = child
-        #         return True
-
-        # # (3) Try to insert
-        # mvar = pmo.first_mvar()
-        # if not mvar:
-        #     return False
-        #
-        # # (3a) Check parent priority, and maybe insert at parent
-        # else:
-        #     # FIXME: left or right children????
-        #     if lineage:
-        #         parent = lineage.pop()
-        #         if hasattr(parent, "insert_over_assigned_math_object"):
-        #             # TODO: if not, try parent's parent
-        #             # Compare priority of pmo and parent
-        #             self_node = parent.node
-        #             other_node = pmo.node
-        #             prior = priority(self_node, other_node)
-        #             if prior in ('=', '>'):
-        #                 success = parent.insert_over_assigned_math_object(pmo,
-        #                                                                  lineage)
-        #                 if success:
-        #                     return True
-        #
-        # # (3b) Insert at self
-        # match = mvar.match(self.assigned_math_object)
-        # if match:
-        #     mvar.assigned_math_object = self.assigned_math_object
-        #     self.assigned_math_object = pmo
-        #     return True
-        # else:
-        #     return False
-
-    # def insert(self, math_object: PatternMathObject, lineage=None) -> bool:
-    #     """
-    #     Try to insert math_object in self. Return True in case of success,
-    #     False otherwise.
-    #     - If self does not have assigned_math_object, just check that
-    #     math_types match (to be improved: try automatic matching, e.g.
-    #         f --> f(.) );
-    #     - Otherwise, try to substitute assigned_math_object with math_object
-    #     by matching the assigned_math_obj with the first mvar of math_object
-    #     (to be improved: try automatic matching?)
-    #     """
-    #
-    #     # Crucial: deepcopy math_object!!
-    #     math_object = math_object.deep_copy(math_object)
-    #
-    #     if not self.assigned_math_object:
-    #         match = self.match(math_object)
-    #         if match:
-    #             self.assigned_math_object = math_object
-    #             return True
-    #         else:
-    #             # FIXME: insert an MVAR with math_object as first child?
-    #             return False
-    #
-    #     else:
-    #         return self.insert_over_assigned_math_object(math_object, lineage)
-
     def delete(self):
         """
         FIXME: what is the desired behavior?
@@ -1478,57 +1500,8 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                 self.math_type.assigned_math_object = None
             return True
 
-    # def to_display(self, format_="html", text=False,
-    #                use_color=True, bf=False, is_type=False,
-    #                used_in_proof=False):
-    #     # mmo = self.assigned_math_object
-    #     unmark = False
-    #     mmo = None
-    #     if mmo:
-    #         assert isinstance(mmo, MarkedPatternMathObject)
-    #         if self.is_marked and not mmo.is_marked:
-    #             mmo.mark()
-    #             unmark = True
-    #         display = mmo.to_display(format_=format_, text=text,
-    #                                  use_color=use_color, bf=bf,
-    #                                  is_type=is_type)
-    #         if unmark:
-    #             mmo.unmark()
-    #     else:
-    #         display = MathObject.to_display(self, format_=format_, text=text,
-    #                                         use_color=use_color, bf=bf,
-    #                                         is_type=is_type)
-    #
-    #     return display
 
-    # @classmethod
-    # def mark_cursor(cls, yes=True):
-    #     MathDisplay.mark_cursor = yes
-
-    # def latex_shape(self, is_type=False, text=False, lean_format=False):
-    #     """
-    #     Modify the latex shape to mark the main symbol, if self.is_marked.
-    #     """
-    #     shape = super().latex_shape(is_type=False,
-    #                                 text=False,
-    #                                 lean_format=False)
-    #     if not self.is_marked:
-    #         return shape
-    #
-    #     marked_shape = MathDisplay.marked_latex_shape(self.node, shape)
-    #     return marked_shape
-    #
-
-# def marked(item):
-#     """
-#     This method add a tag to the main symbol of a tuple representing a latex
-#     shape.
-#     FIXME: criterium and marking to be modified.
-#     """
-#     marked_item = ('*' + item if isinstance(item, str)
-#                    else item)
-#     return marked_item
-
+MarkedPatternMathObject.populate_app_marked_patterns()
 
 if __name__ == "__main__":
     s1 = "SUM(?1 , NUMBER/value=1)"

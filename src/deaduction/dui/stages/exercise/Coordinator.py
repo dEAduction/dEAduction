@@ -402,7 +402,7 @@ class Coordinator(QObject):
         # except RuntimeError:
         #     # It seems that sometimes signals are already deleted
         #     log.debug("(Impossible to disconnect signals)")
-
+        MathObject.clear()
         self.__disconnect_signals()
 
         if not self.test_mode and not self.history_mode:
@@ -539,6 +539,7 @@ class Coordinator(QObject):
 
     async def __restart_lean_server(self):
         log.debug("Stopping Lean server...")
+        MathObject.clear()
         # with trio.move_on_after(10):
         #     await self.servint.file_invalidated.wait()
         await self.servint.secured_stop()
@@ -619,7 +620,7 @@ class Coordinator(QObject):
                 if emission.is_from(self.close_server_task):
                     log.info("    -> Close server_Task...")
                     self.server_task_closed.set()
-                    await emissions.aclose() # FIXME!!!! (for testing)
+                    await emissions.aclose()  # FIXME!!!! (for testing)
                     log.info("            ...closed!")
                     break
 

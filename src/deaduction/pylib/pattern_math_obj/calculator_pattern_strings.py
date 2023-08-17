@@ -27,7 +27,10 @@ This file is part of d∃∀duction.
 from collections import OrderedDict
 
 from .marked_pattern_math_object import MarkedPatternMathObject
+from .definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
+# from deaduction.pylib.math_display import PatternMathDisplay
+# from deaduction.pylib.math_display.pattern_init import pattern_latex
 
 global _
 
@@ -43,6 +46,7 @@ global _
 
 # NUMBERS
 numbers = {str(n): f'NUMBER/value={n}: *NUMBER_TYPES' for n in range(11)}
+
 calculator_pattern_strings = {
                    '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                     # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
@@ -52,12 +56,14 @@ calculator_pattern_strings = {
                    '.': 'POINT(?0, ?1)',
                     # Useful for set extension:
                    ',': 'COMMA(?0, ?1)',
-                   'sin': 'APP: CONSTANT/name=ℝ()(CONSTANT/name=sin, '
-                          '?0: CONSTANT/name=ℝ)',
-                   # 'sin': 'CONSTANT/name=sin: FUNCTION(*NUMBER_TYPES, *NUMBER_TYPES)',
+                   # FIXME:
+                   # 'sin': 'APP: CONSTANT/name=ℝ()(CONSTANT/name=sin, '
+                   #        '?0: CONSTANT/name=ℝ)',
+                   'sin': 'CONSTANT/name=sin: FUNCTION(*NUMBER_TYPES, *NUMBER_TYPES)',
                    # 'max': 'CONSTANT/name=max: FUNCTION(*NUMBER_TYPES, FUNCTION(*NUMBER_TYPES,*NUMBER_TYPES))',
                    # 'max': 'APP: *NUMBER_TYPES()(APP(CONSTANT/name=max, ?0: *NUMBER_TYPES),'
                    #        '?1: *NUMBER_TYPES)',
+                   # FIXME:
                    'max': 'APP: *NUMBER_TYPES()(CONSTANT/name=max, ?0: *NUMBER_TYPES,'
                           '?1: *NUMBER_TYPES)',
                    '()': 'GENERIC_PARENTHESES(?0)',
@@ -80,13 +86,14 @@ calculator_pattern_strings = {
 calculator_pattern_strings.update(numbers)
 
 automatic_matching_patterns = {
-    "APP(?0: !FUNCTION(?1, ?2), ?3: ?1): ?2"  # : ((0,), r"\parentheses", (1,)),
+    "APP(?0: !FUNCTION(?1, ?2), ?3: ?1): ?2",  # : ((0,), r"\parentheses",
+    # (1,)),
     # FIXME: a single point... a single sign...
-    "COMPOSITE_NUMBER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)"
+    "COMPOSITE_NUMBER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)",
     # : (0, 1),
     # "SEVERAL(?0, ?1)": (0, ' ', 1),
     # "SEVERAL(?0, ?1, ?2)": (0, ' ', 1, ' ', 2)
-    # "GENERIC_NODE(?0, ?1)" #: (0, 1)
+    # "GENERIC_NODE(?0, ?1)"  #: (0, 1)
 }
 
 
@@ -124,6 +131,9 @@ class CalculatorPatternLines:
         marked_pmo = MarkedPatternMathObject.from_string(string, [])
         marked_patterns[symbol] = marked_pmo
 
+    # # Special patterns
+    # marked_patterns['()'] = parentheses_patterns() + [marked_patterns['()']]
+
     def __init__(self, title: str, lines: [],
                  patterns=None):
 
@@ -138,7 +148,7 @@ class CalculatorPatternLines:
     @classmethod
     def from_context(cls, context_math_objects: [ContextMathObject]):
         title = _('Context')
-        patterns = {}
+        patterns = dict()
         for obj in context_math_objects:
             symbol = obj.to_display(format_='utf8')
             marked_pmo = MarkedPatternMathObject.from_math_object(obj)
@@ -147,6 +157,31 @@ class CalculatorPatternLines:
                   lines=[list(patterns.keys())],
                   patterns=patterns)
         return cpl
+
+    @classmethod
+    def constants_from_definitions(cls):
+        csts_dict = DefinitionMathObject.get_constants()
+        cpls = []
+        for section, constants in csts_dict.items():
+            symbols, patterns = [], OrderedDict()
+            for obj in constants:
+                marked_pmo = MarkedPatternMathObject.from_math_object(obj)
+                symbol = marked_pmo.name
+                # idx, symbol = marked_pmo.main_shape_symbol()
+                # if symbol == 'max':
+                #     print(marked_pmo.math_type)
+                symbols.append(symbol)
+                patterns[symbol] = marked_pmo
+            # Slices of 4
+            symbols = [symbols[4*idx:4*(idx+1)]
+                       for idx in range(len(symbols) // 4 + 1)]
+            cpl = cls(title=section,
+                      lines=symbols,
+                      patterns=patterns)
+
+            cpls.append(cpl)
+
+        return cpls
 
     def pattern_from_symbol(self, symbol):
         pattern = self.marked_patterns[symbol]
@@ -160,7 +195,7 @@ calculator_group = CalculatorPatternLines(_('Calculator'),
                                            ['0', '.', '()', '+'],
                                            ])
 sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
-                                        [['sin', 'max'],
+                                        [['sin', '()', ','],
                                          # ['=', '<']
                                          ])
 logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])

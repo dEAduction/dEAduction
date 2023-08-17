@@ -91,6 +91,7 @@ class CalculatorTarget(MathTextWidget):
         # self.cursorPositionChanged()  (signal)
 
         self.lean_mode = False  # TODO: change behavior in Lean mode
+        self.check_types = False  # TODO: add button?
 
     def mousePressEvent(self, event):
         if self.lean_mode:
@@ -307,7 +308,7 @@ class CalculatorButton(QToolButton):
 
     def add_shortcut(self):
         """
-        Automatically add the first letter as a shortcut which is a child of
+        Automatically add self.text() as a shortcut which is a child of
         parent.
         """
 
@@ -322,6 +323,14 @@ class CalculatorButton(QToolButton):
         match += more_match
         if len(match) == 1:
             return cls.shortcuts_dic[match[0]]
+        elif len(match) > 1:
+            first_match = match[0]
+            test = all(cls.shortcuts_dic[other_match].text() ==
+                       cls.shortcuts_dic[first_match].text()
+                       for other_match in match[1:])
+            if test:
+                # Several match of 'the same' button
+                return cls.shortcuts_dic[match[0]]
 
     @Slot()
     def process_click(self):
@@ -487,6 +496,9 @@ class CalculatorController:
                                            logic_group,
                                            set_theory_group])
 
+        cpls = CalculatorPatternLines.constants_from_definitions()
+        self.calculator_groups.extend(cpls)
+
         self.history: [MarkedPatternMathObject] = []
         self.history_idx = -1
 
@@ -525,9 +537,13 @@ class CalculatorController:
         self.calculator_ui.show()
 
     @classmethod
-    def get_item(cls, context, target_type, title):
+    def get_item(cls, context, target_type, title) -> (Union[PatternMathObject,
+                                                             str],
+                                                       bool):
         """
         Execute a CalculatorController and send the choice.
+        The choice is either a PatternMathObject to be converted to Lean code,
+        or a string (of Lean code) if the calculator i in Lean mode.
         """
 
         log.debug(f"Calculator with target type = "
@@ -668,11 +684,36 @@ class CalculatorController:
 
     @Slot()
     def insert_pattern(self, pattern_s):
-        # Fixme: pattern or patterns?
+        """
+        Try to insert pattern (or patterns) in self.target.
+        If several patterns are provided, they are tried in order until
+        success. If no success, generic insert is applied.
+        Then an automatic insertion may happen.
+        """
+
         new_target = self.target.deep_copy(self.target)
-        assigned_mvar = new_target.insert(pattern_s)
-        # Alternative: dos not work
-        # ok = new_target.insert_after_marked(pattern_s)
+        assigned_mvar = None
+                
+        if not isinstance(pattern_s, list):
+            pattern_s = [pattern_s]
+            
+        # (1) Special buttons: parentheses
+        # FIXME!!
+        if pattern_s[0].node == "GENERIC_PARENTHESES":
+            assigned_mvar = new_target.insert_app_parentheses()
+
+        # (2) Normal insert
+        if not assigned_mvar:
+            for pattern in pattern_s:
+                assigned_mvar = new_target.insert(pattern)
+                if assigned_mvar:
+                    break
+
+        # (3) Force insertion
+        if not assigned_mvar:
+            pattern = pattern_s[-1]  # FIXME, why not 0 ??
+            assigned_mvar = new_target.generic_insert(pattern)
+
         print(f"New target: {new_target}")
         if assigned_mvar:
             self.target = new_target
