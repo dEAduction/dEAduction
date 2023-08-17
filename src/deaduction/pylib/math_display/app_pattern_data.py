@@ -28,14 +28,12 @@ This file is part of d∃∀duction.
 
 import logging
 
-from .display_parser import display_grammar, DisplayPatternVisitor, ParseError
-from deaduction.pylib.math_display.display_data import name, value
+from .display_parser import display_grammar, DisplayPatternVisitor
+from deaduction.pylib.math_display.display_data import display_name
 
 log = logging.getLogger(__name__)
 
 global _
-
-# NB: the
 
 # Here int stands for metavars ('?1' in pattern --> 1 in display),
 # to display children use tuples, e.g. '(1, )' means second child.
@@ -118,7 +116,8 @@ generic_app_dict = {
     # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
     # Generic app for constants
     # CST? = CONSTANT with any name
-    "APP(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
+    # FIXME: type PROP() below is OK? If not, move AFTER APP(?0: FUNCTION...
+    "APP: PROP()(CST?, ...)": ((-1,), [r'\text_is', (0,)]),
     # f(x):
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
     # Replace x ↦ f(x) by f:
@@ -126,16 +125,16 @@ generic_app_dict = {
 }
 
 
-def additional_data_from_pattern(patterns: [str]) -> dict:
-    dic = dict()
-    for pattern in patterns:
-        try:
-            tree = display_grammar.parse(pattern)
-            more_entry = DisplayPatternVisitor().visit(tree)
-            dic.update(more_entry)
-        except ParseError:
-            pass
-    # TODO
+# def additional_data_from_pattern(patterns: [str]) -> dict:
+#     dic = dict()
+#     for pattern in patterns:
+#         try:
+#             tree = display_grammar.parse(pattern)
+#             more_entry = DisplayPatternVisitor().visit(tree)
+#             dic.update(more_entry)
+#         except ParseError:
+#             pass
+#     # TODO
 
 
 def app_pattern_from_constants(additional_data=None):
@@ -156,8 +155,7 @@ def app_pattern_from_constants(additional_data=None):
         #     pass
         new_key = f'APP(CONSTANT/name={key}, ...)'
         # Change int into tuples in value:
-        new_value = tuple((item, ) if isinstance(item, int)
-                          else item
+        new_value = tuple((item, ) if isinstance(item, int) else item
                           for item in value)
         if r'\text_is' in new_value:
             new_not_key = f"NOT(APP(CONSTANT/name={key},...))"
@@ -174,3 +172,179 @@ def app_pattern_from_constants(additional_data=None):
     latex_from_app_pattern.update(latex_from_app_constant_patterns)
 
     # latex_from_app_pattern.update(generic_app_dict)
+
+
+# def app_functional_shape(math_object, lean_format=False):
+#
+#     lean_name = math_object.name()
+#     pretty_name, toto,  nb_args = PatternMathDisplay.constants[lean_name]
+#     if lean_format:
+#         shape = [lean_name]
+#         for i in range(len(math_object.children[-nb_args:])):
+#             shape.extend([i - nb_args, " "])
+#         return shape
+#
+#     else:
+#         shape = [pretty_name, '(']
+#         for i in range(len(math_object.children[-nb_args:])):
+#             shape.extend([i - nb_args, ", "])
+#         # Replace last comma
+#         shape[-1] = ')'
+#         return shape
+
+
+class PatternMathDisplay:
+    """
+    A class with no instance, to store data and methods for displaying
+    MathObjects with pattern string. Most attributes are dict.
+    cf the MathDisplay class.
+
+    - generic patterns:
+        - unary number functions, e.g. sin
+        - binary number functions, e.g. max
+        - infix binary operator, e.g. divise
+        - unary predicate, e.g. bounded
+        - sup/inf/lim/...
+    """
+
+    # constants = {
+    #     'sin': ('sin', app_functional_shape, 1),
+    #     'max': ('Max', app_functional_shape, 2),
+    #     'divise': (_('divise')), infix_operator_shape, '|')
+    # }
+
+    # Constant Lists:
+    fcts_one_var = ['sin', 'sqrt', 'abs']
+    fcts_two_var = ['max']
+    infix = {'divise': '|',
+             }
+    unary_predicate = ['bounded', 'converging_seq'
+                       'injective']
+    
+    # Dicts
+    constants_pretty_names = {'converging_seq': _('converging')}
+
+    special_shapes = {"abs": ('|', -1, '|')
+                      }
+
+    latex_from_app_constant_patterns = {}
+    lean_from_app_constant_patterns = {}
+    fake_app_constant_patterns = []
+
+    @staticmethod
+    def pattern_from_cst_name(name):
+        pattern = f'CONSTANT/name={name}'
+        return pattern
+
+    @classmethod
+    def app_pattern_from_cst_name(cls, name):
+        cst_pattern = cls.pattern_from_cst_name(name)
+        pattern = f'APP({cst_pattern}, ...)'
+        return pattern
+
+    @classmethod
+    def fake_app_pattern_from_cst_name(cls, name):
+        cst_pattern = cls.pattern_from_cst_name(name)
+        nb_args = cls.nb_args(name)
+        if nb_args == 1:
+            pattern = f'APP({cst_pattern}, ?0)'
+        elif nb_args == 2:
+            pattern = f'APP({cst_pattern}, ?0, ?1)'
+        else:
+            pattern = f'APP({cst_pattern}, ?0, ?1, ?2)'
+        return pattern
+
+    @staticmethod
+    def not_pattern_from_cst_name(name):
+        pattern = f"NOT(APP(CONSTANT/name={name},...))"
+        return pattern
+
+    @classmethod
+    def all_constants_names(cls) -> []:
+        """
+        Return the list of all Lean names of constants by concatenating the 
+        various lists.
+        """
+
+        names = (cls.fcts_one_var + cls.fcts_two_var + cls.unary_predicate
+                 + list(cls.infix.keys()) + list(cls.special_shapes.keys()))
+        return names
+    
+    @classmethod
+    def nb_args(cls, name):
+        """
+        Return the nb of args for constant name.
+        This is crucial for Lean display.        
+        """
+        
+        if name in (cls.fcts_one_var + cls.unary_predicate):
+            return 1
+        
+        if name in (cls.fcts_two_var + list(cls.infix.keys())):
+            return 2
+
+    @classmethod
+    def latex_shape_for_fcts(cls, name):
+        """
+        e.g.     "max": ("max", r'\parentheses', -2, ",", -1).
+        """
+        nb_args = cls.nb_args(name)
+        args = []
+        for idx in range(nb_args):
+            args.extend([(idx - nb_args,), ","])
+        args = tuple(args[:-1])
+        pretty_name = cls.constants_pretty_names.get(name, name)
+        shape = (pretty_name, r'\parentheses') + args
+        return shape
+
+    @classmethod
+    def lean_shape_for_fcts(cls, name):
+        """
+        e.g.     "max": ("max", ' ', -2, ' ', -1).
+        """
+        nb_args = cls.nb_args(name)
+        args = [(0,), ' ']
+        for idx in range(nb_args):
+            args.extend([(idx - nb_args,), ' '])
+        shape = tuple(args[:-1])
+        return shape
+
+    @classmethod
+    def latex_shape_from_constant_name(cls, name):
+        if name in cls.fcts_one_var:
+            pass  # Handled in latex_from_node
+        elif name in cls.fcts_two_var:
+            return cls.latex_shape_for_fcts(name)
+        elif name in cls.infix:
+            pass # TODO
+        elif name in cls.unary_predicate:
+            pass  # TODO
+
+    @classmethod
+    def populate_app_pattern_dict(cls):
+        """
+        Populate the latex_from_app_constant_patterns and
+        lean_from_app_constant_patterns dicts.
+        """
+
+        # TODO: negation patterns/shapes
+        for name in cls.all_constants_names():
+            key = cls.app_pattern_from_cst_name(name)
+            value = cls.latex_shape_for_fcts(name)
+            lean_value = cls.lean_shape_for_fcts(name)
+            cls.latex_from_app_constant_patterns[key] = value
+            cls.lean_from_app_constant_patterns[key] = lean_value
+            # TODO: move elsewhere?
+            cst_key = cls.pattern_from_cst_name(name)
+            cls.lean_from_app_constant_patterns[cst_key] = (display_name, )
+
+            fake_pattern = cls.fake_app_pattern_from_cst_name(name)
+            cls.fake_app_constant_patterns.append(fake_pattern)
+
+    @classmethod
+    def update_dicts(cls):
+        cls.populate_app_pattern_dict()
+
+
+PatternMathDisplay.update_dicts()
+

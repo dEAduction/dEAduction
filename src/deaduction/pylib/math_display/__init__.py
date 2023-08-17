@@ -28,7 +28,7 @@ This file is part of d∃∀duction.
 
 from .pattern_data import metanodes
 # from .pattern_init import pattern_init  !! Circular import !!
-
+from .app_pattern_data import PatternMathDisplay
 from .display_data import (MathDisplay,
                            # latex_from_node,
                            # latex_to_utf8,
