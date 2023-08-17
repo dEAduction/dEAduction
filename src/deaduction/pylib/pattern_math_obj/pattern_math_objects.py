@@ -291,6 +291,7 @@ class PatternMathObject(MathObject):
     def match(self,
               math_object: MathObject,
               use_cls_metavars=False,
+              symmetric_match=False,
               debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
@@ -316,7 +317,7 @@ class PatternMathObject(MathObject):
             metavar_objects = []
 
         match = self.recursive_match(math_object, metavars, metavar_objects,
-                                     debug)
+                                     symmetric_match, debug)
         if match:
             self.metavars = metavars
             self.metavar_objects = metavar_objects
@@ -331,7 +332,7 @@ class PatternMathObject(MathObject):
         return match
 
     def recursive_match(self, math_object: MathObject,
-                        metavars, metavar_objects,
+                        metavars, metavar_objects, symmetric_match=False,
                         debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
@@ -387,7 +388,7 @@ class PatternMathObject(MathObject):
                     log.debug(f"Types mismatch: type of mvar {self} vs"
                               f" {math_object}")
             return match
-        elif isinstance(math_object, MetaVar):
+        elif isinstance(math_object, MetaVar) and symmetric_match:
             # If self has already been identified, math_object matches self
             #   iff it is equal to the corresponding item in metavar_objects
             # If not, then self matches with math_object providing their
