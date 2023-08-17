@@ -33,6 +33,7 @@ from deaduction.pylib.mathobj.math_object import MathObject
 from deaduction.pylib.pattern_math_obj.pattern_math_objects import (PatternMathObject,
                                                                     MetaVar)
 from deaduction.pylib.coursedata import Definition
+from deaduction.pylib.math_display import PatternMathDisplay
 
 
 log = logging.getLogger(__name__)
@@ -55,11 +56,15 @@ class DefinitionMathObject(MathObject, Definition):
     pattern: PatternMathObject = None
     _last_matched_math_object: Optional[MathObject] = None
 
+    # FIXME: clear at exo change
+    instances = []  # List of all instances
+
     def __init__(self, definition: Definition):
         """
         Init self from a definition.
         """
         self.definition = definition
+        self.instances.append(self)
         self.__dict__.update(self.definition.__dict__)
 
         # definition_args = definition.__dict__
@@ -77,6 +82,30 @@ class DefinitionMathObject(MathObject, Definition):
         """
         if self.definition.initial_proof_state:
             return self.definition.initial_proof_state.goals[0].target
+
+    @classmethod
+    def clear_instances(cls):
+        cls.instances = []
+
+    @classmethod
+    def get_constants(cls):
+        """
+        Add all CONSTANTs in self to the all_constants list.
+        """
+
+        # FIXME: croiser avec PatternMathDisplay.all_constants_names
+        all_constants = dict()
+        for defi in cls.instances:
+            section = '/'.join(defi.definition.ugly_hierarchy())
+            if section not in all_constants:
+                all_constants[section] = []
+            csts = all_constants[section]
+            for cst in defi.lhs_pattern.constants_in_self():
+                if (cst.name in PatternMathDisplay.all_constants_names()
+                        and cst not in csts):
+                    csts.append(cst)
+
+        return all_constants
 
     def check_proof_state(self) -> bool:
         """
