@@ -205,7 +205,10 @@ def recursive_html_display(l: Union[list, str], depth, use_color=True,
         else:
             return recursive_html_display(l[1:], depth, use_color, no_text)
     elif head == r'\marked':
-        return recursive_html_display(l[1:], depth, use_color, no_text)
+        return html_class_wrapper(recursive_html_display(l[1:], depth,
+                                                         use_color=use_color,
+                                                         no_text=no_text),
+                                  class_name="highlight")
 
     else:
         # handle "\parentheses":

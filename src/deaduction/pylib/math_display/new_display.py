@@ -106,12 +106,9 @@ def substitute_metavars(shape, metavars: [MetaVar], pattern):
     """
     if isinstance(shape, int):
         item = shape
-        if item < len(metavars):
-            mvar = metavars[item]
-            return mvar.matched_math_object(pattern.metavars,
-                                            pattern.metavar_objects)
-        else:
-            print("index out of range")
+        mvar = metavars[item]
+        return mvar.matched_math_object(pattern.metavars,
+                                        pattern.metavar_objects)
     elif isinstance(shape, list):
         return list(substitute_metavars(item, metavars, pattern)
                     for item in shape)
@@ -182,12 +179,12 @@ def latex_shape(self: MathObject, is_type=False, text=False,
     # (0) Dictionaries to be used (order matters!):
     dicts = []
     # FIXME:
-    if not isinstance(self, PatternMathObject):
-        if is_type:
-            dicts.append(pattern_latex_for_type)
-        if text:
-            dicts.append(pattern_text)
-        dicts.append(pattern_latex)
+    # if not isinstance(self, PatternMathObject):
+    if is_type:
+        dicts.append(pattern_latex_for_type)
+    if text:
+        dicts.append(pattern_text)
+    dicts.append(pattern_latex)
 
     # (1) Search for patterns
     for dic in dicts:
@@ -271,8 +268,12 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
         # if item == 3:
         #     print('debug')
         child = math_object.descendant(item)
-        new_item = expanded_latex_shape(math_object=child, text=text,
-                                        lean_format=lean_format)
+        if child:
+            new_item = expanded_latex_shape(math_object=child, text=text,
+                                            lean_format=lean_format)
+        else:
+            log.debug(f'Descendant {item} not found in shape {shape} for {math_object}')
+            new_item = ''
         if MathDisplay.needs_paren(math_object, child, item):
             new_item = [r'\parentheses', new_item]
 

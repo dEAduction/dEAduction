@@ -57,23 +57,33 @@ def lean_application(mo):
     Return Lean shape for APPLICATION(0, 1, 2, ...)
     -> [0, " ", 1, " ", ...]
     """
+
+    # FIXME: take the "non @" form for constants registered in app_pattern_data.
     li = []
     for i in range(len(mo.children)):
         li.extend([i, " "])
     return li
 
 
-def name(mo):
+def display_name(mo):
     return mo.info.get('name', "NO NAME")
 
 
-def value(mo):
+def display_value(mo):
     return mo.info.get('value')
 
 
 def math_type(mo):
     return mo.math_type
 
+
+def display_lean_value(mo):
+    type_ = math_type(mo)
+    val = display_value(mo)
+    if type_.is_no_math_type:
+        return val
+    else:
+        return '(' + val + ': ' + type_.to_display(format_='lean') + ')'
 
 # def lean_inst_name(mo):
 #     return '[' + name(mo) + ']'
@@ -93,6 +103,9 @@ class MathDisplay:
     """
     A class with no instance, to store data and methods for displaying
     MathObjects. Most attributes are dict.
+
+    Some dicts have an update method, that allows the translation to be
+    up-to-date.
 
     Mind that values are tuples whose tuple elements indicate "descendant"
     (children of children). Otherwise, use lists within main tuple.
@@ -184,8 +197,8 @@ class MathDisplay:
          "SET_INDEX": (r'\set',),
          "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
          "SEQUENCE": (r'\sequence_in', 1),  # (0, r" \to ", 1),
-         "CONSTANT": (name,),
-         "NUMBER": (value,),
+         "CONSTANT": (display_name,),
+         "NUMBER": (display_value,),
          "LOCAL_CONSTANT": ('self.local_constant_shape',),
          "APPLICATION": (0, r'\parentheses', 1),
          "LAMBDA": (1, r"\mapsto", 2),
@@ -195,7 +208,7 @@ class MathDisplay:
          "GENERIC_PARENTHESES": ('(', 0, ')'),
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
-         "GENERIC_NODE": (0, '??', 1),
+         "GENERIC_NODE": (0, '¿', 1),
          "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
@@ -208,8 +221,8 @@ class MathDisplay:
     #####################
     # Only those shape that are distinct from the latex_from_node dict
     lean_from_node = {
-        "LOCAL_CONSTANT": (name,),
-        "CONSTANT": ("@", name),  # e.g. @composition
+        "LOCAL_CONSTANT": (display_name,),
+        "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
         "QUANT_∃": (r"\exists", 1, ": ", 0, ", ", 2),
         "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
@@ -228,7 +241,8 @@ class MathDisplay:
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
         # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
-        "NUMBER": ('(', value, ': ', 'self.math_type', ')'),
+        "NUMBER": (display_lean_value, ),
+        "RAW_LEAN_CODE": (display_name, )
     }
 
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
@@ -258,6 +272,7 @@ class MathDisplay:
         r'\type_Z': 'int',
         r'\type_Q': "rat",
         r'\type_R': 'real',
+        ''
         r'used_property': "",
         r'\not': "not ",
         r'\times': "×",
@@ -527,7 +542,7 @@ class MathDisplay:
     # needs_paren_couples = [('MULT', 'SUM')]
     # dont_need_paren_couples = [('SUM', 'MULT'), ()]
 
-    priorities = [{'COMPOSITE_NUMBER'},
+    priorities = [{'COMPOSITE_NUMBER', 'NUMBER'},
                   {'POINT'},  # FIXME: DECIMAL?
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
@@ -599,9 +614,9 @@ class MathDisplay:
         c_node = child.node if child is not None else "NONE"
 
         # Priority operator rules
-        pt = cls.priority_test(c_node, p_node, child_number)
-        if pt is not None:
-            return not pt
+        test = cls.priority_test(c_node, p_node, child_number)
+        if test is not None:
+            return not test
 
         if p_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS',
                       'GENERIC_PARENTHESES'):
@@ -803,7 +818,9 @@ class MathDisplay:
         m_latex_shape = list(latex_shape)
         # print(f"Marking latex shape {m_latex_shape}")
         # print(f" at index {idx-1}")
-        m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
+        # m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
+        m_latex_shape = [r'\marked'] + m_latex_shape
+        idx += 1
         if cls.mark_cursor:
             # FIXME: take into account items that are lists
             m_latex_shape.insert(idx+1, cls.cursor_tag)

@@ -72,7 +72,8 @@ This file is part of d∃∀duction.
 import logging
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.display_data import name, value
+from deaduction.pylib.math_display.display_data import (display_name,
+                                                        display_value)
 
 log = logging.getLogger(__name__)
 
@@ -196,14 +197,14 @@ latex_from_pattern_string = {
         # ("toto",),
         # FIXME: the following crashes!!!
         # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
-        (r"\{", name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
+        (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
         #  'self.bound_var_type', r"\}"),
         (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
-        ('(', name, ['_', 1], ')', ['_', 1, r"\in_symbol", 3]),
+        ('(', display_name, ['_', 1], ')', ['_', 1, r"\in_symbol", 3]),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
@@ -287,8 +288,8 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=ℝ": (r'\type_R',),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
     # This is maybe too strong: any guy with undefined math_type will match!! :
-    "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
-    "?:CONSTANT/name=MetricSpace": (r'\type_point', name),  # a point of...
+    "?:TYPE": (r'\type_element', display_name),  # NB: TYPE is treated above
+    "?:CONSTANT/name=MetricSpace": (r'\type_point', display_name),  # a point of...
     "?:SET(?0)": (r'\type_element', 'self'),
     "CONSTANT/name=_inst_1": ('Hypo1',)
 }
@@ -311,5 +312,6 @@ lean_from_pattern_string = {
     "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
         (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
     "CONSTANT/name=_inst_1": ('_inst_1',),
-    "CONSTANT/name=_inst_2": ('_inst_2',)
+    "CONSTANT/name=_inst_2": ('_inst_2',),
+    # "APP(CONSTANT, ...)": ((0,), (-1, )),
 }
