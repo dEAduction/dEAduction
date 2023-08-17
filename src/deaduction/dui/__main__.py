@@ -110,7 +110,7 @@ def set_logger():
         # log_domains = ["deaduction", "__main__",  # 'lean',
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
-                       # 'ServerInterface',
+                       'ServerInterface',
                        # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',

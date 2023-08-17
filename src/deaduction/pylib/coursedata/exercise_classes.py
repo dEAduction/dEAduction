@@ -288,7 +288,8 @@ class Statement:
         """
         Return the ordered (chapter > section > …) list of sections pretty
         names corresponding to where self is in the lean file. If the
-        self.lean_name is 'rings_and_ideals.first_definitions.the_statement',
+        self.lean_name is
+        'rings_and_ideals.first_definitions.definition.the_statement',
         return ['Rings and ideals', 'First definitions']. Most of the time
         outline will be present_course.outline, where present_course is the
         instance of Course which initiated self.
