@@ -439,6 +439,43 @@ class MathObject:
                               children=new_children, math_type=new_math_type)
         return new_math_object
 
+    def constants_in_self(self):
+        """
+        Return the injective list of all CONSTANTs in self.
+        """
+
+        if self.is_constant():
+            return [self]
+
+        # if self.is_application():
+        #     nb_args = len(self.children) - 1
+        #     if nb_args > 0:
+        #         child = self.children[0]
+        #         if child.name == "max":
+        #             print(self)
+        #             print("type :")
+        #             print(child.math_type)
+        #             print(child.math_type.info)
+        #             print([c.info for c in child.math_type.children])
+        #             print([c.info for c in self.children])
+
+                    # print("other children:")
+                    # print(self.children[1])
+                    # print(self.children[1].info)
+                    # print(self.children[2])
+                    # print(self.children[1].info)
+        # elif self.is_application():
+        #     nb_args = len(self.children)-1
+        #     if nb_args > -1 and self.children[0].is_constant():
+        #         return [(self.children[0], nb_args)]
+
+        csts = []
+        for child in self.children:
+            for cst in child.constants_in_self():
+                if cst not in csts:
+                    csts.append(cst)
+        return csts
+
 ##################################
 # Some particular instantiations #
 ##################################
@@ -693,7 +730,8 @@ class MathObject:
             return self.children[line_of_descent]
 
         child_number, *remaining = line_of_descent
-        if child_number >= len(self.children):
+        if (child_number >= len(self.children)
+                or child_number < -len(self.children)):
             return None
         child = self.children[child_number]
         if not remaining:
