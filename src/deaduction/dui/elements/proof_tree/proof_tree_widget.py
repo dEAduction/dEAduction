@@ -976,7 +976,7 @@ class ProofTreeWindow(QWidget):
 
         self.set_style_sheet()
 
-        # RawLabelMathObject.highlight_in_tree.connect(self.highlight)
+        # RawLabelMathObject.highlight_in_tree.connect(self.activate_highlight)
         RawLabelMathObject.highlight_in_tree = self.highlight_from_math_wdg
 
         if bool(settings.value("proof_tree/isVisible")):

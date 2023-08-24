@@ -35,6 +35,7 @@ from .font_config import deaduction_fonts
 def highlight_color():
     return "yellow"
 
+
 def color_dummy_variables():
     return (cvars.get('display.color_for_dummy_variables', None)
             if cvars.get('logic.use_color_for_dummy_variables', True)
@@ -72,11 +73,11 @@ class AbstractMathHtmlText:
     """
 
     def __init__(self, use_color=True, font_size=None, text_mode=False,
-                 highlight=True):
+                 activate_highlight=False):
         self.use_color = use_color
         self.font_size = font_size  # FIXME: not used
         self.text_mode = text_mode
-        self.highlight = highlight
+        self.activate_highlight = activate_highlight
 
     def set_use_color(self, yes=True):
         self.use_color = yes
@@ -90,7 +91,7 @@ class AbstractMathHtmlText:
         self.text_mode = yes
 
     def set_highlight(self, yes=True):
-        self.highlight = yes
+        self.activate_highlight = yes
 
     def math_font_style(self):
         fonts_name = deaduction_fonts.math_fonts_name
@@ -126,7 +127,7 @@ class AbstractMathHtmlText:
         return style
 
     def highlight_style(self):
-        if self.highlight:
+        if self.activate_highlight:
             style = f".highlight {{ background-color: {highlight_color()} }}"
         else:
             style = ""
@@ -192,7 +193,7 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
-        self.set_highlight()
+        self.set_highlight(False)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)

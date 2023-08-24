@@ -195,6 +195,9 @@ class MathObjectWidgetItem(MathItem):
         return self is other  # Brutal but that is what we need.
 
     def highlight(self, yes=True, duration=None):
+        """
+        Change background to highlight self.
+        """
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")
         self.setBackground(QBrush(QColor(color)) if yes else QBrush())
@@ -208,7 +211,7 @@ class MathObjectWidgetItem(MathItem):
         # self.setBackground(color)
 
     # def un_highlight(self):
-    #     self.highlight(yes=False)
+    #     self.activate_highlight(yes=False)
 
     def select(self, yes=True):
         self.math_object_wdg.select_item(self, yes)
@@ -674,7 +677,7 @@ class TargetLabel(MathLabel):
             QTimer.singleShot(duration, unlit)
 
     # def un_highlight(self):
-    #     self.highlight(yes=False)
+    #     self.activate_highlight(yes=False)
 
 
 class TargetWidget(QWidget):

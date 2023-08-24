@@ -582,7 +582,7 @@ class RawLabelMathObject(MathLabel):
     """
     Mother class for displaying a MathObject or a msg which is computed by
     the callable html_msg, which takes parameter use_color and bf.
-    This allows to disable self by setting use_color=False, or to highlight
+    This allows to disable self by setting use_color=False, or to activate_highlight
     it by setting bf=True.
     This QLabel may be highlighted, it can change its text dynamically thanks
     to its attribute html_msg which is a callable (and to the update_txt()
@@ -666,7 +666,7 @@ class RawLabelMathObject(MathLabel):
     def enterEvent(self, event):
         """
         If self display a ContextMathObject, call self.highlight_in_tree.
-        to highlight all related RawLabelMO in the proof tree widget.
+        to activate_highlight all related RawLabelMO in the proof tree widget.
         """
         super().enterEvent(event)
         if isinstance(self.math_object, ContextMathObject):
@@ -1352,7 +1352,7 @@ class TargetWidget(QWidget):
     def set_as_current_target(self, yes=True, blinking=True) \
             -> Optional[QWidget]:
         """
-        Set self as current target, i.e. highlight target in boldface and make
+        Set self as current target, i.e. activate_highlight target in boldface and make
         status_msg blinks. If blinking then return current_status_label,
         else return proof_title. The returned widget should be made visible in
         the ScrollArea.
