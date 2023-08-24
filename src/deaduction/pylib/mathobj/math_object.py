@@ -236,7 +236,7 @@ class MathObject:
         The constant NO_MATH_TYPE is defined below, after the methods
         """
         if self._math_type is None:
-            return MathObject.NO_MATH_TYPE
+            return self.NO_MATH_TYPE
         else:
             return self._math_type
 
@@ -978,6 +978,16 @@ class MathObject:
             return True
         else:
             return False
+
+    def is_suitable_for_app(self, is_math_type=False) -> bool:
+        """
+        Test if self may be the first argument of an application,
+        e.g. self is a function, a sequence or a set family.
+        """
+        tests = (self.is_function(is_math_type=is_math_type),
+                 self.is_sequence(is_math_type=is_math_type),
+                 self.is_set_family(is_math_type=is_math_type))
+        return any(tests)
 
     def is_set_family(self, is_math_type=False) -> bool:
         """

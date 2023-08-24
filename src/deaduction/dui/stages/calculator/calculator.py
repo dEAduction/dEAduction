@@ -74,6 +74,8 @@ class CalculatorTarget(MathTextWidget):
 
     def __init__(self):
         super().__init__()
+        self.set_highlight(True)
+
         self.setFixedHeight(40)  # fixme
         # self.setReadOnly(True)
         self.setLineWrapMode(QTextEdit.NoWrap)
@@ -319,11 +321,13 @@ class CalculatorButton(QToolButton):
         # FIXME: not optimal
         match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
         more_match = [calc_shortcuts[key] for key in calc_shortcuts
-                      if key.startswith(text_buffer)]
+                      if key.startswith(text_buffer)
+                      and calc_shortcuts[key] in cls.shortcuts_dic]
         match += more_match
         if len(match) == 1:
             return cls.shortcuts_dic[match[0]]
         elif len(match) > 1:
+            # OK if all shortcuts refer to the same text
             first_match = match[0]
             test = all(cls.shortcuts_dic[other_match].text() ==
                        cls.shortcuts_dic[first_match].text()
@@ -488,6 +492,8 @@ class CalculatorController:
         if context:
             context_line = CalculatorPatternLines.from_context(context)
             self.calculator_groups.append(context_line)
+            # Compute applications on ContextMathObjects:
+            MarkedPatternMathObject.populate_applications_from_context(context)
 
         if calculator_groups:
             self.calculator_groups.extend(calculator_groups)
@@ -546,17 +552,20 @@ class CalculatorController:
         or a string (of Lean code) if the calculator i in Lean mode.
         """
 
-        log.debug(f"Calculator with target type = "
-                  f"{target_type.to_display(format_='utf8')}")
+        if target_type:
+            log.debug(f"Calculator with target type = "
+                      f"{target_type.to_display(format_='utf8')}")
         calculator_controller = cls(context=context,
                                     target_type=target_type,
                                     title=title)
         # Execute the ButtonsDialog and wait for results
         OK = calculator_controller.calculator_ui.exec()
-        if not calculator_controller.lean_mode:
-            choice = calculator_controller.target
-        else:
-            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
+
+        # After exec
+        choice = calculator_controller.target
+        choice.unmark()
+        if calculator_controller.lean_mode:
+            choice = choice.toPlainText()
         return choice, OK
 
     @Slot()

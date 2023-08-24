@@ -839,6 +839,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     cursor_pos = None
     automatic_patterns = []  # Populated in calculator_pattern_strings.py
     app_patterns = []
+    applications_from_ctxt = []
+
     #
     # @classmethod
     # def populate_automatic_patterns(cls):
@@ -884,6 +886,37 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         pmo = super().from_string(s, metavars)
         mpmo = cls.from_pattern_math_object(pmo)
         return mpmo
+
+    @classmethod
+    def application_from_function(cls, fct):
+        """
+        Given a function fct, construct the MPMO corresponding to
+        APP(fct, mvar) where mvar is a fresh mvar.
+        """
+
+        if not isinstance(fct, cls):
+            fct = cls.from_math_object(fct)
+
+        children = fct.math_type.children
+        if children:
+            arg_type = children[0]
+        else:
+            arg_type = cls.NO_MATH_TYPE
+
+        mvar = MarkedMetavar(math_type=arg_type)
+        mpmo = cls.application(fct, mvar)
+        return mpmo
+
+    @classmethod
+    def populate_applications_from_context(cls, context):
+        """
+        For each MathObject fct from context, if suitable, compute
+        app(fct, mvar), and return the list.
+        """
+        apps = [cls.application_from_function(fct)
+                for fct in context
+                if fct.is_suitable_for_app()]
+        cls.applications_from_ctxt = apps
 
     @classmethod
     def populate_app_marked_patterns(cls):
@@ -1268,7 +1301,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         math_object = mvar.assigned_math_object
         if not math_object:
             return
-        for app_pattern in self.app_patterns:
+        for app_pattern in self.app_patterns + self.applications_from_ctxt:
             child = app_pattern.children[0]
             if child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)

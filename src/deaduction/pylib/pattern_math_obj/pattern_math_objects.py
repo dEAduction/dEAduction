@@ -245,8 +245,8 @@ class PatternMathObject(MathObject):
                 new_child = cls.__from_math_object(child,
                                                    turn_lc_into_mvar=turn_lc_into_mvar)
                 children.append(new_child)
-            if math_object.math_type is MathObject.NO_MATH_TYPE:
-                math_type = PatternMathObject.NO_MATH_TYPE
+            if math_object.math_type is math_object.NO_MATH_TYPE:
+                math_type = cls.NO_MATH_TYPE
             else:
                 # log.debug("   ->Math type:")
                 math_type = cls.__from_math_object(math_object.math_type,
@@ -343,7 +343,10 @@ class PatternMathObject(MathObject):
 
         children = self.children
         node = self.node
-        math_type = self.math_type
+        self_type = self.math_type
+        # DEBUG
+        if not isinstance(self_type, PatternMathObject):
+            print(f"{self_type} is not a PatternMathObject!!!")
 
         # -----------------------------------------------
         # Case of NO_MATH_TYPE (avoid infinite recursion!)
@@ -403,8 +406,7 @@ class PatternMathObject(MathObject):
                               f" {self}")
             else:
                 mvar_type = math_object.math_type
-                math_type = self.math_type
-                match = mvar_type.recursive_match(math_type,
+                match = mvar_type.recursive_match(self_type,
                                                   metavars, metavar_objects)
                 if match:
                     metavars.append(math_object)
@@ -622,6 +624,9 @@ class MetaVar(PatternMathObject):
         Nevertheless, we include the other parameters for compatibility with
         MathObject __init__, e.g. for the deepcopy() method.
         """
+
+        # if not math_type or math_type is MathObject.NO_MATH_TYPE:
+        #     math_type = PatternMathObject.NO_MATH_TYPE
         MetaVar.metavar_nb += 1
         super().__init__(node='METAVAR',
                          info={'nb': MetaVar.metavar_nb},
@@ -674,7 +679,7 @@ class MetaVar(PatternMathObject):
 
     def clear_assignment(self):
         self.assigned_math_object = None
-        if self.math_type.is_metavar():
+        if isinstance(self.math_type, MetaVar):
             self.math_type.clear_assignment()
 
     # def math_object_from_metavar(self):
