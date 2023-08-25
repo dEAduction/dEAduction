@@ -723,6 +723,23 @@ class MathDisplay:
             return string
 
     @staticmethod
+    def wrap_lean_shape_with_type(mo, lean_shape) -> []:
+        """
+        Add type indication for Lean shape, if this is pertinent.
+        Return a new tuple shape.
+        """
+
+        lean_shape = list(lean_shape)
+
+        if mo.node == 'NUMBER' and (mo.math_type.is_number()
+                                    or mo.math_type.node == '*NUMBER_TYPES'):
+            lean_type = mo.math_type.to_display(format_='lean')
+            wrap_shape = ['(', '('] + lean_shape + [') : ', lean_type, ')']
+            return wrap_shape
+        else:
+            return lean_shape
+
+    @staticmethod
     def main_symbol_from_shape(shape) -> (int, str):
         """
         Return the main symbol of the node, e.g.

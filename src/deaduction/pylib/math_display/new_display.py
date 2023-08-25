@@ -2,11 +2,9 @@
 from typing import Union
 import logging
 
-from deaduction.pylib.mathobj import MathObject, ContextMathObject
-from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
+from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.pattern_math_obj import MetaVar
 from deaduction.pylib.math_display.display_data import MathDisplay
-                                                        # lean_from_node,
-                                                        # needs_paren)
 from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_lean,
                                                         pattern_text,
@@ -143,6 +141,8 @@ def lean_shape(self: MathObject) -> []:
 
         shape = [process_shape_macro(self, item) if isinstance(item, str)
                  else item for item in shape]
+
+        shape = MathDisplay.wrap_lean_shape_with_type(self, shape)
 
     return shape
 
@@ -318,8 +318,10 @@ def to_display(self: MathObject, format_="html", text=False,
     # (1) Compute expanded shape
     shape = self.latex_shape(is_type=is_type, text=text,
                              lean_format=lean_format)
-    if used_in_proof:
+
+    if used_in_proof and not lean_format:
         shape = [r'\used_property'] + shape
+
     abstract_string = expanded_latex_shape(math_object=self, shape=shape,
                                            text=text, lean_format=lean_format)
 
