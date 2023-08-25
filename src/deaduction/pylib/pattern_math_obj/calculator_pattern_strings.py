@@ -111,6 +111,16 @@ calc_shortcuts = {'\\forall': '∀',
                   '\\cap': '∩',
                   '\\cup': '∪'}
 
+# greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
+
+greek_shortcuts = {'\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ',
+                   '\\epsilon': 'ε', '\\delta': 'δ', '\\eta': 'η', '\\phi':
+                       'φ', '\\psi': 'ψ', '\\lambda': 'λ', '\\mu': 'μ',
+                   '\\nu':  'ν', '\\pi': 'π', '\\rho': 'ρ', '\\theta': 'θ',
+                   '\\sigma': 'σ', '\\tau': 'τ'}
+
+calc_shortcuts.update(greek_shortcuts)
+
 
 def translate_calc_shortcuts():
     """
@@ -163,23 +173,24 @@ class CalculatorPatternLines:
         csts_dict = DefinitionMathObject.get_constants()
         cpls = []
         for section, constants in csts_dict.items():
-            symbols, patterns = [], OrderedDict()
-            for obj in constants:
-                marked_pmo = MarkedPatternMathObject.from_math_object(obj)
-                symbol = marked_pmo.name
-                # idx, symbol = marked_pmo.main_shape_symbol()
-                # if symbol == 'max':
-                #     print(marked_pmo.math_type)
-                symbols.append(symbol)
-                patterns[symbol] = marked_pmo
-            # Slices of 4
-            symbols = [symbols[4*idx:4*(idx+1)]
-                       for idx in range(len(symbols) // 4 + 1)]
-            cpl = cls(title=section,
-                      lines=symbols,
-                      patterns=patterns)
+            if constants:
+                symbols, patterns = [], OrderedDict()
+                for obj in constants:
+                    marked_pmo = MarkedPatternMathObject.from_math_object(obj)
+                    symbol = marked_pmo.name
+                    # idx, symbol = marked_pmo.main_shape_symbol()
+                    # if symbol == 'max':
+                    #     print(marked_pmo.math_type)
+                    symbols.append(symbol)
+                    patterns[symbol] = marked_pmo
+                # Slices of 4
+                symbols = [symbols[4*idx:4*(idx+1)]
+                           for idx in range(len(symbols) // 4 + 1)]
+                cpl = cls(title=section,
+                          lines=symbols,
+                          patterns=patterns)
 
-            cpls.append(cpl)
+                cpls.append(cpl)
 
         return cpls
 
