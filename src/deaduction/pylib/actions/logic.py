@@ -166,7 +166,7 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
     proof_step.prove_or_use = "use"
 
     if not new_hypo_name:
-        new_hypo_name = get_new_hyp()
+        new_hypo_name = get_new_hyp(proof_step)
 
     goal = proof_step.goal
     universal_property = selected_objects[-1]
@@ -344,7 +344,7 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             quant = selected_objects[0].math_type
             input_target = quant.type_of_explicit_quant()
             raise MissingParametersError(InputType.Calculator,
-                                         title=_("For ALL"),
+                                         title=_("For All"),
                                          target=input_target)
         # raise MissingParametersError(InputType.Text,
         #                                  title=_("Use a universal property"),

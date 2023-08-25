@@ -74,13 +74,13 @@ calculator_pattern_strings = {
                    '∀': 'QUANT_∀: PROP()(?0, LOCAL_CONSTANT/name=x, ?2)',
                    # '∀>': 'QUANT_∀(?0, LOCAL_CONSTANT/name=x, '
                    #       'PROP_IMPLIES(PROP_>()))',
-                   '⇒': 'PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)',
-                   '∧': 'PROP_AND: PROP()(?0: PROP, ?1: PROP)',
-                   '∨': 'PROP_OR: PROP()(?0: PROP, ?1: PROP)',
+                   # '⇒': 'PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)',
+                   # '∧': 'PROP_AND: PROP()(?0: PROP, ?1: PROP)',
+                   # '∨': 'PROP_OR: PROP()(?0: PROP, ?1: PROP)',
                    # SET THEORY
-                   '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
-                   '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))',
-                   '{}': 'SET_EXTENSION1(?0)',
+                   # '∩': 'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                   # '∪': 'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                   # '{}': 'SET_EXTENSION1(?0)',
                     # Fixme: boundvar:
                    '{|}': 'SET_INTENSION(?0: TYPE, ?1, ?2: PROP)'
 }

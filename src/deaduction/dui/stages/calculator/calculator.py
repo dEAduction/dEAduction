@@ -48,7 +48,7 @@ import deaduction.pylib.utils.filesystem as fs
 
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
-                                                 SetTheoryNode)
+                                                 SetTheoryNode, NumberNode)
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
@@ -466,12 +466,10 @@ class CalculatorMainWindow(QDialog):
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
 
-        logical_buttons = CalculatorButtonsGroup.from_node_subclass(LogicalNode)
-        set_buttons = CalculatorButtonsGroup.from_node_subclass(SetTheoryNode)
-        btns_lyt.addWidget(logical_buttons)
-        btns_lyt.addWidget(set_buttons)
-        self.buttons_groups.append(logical_buttons)
-        self.buttons_groups.append(set_buttons)
+        for NodeClass in (LogicalNode, SetTheoryNode, NumberNode):
+            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass)
+            btns_lyt.addWidget(buttons)
+            self.buttons_groups.append(buttons)
 
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)

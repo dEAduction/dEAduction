@@ -63,6 +63,8 @@ class Node:
             self._node_pattern = node_name + node_pattern
         elif not node_pattern.startswith(node_name):
             self._node_pattern = node_name + " :" + node_pattern
+        else:
+            self._node_pattern = node_pattern
 
         self._latex_shape = latex_shape
         self._text_shape = text_shape
@@ -318,30 +320,53 @@ inverse.set_button_symbol("f⁻¹({})")
 #     r"\no_text", r'\{', 1, r' \in ', 0, ' | ', 2, r'\}'),
 # "SET_INTENSION_EXT": (
 #     r"\no_text", r'\{', 2, ' | ', 1, r' \in ', 0, r'\}'),
+# symbol = '{|}': 'SET_INTENSION(?0: TYPE, ?1, ?2: PROP)'
 
 
 class NumberNode(Node):
-    """
-         "PROP_<": (0, " < ", 1),  # Fixme ms: <>+-*....
-         "PROP_>": (0, " > ", 1),
-         "PROP_≤": (0, r" \leq ", 1),
-         "PROP_≥": (0, r" \geq ", 1),
-         "DIFFERENCE": (0, " - ", 1),
-         "SUM": (0, " + ", 1),
-         "MULT": (0, r" \mul ", 1),
-         "PRODUCT": (0, r" \times ", 1),
-         "DIV": (0, r"/", 1),
-         "MINUS": ("-", 0),
-         "POWER": (0, [r'\super', 1]),  # FIXME: remove list??
-         "SQRT": ('√', -1),
-    """
+    name = "Numbers"
 
-    @classmethod
-    def div(cls):
-        return cls("DIV",
-                   "*NUMBER_TYPES",
-                   (0, r"/", 1),
-                   )
+
+def instantiate_nb_node(i: int):
+    node = NumberNode(f'NUMBER',
+                      f'NUMBER/value={i}: *NUMBER_TYPES',
+                      (str(i), ))
+
+
+for i in [7, 8, 9]:
+    instantiate_nb_node(i)
+
+div_ = NumberNode('DIV',
+                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  (0, r"/", 1)
+                  )
+
+# '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+# # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
+# '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+# '*': 'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',  # pb = real + int ?
+# '/': 'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+# '.': 'POINT(?0, ?1)',
+
+# [['7', '8', '9', '/'],
+#  ['4', '5', '6', '*'],
+#  ['1', '2', '3', '-'],
+#  ['0', '.', '()', '+'],
+
+# """
+#      "PROP_<": (0, " < ", 1),  # Fixme ms: <>+-*....
+#      "PROP_>": (0, " > ", 1),
+#      "PROP_≤": (0, r" \leq ", 1),
+#      "PROP_≥": (0, r" \geq ", 1),
+#      "DIFFERENCE": (0, " - ", 1),
+#      "SUM": (0, " + ", 1),
+#      "MULT": (0, r" \mul ", 1),
+#      "PRODUCT": (0, r" \times ", 1),
+#      "DIV": (0, r"/", 1),
+#      "MINUS": ("-", 0),
+#      "POWER": (0, [r'\super', 1]),  # FIXME: remove list??
+#      "SQRT": ('√', -1),
+# """
 
 
 class SpecialNode(Node):

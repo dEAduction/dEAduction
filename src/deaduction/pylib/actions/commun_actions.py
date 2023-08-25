@@ -76,7 +76,7 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
     elif len(user_input) == 2:
         sub_goal = user_input[1]
         if isinstance(sub_goal, MathObject):
-            sub_goal.to_display(format_='lean')
+            sub_goal = sub_goal.to_display(format_='lean')
 
     # (C) Code:
     if sub_goal:
