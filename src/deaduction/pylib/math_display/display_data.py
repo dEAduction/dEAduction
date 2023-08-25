@@ -301,6 +301,7 @@ class MathDisplay:
         cls.latex_to_utf8_dic = {
             # r'\and': " " + _("and") + " ",
             # r'\or': " " + _("or") + " ",
+            r"\ms": "",
             r"\equal": "=",
             r'\backslash': '\\',
             r'\Delta': '∆',

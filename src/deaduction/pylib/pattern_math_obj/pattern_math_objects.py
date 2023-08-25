@@ -33,6 +33,7 @@ from copy import copy
 
 from deaduction.pylib.utils import tree_list
 from .pattern_parser import tree_from_str
+from deaduction.pylib.math_display.nodes import Node
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 

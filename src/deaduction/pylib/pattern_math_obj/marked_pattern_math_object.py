@@ -1462,6 +1462,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             return True
 
 
+
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     """
     A Metavar which can be marked.

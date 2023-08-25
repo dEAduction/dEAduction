@@ -68,47 +68,50 @@ latex_from_app_pattern = {
 latex_from_constant_name = {
     "symmetric_difference": (-2, r'\Delta', -1),
     # "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
-    "prod": (1, r'\times', 2),
+    # "prod": (1, r'\times', 2),
     "Identite": ("Id",),# FIXME: use Id for name...
     "identite": ("Id",),
-    "ne": (2, r" \neq ", 3),  # Lean name for ≠
+    # "ne": (2, r" \neq ", 3),  # Lean name for ≠
     "interval": (r"\[", -2, ",", -1, r"\]"),
+
     # FIXME: translate to english in Lean files
     "majorant": (-1, r'\text_is', " majorant de ", -2),
     "minorant": (-1, r'\text_is', " minorant de ", -2),
-    "borne_sup": ("Sup ", -2, " = ", -1),
-    "borne_inf": ("Inf ", -2, " = ", -1),
+    "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
+
     "est_majore": (-1, r'\text_is', " majoré"),
     "est_minore": (-1, r'\text_is', " minoré"),
     "est_borne": (-1, r'\text_is', " borné"),
+
     "limit": ("lim ", -2, " = ", -1),
-    "converging_seq": (-1, r'\text_is', _(" converging")),
+    "borne_sup": ("Sup ", -2, " = ", -1),
+    "borne_inf": ("Inf ", -2, " = ", -1),
     "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    "increasing_seq": (-1, r'\text_is', _(" non decreasing")),
-    "bounded_above": (-1, r'\text_is', " " + _("bounded from above")),
-    "bounded_below": (-1, r'\text_is', " " + _("bounded from below")),
-    "bounded_sequence": (-1, r'\text_is', " " + _("bounded")),
     "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
-    "continuous": (-1, r'\text_is', _("continuous")),
-    "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
-    "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
-    "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
+    # "converging_seq": (-1, r'\text_is', _(" converging")),
+    # "increasing_seq": (-1, r'\text_is', _(" non decreasing")),
+    # "bounded_above": (-1, r'\text_is', " " + _("bounded from above")),
+    # "bounded_below": (-1, r'\text_is', " " + _("bounded from below")),
+    # "bounded_sequence": (-1, r'\text_is', " " + _("bounded")),
+    # "continuous": (-1, r'\text_is', _("continuous")),
+    # "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
+    # "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
     "abs": ('|', -1, '|'),
-    "max": ("Max", r'\parentheses', -2, ",", -1),
-    "min": ("Min", r'\parentheses', -2, ",", -1),
+    # "max": ("Max", r'\parentheses', -2, ",", -1),
+    # "min": ("Min", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
-    "product": (-2, ".", -1),
+    # "product": (-2, ".", -1),
     "image": (-1, " = ", -3, "(", -2, ")"),
-    "relation_equivalence": (-1, r'\text_is', _("an equivalence relation")),
+    # "relation_equivalence": (-1, r'\text_is', _("an equivalence relation")),
     "classe_equivalence": (r"\[", (-1, ), r"\]", ['_', (1, )]),
     "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
     "powerset": (r'\set_of_subsets', [r"\parentheses", (-1, )]),
-    "partition": (-1, r'\text_is', _("a partition of") + " ", -2),
-    "application": (-1, r'\text_is', _("an application") + " "),
-    "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
+    # "partition": (-1, r'\text_is', _("a partition of") + " ", -2),
+    # "application": (-1, r'\text_is', _("an application") + " "),
+    # "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
-    "even":  (-1,  r'\text_is', " " + _("even")),
-    "divise": (-2, ' | ', -1),
+    # "even":  (-1,  r'\text_is', " " + _("even")),
+    # "divise": (-2, ' | ', -1),
 }
 
 generic_app_dict = {
@@ -215,14 +218,37 @@ class PatternMathDisplay:
 
     # Constant Lists:
     fcts_one_var = ['sin', 'sqrt', 'abs']
-    fcts_two_var = ['max']
+    fcts_two_var = ['max', 'min']
     infix = {'divise': '|',
+             'ne': '\\neq',
+             'prod': '\\times',
+             'product': ".",
+
              }
-    unary_predicate = ['bounded', 'converging_seq'
-                       'injective']
+    unary_predicate = ['bounded', 'converging_seq', 'increasing_seq',
+                       'decreasing_seq', 'bounded_above', 'bounded_below',
+                       'bounded_sequence', 'cauchy',
+                       'continuous', 'uniformly continuous',
+                       'injective', 'relation_equivalence', 'partition',
+                       'application', 'application_bijective', 'even', 'odd']
     
     # Dicts
-    constants_pretty_names = {'converging_seq': _('converging')}
+    constants_pretty_names = {'converging_seq': _("converging"),
+                              'increasing_seq': _(" non decreasing"),
+                              'decreasing_seq': _(" non increasing"),
+                              'bounded_above': _("bounded from above"),
+                              'bounded_below': _("bounded from below"),
+                              'bounded_sequence': _("bounded"),
+                              'cauchy': _("a Cauchy sequence"),
+                              'relation_equivalence': _('an equivalence '
+                                                        'relation'),
+                              'partition': _('a partition'),
+                              'application': _('an application'),
+                              'application_bijective': _('a bijective '
+                                                         'application'),
+                              'even': _('even'),
+                              'odd': _('odd')
+                              }
 
     special_shapes = {"abs": ('|', -1, '|')
                       }
@@ -298,7 +324,41 @@ class PatternMathDisplay:
         return shape
 
     @classmethod
-    def lean_shape_for_fcts(cls, name):
+    def latex_shape_for_infix(cls, name):
+        """
+        e.g.     "sum": 
+        """
+        nb_args = cls.nb_args(name)
+        args = []
+        for idx in range(nb_args):
+            args.extend([(idx - nb_args,), ","])
+        args = tuple(args[:-1])
+        pretty_name = cls.constants_pretty_names.get(name, name)
+        shape = (pretty_name, r'\parentheses') + args
+        return shape
+
+    @classmethod
+    def latex_shape_for_predicate(cls, name):
+        """
+        e.g.         "converging_seq": (-1, r'\text_is', _(" converging")).
+        """
+
+        pretty_name = cls.constants_pretty_names.get(name, name)
+        shape = (-1, r'\text_is', pretty_name),
+        return shape
+
+    @classmethod
+    def latex_shape_for_app_of_cst(cls, name):
+        if name in cls.fcts_one_var + cls.fcts_two_var:
+            # NB: one var could ba handled in latex_from_node
+            return cls.latex_shape_for_fcts(name)
+        elif name in cls.infix:
+            return cls.latex_shape_for_infix(name)
+        elif name in cls.unary_predicate:
+            return cls.latex_shape_for_predicate(name)
+
+    @classmethod
+    def lean_shape_for_app_of_cst(cls, name):
         """
         e.g.     "max": ("max", ' ', -2, ' ', -1).
         """
@@ -308,17 +368,6 @@ class PatternMathDisplay:
             args.extend([(idx - nb_args,), ' '])
         shape = tuple(args[:-1])
         return shape
-
-    @classmethod
-    def latex_shape_from_constant_name(cls, name):
-        if name in cls.fcts_one_var:
-            pass  # Handled in latex_from_node
-        elif name in cls.fcts_two_var:
-            return cls.latex_shape_for_fcts(name)
-        elif name in cls.infix:
-            pass # TODO
-        elif name in cls.unary_predicate:
-            pass  # TODO
 
     @classmethod
     def populate_app_pattern_dict(cls):
@@ -331,7 +380,7 @@ class PatternMathDisplay:
         for name in cls.all_constants_names():
             key = cls.app_pattern_from_cst_name(name)
             value = cls.latex_shape_for_fcts(name)
-            lean_value = cls.lean_shape_for_fcts(name)
+            lean_value = cls.lean_shape_for_app_of_cst(name)
             cls.latex_from_app_constant_patterns[key] = value
             cls.lean_from_app_constant_patterns[key] = lean_value
             # TODO: move elsewhere?

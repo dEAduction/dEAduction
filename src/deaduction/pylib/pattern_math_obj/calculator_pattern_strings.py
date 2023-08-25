@@ -26,10 +26,11 @@ This file is part of d∃∀duction.
 
 from collections import OrderedDict
 
+from deaduction.pylib.math_display.nodes import Node
 from .marked_pattern_math_object import MarkedPatternMathObject
 from .definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
-# from deaduction.pylib.math_display import PatternMathDisplay
+from deaduction.pylib.math_display import MathDisplay
 # from deaduction.pylib.math_display.pattern_init import pattern_latex
 
 global _
@@ -103,13 +104,8 @@ def populate_automatic_patterns(cls):
         MarkedPatternMathObject.automatic_patterns.append(mpmo)
 
 
-calc_shortcuts = {'\\forall': '∀',
-                  '\\to': '⇒',
-                  '\\implies': '⇒',
-                  '\\and': '∧',
-                  '\\or': '',
-                  '\\cap': '∩',
-                  '\\cup': '∪'}
+calc_shortcuts = {'\\implies': '⇒',
+                  '\\and': '∧'}
 
 # greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
 
@@ -121,12 +117,37 @@ greek_shortcuts = {'\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ',
 
 calc_shortcuts.update(greek_shortcuts)
 
+for key, value in MathDisplay.latex_to_utf8_dic.items():
+    if isinstance(value, str):
+        calc_shortcuts[key] = value
 
-def translate_calc_shortcuts():
+
+class CalculatorAbstractButton:
     """
-    TODO
+    A class to store the data needed to build a CalculatorButton.
     """
-    pass
+
+    def __init__(self, symbol, tooltip, patterns, menu=False):
+        self.symbol = symbol
+        self.tooltip = tooltip
+        if not patterns:
+            patterns = CalculatorPatternLines.marked_patterns.get(symbol)
+        self.patterns = patterns if isinstance(patterns, list) else [patterns]
+        self.menu = menu
+
+    @classmethod
+    def from_node(cls, node: Node):
+        return cls(symbol=node.button_symbol(),
+                   tooltip=node.button_tooltip(),
+                   patterns=node.marked_pattern_math_object(),
+                   menu=False)
+
+    @classmethod
+    def from_pattern_nodes(cls, node):
+        pass
+        # TODO
+        # patterns should be the list of all PatternNodes which are based on
+        # node
 
 
 class CalculatorPatternLines:
@@ -209,6 +230,6 @@ sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
                                         [['sin', '()', ','],
                                          # ['=', '<']
                                          ])
-logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
-set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
+# logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
+# set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
 

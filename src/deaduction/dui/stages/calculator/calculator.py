@@ -36,7 +36,9 @@ from typing import Union, List
 from PySide2.QtCore import Signal, Slot, Qt, QTimer
 from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
 from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
-                               QHBoxLayout, QVBoxLayout, QLabel, QToolBar,
+                               QPushButton,
+                               QHBoxLayout, QVBoxLayout, QGridLayout,
+                               QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
                                QCheckBox)
 
@@ -45,6 +47,8 @@ import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.utils.filesystem as fs
 
 from deaduction.pylib.math_display import MathDisplay
+from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
+                                                 SetTheoryNode)
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
@@ -53,9 +57,8 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                CalculatorPatternLines,
                                                calc_shortcuts,
                                                calculator_group,
-                                               sci_calc_group,
-                                               logic_group,
-                                               set_theory_group)
+                                               sci_calc_group)
+from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
 
 from deaduction.dui.elements import TargetLabel
 from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
@@ -68,6 +71,10 @@ if __name__ == "__main__":
     logger.configure(domains="deaduction",
                      display_level="debug",
                      filename=None)
+
+
+Node.PatternMathObject = PatternMathObject
+Node.MarkedPatternMathObject = MarkedPatternMathObject
 
 
 class CalculatorTarget(MathTextWidget):
@@ -287,7 +294,7 @@ class NavigationBar(AbstractToolBar):
         self.addAction(self.beginning_action)
 
 
-class CalculatorButton(QToolButton):
+class CalculatorButton(QToolButton, CalculatorAbstractButton):
     """
     A class to display a button associated to a (list of)
     MarkedPatternMathObjects. Pressing the button insert (one of) the pattern
@@ -299,19 +306,21 @@ class CalculatorButton(QToolButton):
 
     shortcuts_dic = dict()
 
-    def __init__(self, symbol):
+    def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
         super().__init__()
-        self.pattern_s = CalculatorPatternLines.marked_patterns[symbol]
+        CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
+        # self.patterns = CalculatorPatternLines.marked_patterns[symbol]
 
-        action = QAction(symbol)
+        action = QAction(self.symbol)
         action.triggered.connect(self.process_click)
         self.setDefaultAction(action)
+        if self.tooltip:
+            self.setToolTip(self.tooltip)
         self.add_shortcut()
 
     def add_shortcut(self):
         """
-        Automatically add self.text() as a shortcut which is a child of
-        parent.
+        Automatically add self.text() as a shortcut for self.
         """
 
         self.shortcuts_dic[self.text()] = self
@@ -341,7 +350,7 @@ class CalculatorButton(QToolButton):
         """
         Send a signal so that Calculator process the click.
         """
-        self.send_pattern.emit(self.pattern_s)
+        self.send_pattern.emit(self.patterns)
 
     @classmethod
     def process_key_events(cls, key_event_buffer):
@@ -350,6 +359,54 @@ class CalculatorButton(QToolButton):
         if button:
             button.animateClick(100)
             return True
+
+
+class CalculatorButtonsGroup(QWidget):
+    """
+    A widget to display a list of CalculatorButtons, with a title and a
+    disclosure triangle.
+    """
+
+    nb_buttons_by_line = 6
+
+    def __init__(self, title, calculator_buttons: [CalculatorButton]):
+        super().__init__()
+        self.title = title
+        self.buttons = calculator_buttons
+
+        self.title_label = QLabel(self.title + _(':'))
+        self.buttons_layout = QGridLayout()
+        self.include_buttons()
+
+        # Fill-in main layout
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.title_label)
+        main_layout.addLayout(self.buttons_layout)
+        self.setLayout(main_layout)
+
+    def include_buttons(self):
+        """
+        Add self's buttons is self.buttons_layout
+        """
+
+        for line in range(len(self.buttons) // self.nb_buttons_by_line + 1):
+            col = 0
+            for button in self.buttons[self.nb_buttons_by_line * line:
+                                       self.nb_buttons_by_line * (line + 1)]:
+                self.buttons_layout.addWidget(button, line, col)
+                col += 1
+
+    @classmethod
+    def from_node_subclass(cls, node_class):
+        """
+        Construct a CalculatorButtonsGroup from instances of a Node subclass.
+        Here node_class should be, for instance LogicalNode.
+        """
+        buttons = [CalculatorButton.from_node(node)
+                   for node in node_class.calculator_nodes]
+        buttons_group = cls(title=node_class.name,
+                            calculator_buttons=buttons)
+        return buttons_group
 
 
 class CalculatorButtons(QHBoxLayout):
@@ -409,6 +466,13 @@ class CalculatorMainWindow(QDialog):
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
 
+        logical_buttons = CalculatorButtonsGroup.from_node_subclass(LogicalNode)
+        set_buttons = CalculatorButtonsGroup.from_node_subclass(SetTheoryNode)
+        btns_lyt.addWidget(logical_buttons)
+        btns_lyt.addWidget(set_buttons)
+        self.buttons_groups.append(logical_buttons)
+        self.buttons_groups.append(set_buttons)
+
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)
 
@@ -454,10 +518,6 @@ class CalculatorMainWindow(QDialog):
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
 
-    # @Slot()
-    # def process_ok_button(self, pattern):
-    #     self.accept()
-
 
 class CalculatorController:
     """
@@ -498,9 +558,7 @@ class CalculatorController:
         if calculator_groups:
             self.calculator_groups.extend(calculator_groups)
         else:  # Standard groups
-            self.calculator_groups.extend([calculator_group, sci_calc_group,
-                                           logic_group,
-                                           set_theory_group])
+            self.calculator_groups.extend([calculator_group, sci_calc_group])
 
         cpls = CalculatorPatternLines.constants_from_definitions()
         self.calculator_groups.extend(cpls)
@@ -740,7 +798,7 @@ class CalculatorController:
     def delete(self):
         new_target = self.target.deep_copy(self.target)
         success = new_target.clear_marked_mvar()
-        print(new_target)
+        # print(new_target)
         if success:
             self.target = new_target
             # if not self.target.is_at_beginning():
