@@ -90,7 +90,7 @@ class DefinitionMathObject(MathObject, Definition):
     @classmethod
     def get_constants(cls):
         """
-        Add all CONSTANTs in self to the all_constants list.
+        Add all CONSTANTS in self to the all_constants list.
         """
 
         # FIXME: croiser avec PatternMathDisplay.all_constants_names
@@ -100,10 +100,11 @@ class DefinitionMathObject(MathObject, Definition):
             if section not in all_constants:
                 all_constants[section] = []
             csts = all_constants[section]
-            for cst in defi.lhs_pattern.constants_in_self():
-                if (cst.name in PatternMathDisplay.all_constants_names()
-                        and cst not in csts):
-                    csts.append(cst)
+            if defi.lhs_pattern:
+                for cst in defi.lhs_pattern.constants_in_self():
+                    if (cst.name in PatternMathDisplay.all_constants_names()
+                            and cst not in csts):
+                        csts.append(cst)
 
         return all_constants
 
