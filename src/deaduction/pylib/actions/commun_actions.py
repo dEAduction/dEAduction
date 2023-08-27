@@ -27,7 +27,7 @@ This file is part of dEAduction.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from deaduction.pylib.actions.utils import pre_process_lean_code
 from deaduction.pylib.actions import (InputType,
@@ -135,7 +135,7 @@ def inequality_from_pattern_matching(math_object: MathObject,
 
 
 def have_new_property(arrow: MathObject,
-                      variable_names: [str],
+                      variables: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
                       iff_direction='') -> CodeForLean:
@@ -145,7 +145,7 @@ def have_new_property(arrow: MathObject,
 
     :param arrow:           a MathObject which is either an implication or a
                             universal property
-    :param variable_names:  a list of names of variables (or properties) to
+    :param variables:       a list of [names of] variables (or properties) to
                             which "arrow" will be applied
     :param new_hypo_name:   a fresh name for the new property
 
@@ -179,6 +179,11 @@ def have_new_property(arrow: MathObject,
     # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
     # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
     # = "mp")
+
+    variable_names = [variable.to_display(format_='lean')
+                      if isinstance(variable, MathObject)
+                      else variable for variable in variables]
+
     selected_hypo = arrow.info["name"]
     have = f'have {new_hypo_name} := '
     arguments = ' '.join(variable_names)

@@ -173,11 +173,11 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
-    variable_names = []
+    variables = []
     used_inequalities = []
     # Check for "∀x>0" (and variations)
     variable = inequality.children[0]
-    variable_names.append(variable.name)
+    variables.append(variable)
     math_types = [p.math_type for p in goal.context]
     code = CodeForLean.empty_code()
 
@@ -187,17 +187,17 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
         index = math_types.index(inequality)
         context_inequality = goal.context[index]
         used_inequalities.append(context_inequality)
-        inequality_name = context_inequality.display_name
-        variable_names.append(inequality_name)
+        variables.append(context_inequality)
     else:
         ineq_in_ctxt = False
         # If not, assert inequality as a new goal:
         inequality_name = new_hypo_name
-        variable_names.append(inequality_name)
+        variables.append(inequality_name)
         unsolved_inequality_counter += 1
         # Add type indication to the variable in inequality
         math_type = inequality.children[1].math_type
         # Variable is not used explicitly, but this affects inequality:
+        # FIXME: now useless, this is included in Lean display?
         variable = add_type_indication(variable, math_type)
         ineq_with_type = MathObject(node=inequality.node,
                                     info=inequality.info,
@@ -213,11 +213,11 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
 
     # (2) Apply universal_property, with no success_msg #
     # Add remaining variables:
-    variable_names.extend([var.name for var in selected_objects[1:-1]])
+    variables.extend(selected_objects[1:-1])
     if not ineq_in_ctxt:  # Hypo_name has been used
         new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
-                                           variable_names,
+                                           variables,
                                            new_hypo_name,
                                            success_msg=""))
     if used_inequalities:
@@ -268,11 +268,11 @@ def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
 
     universal_property = selected_objects[-1]  # The property to be applied
     new_hypo_name = get_new_hyp(proof_step)
-    var_names = [var.info['name'] for var in selected_objects[:-1]]
+    variables = selected_objects[:-1]
     # Replace first var if pertinent:
     potential_var = extract_var(selected_objects[0])
-    var_names[0] = potential_var.to_display(format_='lean')
-    simple_code = have_new_property(universal_property, var_names,
+    variables[0] = potential_var
+    simple_code = have_new_property(universal_property, variables,
                                     new_hypo_name)
     simple_code.add_success_msg(_("Property {} added to the context").
                                 format(new_hypo_name))
@@ -712,15 +712,14 @@ def use_implies_to_hyp(proof_step,
 
     implication = selected_objects[-1]
     new_hypo_name = get_new_hyp(proof_step)
-    variable_names = [variable.info['name'] for variable in
-                      selected_objects[:-1]]
+    variables = selected_objects[:-1]
     if implication.can_be_used_for_implication(implicit=True,
                                                include_iff=False):
-        code = have_new_property(implication, variable_names, new_hypo_name)
+        code = have_new_property(implication, variables, new_hypo_name)
     else:  # implication is an iff or a universal iff
-        code1 = have_new_property(implication, variable_names, new_hypo_name,
+        code1 = have_new_property(implication, variables, new_hypo_name,
                                   iff_direction='mp')
-        code2 = have_new_property(implication, variable_names, new_hypo_name,
+        code2 = have_new_property(implication, variables, new_hypo_name,
                                   iff_direction='mpr')
         code = code1.or_else(code2)
 
