@@ -54,7 +54,7 @@ calculator_pattern_strings = {
                    '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                    '*': 'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',  # pb = real + int ?
                    '/': 'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
-                   '.': 'POINT(?0, ?1)',
+                   '.': 'POINT()',
                     # Useful for set extension:
                    ',': 'COMMA(?0, ?1)',
                    # FIXME:
@@ -105,7 +105,8 @@ def populate_automatic_patterns(cls):
 
 
 calc_shortcuts = {'\\implies': '⇒',
-                  '\\and': '∧'}
+                  '\\and': '∧',
+                  '*': '×'}
 
 # greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
 

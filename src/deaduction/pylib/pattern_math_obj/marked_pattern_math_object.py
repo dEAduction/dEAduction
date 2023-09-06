@@ -105,7 +105,7 @@ class MarkedTree:
 
     assigned_math_object = None
     # cursor_pos is the rank of current selected item in self.latex_shape,
-    # solely for the marked node.
+    # solely for the marked node. -1 denotes first position.
     cursor_pos = None
     marked_nb = None
 
@@ -229,8 +229,12 @@ class MarkedTree:
     def current_index_in_total_list(self):
         total_list, cursor_list = self.total_and_cursor_list()
         pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
-        idx = list(zip(total_list, cursor_list)).index(pair)
-        return idx
+        l = list(zip(total_list, cursor_list))
+        if pair in l:
+            idx = l.index(pair)
+            return idx
+        else:
+            return -1
 
     ######################
     # Moving in the tree #
@@ -243,11 +247,9 @@ class MarkedTree:
         return first_mvar, first_cursor
 
     def is_at_beginning(self):
-        # total_list, cursor_list = self.total_and_cursor_list()
-        # test1 = self.marked_descendant() is total_list[0]
-        # test2 = self.marked_descendant().cursor_pos == cursor_list[0]
-        current = self.marked_descendant(), self.marked_descendant().cursor_pos
-        return current == self.first_pos()
+        return self.marked_descendant().cursor_pos == -1
+        # current = self.marked_descendant(), self.marked_descendant().cursor_pos
+        # return current == self.first_pos()
 
     def last_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
@@ -271,8 +273,9 @@ class MarkedTree:
             mvar.cursor_pos = pos
 
     def go_to_beginning(self):
-        first_mvar, first_cursor = self.first_pos()
-        self.set_cursor_at(first_mvar, first_cursor)
+        # first_mvar, first_cursor = self.first_pos()
+        # self.set_cursor_at(first_mvar, first_cursor)
+        self.set_cursor_at(self, -1)
 
     def go_to_end(self):
         last_mvar, last_cursor = self.last_pos()
@@ -286,7 +289,8 @@ class MarkedTree:
             cursor_pos = cursor_list[idx-1]
             self.set_cursor_at(mvar, cursor_pos)
         else:
-            self.set_cursor_at(self, -1)
+            self.go_to_beginning()
+            # self.set_cursor_at(self, -1)
 
     def increase_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
@@ -1230,17 +1234,18 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     success = False
                     while mvars:
                         pmo_mvar = mvars.pop(0)
-                        # math_child = child.assigned_math_object
+                        math_child = child.assigned_math_object
                         # if math_child:
-                        if pmo_mvar.match(child,
-                                            use_cls_metavars=True):
+                        if pmo_mvar.match(math_child,
+                                          use_cls_metavars=True):
                             # Success for this child!
                             child.clear_assignment()
                             success = True
                             break
                         elif not check_types:
+                            child.clear_assignment()
                             assignments.append((pmo_mvar,
-                                                child))
+                                                math_child))
                             success = True
                             log.debug("Failed, assigned anyway")
                             break
@@ -1249,7 +1254,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                         log.debug(f"unable to assign child {child}")
                         return False
                     else:
-                        log.debug(f"Child {child} assigned tp {pmo_mvar}")
+                        log.debug(f"Child {child} assigned to {pmo_mvar}")
 
         ##################
         # (D) Last match #
