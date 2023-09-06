@@ -256,26 +256,21 @@ class SetTheoryNode(Node):
     calculator_nodes = []
 
 
-included = SetTheoryNode("PROP_INCLUDED",
-                         'PROP()(?0: SET(?2), ?1: SET(?2))',
-                         (0, r" \subset ", 1))
-
 belongs = SetTheoryNode("PROP_BELONGS",
                         'PROP()(?0: ?2, ?1: SET(?2))',
                         (0, r" \in ", 1))
-
+included = SetTheoryNode("PROP_INCLUDED",
+                         'PROP()(?0: SET(?2), ?1: SET(?2))',
+                         (0, r" \subset ", 1))
 # not_belongs = SetTheoryNode("PROP_NOT_BELONGS",
 #                             'PROP()(?0: ?2, ?1: SET(?2))',
 #                             (0, r" \not\in ", 1))
-
 inter = SetTheoryNode("SET_INTER",
                       'PROP()(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cap ", 1))
-
 union = SetTheoryNode("SET_UNION",
                       'PROP()(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cup ", 1))
-
 empty = SetTheoryNode("SET_EMPTY",
                       '()',
                       (r"\emptyset",)
@@ -338,8 +333,43 @@ for i in [7, 8, 9]:
 
 div_ = NumberNode('DIV',
                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
-                  (0, r"/", 1)
+                  (0, "/", 1)
                   )
+
+for i in [4, 5, 6]:
+    instantiate_nb_node(i)
+
+mult_ = NumberNode('MULT',
+                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                   (0, r"\times", 1)
+                   )
+
+for i in [1, 2, 3]:
+    instantiate_nb_node(i)
+
+diff = NumberNode('DIFFERENCE',
+                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  (0, "-", 1)
+                  )
+
+instantiate_nb_node(0)
+
+point = NumberNode('POINT',
+                   '(?0, ?1)',
+                   (0, '.', 1)
+                   )
+
+parentheses = NumberNode('GENERIC_PARENTHESES',
+                         '(?0)',
+                         ('(', 0, ')')
+                         )
+parentheses.set_button_symbol("()")
+
+sum_ = NumberNode('SUM',
+                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  (0, "+", 1)
+                  )
+
 
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3

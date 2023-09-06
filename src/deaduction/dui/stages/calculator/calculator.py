@@ -60,8 +60,9 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                sci_calc_group)
 from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
 
-from deaduction.dui.elements import TargetLabel
 from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
+from deaduction.dui.primitives          import deaduction_fonts
+
 
 global _
 log = logging.getLogger(__name__)
@@ -318,6 +319,9 @@ class CalculatorButton(QToolButton, CalculatorAbstractButton):
             self.setToolTip(self.tooltip)
         self.add_shortcut()
 
+        symbol_size = deaduction_fonts.symbol_button_font_size
+        self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+
     def add_shortcut(self):
         """
         Automatically add self.text() as a shortcut for self.
@@ -367,11 +371,11 @@ class CalculatorButtonsGroup(QWidget):
     disclosure triangle.
     """
 
-    nb_buttons_by_line = 6
-
-    def __init__(self, title, calculator_buttons: [CalculatorButton]):
+    def __init__(self, title, calculator_buttons: [CalculatorButton],
+                 col_size):
         super().__init__()
         self.title = title
+        self.col_size = col_size
         self.buttons = calculator_buttons
 
         self.title_label = QLabel(self.title + _(':'))
@@ -389,15 +393,15 @@ class CalculatorButtonsGroup(QWidget):
         Add self's buttons is self.buttons_layout
         """
 
-        for line in range(len(self.buttons) // self.nb_buttons_by_line + 1):
+        for line in range(len(self.buttons) // self.col_size + 1):
             col = 0
-            for button in self.buttons[self.nb_buttons_by_line * line:
-                                       self.nb_buttons_by_line * (line + 1)]:
+            for button in self.buttons[self.col_size * line:
+                                       self.col_size * (line + 1)]:
                 self.buttons_layout.addWidget(button, line, col)
                 col += 1
 
     @classmethod
-    def from_node_subclass(cls, node_class):
+    def from_node_subclass(cls, node_class, col_size=4):
         """
         Construct a CalculatorButtonsGroup from instances of a Node subclass.
         Here node_class should be, for instance LogicalNode.
@@ -405,7 +409,8 @@ class CalculatorButtonsGroup(QWidget):
         buttons = [CalculatorButton.from_node(node)
                    for node in node_class.calculator_nodes]
         buttons_group = cls(title=node_class.name,
-                            calculator_buttons=buttons)
+                            calculator_buttons=buttons,
+                            col_size=col_size)
         return buttons_group
 
 
@@ -466,8 +471,11 @@ class CalculatorMainWindow(QDialog):
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
 
-        for NodeClass in (LogicalNode, SetTheoryNode, NumberNode):
-            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass)
+        for NodeClass, col_size in ((LogicalNode, 5),
+                                    (SetTheoryNode, 5),
+                                    (NumberNode, 4)):
+            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
+                                                                col_size)
             btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
 
@@ -555,8 +563,8 @@ class CalculatorController:
 
         if calculator_groups:
             self.calculator_groups.extend(calculator_groups)
-        else:  # Standard groups
-            self.calculator_groups.extend([calculator_group, sci_calc_group])
+        # else:  # Standard groups
+        #     self.calculator_groups.extend([calculator_group, sci_calc_group])
 
         cpls = CalculatorPatternLines.constants_from_definitions()
         self.calculator_groups.extend(cpls)
