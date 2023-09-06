@@ -74,6 +74,8 @@ if __name__ == '__main__':
     from deaduction.dui.__main__ import language_check
     language_check()
 
+from typing import Optional
+
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
@@ -82,6 +84,12 @@ from deaduction.pylib.math_display import PatternMathDisplay
 # from .calculator_pattern_strings import automatic_matching_patterns
 
 log = logging.getLogger(__name__)
+
+
+def merge_nbs(nb1: str, nb2: str) -> Optional[str]:
+    nb = nb1 + nb2
+    if nb.count('.') < 2:
+        return nb
 
 
 class MarkedTree:
@@ -289,6 +297,17 @@ class MarkedTree:
             self.set_cursor_at(mvar, cursor_pos)
         else:
             pass
+
+    def next_after_marked(self):
+        """
+        Return the node which is just after the marked node, i.e. right of
+        cursor.
+        """
+        total_list, cursor_list = self.total_and_cursor_list()
+        idx = self.current_index_in_total_list()
+        if idx < len(total_list) - 1:
+            mvar = total_list[idx+1]
+            return mvar
 
     def parent_of_marked(self):
         mvar = self.marked_descendant()
@@ -1357,6 +1376,33 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mvar.assigned_math_object = new_pmo
         return True
 
+    def insert_number(self, new_pmo):
+        """
+        Try to merge numbers to create a new value.
+        """
+        if new_pmo.node not in ('NUMBER', 'POINT'):
+            return
+
+        new_pmo_value = new_pmo.value if new_pmo.node == 'NUMBER' else '.'
+
+        mvar = self.marked_descendant()
+        left_child = mvar.assigned_math_object
+        if left_child and left_child.node == 'NUMBER':
+            left = left_child.value
+            new_value = merge_nbs(left, new_pmo_value)
+            if new_value:
+                left_child.value = new_value
+                return mvar
+        else:
+            mvar = self.next_after_marked()
+            right_child = mvar.assigned_math_object
+            if right_child and right_child.node == 'NUMBER':
+                right = right_child.value
+                new_value = merge_nbs(new_pmo_value, right)
+                if new_value:
+                    right_child.value = new_value
+                    return mvar
+
     def generic_insert(self, new_pmo: PatternMathObject):
         """
         Force insertion of new_pmo at self.marked_descendant() by inserting
@@ -1365,16 +1411,22 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
+        new_nb = self.insert_number(new_pmo)
+        if new_nb:
+            self.set_cursor_at(new_nb)
+            return self.marked_descendant()
+
         mvar = self.marked_descendant()
         left_child = mvar.assigned_math_object
         if left_child:
             mvar.clear_assignment()
-            if left_child.node == 'NUMBER' and new_pmo_copy.node == 'NUMBER':
-                generic_node = MarkedPatternMathObject.composite_number(
-                            left_child=left_child, right_child=new_pmo_copy)
-            else:
-                generic_node = MarkedPatternMathObject.generic_node(
-                            left_child=left_child, right_child=new_pmo_copy)
+            # if (left_child.node == 'NUMBER'
+            #         and new_pmo_copy.node in ('NUMBER', 'POINT')):
+            #     generic_node = MarkedPatternMathObject.composite_number(
+            #                 left_child=left_child, right_child=new_pmo_copy)
+            # else:
+            generic_node = MarkedPatternMathObject.generic_node(
+                        left_child=left_child, right_child=new_pmo_copy)
         else:
             generic_node = MarkedPatternMathObject.generic_node(
                 left_child=new_pmo_copy)

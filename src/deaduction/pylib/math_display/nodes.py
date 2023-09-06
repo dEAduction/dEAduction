@@ -354,10 +354,14 @@ diff = NumberNode('DIFFERENCE',
 
 instantiate_nb_node(0)
 
-point = NumberNode('POINT',
-                   '(?0, ?1)',
-                   (0, '.', 1)
-                   )
+# point = NumberNode('POINT',
+#                    'POINT()',
+#                    ('.', )
+#                    )
+
+point = NumberNode(f'NUMBER',
+                   f"NUMBER/value=.: *NUMBER_TYPES",
+                   ('.',))
 
 parentheses = NumberNode('GENERIC_PARENTHESES',
                          '(?0)',
