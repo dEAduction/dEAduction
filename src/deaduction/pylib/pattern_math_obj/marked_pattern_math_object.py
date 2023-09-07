@@ -949,8 +949,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     @classmethod
     def generic_node(cls, left_child=None, right_child=None, node=None):
         """
-        Create a MarkedPatternMathObject with node GENERIC_NODE and children
-        self and other. This is used to force insertion when math_type is
+        Create a MarkedPatternMathObject with node GENERIC_NODE and
+        given children. This is used to force insertion when math_type is
         unknown.
         """
         if node is None:
@@ -964,9 +964,20 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return generic_node
 
     @classmethod
-    def composite_number(cls, left_child, right_child):
-        return cls.generic_node(left_child, right_child,
-                                node="COMPOSITE_NUMBER")
+    def generic_parentheses(cls, child=None):
+        """
+        Create a MarkedPatternMathObject with node GENERIC_PARENTHESES and
+        """
+        pattern = "GENERIC_PARENTHESES(?0)"
+        generic_node = cls.from_string(pattern)
+        mvar = generic_node.children[0]
+        mvar.assigned_math_object = child
+        return generic_node
+
+    # @classmethod
+    # def composite_number(cls, left_child, right_child):
+    #     return cls.generic_node(left_child, right_child,
+    #                             node="COMPOSITE_NUMBER")
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
@@ -1421,6 +1432,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             self.set_cursor_at(new_nb)
             return self.marked_descendant()
 
+        # GENERIC INSERT DESACTIVATED:
+        else:
+            return
+
         mvar = self.marked_descendant()
         left_child = mvar.assigned_math_object
         if left_child:
@@ -1447,25 +1462,26 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     #     automatic_patterns list.
     #     """
 
-    def post_process(self):
-        new_children = [child.post_process() for child in self.children]
+    # def post_process(self):
+        # new_children = [child.post_process() for child in self.children]
+        #
+        # if self.node == "COMPOSITE_NUMBER":
+        #     child0 = new_children[0]
+        #     child1 = new_children[1]
+        #     if child0.node == 'NUMBER' and child1.node == 'NUMBER':
+        #         # Concatenate
+        #         new_child = child0.value() + child1.value()
+        #         return new_child
+        # elif self.node == "POINT":
+        #     child0 = new_children[0]
+        #     child1 = new_children[1]
+        #     if child0.node == 'NUMBER' and child1.node == 'NUMBER':
+        #         # Concatenate
+        #         new_child = child0.value() + '.' + child1.value()
+        #         return new_child
+        #
+        # return self
 
-        if self.node == "COMPOSITE_NUMBER":
-            child0 = new_children[0]
-            child1 = new_children[1]
-            if child0.node == 'NUMBER' and child1.node == 'NUMBER':
-                # Concatenate
-                new_child = child0.value() + child1.value()
-                return new_child
-        elif self.node == "POINT":
-            child0 = new_children[0]
-            child1 = new_children[1]
-            if child0.node == 'NUMBER' and child1.node == 'NUMBER':
-                # Concatenate
-                new_child = child0.value() + '.' + child1.value()
-                return new_child
-
-        return self
 
     @classmethod
     def tree_from_list(cls, i_list: []):
@@ -1516,8 +1532,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         success = self.marked_descendant().delete()
         if success:
             self.set_cursor_at(self.marked_descendant(), 0)
+            self.decrease_cursor_pos()
             return True
-
 
 
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):

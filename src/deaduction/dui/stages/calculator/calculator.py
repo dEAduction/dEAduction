@@ -274,24 +274,41 @@ class NavigationBar(AbstractToolBar):
         icons_dir = cdirs.icons
         # TODO: add icons
 
-        self.beginning_action = QAction(_('←←'), self)
-        self.left_unassigned_action = QAction(_('?←'), self)
-        self.left_action = QAction(_('←'), self)
-        self.up_action = QAction(_('↑'), self)
-        self.right_action = QAction(_('→'), self)
-        self.right_unassigned_action = QAction(_('→?'), self)
-        self.end_action = QAction(_('→→'), self)
+        beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
+        self.beginning_action = QAction(QIcon(beg_path),
+                                        _('Go to beginning'), self)
+
+        # self.left_unassigned_action = QAction(_('?←'), self)
+
+        left_path = str((icons_dir / 'icons8-back-48.png').resolve())
+        self.left_action = QAction(QIcon(left_path),
+                                   _('Move left'), self)
+
+        up_path = str((icons_dir /
+                      'icons8-thick-arrow-pointing-up-48.png').resolve())
+        self.up_action = QAction(QIcon(up_path), _('Move up'), self)
+
+        right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
+        self.right_action = QAction(QIcon(right_path),
+                                   _('Move right'), self)
+
+        # self.right_unassigned_action = QAction(_('→?'), self)
+
+        end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
+        self.end_action = QAction(QIcon(end_path),
+                                   _('Go to end'), self)
+
         self.delete = QAction(QIcon(str((icons_dir /
-                                         'cancel.png').resolve())),
-            _('Delete'), self)
+                                         'icons8-clear-48.png').resolve())),
+                              _('Delete'), self)
 
         self.addAction(self.delete)
         self.addAction(self.end_action)
-        self.addAction(self.right_unassigned_action)
+        # self.addAction(self.right_unassigned_action)
         self.addAction(self.right_action)
         self.addAction(self.up_action)
         self.addAction(self.left_action)
-        self.addAction(self.left_unassigned_action)
+        # self.addAction(self.left_unassigned_action)
         self.addAction(self.beginning_action)
 
 
@@ -381,11 +398,15 @@ class CalculatorButtonsGroup(QWidget):
         self.title_label = QLabel(self.title + _(':'))
         self.buttons_layout = QGridLayout()
         self.include_buttons()
+        self.margin_btns_lyt = QHBoxLayout()
+        self.margin_btns_lyt.addStretch()
+        self.margin_btns_lyt.addLayout(self.buttons_layout)
+        self.margin_btns_lyt.addStretch()
 
         # Fill-in main layout
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.title_label)
-        main_layout.addLayout(self.buttons_layout)
+        main_layout.addLayout(self.margin_btns_lyt)
         self.setLayout(main_layout)
 
     def include_buttons(self):
@@ -471,9 +492,9 @@ class CalculatorMainWindow(QDialog):
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
 
-        for NodeClass, col_size in ((LogicalNode, 5),
-                                    (SetTheoryNode, 5),
-                                    (NumberNode, 4)):
+        for NodeClass, col_size in (  # (LogicalNode, 5),
+                                      # (SetTheoryNode, 5),
+                                    (NumberNode, 4), ):
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
                                                                 col_size)
             btns_lyt.addWidget(buttons)
@@ -592,13 +613,13 @@ class CalculatorController:
 
         n_bar = calc_ui.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-        n_bar.left_unassigned_action.triggered.connect(
-            self.move_to_previous_unassigned)
+        # n_bar.left_unassigned_action.triggered.connect(
+        #     self.move_to_previous_unassigned)
         n_bar.left_action.triggered.connect(self.move_left)
         n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
-        n_bar.right_unassigned_action.triggered.connect(
-            self.move_to_next_unassigned)
+        # n_bar.right_unassigned_action.triggered.connect(
+        #     self.move_to_next_unassigned)
         n_bar.end_action.triggered.connect(self.go_to_end)
         n_bar.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
@@ -628,6 +649,8 @@ class CalculatorController:
         # After exec
         choice = calculator_controller.target
         choice.unmark()
+        choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
+
         if calculator_controller.lean_mode:
             choice = choice.toPlainText()
         return choice, OK
@@ -654,9 +677,9 @@ class CalculatorController:
     def beginning_action(self):
         return self.calculator_ui.navigation_bar.beginning_action
 
-    @property
-    def left_unassigned_action(self):
-        return self.calculator_ui.navigation_bar.left_unassigned_action
+    # @property
+    # def left_unassigned_action(self):
+    #     return self.calculator_ui.navigation_bar.left_unassigned_action
 
     @property
     def left_action(self):
@@ -670,9 +693,9 @@ class CalculatorController:
     def right_action(self):
         return self.calculator_ui.navigation_bar.right_action
 
-    @property
-    def right_unassigned_action(self):
-        return self.calculator_ui.navigation_bar.right_unassigned_action
+    # @property
+    # def right_unassigned_action(self):
+    #     return self.calculator_ui.navigation_bar.right_unassigned_action
 
     @property
     def end_action(self):
@@ -717,11 +740,11 @@ class CalculatorController:
     def enable_actions(self):
         target = self.target
         self.beginning_action.setEnabled(not target.is_at_beginning())
-        self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
+        # self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
         self.left_action.setEnabled(not target.is_at_beginning())
         self.up_action.setEnabled(bool(target.parent_of_marked()))
         self.right_action.setEnabled(not target.is_at_end())
-        self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
+        # self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
         self.end_action.setEnabled(not target.is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
