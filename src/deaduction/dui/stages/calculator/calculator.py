@@ -492,7 +492,7 @@ class CalculatorMainWindow(QDialog):
                 btns_lyt.addLayout(buttons_lyt)
                 self.buttons_groups.append(buttons_lyt)
 
-        for NodeClass, col_size in (  # (LogicalNode, 5),
+        for NodeClass, col_size in (  (LogicalNode, 5),
                                       # (SetTheoryNode, 5),
                                     (NumberNode, 4), ):
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,

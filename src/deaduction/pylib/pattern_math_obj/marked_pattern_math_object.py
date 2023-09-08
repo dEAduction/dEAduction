@@ -199,7 +199,8 @@ class MarkedTree:
 
     def total_and_cursor_list(self) -> (list, list):
         """
-        Return a non-injective list of self's node, where each item
+        Return a non-injective list of nodes in the tree starting at self,
+        where each item
         corresponds to an unbreakable block of string in the display of self.
         Also return the list of cursor numbers, i.e. index of item's
         appearance in the latex_shape.
@@ -1106,11 +1107,17 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     #     pass
 
     @staticmethod
-    def assign(mvars, math_object, assignments, check_types=False):
+    def assign(mvars, math_object, assignments, check_types=False) -> bool:
+        """
+        Try to assign math_object to one of the mvar in mvars.
+        If check_types is True then assignment is included in the match
+        method (and done only if this match is a success).
+        In the opposite case, and if the match fails, the assignment will be
+        done anyway, and for this it is recorded in the assignments list.
+        """
         for child_new_pmo in mvars:
             log.debug(f"----> {child_new_pmo} match?")
-            if child_new_pmo.match(math_object,
-                                     use_cls_metavars=True):
+            if child_new_pmo.match(math_object, use_cls_metavars=True):
                 log.debug("yes!")
                 return True
             elif not check_types:
@@ -1119,10 +1126,152 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 log.debug("Check type failed, assign anyway")
                 return True
 
+    def priority_tests(self, new_pmo, mvar, parent_mvar) -> bool:
+        """
+        Check if the priority rules are compatible with
+        (1) new_pmo being a child of parent_mvar in place of mvar
+        (mvar is a left or right child of parent_mvar)
+        (2) mvar being a left or right child of new_pmo
+        (left/right according to position of mvar relative to the current
+        cursor)
+        """
+        # Priority test I (no priority test for common ancestor):
+        #  Can new_pmo be a child of parent_mvar?
+        if parent_mvar:
+            left_children, central_children, right_children = \
+                parent_mvar.partionned_children()
+            if mvar in left_children:
+                # new_pmo would take the place of mvar, as a left child
+                priority_test = (priority(parent_mvar.node, new_pmo.node) != '>')
+            elif mvar in right_children:
+                # new_pmo would take the place of mvar, as a right child
+                priority_test = (priority(parent_mvar.node, new_pmo.node)
+                                 not in ('=', '>'))
+            else:
+                priority_test = True
+            if not priority_test:
+                log.debug(f"--> Priority test I failed")
+                return False
+            else:
+                log.debug("--> Priority test I passed")
+
+        # Priority test II: Can mvar be a child of new_pmo?
+        left = self.appears_left_of_cursor(mvar)
+        if left:  # mvar would be inserted as a left child
+            priority_test = (priority(new_pmo.node, mvar.node) != '>')
+        else:
+            priority_test = (priority(new_pmo.node, mvar.node)
+                             not in ('=', '>'))
+        if not priority_test:
+            log.debug(f"--> Priority test II failed")
+            return False
+        else:
+            log.debug("--> Priority test II passed")
+            return True
+
     @staticmethod
     def do_assign(assignments):
         for metavar, math_object in assignments:
             metavar.assigned_math_object = math_object
+
+    def re_assign(self, mvar, new_pmo, assignments, check_types) -> bool:
+        """
+        Try to re-assign the assigned_math_object of mvar, which is a node of
+        self, to new_pmo, to be inserted at cursor pos.
+        Some of the children of mvar may have been displaced by the
+        re-assignment to the wrong side of new_pmo, and those have to be
+        also re-assigned to mvar children of new_pmo.
+        """
+
+        assert mvar.is_assigned
+        left = self.appears_left_of_cursor(mvar)
+        right = self.appears_right_of_cursor(mvar)
+
+        left_mvars, central_mvars, right_mvars = \
+            new_pmo.partionned_mvars(unassigned=True)
+        pmo_display = new_pmo.to_display(format_='utf8')
+
+        left_insertion = False
+        central_insertion = False
+        right_insertion = False
+        math_object = mvar.assigned_math_object
+        if left:
+            log.debug(f"--> Trying to match left mvars of {pmo_display} "
+                      f"with {math_object}")
+            left_insertion = self.assign(left_mvars, math_object,
+                                         assignments, check_types)
+
+        if not left_insertion and right:
+            log.debug(f"--> Trying to match right mvars of {pmo_display} with"
+                      f" {math_object}")
+            right_insertion = self.assign(right_mvars, math_object,
+                                          assignments, check_types)
+
+        if not (left_insertion or right_insertion):
+            log.debug(f"--> Trying to match central mvars of {pmo_display} "
+                      f"with {math_object}")
+            central_insertion = self.assign(central_mvars, math_object,
+                                            assignments, check_types)
+
+        insertion = (left_insertion or right_insertion or central_insertion)
+        if not insertion:
+            log.debug("-->Child don't match.")
+            return False
+
+        ##############################
+        # (C) Additional refactoring #
+        ##############################
+        # Some of mvar.assigned_math_object's children may be at the wrong
+        # side of new_pmo
+        dubious_children = mvar.assigned_math_object.children
+
+        # (C-1) Find bad children
+        if left_insertion:
+            # mvar.assigned_mo will be inserted on the left of new_pmo
+            # move bad children of this to the right mvar of new_pmo,
+            # trying successively all right unassigned mvars of new_pmo
+            mvars = right_mvars
+            bad_children = [child for child in dubious_children
+                            if not self.appears_left_of_cursor(child)]
+        elif right_insertion:
+            mvars = left_mvars
+            bad_children = [child for child in dubious_children
+                            if not self.appears_right_of_cursor(child)]
+
+        # (C-2) move bad children
+        if left_insertion or right_insertion:
+            display = [child.to_display(format_='utf8')
+                       for child in bad_children]
+            log.debug(f"--> Bad children: {display}")
+            while bad_children:
+                child = bad_children.pop(0)
+                success = False
+                while mvars:
+                    pmo_mvar = mvars.pop(0)
+                    math_child = child.assigned_math_object
+                    # if math_child:
+                    if pmo_mvar.match(math_child,
+                                      use_cls_metavars=True):
+                        # Success for this child!
+                        child.clear_assignment()
+                        # FIXME: only in case of global success?!
+                        success = True
+                        break
+                    elif not check_types:
+                        child.clear_assignment()
+                        assignments.append((pmo_mvar,
+                                            math_child))
+                        success = True
+                        log.debug("Failed, assigned anyway")
+                        break
+                if not success:
+                    # last mvar did not match
+                    log.debug(f"unable to assign child {child}")
+                    return False
+                else:
+                    log.debug(f"Child {child} assigned to {pmo_mvar}")
+
+        return True
 
     def insert_if_you_can(self, new_pmo, mvar, parent_mvar=None,
                           check_types=False):
@@ -1150,122 +1299,17 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         ######################
         # (A) Priority tests #
         ######################
-        # Priority test I (no priority test for common ancestor):
-        #  Can new_pmo be a child of parent_mvar?
-        if parent_mvar:
-            left_children, central_children, right_children = \
-                parent_mvar.partionned_children()
-            if mvar in left_children:
-                # new_pmo would take the place of mvar, as a left child
-                priority_test = (priority(parent_mvar.node, new_pmo.node) != '>')
-            elif mvar in right_children:
-                # new_pmo would take the place of mvar, as a right child
-                priority_test = (priority(parent_mvar.node, new_pmo.node)
-                                 not in ('=', '>'))
-            else:
-                priority_test = True
-            if not priority_test:
-                log.debug(f"--> Priority test I failed")
-                return False
-            else:
-                log.debug("--> Priority test I passed")
-
-        # Priority test II: Can mvar be a child of new_pmo?
-        if left:  # mvar would be inserted as a left child
-            priority_test = (priority(new_pmo.node, mvar.node) != '>')
-        else:
-            priority_test = (priority(new_pmo.node, mvar.node)
-                             not in ('=', '>'))
-        if not priority_test:
-            log.debug(f"--> Priority test II failed")
+        if not self.priority_tests(new_pmo, mvar, parent_mvar):
             return False
-        else:
-            log.debug("--> Priority test II passed")
 
         ########################
         # (B) First match test #
         ########################
         # Try to insert mvar.assigned_math_object as a left/right/central
         # mvars of new_pmo
-        left_mvars, central_mvars, right_mvars = \
-            new_pmo.partionned_mvars(unassigned=True)
-        if mvar.is_assigned:
-            left_insertion = False
-            central_insertion = False
-            right_insertion = False
-            math_object = mvar.assigned_math_object
-            if left:
-                log.debug(f"--> Trying to match left mvars of {pmo_display} "
-                          f"with {math_object}")
-                left_insertion = self.assign(left_mvars, math_object,
-                                             assignments, check_types)
-
-            if not left_insertion and right:
-                log.debug(f"--> Trying to match right mvars of {pmo_display} with"
-                          f" {mvar.assigned_math_object}")
-                right_insertion = self.assign(right_mvars, math_object,
-                                              assignments, check_types)
-
-            if not (left_insertion or right_insertion):
-                log.debug(f"--> Trying to match central mvars of {pmo_display} "
-                          f"with {mvar.assigned_math_object}")
-                central_insertion = self.assign(central_mvars, math_object,
-                                                assignments, check_types)
-
-            insertion = (left_insertion or right_insertion or central_insertion)
-            if not insertion:
-                log.debug("-->Child don't match.")
-                return False
-
-            ##############################
-            # (C) Additional refactoring #
-            ##############################
-            # Some of mvar.assigned_math_object's children may be at the wrong
-            # side of new_pmo
-            dubious_children = mvar.assigned_math_object.children
-
-            if left_insertion:
-                # mvar.assigned_mo has been inserted on the left of new_pmo
-                # move bad children of this to the right mvar of new_pmo,
-                # trying successively all right unassigned mvars of new_pmo
-                mvars = right_mvars
-                bad_children = [child for child in dubious_children
-                                if not self.appears_left_of_cursor(child)]
-            elif right_insertion:
-                mvars = left_mvars
-                bad_children = [child for child in dubious_children
-                                if not self.appears_right_of_cursor(child)]
-
-            if left_insertion or right_insertion:
-                display = [child.to_display(format_='utf8')
-                           for child in bad_children]
-                log.debug(f"--> Bad children: {display}")
-                while bad_children:
-                    child = bad_children.pop(0)
-                    success = False
-                    while mvars:
-                        pmo_mvar = mvars.pop(0)
-                        math_child = child.assigned_math_object
-                        # if math_child:
-                        if pmo_mvar.match(math_child,
-                                          use_cls_metavars=True):
-                            # Success for this child!
-                            child.clear_assignment()
-                            success = True
-                            break
-                        elif not check_types:
-                            child.clear_assignment()
-                            assignments.append((pmo_mvar,
-                                                math_child))
-                            success = True
-                            log.debug("Failed, assigned anyway")
-                            break
-                    if not success:
-                        # last mvar did not match
-                        log.debug(f"unable to assign child {child}")
-                        return False
-                    else:
-                        log.debug(f"Child {child} assigned to {pmo_mvar}")
+        if (mvar.is_assigned and
+                not self.re_assign(mvar, new_pmo, assignments, check_types)):
+            return False
 
         ##################
         # (D) Last match #
@@ -1302,26 +1346,25 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         at which insertion has been done.
         """
 
-        mvar = self.marked_descendant()
+        # mvar = self.marked_descendant()
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
-        if mvar.node == "GENERIC_NODE":
-            success = self.substitute_generic_node(mvar, new_pmo_copy)
-            if success:
-                return mvar
+        for mvar in (self.marked_descendant(), self.next_after_marked()):
+            if mvar.node == "GENERIC_NODE":
+                success = self.substitute_generic_node(mvar, new_pmo_copy)
+                if success:
+                    return mvar
 
-        parent_mvar = self.parent_of(mvar)
+            parent_mvar = self.parent_of(mvar)
 
-        while mvar:
-            success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
-            if success:
-                return mvar
-            mvar = parent_mvar
-            parent_mvar = self.parent_of(parent_mvar)
-            if mvar and not mvar.is_metavar():
-                continue
-
-        # TODO: try next!
+            while mvar:
+                success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+                if success:
+                    return mvar
+                mvar = parent_mvar
+                parent_mvar = self.parent_of(parent_mvar)
+                if mvar and not mvar.is_metavar():
+                    continue
 
         # return self.generic_insert(new_pmo)
 

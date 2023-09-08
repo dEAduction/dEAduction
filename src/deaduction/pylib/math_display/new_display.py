@@ -116,7 +116,7 @@ def substitute_metavars(shape, metavars: [MetaVar], pattern):
 
 def lean_shape(self: MathObject) -> []:
     """
-    Shape for lean format. See the shape() method doc.
+    Shape for lean format. See the latex_shape() method doc.
     """
     shape = None
     for pattern, pre_shape, metavars in pattern_lean:
