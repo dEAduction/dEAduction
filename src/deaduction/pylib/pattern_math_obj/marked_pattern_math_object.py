@@ -199,16 +199,18 @@ class MarkedTree:
 
     def total_and_cursor_list(self) -> (list, list):
         """
-        Return a non-injective list of nodes in the tree starting at self,
+        Return a non-injective list of MathObjects in the tree starting at self,
         where each item
         corresponds to an unbreakable block of string in the display of self.
         Also return the list of cursor numbers, i.e. index of item's
-        appearance in the latex_shape.
+        appearance in the latex_shape where it belongs.
         e.g. if self is generic_parentheses, with one child mv0,
         then total list is (self, mv0, self)
         and cursor_list is (0, 0, 2).
 
-        This makes use of self.ordered_children.
+        This makes use of self.ordered_children: essentially, ordered_children
+        is expanded by replacing recursively each child by its
+        ordered_children list.
         """
 
         total_list = []
@@ -227,7 +229,13 @@ class MarkedTree:
 
         return total_list, cursor_list
 
-    def current_index_in_total_list(self):
+    def current_index_in_total_list(self) -> int:
+        """
+        Return the index of the item corresponding to the current cursor pos
+        ( as recorder in self.marked_descendant() and
+        self.marked_descendant( ).cursor_pos )
+        in self.total_and_cursor_list.
+        """
         total_list, cursor_list = self.total_and_cursor_list()
         pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
         l = list(zip(total_list, cursor_list))
@@ -389,8 +397,9 @@ class MarkedTree:
 
     def appears_right_of_cursor(self, other) -> bool:
         """
-        True iff other is right of last appearance of marked element in
-        self.total_list.
+        True iff other appears right of cursor. Note that other may appear
+        both left and right of cursor, but only if it is an ancestor of
+        self.marked_element.
         """
         l, _ = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
@@ -398,8 +407,7 @@ class MarkedTree:
 
     def appears_left_of_cursor(self, other) -> bool:
         """
-        True iff other is left of the first appearance of marked element in
-        self.total_list.
+        True iff other appears left of cursor.
         """
         l, _ = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
@@ -1011,6 +1019,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         List of ordered children or descendant appearing in latex_shape,
         with str entries replaced by self.
+            e.g. if <shape is
+        (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
+
+            then this methid will return
+        (self, self.children[1], self, self.descendant(0,0), self,
+        self.children[2] )
+
         """
         # FIXME: put this and following methods in PatternMathObj?
         # Unmarked latex_shape
@@ -1033,6 +1048,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         Partition proper children (items of self.ordered_children that are
         not self) into three lists:
         left, central, right.
+        Left children are the ones are before the first of self in
+        self.ordered_children.
         """
         left = []
         central = []
@@ -1174,6 +1191,64 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         for metavar, math_object in assignments:
             metavar.assigned_math_object = math_object
 
+    def first_right_descendants(self, mvar) -> list:
+        """
+        Return the list of descendants of mvar which are the first to be at
+        the right of the cursor pos in their lineage, from top to bottom.
+        These are the nodes which must be re-assigned if mvar is re-assigned
+        to the left of the cursor.
+        They are either right descendants of the last left child,
+        or right children.
+        """
+
+        math_object = mvar.assigned_math_object
+        if not math_object:
+            return []
+        children = math_object.children
+
+        left_children = [child for child in children
+                         if not self.appears_right_of_cursor(child)]
+
+        right_children = [child for child in children
+                          if not self.appears_left_of_cursor(child)]
+
+        if left_children:
+            limit_child = left_children[-1]
+            more_right_descendants = self.first_right_descendants(limit_child)
+        else:
+            more_right_descendants = []
+
+        return more_right_descendants + right_children
+
+    def first_left_descendants(self, mvar) -> list:
+        """
+        Return the list of descendants of mvar which are the first to be at
+        the right of the cursor pos in their lineage, from top to bottom.
+        These are the nodes which must be re-assigned if mvar is re-assigned
+        to the left of the cursor.
+        They are either right descendants of the last left child,
+        or right children.
+        """
+
+        math_object = mvar.assigned_math_object
+        if not math_object:
+            return []
+        children = math_object.children
+
+        left_children = [child for child in children
+                         if not self.appears_right_of_cursor(child)]
+
+        right_children = [child for child in children
+                          if not self.appears_left_of_cursor(child)]
+
+        if right_children:
+            limit_child = right_children[0]
+            more_left_descendants = self.first_left_descendants(limit_child)
+        else:
+            more_left_descendants = []
+
+        return left_children + more_left_descendants
+
     def re_assign(self, mvar, new_pmo, assignments, check_types) -> bool:
         """
         Try to re-assign the assigned_math_object of mvar, which is a node of
@@ -1183,7 +1258,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         also re-assigned to mvar children of new_pmo.
         """
 
+        # FIXME:
+        #  (1) bad re-assignment, some node may have to be reassigned other
+        #  than direct children.
+        #  (2) some previous assignment are cleared even in case of failure??
+
         assert mvar.is_assigned
+        # Determine if mvar should be assigned to a left or right child of
+        # new_pmo, i.e. if it appears left or right of cursor.
         left = self.appears_left_of_cursor(mvar)
         right = self.appears_right_of_cursor(mvar)
 
@@ -1217,59 +1299,71 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if not insertion:
             log.debug("-->Child don't match.")
             return False
+        elif central_insertion:
+            return True
+        # Now left_insertion or right_insertion
 
         ##############################
         # (C) Additional refactoring #
         ##############################
+        # FIXME :                             DESCENDANTS
         # Some of mvar.assigned_math_object's children may be at the wrong
         # side of new_pmo
-        dubious_children = mvar.assigned_math_object.children
+        # FIXME: pour fixer les idées, mettons qu'on a une insertion gauche.
+        #  On parcourt l'arbre sous mvar dans l'ordre. A un moment on
+        #  passe de gauche à droite du curseur.
 
         # (C-1) Find bad children
-        if left_insertion:
-            # mvar.assigned_mo will be inserted on the left of new_pmo
-            # move bad children of this to the right mvar of new_pmo,
-            # trying successively all right unassigned mvars of new_pmo
-            mvars = right_mvars
-            bad_children = [child for child in dubious_children
-                            if not self.appears_left_of_cursor(child)]
-        elif right_insertion:
-            mvars = left_mvars
-            bad_children = [child for child in dubious_children
-                            if not self.appears_right_of_cursor(child)]
+        # dubious_children = mvar.assigned_math_object.children
+        # if left_insertion:
+        #     # mvar.assigned_mo will be inserted on the left of new_pmo
+        #     # move bad children of this to the right mvar of new_pmo,
+        #     # trying successively all right unassigned mvars of new_pmo
+        #     mvars = right_mvars
+        #     bad_children = [child for child in dubious_children
+        #                     if not self.appears_left_of_cursor(child)]
+        #     # bad_children = self.first_right_descendants(mvar)
+        # elif right_insertion:
+        #     mvars = left_mvars
+        #     # bad_children = self.first_left_descendants(mvar)
+        #     bad_children = [child for child in dubious_children
+        #                     if not self.appears_right_of_cursor(child)]
 
+        mvars, bad_children = ((right_mvars, self.first_right_descendants(mvar))
+                               if left_insertion else
+                               (left_mvars, self.first_left_descendants(mvar))
+                               )
         # (C-2) move bad children
-        if left_insertion or right_insertion:
-            display = [child.to_display(format_='utf8')
-                       for child in bad_children]
-            log.debug(f"--> Bad children: {display}")
-            while bad_children:
-                child = bad_children.pop(0)
-                success = False
-                while mvars:
-                    pmo_mvar = mvars.pop(0)
-                    math_child = child.assigned_math_object
-                    # if math_child:
-                    if pmo_mvar.match(math_child,
-                                      use_cls_metavars=True):
-                        # Success for this child!
-                        child.clear_assignment()
-                        # FIXME: only in case of global success?!
-                        success = True
-                        break
-                    elif not check_types:
-                        child.clear_assignment()
-                        assignments.append((pmo_mvar,
-                                            math_child))
-                        success = True
-                        log.debug("Failed, assigned anyway")
-                        break
-                if not success:
-                    # last mvar did not match
-                    log.debug(f"unable to assign child {child}")
-                    return False
-                else:
-                    log.debug(f"Child {child} assigned to {pmo_mvar}")
+        display = [child.to_display(format_='utf8')
+                   for child in bad_children]
+        log.debug(f"--> Bad children: {display}")
+        while bad_children:
+            child = bad_children.pop(0)
+            success = False
+            while mvars:
+                pmo_mvar = mvars.pop(0)
+                math_child = child.assigned_math_object
+                # if math_child:
+                if pmo_mvar.match(math_child,
+                                  use_cls_metavars=True):
+                    # Success for this child!
+                    child.clear_assignment()
+                    # FIXME: only in case of global success?!
+                    success = True
+                    break
+                elif not check_types:
+                    child.clear_assignment()
+                    assignments.append((pmo_mvar,
+                                        math_child))
+                    success = True
+                    log.debug("Failed, assigned anyway")
+                    break
+            if not success:
+                # last mvar did not match
+                log.debug(f"unable to assign child {child}")
+                return False
+            else:
+                log.debug(f"Child {child} assigned to {pmo_mvar}")
 
         return True
 
@@ -1344,6 +1438,11 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         Try to insert pmo in self's tree, so that pmo is just after the
         marked node in the infix order. In case of success, return the mvar
         at which insertion has been done.
+
+        We first try insertion at the marked mvar, which is supposed to be
+        just before cursor pos, and all the way up from
+        there. If none works, then we try again starting from the mvar just
+        after cursor pos.
         """
 
         # mvar = self.marked_descendant()
