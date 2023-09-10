@@ -1259,8 +1259,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
 
         # FIXME:
-        #  (1) bad re-assignment, some node may have to be reassigned other
-        #  than direct children.
         #  (2) some previous assignment are cleared even in case of failure??
 
         assert mvar.is_assigned
@@ -1306,37 +1304,22 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         ##############################
         # (C) Additional refactoring #
         ##############################
-        # FIXME :                             DESCENDANTS
         # Some of mvar.assigned_math_object's children may be at the wrong
         # side of new_pmo
-        # FIXME: pour fixer les idées, mettons qu'on a une insertion gauche.
-        #  On parcourt l'arbre sous mvar dans l'ordre. A un moment on
-        #  passe de gauche à droite du curseur.
 
         # (C-1) Find bad children
-        # dubious_children = mvar.assigned_math_object.children
-        # if left_insertion:
-        #     # mvar.assigned_mo will be inserted on the left of new_pmo
-        #     # move bad children of this to the right mvar of new_pmo,
-        #     # trying successively all right unassigned mvars of new_pmo
-        #     mvars = right_mvars
-        #     bad_children = [child for child in dubious_children
-        #                     if not self.appears_left_of_cursor(child)]
-        #     # bad_children = self.first_right_descendants(mvar)
-        # elif right_insertion:
-        #     mvars = left_mvars
-        #     # bad_children = self.first_left_descendants(mvar)
-        #     bad_children = [child for child in dubious_children
-        #                     if not self.appears_right_of_cursor(child)]
-
         mvars, bad_children = ((right_mvars, self.first_right_descendants(mvar))
                                if left_insertion else
                                (left_mvars, self.first_left_descendants(mvar))
                                )
-        # (C-2) move bad children
         display = [child.to_display(format_='utf8')
                    for child in bad_children]
         log.debug(f"--> Bad children: {display}")
+
+        # (C-2) move bad children
+        # FIXME: algo should be symmetric but is not,
+        #  this can be a problem in case of multiple mvars.
+        mvar_to_be_cleared = []
         while bad_children:
             child = bad_children.pop(0)
             success = False
@@ -1347,12 +1330,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if pmo_mvar.match(math_child,
                                   use_cls_metavars=True):
                     # Success for this child!
-                    child.clear_assignment()
-                    # FIXME: only in case of global success?!
+                    # FIXME: only in case of global success?! :
+                    # child.clear_assignment()
+                    mvar_to_be_cleared.append(child)
                     success = True
                     break
                 elif not check_types:
-                    child.clear_assignment()
+                    mvar_to_be_cleared.append(child)
+                    # child.clear_assignment()
                     assignments.append((pmo_mvar,
                                         math_child))
                     success = True
@@ -1363,6 +1348,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 log.debug(f"unable to assign child {child}")
                 return False
             else:
+                [child.clear_assignment() for child in mvar_to_be_cleared]
                 log.debug(f"Child {child} assigned to {pmo_mvar}")
 
         return True
