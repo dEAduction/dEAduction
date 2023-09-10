@@ -652,7 +652,7 @@ class CalculatorController:
         choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
 
         if calculator_controller.lean_mode:
-            choice = choice.toPlainText()
+            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
         return choice, OK
 
     @Slot()
