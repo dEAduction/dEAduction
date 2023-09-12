@@ -3,11 +3,9 @@
 # nodes.py : provide the Nodes class #
 ##########################################################################
 
-    This file provides dictionaries for converting MathObjects into strings.
-    Here only strings, and dic/lists/tuples/sets of strings are manipulated.
-    Processing on MathObjects take place in the companion file display_math.
-
-    It also provides several functions, like the function needs_paren.
+    This file provides the Node class. For now, instances of this class are
+    used to create CalculatorButtons. TODO: use this as nodes for MathObjects,
+    instead of strings, and use them for display.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -77,11 +75,6 @@ class Node:
 
         if display_in_calculator:
             self.__class__.calculator_nodes.append(self)
-
-        # todo
-        # self.main_symbol
-        # self.calculator_button_text : par défaut, main_symbol, sinon le
-        # latex shape avec mvar.
 
     def set_button_symbol(self, symbol):
         self._button_symbol = symbol
@@ -214,7 +207,8 @@ class LogicalNode(Node):
 
 
 forall = LogicalNode("QUANT_∀",
-                     'PROP()(?0, ?1: ?0, ?2: PROP)',
+                     # 'PROP()(?0, ?1: ?0, ?2: PROP)',
+                     'PROP()(?0, LOCAL_CONSTANT/name=x.BoundVar: ?0, ?2: PROP)',
                      (r"\forall", 1, r" \in_quant ", 0, ", ", 2)
                      )
 exists = LogicalNode("QUANT_∃",

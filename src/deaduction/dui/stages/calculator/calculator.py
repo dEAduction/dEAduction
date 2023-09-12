@@ -96,7 +96,7 @@ class CalculatorTarget(MathTextWidget):
 
         self.key_buffer_timer = QTimer()
         self.key_buffer_timer.setSingleShot(True)
-        self.key_buffer_timer.timeout.connect(self.clear_key_buffer)
+        self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
         # self.cursorForPosition()
         # self.cursorPositionChanged()  (signal)
 
@@ -196,15 +196,22 @@ class CalculatorTarget(MathTextWidget):
             # FIXME: process more complex sequences (i.e. more than one letter)
             self.key_event_buffer += text
             # print(self.key_event_buffer, self.key_buffer_timer)
-            yes = CalculatorButton.process_key_events(self.key_event_buffer)
+            yes = CalculatorButton.process_key_events(self.key_event_buffer,
+                                                      timeout=False)
             if yes:
                 self.clear_key_buffer()
 
         event.ignore()
 
     @Slot()
+    def key_buffer_timeout(self):
+        CalculatorButton.process_key_events(self.key_event_buffer,
+                                            timeout=True)
+        self.key_event_buffer = ""
+
     def clear_key_buffer(self):
         self.key_event_buffer = ""
+        self.key_buffer_timer.stop()
 
     def go_to_position(self, new_position):
         cursor = self.textCursor()
@@ -265,12 +272,8 @@ class NavigationBar(AbstractToolBar):
     """
     def __init__(self):
         super().__init__()
-        self.setLayoutDirection(Qt.RightToLeft)
+        # self.setLayoutDirection(Qt.RightToLeft)
 
-        self.lean_mode_wdg = QCheckBox("Lean mode")
-        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
-        self.addWidget(self.lean_mode_wdg)
-        self.addSeparator()
         icons_dir = cdirs.icons
         # TODO: add icons
 
@@ -302,14 +305,19 @@ class NavigationBar(AbstractToolBar):
                                          'icons8-clear-48.png').resolve())),
                               _('Delete'), self)
 
-        self.addAction(self.delete)
-        self.addAction(self.end_action)
-        # self.addAction(self.right_unassigned_action)
-        self.addAction(self.right_action)
-        self.addAction(self.up_action)
+        self.addAction(self.beginning_action)
         self.addAction(self.left_action)
         # self.addAction(self.left_unassigned_action)
-        self.addAction(self.beginning_action)
+        self.addAction(self.up_action)
+        self.addAction(self.right_action)
+        self.addAction(self.end_action)
+        # self.addAction(self.right_unassigned_action)
+        self.addAction(self.delete)
+
+        # self.addSeparator()
+        # self.lean_mode_wdg = QCheckBox("Lean mode")
+        # self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
+        # self.addWidget(self.lean_mode_wdg)
 
 
 class CalculatorButton(QToolButton, CalculatorAbstractButton):
@@ -332,39 +340,105 @@ class CalculatorButton(QToolButton, CalculatorAbstractButton):
         action = QAction(self.symbol)
         action.triggered.connect(self.process_click)
         self.setDefaultAction(action)
-        if self.tooltip:
-            self.setToolTip(self.tooltip)
+        self.shortcut = ''
         self.add_shortcut()
+        if self.tooltip:
+            tooltip = self.tooltip
+            if self.shortcut:
+                tooltip = "(type " + self.shortcut + ")" + "\n" + tooltip
+            self.setToolTip(tooltip)
 
         symbol_size = deaduction_fonts.symbol_button_font_size
         self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
 
     def add_shortcut(self):
         """
-        Automatically add self.text() as a shortcut for self.
+        Add a pertinent beginning of self.text() as a shortcut for self.
+
+        If the text of some button is a beginning word of one or more others,
+        its shortcut will be a tuple containing all buttons.
+
+        If two buttons have the same text, only one will have a shortcut.
         """
 
-        self.shortcuts_dic[self.text()] = self
+        text = self.text()
+
+        # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
+        for key, value in calc_shortcuts.items():
+            if text.startswith(value):
+                text = text.replace(value, key)
+                # e.g. " ε' " --> " \epsilon' "
+
+        shortcut = ''
+        sdic = self.shortcuts_dic
+        for car in text:
+            shortcut += car
+            if shortcut in sdic:
+                # Modify conflicting shortcut
+                conflicting_button = sdic.pop(shortcut)
+                if isinstance(conflicting_button, tuple):
+                    conflicting_button = conflicting_button[0]
+                conflicting_text = conflicting_button.text()
+                new_length = len(shortcut) + 1
+
+                if len(conflicting_text) >= new_length:
+                    new_shortcut = conflicting_button.text()[:new_length]
+                    sdic[new_shortcut] = conflicting_button
+                    if len(text) == new_length - 1:
+                        # conflicting_text is a proper starting word of
+                        # self.text()
+                        sdic[shortcut] = (self, conflicting_button)
+                elif len(text) >= new_length:
+                    # self.text() is a proper starting word of
+                    # conflicting_text
+                    sdic[shortcut] = (conflicting_button, self)
+                # NB: if both conflicting_text and self.text() have length <
+                # new_length, then they coincide, and self will have no
+                # shortcut.
+
+            else:
+                sdic[shortcut] = self
+
+        if shortcut in sdic and sdic[shortcut] == self:
+            self.shortcut = shortcut
 
     @classmethod
-    def find_shortcut(cls, text_buffer):
-        # FIXME: not optimal
-        match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-        more_match = [calc_shortcuts[key] for key in calc_shortcuts
-                      if key.startswith(text_buffer)
-                      and calc_shortcuts[key] in cls.shortcuts_dic]
-        match += more_match
-        if len(match) == 1:
-            return cls.shortcuts_dic[match[0]]
-        elif len(match) > 1:
-            # OK if all shortcuts refer to the same text
-            first_match = match[0]
-            test = all(cls.shortcuts_dic[other_match].text() ==
-                       cls.shortcuts_dic[first_match].text()
-                       for other_match in match[1:])
-            if test:
-                # Several match of 'the same' button
-                return cls.shortcuts_dic[match[0]]
+    def find_shortcut(cls, text_buffer, timeout=False):
+        """
+        If timeout is False, and one and only one shortcut match text_buffer,
+        return the corresponding button.
+
+        If timeout is True:
+        If one shortcut exactly match text_buffer, return the corresponding
+        button, even if there may be some other shortcut starting with
+        text_buffer.
+
+        """
+
+        buttons = cls.shortcuts_dic.get(text_buffer)
+        if buttons:
+            if not isinstance(buttons, tuple):  # buttons is a single button
+                return buttons
+            elif timeout:
+                return buttons[0]
+
+        # # FIXME: not optimal
+        # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
+        # more_match = [calc_shortcuts[key] for key in calc_shortcuts
+        #               if key.startswith(text_buffer)
+        #               and calc_shortcuts[key] in cls.shortcuts_dic]
+        # match += more_match
+        # if len(match) == 1:
+        #     return cls.shortcuts_dic[match[0]]
+        # elif len(match) > 1:
+        #     # OK if all shortcuts refer to the same text
+        #     first_match = match[0]
+        #     test = all(cls.shortcuts_dic[other_match].text() ==
+        #                cls.shortcuts_dic[first_match].text()
+        #                for other_match in match[1:])
+        #     if test:
+        #         # Several match of 'the same' button
+        #         return cls.shortcuts_dic[match[0]]
 
     @Slot()
     def process_click(self):
@@ -374,9 +448,9 @@ class CalculatorButton(QToolButton, CalculatorAbstractButton):
         self.send_pattern.emit(self.patterns)
 
     @classmethod
-    def process_key_events(cls, key_event_buffer):
+    def process_key_events(cls, key_event_buffer, timeout=False):
         # button = cls.shortcuts_dic.get(key_event_buffer)
-        button = cls.find_shortcut(key_event_buffer)
+        button = cls.find_shortcut(key_event_buffer, timeout)
         if button:
             button.animateClick(100)
             return True
@@ -515,7 +589,15 @@ class CalculatorMainWindow(QDialog):
             btn.send_pattern.connect(self.process_clic)
 
         # Navigation btns
-        main_lyt.addWidget(self.navigation_bar)
+        # main_lyt.addWidget(self.navigation_bar)
+        nav_lyt = QHBoxLayout()
+        nav_lyt.addWidget(self.navigation_bar)
+        nav_lyt.addStretch()
+        self.lean_mode_wdg = QCheckBox("Lean mode")
+        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
+        nav_lyt.addWidget(self.lean_mode_wdg)
+
+        main_lyt.addLayout(nav_lyt)
 
         # OK / Cancel btns
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
@@ -621,7 +703,7 @@ class CalculatorController:
         # n_bar.right_unassigned_action.triggered.connect(
         #     self.move_to_next_unassigned)
         n_bar.end_action.triggered.connect(self.go_to_end)
-        n_bar.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
+        calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
     def show(self):
@@ -658,11 +740,14 @@ class CalculatorController:
     @Slot()
     def set_lean_mode(self):
         self.calculator_ui.calculator_target.lean_mode = self.lean_mode
-        self.set_target()
+        if self.lean_mode:
+            self.set_target()
+        else:
+            self.set_target_and_update()
 
     @property
     def lean_mode(self) -> bool:
-        mode = self.calculator_ui.navigation_bar.lean_mode_wdg.isChecked()
+        mode = self.calculator_ui.lean_mode_wdg.isChecked()
         return mode
 
     @property

@@ -1435,6 +1435,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         for mvar in (self.marked_descendant(), self.next_after_marked()):
+            if not mvar:
+                continue
             if mvar.node == "GENERIC_NODE":
                 success = self.substitute_generic_node(mvar, new_pmo_copy)
                 if success:

@@ -117,6 +117,7 @@ class MathDisplay:
     plurals = dict()
     every = dict()
     numbers = dict()
+    standard_latex_to_utf8 = dict()
     latex_to_utf8_dic = dict()
 
     # Tags to mark the position just before and just after a marked node:
@@ -298,22 +299,11 @@ class MathDisplay:
         Convert Latex command into utf8 symbols.
         """
 
-        cls.latex_to_utf8_dic = {
-            # r'\and': " " + _("and") + " ",
-            # r'\or': " " + _("or") + " ",
-            r"\ms": "",
-            r"\equal": "=",
-            r'\backslash': '\\',
-            r'\Delta': '∆',
+        cls.standard_latex_to_utf8 = {
             r'\circ': '∘',
             r'\times': '×',
             r'\mul': '×',
             r'\in': '∈',  # '∊'
-            r'\in_quant': '∈',
-            r"\in_symbol": '∈',
-            r'\in_prop': ":",
-            r'\in_set': ":",
-            r'\in_function': ":",
             r'\Leftrightarrow': '⇔',
             r'\Rightarrow': '⇒',
             r'\forall': '∀',
@@ -331,6 +321,21 @@ class MathDisplay:
             r'\neq': '≠',
             r'\leq': '≤',
             r'\geq': '≥',
+            r'\set_inverse': [r'^', '-1'],
+        }
+
+        cls.latex_to_utf8_dic = {
+            # r'\and': " " + _("and") + " ",
+            # r'\or': " " + _("or") + " ",
+            r"\ms": "",
+            r"\equal": "=",
+            r'\backslash': '\\',
+            r'\Delta': '∆',
+            r'\in_quant': '∈',
+            r"\in_symbol": '∈',
+            r'\in_prop': ":",
+            r'\in_set': ":",
+            r'\in_function': ":",
             r'\set_of_subsets': '𝒫',
             r'\{': '{',
             r'\}': '}',
@@ -342,7 +347,6 @@ class MathDisplay:
             r'\metric_space': _('metric space'),
             r'\not': " " + _("not") + " ",
             r'\set_image': "",
-            r'\set_inverse': [r'^', '-1'],
             r'\if': "",  # '\if' is just here for text mode
             r'\such_that': ", ",
             r'\context_function_from': "",
@@ -370,6 +374,8 @@ class MathDisplay:
             r'\type_Q': _('rational number'),
             r'\type_R': _('real number')
         }
+
+        cls.latex_to_utf8_dic.update(cls.standard_latex_to_utf8)
 
     #####################
     #####################

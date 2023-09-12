@@ -342,6 +342,7 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
+        # debug = True
         children = self.children
         node = self.node
         self_type = self.math_type
@@ -373,7 +374,8 @@ class PatternMathObject(MathObject):
                 # TODO: use only self.assigned_math_object and mvar.match?
                 corresponding_object = self.matched_math_object(metavars,
                                                                 metavar_objects)
-                match = (math_object == corresponding_object)
+                # match = (math_object == corresponding_object)
+                match = MathObject.__eq__(math_object, corresponding_object)
                 if not match and debug:
                     log.debug(f"Mismatch: matched mvar {self} vs"
                               f" {math_object}")
@@ -638,7 +640,8 @@ class MetaVar(PatternMathObject):
         """
         Redefine __eq__, otherwise all METAVARS are equals!?
         """
-        return self is other
+        eq = (self is other)  # or self.assigned_math_object == other
+        return eq
 
     def __repr__(self):
         math_obj = self.assigned_math_object
