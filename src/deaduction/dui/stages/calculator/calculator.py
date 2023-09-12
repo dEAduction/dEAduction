@@ -63,6 +63,7 @@ from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import Calcula
 from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
 from deaduction.dui.primitives          import deaduction_fonts
 
+from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
 global _
 log = logging.getLogger(__name__)
@@ -320,141 +321,141 @@ class NavigationBar(AbstractToolBar):
         # self.addWidget(self.lean_mode_wdg)
 
 
-class CalculatorButton(QToolButton, CalculatorAbstractButton):
-    """
-    A class to display a button associated to a (list of)
-    MarkedPatternMathObjects. Pressing the button insert (one of) the pattern
-    at the current cursor position in the MarkedPatternMathObject under
-    construction.
-    """
-
-    send_pattern = Signal(MarkedPatternMathObject)
-
-    shortcuts_dic = dict()
-
-    def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
-        super().__init__()
-        CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
-        # self.patterns = CalculatorPatternLines.marked_patterns[symbol]
-
-        action = QAction(self.symbol)
-        action.triggered.connect(self.process_click)
-        self.setDefaultAction(action)
-        self.shortcut = ''
-        self.add_shortcut()
-        if self.tooltip:
-            tooltip = self.tooltip
-            if self.shortcut:
-                tooltip = "(type " + self.shortcut + ")" + "\n" + tooltip
-            self.setToolTip(tooltip)
-
-        symbol_size = deaduction_fonts.symbol_button_font_size
-        self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
-
-    def add_shortcut(self):
-        """
-        Add a pertinent beginning of self.text() as a shortcut for self.
-
-        If the text of some button is a beginning word of one or more others,
-        its shortcut will be a tuple containing all buttons.
-
-        If two buttons have the same text, only one will have a shortcut.
-        """
-
-        text = self.text()
-
-        # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
-        for key, value in calc_shortcuts.items():
-            if text.startswith(value):
-                text = text.replace(value, key)
-                # e.g. " ε' " --> " \epsilon' "
-
-        shortcut = ''
-        sdic = self.shortcuts_dic
-        for car in text:
-            shortcut += car
-            if shortcut in sdic:
-                # Modify conflicting shortcut
-                conflicting_button = sdic.pop(shortcut)
-                if isinstance(conflicting_button, tuple):
-                    conflicting_button = conflicting_button[0]
-                conflicting_text = conflicting_button.text()
-                new_length = len(shortcut) + 1
-
-                if len(conflicting_text) >= new_length:
-                    new_shortcut = conflicting_button.text()[:new_length]
-                    sdic[new_shortcut] = conflicting_button
-                    if len(text) == new_length - 1:
-                        # conflicting_text is a proper starting word of
-                        # self.text()
-                        sdic[shortcut] = (self, conflicting_button)
-                elif len(text) >= new_length:
-                    # self.text() is a proper starting word of
-                    # conflicting_text
-                    sdic[shortcut] = (conflicting_button, self)
-                # NB: if both conflicting_text and self.text() have length <
-                # new_length, then they coincide, and self will have no
-                # shortcut.
-
-            else:
-                sdic[shortcut] = self
-
-        if shortcut in sdic and sdic[shortcut] == self:
-            self.shortcut = shortcut
-
-    @classmethod
-    def find_shortcut(cls, text_buffer, timeout=False):
-        """
-        If timeout is False, and one and only one shortcut match text_buffer,
-        return the corresponding button.
-
-        If timeout is True:
-        If one shortcut exactly match text_buffer, return the corresponding
-        button, even if there may be some other shortcut starting with
-        text_buffer.
-
-        """
-
-        buttons = cls.shortcuts_dic.get(text_buffer)
-        if buttons:
-            if not isinstance(buttons, tuple):  # buttons is a single button
-                return buttons
-            elif timeout:
-                return buttons[0]
-
-        # # FIXME: not optimal
-        # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-        # more_match = [calc_shortcuts[key] for key in calc_shortcuts
-        #               if key.startswith(text_buffer)
-        #               and calc_shortcuts[key] in cls.shortcuts_dic]
-        # match += more_match
-        # if len(match) == 1:
-        #     return cls.shortcuts_dic[match[0]]
-        # elif len(match) > 1:
-        #     # OK if all shortcuts refer to the same text
-        #     first_match = match[0]
-        #     test = all(cls.shortcuts_dic[other_match].text() ==
-        #                cls.shortcuts_dic[first_match].text()
-        #                for other_match in match[1:])
-        #     if test:
-        #         # Several match of 'the same' button
-        #         return cls.shortcuts_dic[match[0]]
-
-    @Slot()
-    def process_click(self):
-        """
-        Send a signal so that Calculator process the click.
-        """
-        self.send_pattern.emit(self.patterns)
-
-    @classmethod
-    def process_key_events(cls, key_event_buffer, timeout=False):
-        # button = cls.shortcuts_dic.get(key_event_buffer)
-        button = cls.find_shortcut(key_event_buffer, timeout)
-        if button:
-            button.animateClick(100)
-            return True
-
+# class CalculatorButton(QToolButton, CalculatorAbstractButton):
+#     """
+#     A class to display a button associated to a (list of)
+#     MarkedPatternMathObjects. Pressing the button insert (one of) the pattern
+#     at the current cursor position in the MarkedPatternMathObject under
+#     construction.
+#     """
+#
+#     send_pattern = Signal(MarkedPatternMathObject)
+#
+#     shortcuts_dic = dict()
+#
+#     def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
+#         super().__init__()
+#         CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
+#         # self.patterns = CalculatorPatternLines.marked_patterns[symbol]
+#
+#         action = QAction(self.symbol)
+#         action.triggered.connect(self.process_click)
+#         self.setDefaultAction(action)
+#         self.shortcut = ''
+#         self.add_shortcut()
+#         if self.tooltip:
+#             tooltip = self.tooltip
+#             if self.shortcut:
+#                 tooltip = "(type " + self.shortcut + ")" + "\n" + tooltip
+#             self.setToolTip(tooltip)
+#
+#         symbol_size = deaduction_fonts.symbol_button_font_size
+#         self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+#
+#     def add_shortcut(self):
+#         """
+#         Add a pertinent beginning of self.text() as a shortcut for self.
+#
+#         If the text of some button is a beginning word of one or more others,
+#         its shortcut will be a tuple containing all buttons.
+#
+#         If two buttons have the same text, only one will have a shortcut.
+#         """
+#
+#         text = self.text()
+#
+#         # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
+#         for key, value in calc_shortcuts.items():
+#             if text.startswith(value):
+#                 text = text.replace(value, key)
+#                 # e.g. " ε' " --> " \epsilon' "
+#
+#         shortcut = ''
+#         sdic = self.shortcuts_dic
+#         for car in text:
+#             shortcut += car
+#             if shortcut in sdic:
+#                 # Modify conflicting shortcut
+#                 conflicting_button = sdic.pop(shortcut)
+#                 if isinstance(conflicting_button, tuple):
+#                     conflicting_button = conflicting_button[0]
+#                 conflicting_text = conflicting_button.text()
+#                 new_length = len(shortcut) + 1
+#
+#                 if len(conflicting_text) >= new_length:
+#                     new_shortcut = conflicting_button.text()[:new_length]
+#                     sdic[new_shortcut] = conflicting_button
+#                     if len(text) == new_length - 1:
+#                         # conflicting_text is a proper starting word of
+#                         # self.text()
+#                         sdic[shortcut] = (self, conflicting_button)
+#                 elif len(text) >= new_length:
+#                     # self.text() is a proper starting word of
+#                     # conflicting_text
+#                     sdic[shortcut] = (conflicting_button, self)
+#                 # NB: if both conflicting_text and self.text() have length <
+#                 # new_length, then they coincide, and self will have no
+#                 # shortcut.
+#
+#             else:
+#                 sdic[shortcut] = self
+#
+#         if shortcut in sdic and sdic[shortcut] == self:
+#             self.shortcut = shortcut
+#
+#     @classmethod
+#     def find_shortcut(cls, text_buffer, timeout=False):
+#         """
+#         If timeout is False, and one and only one shortcut match text_buffer,
+#         return the corresponding button.
+#
+#         If timeout is True:
+#         If one shortcut exactly match text_buffer, return the corresponding
+#         button, even if there may be some other shortcut starting with
+#         text_buffer.
+#
+#         """
+#
+#         buttons = cls.shortcuts_dic.get(text_buffer)
+#         if buttons:
+#             if not isinstance(buttons, tuple):  # buttons is a single button
+#                 return buttons
+#             elif timeout:
+#                 return buttons[0]
+#
+#         # # FIXME: not optimal
+#         # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
+#         # more_match = [calc_shortcuts[key] for key in calc_shortcuts
+#         #               if key.startswith(text_buffer)
+#         #               and calc_shortcuts[key] in cls.shortcuts_dic]
+#         # match += more_match
+#         # if len(match) == 1:
+#         #     return cls.shortcuts_dic[match[0]]
+#         # elif len(match) > 1:
+#         #     # OK if all shortcuts refer to the same text
+#         #     first_match = match[0]
+#         #     test = all(cls.shortcuts_dic[other_match].text() ==
+#         #                cls.shortcuts_dic[first_match].text()
+#         #                for other_match in match[1:])
+#         #     if test:
+#         #         # Several match of 'the same' button
+#         #         return cls.shortcuts_dic[match[0]]
+#
+#     @Slot()
+#     def process_click(self):
+#         """
+#         Send a signal so that Calculator process the click.
+#         """
+#         self.send_pattern.emit(self.patterns)
+#
+#     @classmethod
+#     def process_key_events(cls, key_event_buffer, timeout=False):
+#         # button = cls.shortcuts_dic.get(key_event_buffer)
+#         button = cls.find_shortcut(key_event_buffer, timeout)
+#         if button:
+#             button.animateClick(100)
+#             return True
+#
 
 class CalculatorButtonsGroup(QWidget):
     """

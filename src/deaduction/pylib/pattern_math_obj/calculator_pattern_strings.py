@@ -183,7 +183,8 @@ class CalculatorPatternLines:
         title = _('Context')
         patterns = dict()
         for obj in context_math_objects:
-            symbol = obj.to_display(format_='utf8')
+            symbol = obj.to_display(format_='html',
+                                    use_color=True)
             marked_pmo = MarkedPatternMathObject.from_math_object(obj)
             patterns[symbol] = marked_pmo
         cpl = cls(title=title,
