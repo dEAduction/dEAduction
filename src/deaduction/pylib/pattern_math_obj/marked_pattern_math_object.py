@@ -108,6 +108,7 @@ class MarkedTree:
     # solely for the marked node. -1 denotes first position.
     cursor_pos = None
     marked_nb = None
+    _current_index_in_total_list = None
 
     @property
     def is_marked(self):
@@ -236,14 +237,20 @@ class MarkedTree:
         self.marked_descendant( ).cursor_pos )
         in self.total_and_cursor_list.
         """
+
+        if self._current_index_in_total_list:
+            return self._current_index_in_total_list
+
         total_list, cursor_list = self.total_and_cursor_list()
         pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
         l = list(zip(total_list, cursor_list))
         if pair in l:
             idx = l.index(pair)
-            return idx
         else:
-            return -1
+            idx = -1
+
+        self._current_index_in_total_list = idx
+        return idx
 
     ######################
     # Moving in the tree #
@@ -293,9 +300,11 @@ class MarkedTree:
     def decrease_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
+        print(f"Cursor idx: {idx}")
         if idx > 0:
             mvar = total_list[idx-1]
             cursor_pos = cursor_list[idx-1]
+            self._current_index_in_total_list += -1
             self.set_cursor_at(mvar, cursor_pos)
         else:
             self.go_to_beginning()
@@ -307,6 +316,7 @@ class MarkedTree:
         if idx < len(total_list) - 1:
             mvar = total_list[idx+1]
             cursor_pos = cursor_list[idx+1]
+            self._current_index_in_total_list += 1
             self.set_cursor_at(mvar, cursor_pos)
         else:
             pass
@@ -899,7 +909,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                        else copy(pmo.math_type))
         if pmo.is_bound_var:
             marked_pmo = MarkedBoundVar(node=pmo.node, info=pmo.info,
-                                        children = children,
+                                        children=children,
                                         math_type=marked_type)
         else:
             marked_pmo = cls(pmo.node, pmo.info, children,
@@ -1750,11 +1760,21 @@ class MarkedBoundVar(BoundVar, MarkedPatternMathObject):
     A BoundVar that can be marked.
     """
 
+    def __init__(self, node, info, children, math_type):
+        name = info.get('name')
+        lean_name = info.get('lean_name')
+        if (not name or name == 'NO NAME') \
+                and (lean_name and lean_name != 'NO NAME'):
+            info['name'] = lean_name
+
+        super().__init__(node, info, children, math_type)
+
     @property
     def name(self):
         name = self.info.get('name')
         if name == 'NO NAME':
-            name = '(?)'
+            lean_name = self.info.get('lean_name')
+            name = '(' + lean_name + ')' if lean_name else '(?)'
         return name
 
 

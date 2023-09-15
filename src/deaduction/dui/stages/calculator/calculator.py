@@ -811,6 +811,7 @@ class CalculatorController:
         # MathDisplay.cursor_pos = self.target.marked_descendant().cursor_pos
         doc.setHtml(self.html_target)
         text = doc.toPlainText()
+        # print(f"VIRTUAL CURSOR POS: {text}")
         position = text.find(MathDisplay.cursor_tag)
 
         MathDisplay.mark_cursor = False
@@ -961,12 +962,18 @@ class CalculatorController:
     @Slot()
     def move_right(self):
         # TODO: repeat if actual cursor do not move
-        self.target.increase_cursor_pos()
+        cursor_pos = self.virtual_cursor_position()
+        while self.virtual_cursor_position() == cursor_pos:
+            self.target.increase_cursor_pos()
+        # self.target.increase_cursor_pos()
         self.set_target_and_update()
 
     @Slot()
     def move_left(self):
-        self.target.decrease_cursor_pos()
+        cursor_pos = self.virtual_cursor_position()
+        while self.virtual_cursor_position() == cursor_pos:
+            self.target.decrease_cursor_pos()
+        # self.target.decrease_cursor_pos()
         self.set_target_and_update()
 
     @Slot()
