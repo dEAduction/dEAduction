@@ -362,10 +362,10 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
                                          info={'name': '(' + math_object + ')'},
                                          children=[],
                                          math_type=None)
-            elif not math_object.info.get('name'):
-                # This is a bit weird...
-                math_object.info['name'] = ('(' + math_object.to_display(
-                                                        format_='lean') + ')')
+            # elif not math_object.info.get('name'):
+            #     # This is a bit weird...
+            #     math_object.info['name'] = ('(' + math_object.to_display(
+            #                                             format_='lean') + ')')
 
             selected_objects.insert(0, math_object)
             code = use_forall(proof_step, selected_objects)

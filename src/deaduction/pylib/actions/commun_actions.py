@@ -145,8 +145,8 @@ def have_new_property(arrow: MathObject,
 
     :param arrow:           a MathObject which is either an implication or a
                             universal property
-    :param variables:       a list of [names of] variables (or properties) to
-                            which "arrow" will be applied
+    :param variables:       a list of MathObjects to which "arrow" will be
+                            applied
     :param new_hypo_name:   a fresh name for the new property
 
     :param success_msg:     A success msg, if None then the standard one will be

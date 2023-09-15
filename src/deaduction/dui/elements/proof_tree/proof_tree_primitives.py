@@ -601,7 +601,7 @@ class RawLabelMathObject(MathLabel):
         then it is a callable with parameter use_color.
         """
         super().__init__()
-        self.set_font_size(cvars.get('display.proof_tree_font_size'))
+        # self.set_font_size(cvars.get('display.proof_tree_font_size'))
         assert math_object or html_msg
         self.html_msg = html_msg
         self.math_object = math_object
