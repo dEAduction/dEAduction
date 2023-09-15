@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
 from typing import Optional
 
-from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.mathobj import MathObject, BoundVar
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
 # from deaduction.pylib.math_display.pattern_init import all_app_patterns
@@ -897,8 +897,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # NO_MATH_TYPE should be kept identical
         marked_type = (pmo.math_type if pmo.math_type.is_no_math_type()
                        else copy(pmo.math_type))
-        marked_pmo = cls(pmo.node, pmo.info, children,
-                         marked_type, pmo.imperative_matching)
+        if pmo.is_bound_var:
+            marked_pmo = MarkedBoundVar(node=pmo.node, info=pmo.info,
+                                        children = children,
+                                        math_type=marked_type)
+        else:
+            marked_pmo = cls(pmo.node, pmo.info, children,
+                             marked_type, pmo.imperative_matching)
         return marked_pmo
 
     @classmethod
@@ -1659,11 +1664,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         'Delete' current marked metavar, i.e. remove assigned_math_object.
         """
-        success = self.marked_descendant().delete()
-        if success:
-            self.set_cursor_at(self.marked_descendant(), 0)
-            self.decrease_cursor_pos()
-            return True
+
+        if self.marked_descendant():
+            success = self.marked_descendant().delete()
+            if success:
+                self.set_cursor_at(self.marked_descendant(), 0)
+                self.decrease_cursor_pos()
+                return True
 
 
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):
@@ -1698,7 +1705,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         """
         Override super().node.
         """
-        node = (self.assigned_math_object._node
+        node = (self.assigned_math_object.node
                 if self.assigned_math_object else self._node)
         return node
 
@@ -1707,7 +1714,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         """
         Override super().children in case self has a assigned_math_object.
         """
-        info = (self.assigned_math_object._info
+        info = (self.assigned_math_object.info
                 if self.assigned_math_object else self._info)
         return info
 
@@ -1716,7 +1723,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         """
         Override super().children in case self has a assigned_math_object.
         """
-        children = (self.assigned_math_object._children
+        children = (self.assigned_math_object.children
                     if self.assigned_math_object else self._children)
         return children
 
@@ -1738,7 +1745,21 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
             return True
 
 
+class MarkedBoundVar(BoundVar, MarkedPatternMathObject):
+    """
+    A BoundVar that can be marked.
+    """
+
+    @property
+    def name(self):
+        name = self.info.get('name')
+        if name == 'NO NAME':
+            name = '(?)'
+        return name
+
+
 MarkedPatternMathObject.populate_app_marked_patterns()
+
 
 if __name__ == "__main__":
     s1 = "SUM(?1 , NUMBER/value=1)"

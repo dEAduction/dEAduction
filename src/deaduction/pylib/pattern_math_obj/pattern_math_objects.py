@@ -34,7 +34,7 @@ from copy import copy
 from deaduction.pylib.utils import tree_list
 from .pattern_parser import tree_from_str
 from deaduction.pylib.math_display.nodes import Node
-from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
+from deaduction.pylib.mathobj import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 
 log = logging.getLogger(__name__)
@@ -158,8 +158,20 @@ class PatternMathObject(MathObject):
             node, info = node.split('/')
             key, value = info.split('=')
             info = {key: value}
-            pmo = cls(node=node, children=children_pmo, math_type=math_type,
-                      info=info, imperative_matching=imperative)
+            name = info.get('name')
+            if name and name.endswith('.BoundVar'):
+                # if name == 'u.BoundVar':
+                #     print("debug")
+                # Remove suffix and create a BoundVar
+                # info['name'] = info['name'][:-len('.BoundVar')]
+                pmo = BoundVar(node=node,
+                               info=info,
+                               math_type=math_type,
+                               children=children_pmo,
+                               parent=None)
+            else:
+                pmo = cls(node=node, children=children_pmo, math_type=math_type,
+                          info=info, imperative_matching=imperative)
 
         # -----> (3d) Generic case
         else:

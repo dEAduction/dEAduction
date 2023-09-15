@@ -370,7 +370,7 @@ class MathObject:
                     # if name == 'u.BoundVar':
                     #     print("debug")
                     # Remove suffix and create a BoundVar
-                    info['name'] = info['name'][:-len('.BoundVar')]
+                    # info['name'] = info['name'][:-len('.BoundVar')]
                     math_object = BoundVar(node=node,
                                            info=info,
                                            math_type=math_type,
@@ -510,7 +510,7 @@ class MathObject:
     @classmethod
     def forall(cls, old_var, body):
         """
-        Construct a new MathObject instance which stands for the a universal
+        Construct a new MathObject instance which stands for a universal
         property obtained by replacing old_var by a fresh boundvar in body.
         """
         var_type = old_var.math_type
@@ -1847,6 +1847,10 @@ class BoundVar(MathObject):
     def set_unnamed_bound_var(self):
         # FIXME: suppress:
         lean_name = self.info.get('name', '')
+        if lean_name and lean_name.endswith('.BoundVar'):
+            # Remove suffix
+            lean_name = lean_name[:-len('.BoundVar')]
+
         if lean_name in ("NO NAME", '*no_name*'):
             lean_name = ''
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
@@ -1878,6 +1882,9 @@ class BoundVar(MathObject):
 # Methods for PatternMathObject #
 #################################
     def recursive_match(self, other, metavars, metavar_objects):
+        """
+        For compatibility with the PatternMathObject class.
+        """
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())
 
