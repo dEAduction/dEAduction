@@ -40,7 +40,8 @@ from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
                                QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
-                               QCheckBox)
+                               QCheckBox,
+                               QGroupBox)
 
 import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.dirs as cdirs
@@ -457,22 +458,28 @@ class NavigationBar(AbstractToolBar):
 #             return True
 #
 
-class CalculatorButtonsGroup(QWidget):
+class CalculatorButtonsGroup(QGroupBox):
     """
     A widget to display a list of CalculatorButtons, with a title and a
     disclosure triangle.
     """
 
+    col_size = 4
+
     def __init__(self, title, calculator_buttons: [CalculatorButton],
                  col_size):
-        super().__init__()
-        self.title = title
-        self.col_size = col_size
-        self.buttons = calculator_buttons
 
-        self.title_label = QLabel(self.title + _(':'))
+        self.title = title
+        super().__init__(title)
+
+        if col_size:
+            self.col_size = col_size
+        self.buttons = []
         self.buttons_layout = QGridLayout()
-        self.include_buttons()
+        for btn in calculator_buttons:
+            self.add_button(btn)
+        # self.include_buttons()
+
         self.margin_btns_lyt = QHBoxLayout()
         self.margin_btns_lyt.addStretch()
         self.margin_btns_lyt.addLayout(self.buttons_layout)
@@ -480,13 +487,14 @@ class CalculatorButtonsGroup(QWidget):
 
         # Fill-in main layout
         main_layout = QVBoxLayout()
-        main_layout.addWidget(self.title_label)
+        # self.title_label = QLabel(self.title + _(':'))
+        # main_layout.addWidget(self.title_label)
         main_layout.addLayout(self.margin_btns_lyt)
         self.setLayout(main_layout)
 
     def include_buttons(self):
         """
-        Add self's buttons is self.buttons_layout
+        Add self's buttons in self.buttons_layout
         """
 
         for line in range(len(self.buttons) // self.col_size + 1):
@@ -496,11 +504,17 @@ class CalculatorButtonsGroup(QWidget):
                 self.buttons_layout.addWidget(button, line, col)
                 col += 1
 
+    def add_button(self, button: CalculatorButton):
+        line = len(self.buttons) // self.col_size
+        col = len(self.buttons) - (line * self.col_size)
+        self.buttons_layout.addWidget(button, line, col)
+        self.buttons.append(button)
+
     @classmethod
     def from_node_subclass(cls, node_class, col_size=4):
         """
         Construct a CalculatorButtonsGroup from instances of a Node subclass.
-        Here node_class should be, for instance LogicalNode.
+        Here node_class should be for instance LogicalNode.
         """
         buttons = [CalculatorButton.from_node(node)
                    for node in node_class.calculator_nodes]
@@ -509,24 +523,39 @@ class CalculatorButtonsGroup(QWidget):
                             col_size=col_size)
         return buttons_group
 
+    @classmethod
+    def from_calculator_pattern_lines(cls, calc_pattern):
+        buttons = []
+        # If more than one line, then col_size = length of first line
+        col_size = (len(calc_pattern.lines[0]) if len(calc_pattern.lines) > 1
+                    else None)
+        for line in calc_pattern.lines:
+            for symbol in line:
+                buttons.append(CalculatorButton(symbol))
 
-class CalculatorButtons(QHBoxLayout):
-    """
-    A class to display a line of CalculatorButton.
-    """
+        buttons_group = cls(title=calc_pattern.title,
+                            calculator_buttons=buttons,
+                            col_size=col_size)
+        return buttons_group
 
-    def __init__(self, title: str, line: [str]):
-        super().__init__()
-        self.title = title
-        self.line = line
-        self.buttons = [CalculatorButton(symbol) for symbol in line]
-        self.addStretch()
-        for button in self.buttons:
-            self.addWidget(button)
-        self.addStretch()
 
-    def from_calculator_pattern_lines(self):
-        pass
+# class CalculatorButtons(QHBoxLayout):
+#     """
+#     A class to display a line of CalculatorButton.
+#     """
+#
+#     def __init__(self, title: str, line: [str]):
+#         super().__init__()
+#         self.title = title
+#         self.line = line
+#         self.buttons = [CalculatorButton(symbol) for symbol in line]
+#         self.addStretch()
+#         for button in self.buttons:
+#             self.addWidget(button)
+#         self.addStretch()
+#
+#     def from_calculator_pattern_lines(self):
+#         pass
 
 
 class CalculatorMainWindow(QDialog):
@@ -558,14 +587,18 @@ class CalculatorMainWindow(QDialog):
         self.btns_wgt = QWidget()
         btns_lyt = QVBoxLayout()
         for calc_pattern in calc_patterns:
-            title = calc_pattern.title
-            btns_lyt.addWidget(QLabel(calc_pattern.title + _(':')))
-            for line in calc_pattern.lines:
-                buttons_lyt = CalculatorButtons(title, line)
-                # FIXME: improve UI1
-                # main_lyt.addLayout(buttons_lyt)
-                btns_lyt.addLayout(buttons_lyt)
-                self.buttons_groups.append(buttons_lyt)
+            buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
+                calc_pattern)
+            btns_lyt.addWidget(buttons)
+            self.buttons_groups.append(buttons)
+            # title = calc_pattern.title
+            # btns_lyt.addWidget(QLabel(calc_pattern.title + _(':')))
+            # for line in calc_pattern.lines:
+            #     buttons_lyt = CalculatorButtons(title, line)
+            #     # FIXME: improve UI1
+            #     # main_lyt.addLayout(buttons_lyt)
+            #     btns_lyt.addLayout(buttons_lyt)
+            #     self.buttons_groups.append(buttons_lyt)
 
         for NodeClass, col_size in (  (LogicalNode, 5),
                                       # (SetTheoryNode, 5),
@@ -621,6 +654,8 @@ class CalculatorMainWindow(QDialog):
             btns.extend(buttons_group.buttons)
         return btns
 
+    # def add_bound_var_btn(self):
+
     def set_html(self, text):
         self.calculator_target.setHtml(text)
 
@@ -639,7 +674,7 @@ class CalculatorController:
     """
 
     def __init__(self, target_type=None,
-                 context=None,
+                 goal=None,
                  calculator_groups=None,
                  title="Calculator"):
 
@@ -659,9 +694,11 @@ class CalculatorController:
         self.target_title = _("Enter") + " " + display_type
 
         self.calculator_groups = []
-        if context:
+        if goal:
+            context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
-            self.calculator_groups.append(context_line)
+            bound_vars = CalculatorPatternLines.bound_vars()
+            self.calculator_groups.extend([context_line, bound_vars])
             # Compute applications on ContextMathObjects:
             MarkedPatternMathObject.populate_applications_from_context(context)
 
@@ -711,9 +748,9 @@ class CalculatorController:
         self.calculator_ui.show()
 
     @classmethod
-    def get_item(cls, context, target_type, title) -> (Union[PatternMathObject,
-                                                             str],
-                                                       bool):
+    def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
+                                                          str],
+                                                    bool):
         """
         Execute a CalculatorController and send the choice.
         The choice is either a PatternMathObject to be converted to Lean code,
@@ -723,7 +760,7 @@ class CalculatorController:
         if target_type:
             log.debug(f"Calculator with target type = "
                       f"{target_type.to_display(format_='utf8')}")
-        calculator_controller = cls(context=context,
+        calculator_controller = cls(goal=goal,
                                     target_type=target_type,
                                     title=title)
         # Execute the ButtonsDialog and wait for results
@@ -1029,7 +1066,7 @@ def main():
                              children=[set_])
     target_type = MathObject(node="CONSTANT", info={'name': 'ℝ'},
                              children=[])
-    choice, ok = CalculatorController.get_item(context=None,
+    choice, ok = CalculatorController.get_item(goal=None,
                                                target_type=target_type,
                                                title='Essai')
 

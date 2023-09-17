@@ -1337,10 +1337,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mvar_to_be_cleared = []
         while bad_children:
             child = bad_children.pop(0)
+            math_child = child.assigned_math_object
+            if not math_child:
+                continue
+
             success = False
             while mvars:
                 pmo_mvar = mvars.pop(0)
-                math_child = child.assigned_math_object
                 # if math_child:
                 if pmo_mvar.match(math_child,
                                   use_cls_metavars=True):

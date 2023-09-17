@@ -193,6 +193,12 @@ class CalculatorPatternLines:
         return cpl
 
     @classmethod
+    def bound_vars(cls):
+        title = _('Bound variables')
+        cpl = cls(title=title, lines=[])
+        return cpl
+
+    @classmethod
     def constants_from_definitions(cls):
         csts_dict = DefinitionMathObject.get_constants()
         cpls = []
