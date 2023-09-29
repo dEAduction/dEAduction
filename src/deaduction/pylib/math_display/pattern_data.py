@@ -179,6 +179,8 @@ def set_quant_pattern():
             (r"\forall", (2, 0), ", ", (2, 1)),
         "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
             (r"\exists", (2, 0), ", ", (2, 1)),
+        "QUANT_∃(?0, ?1, PROP_∃(PROP_BELONGS(?1, ?2), ?3))":
+            (r"\exists", (2, 0), ", ", (2, 1)),
     }
     if cvars.get("logic.use_bounded_quantification_notation", True):
         quant_pattern.update(bounded_quant_pattern)
@@ -263,6 +265,7 @@ text_from_pattern_string = {
          _("there exists a unique sequence {} of elements of {} such that {}"),
          0, (0, 1), 1)
 }
+# TODO: add bounded quantification patterns for text
 
 ########################################################
 ########################################################
@@ -313,5 +316,9 @@ lean_from_pattern_string = {
         (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
     "CONSTANT/name=_inst_1": ('_inst_1',),
     "CONSTANT/name=_inst_2": ('_inst_2',),
+    "QUANT_∀(?0: set ?3, ?1, ?2)":
+        (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
+    "QUANT_∃(?0: set ?3, ?1, ?2)":
+        (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
     # "APP(CONSTANT, ...)": ((0,), (-1, )),
 }
