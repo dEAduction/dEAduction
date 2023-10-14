@@ -12,7 +12,7 @@
     instantiated as an attribute of ExerciseMainWindow. Provided
     classes:
         - ActionButton;
-        - ActionButtonsWidget;
+        - ActionButtonsLine;
         - StatementsTreeWidgetNode;
         - StatementsTreeWidgetItem;
         - StatementsTreeWidget.
@@ -63,7 +63,8 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QAbstractItemView,
                                 QLabel,
                                 QGroupBox,
-                                QStackedLayout)
+                                QStackedLayout,
+                                QCheckBox)
 
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
@@ -94,7 +95,7 @@ global _
 # Classes for the two rows of buttons (e.g. ∀ button) in the Actions
 # area of the exercise window. Each button is coded as an instance of
 # the class ActionButton and each row essentially is a container of
-# instances of ActionButton coded as an instance of ActionButtonsWidget.
+# instances of ActionButton coded as an instance of ActionButtonsLine.
 
 
 class ActionButton(QPushButton):
@@ -145,11 +146,13 @@ class ActionButton(QPushButton):
         # Modify button default color
         if cvars.get('others.os') == "linux":
 
-            if self.name.startswith('use'):
-                background_color = '#CC31CC'
-            else:
-                background_color = cvars.get("display.color_for_selection",
-                                             "limegreen")
+            # if self.name.startswith('use'):
+            #     background_color = '#CC31CC'
+            # else:
+            #     background_color = cvars.get("display.color_for_selection",
+            #                                  "limegreen")
+            background_color = cvars.get("display.color_for_selection",
+                                         "limegreen")
             self.set_color(background_color)
             # palette = self.palette()
             # highlight_color = QColor(background_color)
@@ -379,7 +382,7 @@ class ProveUseModeSetter(QWidget):
         self.clicked.emit()
 
 
-class ActionButtonsWidget(QWidget):
+class ActionButtonsLine(QWidget):
     """
     A container class to create and display an ordered row of instances
     of the class Action as buttons (instances of the class
@@ -412,13 +415,16 @@ class ActionButtonsWidget(QWidget):
         demo_lbl.deleteLater()
         use_lbl.deleteLater()
 
-    def __init__(self, actions: [Action], show_label=True):
+    def __init__(self, actions: [Action], show_label=False):
         """
         Init self with an ordered list of instances of the class Action.
         :param actions: The list of instances of the class Action one
             wants to create buttons from.
         demo_line is True iff all buttons are 'prove' buttons. In this case,
         a QLabel display 'Prove :'. Likewise for use_line.
+
+        The bool show_label allows display of a label 'Prove:' or 'Use:'
+        (obsolete).
         """
 
         super().__init__()
@@ -438,6 +444,7 @@ class ActionButtonsWidget(QWidget):
         h_layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
+        # fixme: Obsolete
         if show_label:
             if self.demo_line:
                 demo_lbl = QLabel(_('Prove:'))
@@ -457,6 +464,10 @@ class ActionButtonsWidget(QWidget):
         h_layout.addStretch()
 
         self.setLayout(h_layout)
+
+        sp = self.sizePolicy()
+        sp.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(sp)
 
     def update(self):
         """
@@ -482,6 +493,8 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
         self.use_wdgs = use_wdgs
         self.lyt = QVBoxLayout()
         self.prove_use_mode_setter = None
+        # self.toggled.connect(self.hide)
+        # self.recorded_height = 0
 
         if not switcher:  # Just the two buttons lines
             self.prove_use_mode_setter = None
@@ -528,10 +541,85 @@ class ProveUseSwitcherButtonGroupBox(QGroupBox):
             if change:
                 self.prove_use_mode_setter.click()
 
+    # def hide(self):
+    #     if self.isChecked():
+    #         self.setMaximumHeight(self.recorded_height)
+    #         self.prove_wdgs.show()
+    #         self.use_wdgs.show()
+    #         self.setFlat(False)
+    #     else:
+    #         self.recorded_height = self.height()
+    #         self.prove_wdgs.hide()
+    #         self.use_wdgs.hide()
+    #         self.setFlat(True)
+    #         self.setMaximumHeight(20)
+    #         # self.lyt.setMargin(0)
+    #         # self.lyt.setContentsMargins(0,0,0,0)
+
+
+class ActionButtonsGroup(QGroupBox):
+    """
+    This class is a QGroupbox with a title containing one or several
+    ActionButtonLines.
+
+    TODO:
+    The title could be made clickable (e.g. a checkbox) to allow hide/show
+    the box.
+    """
+
+    def __init__(self, title, action_button_lines: [ActionButtonsLine]):
+        super().__init__()
+        self.setTitle(title)
+        self.lyt = QVBoxLayout()
+        for abw in action_button_lines:
+            self.lyt.addWidget(abw)
+
+        self.setLayout(self.lyt)
+
+
+    # def __init__(self, title, action_button_wdgs: [ActionButtonsLine]):
+    #     super().__init__()
+    #
+    #     # 1 or 2 widgets
+    #     self.title_wdg = QCheckBox(title) if title else None
+    #     self.group_box = QGroupBox()
+    #     self.gb_lyt = QVBoxLayout()
+    #
+    #     for abw in action_button_wdgs:
+    #         self.gb_lyt.addWidget(abw)
+    #     self.group_box.setLayout(self.gb_lyt)
+    #
+    #     self.lyt = QVBoxLayout()
+    #     self.lyt.setContentsMargins(0,0,0,0)
+    #     self.lyt.setMargin(0)
+    #
+    #     if self.title_wdg:
+    #         self.title_wdg.setChecked(True)
+    #         self.lyt.addWidget(self.title_wdg)
+    #         self.title_wdg.stateChanged.connect(self.show_or_hide)
+    #
+    #     self.lyt.addWidget(self.group_box)
+    #     self.setLayout(self.lyt)
+    #
+    # def show_or_hide(self):
+    #     if not self.title_wdg:
+    #         return
+    #
+    #     if self.title_wdg.isChecked():
+    #         self.group_box.show()
+    #
+    #     else:
+    #         self.group_box.hide()
+
 
 class ActionButtonsLyt(QVBoxLayout):
     """
     This class provides a QVBoxLayout which contains all action buttons.
+    The action buttons are first grouped by lines in ActionButtonsLines,
+    and lines are grouped in a ActionButtonsGroup with a title:
+    thus the entry data are of type [(str, [[Actions]])].
+
+    Fixme, obsolete:
     There are two cases:
     - either prove_wdgs and use_wdgs are provided, then these are used to
     build a ProveUseSwitcherButtonGroupBox, and the other line wdgs are put
@@ -539,14 +627,38 @@ class ActionButtonsLyt(QVBoxLayout):
     - or all the line wdgs are directly put into self.
     """
 
-    def __init__(self,
-                 other_line_wdgs: [ActionButtonsWidget],
-                 prove_wdgs: ActionButtonsWidget = None,
-                 use_wdgs: ActionButtonsWidget = None,
+    def __init__(self, action_buttons_lines: [(str, [[ActionButtonsLine]])],
+                 switcher=False):
+        super().__init__()
+
+        for (title, group) in action_buttons_lines:
+            group_box = ActionButtonsGroup(title, group)
+            self.addWidget(group_box)
+
+    @classmethod
+    def from_actions(cls, actions_lines: [(str, [[Action]])]):
+        """
+        The action buttons are first grouped by lines in ActionButtonsLines,
+        and lines are grouped in a ActionButtonsGroup with a title:
+        thus the entry data are of type [(str, [[Actions]])].
+        """
+        pass
+
+    # FIXME:
+    @classmethod
+    def obsolete(cls,
+                 other_line_wdgs: [ActionButtonsLine],
+                 prove_wdgs: ActionButtonsLine = None,
+                 use_wdgs: ActionButtonsLine = None,
                  display_prove_use=False,
                  switcher=True):
 
         super().__init__()
+
+        # Try
+        prove_wdgs = ActionButtonsGroup(_('Prove:'), [prove_wdgs])
+        use_wdgs = ActionButtonsGroup(_('Use:'), [use_wdgs])
+
         self.prove_use_box = None
         other_lyt = QVBoxLayout() if display_prove_use else self
 
@@ -565,6 +677,8 @@ class ActionButtonsLyt(QVBoxLayout):
             self.prove_use_box = \
                 ProveUseSwitcherButtonGroupBox(prove_wdgs, use_wdgs,
                                                switcher=switcher)
+            # self.prove_use_box.setTitle('Prove or use')
+            # self.prove_use_box.setCheckable(True)
             other_box = QGroupBox()
             other_box.setLayout(other_lyt)
 

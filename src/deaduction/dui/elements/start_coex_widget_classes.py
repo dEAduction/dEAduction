@@ -12,7 +12,7 @@
     instantiated as an attribute of ExerciseMainWindow. Provided
     classes:
         - ActionButton;
-        - ActionButtonsWidget;
+        - ActionButtonsLine;
         - StatementsTreeWidgetNode;
         - StatementsTreeWidgetItem;
         - StatementsTreeWidget.

@@ -62,7 +62,8 @@ from PySide2.QtWidgets import ( QAction,
 from deaduction.dui.utils               import   clear_layout
 from deaduction.dui.elements            import (ActionButton,
                                                 ProveUseModeSetter,
-                                                ActionButtonsWidget,
+                                                ActionButtonsLine,
+                                                ActionButtonsGroup,
                                                 ActionButtonsLyt,
                                                 StatementsTreeWidget,
                                                 StatementsTreeWidgetItem,
@@ -114,11 +115,11 @@ class ExerciseCentralWidget(QWidget):
     with the method update_goal. Note that neither the exercise (used in
     self.__init__) nor the goal are kept as class attributes!
 
-    :attribute logic_btns ActionButtonsWidget: Logic buttons available
+    :attribute logic_btns ActionButtonsLine: Logic buttons available
         for this exercise.
     :attribute objects_wgt MathObjectWidget: Widget for context
         objects (e.g. f:X->Y a function).
-    :attribute proof_btns ActionButtonsWidget: Proof buttons
+    :attribute proof_btns ActionButtonsLine: Proof buttons
         available for this exercise.
     :attribute props_wgt MathObjectWidget: Widget for context
         properties (e.g. f is continuous).
@@ -166,12 +167,14 @@ class ExerciseCentralWidget(QWidget):
         # ──────────────── Init Actions area ─────────────── #
         # Action buttons
         ActionButton.from_name = dict()
-        self.__prove_btns = ActionButtonsWidget(exercise.available_logic_prove)
-        self.__use_btns = ActionButtonsWidget(exercise.available_logic_use)
-        self.__logic_1_btns = ActionButtonsWidget(exercise.available_logic_1)
-        self.__logic_2_btns = ActionButtonsWidget(exercise.available_logic_2)
-        self.__magic_proof_btns = ActionButtonsWidget(exercise.available_magic +
-                                                      exercise.available_proof)
+        self.__prove_btns = ActionButtonsLine(exercise.available_logic_prove,
+                                              show_label=False)
+        self.__use_btns = ActionButtonsLine(exercise.available_logic_use,
+                                            show_label=False)
+        self.__logic_1_btns = ActionButtonsLine(exercise.available_logic_1)
+        self.__logic_2_btns = ActionButtonsLine(exercise.available_logic_2)
+        self.__magic_proof_btns = ActionButtonsLine(exercise.available_magic +
+                                                    exercise.available_proof)
 
         # !! Somehow, this does not work for self.__prove_buttons if called
         # after these are set into ths GroupBox in switch mode, so I put it
@@ -273,7 +276,7 @@ class ExerciseCentralWidget(QWidget):
 
         # (1) Remove ActionButtonWidgets from layout
         if self.__action_btns_lyt:
-            for action_buttons_widget in self.__action_buttons_widgets:
+            for action_buttons_widget in self.__action_buttons_lines:
                 self.__action_btns_lyt.removeWidget(action_buttons_widget)
 
         exercise = self.exercise
@@ -300,11 +303,13 @@ class ExerciseCentralWidget(QWidget):
 
         switcher = (mode == 'display_switch')
 
-        self.__action_btns_lyt = ActionButtonsLyt(other_wdgs,
-                                                  prove_wdg,
-                                                  use_wdg,
-                                                  display_prove_use=dpu,
-                                                  switcher=switcher)
+        # List of (title, [ActionButtonsLine]):
+        groups = [(_('Prove:'), [prove_wdg]),
+                  (_('Use:'), [use_wdg]),
+                  (None, other_wdgs)]
+        self.__action_btns_lyt = ActionButtonsLyt(groups)
+                                                  # display_prove_use=dpu,
+                                                  # switcher=switcher)
 
         self.__action_btns_lyt.setSpacing(2)
 
@@ -384,7 +389,7 @@ class ExerciseCentralWidget(QWidget):
 ##############################
 
     @property
-    def __action_buttons_widgets(self) -> [ActionButtonsWidget]:
+    def __action_buttons_lines(self) -> [ActionButtonsLine]:
         return [self.__prove_btns,
                 self.__use_btns,
                 self.__logic_1_btns,
@@ -395,7 +400,7 @@ class ExerciseCentralWidget(QWidget):
     def action_buttons(self) -> [ActionButton]:
         btns = sum([action_buttons_widgets.buttons
                     for action_buttons_widgets in
-                    self.__action_buttons_widgets], [])
+                    self.__action_buttons_lines], [])
         return btns
 
     def set_font_for_action_buttons(self):
@@ -411,7 +416,7 @@ class ExerciseCentralWidget(QWidget):
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets methods.
         Target font size is set in TargetWidget.
-        ActionButtonsWidget max-height is set so that they keep their nice
+        ActionButtonsLine max-height is set so that they keep their nice
         appearance on Mac, whatever the font size.
         """
 
