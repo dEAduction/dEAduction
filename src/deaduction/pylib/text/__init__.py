@@ -28,6 +28,7 @@ This file is part of d∃∀duction.
 from .tooltips import (button_symbol,
                        button_tool_tip,
                        logic_buttons_line_1,
-                       logic_buttons_line_2)
+                       logic_buttons_line_2,
+                       compute_buttons_line)
 
 from .help_msgs import use, prove, current_button_name

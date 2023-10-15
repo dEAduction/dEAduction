@@ -23,7 +23,7 @@ font_size_for_symbol_buttons = "14pt"
 math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 
 selection_color = "limegreen"
-symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
+symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦, +"
 use_symbols_for_logic_button = true
 short_buttons_line = true
 

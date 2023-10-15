@@ -106,7 +106,10 @@ __tooltips = {
     'assumption':
         [_("Terminate the proof when the target is obvious from the context")],
     'compute':
-        [_("Terminate the proof when target results from manipulating numbers")]
+        [_("Terminate the proof when target results from manipulating "
+           "numbers")],
+    'sum':
+        [_('Add equalities or inequalities')]
 }
 
 for key in ('forall', 'exists', 'implies', 'and', 'or'):
@@ -140,6 +143,7 @@ __buttons_symbols = dict()
 # logic_buttons_line_2 = ["forall", "exists", "equal", "map"]
 logic_buttons_line_1 = ["forall", "exists", "implies", "and", "or"]
 logic_buttons_line_2 = ["not", "iff", "equal", "map"]
+compute_buttons_line = ["sum"]
 # logic_buttons = logic_buttons_line_1 + logic_buttons_line_2
 
 __logic_translation =\
@@ -149,7 +153,8 @@ __logic_translation =\
      _('USE FORALL'), _('USE EXISTS'), _('USE IMPLIES'), _('USE AND'),
      _('USE OR'),
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
-     _('NEW OBJECT'), _('PROOF METHODS')]
+     _('NEW OBJECT'), _('PROOF METHODS'),
+     _('SUM')]
 
 
 def __compute_buttons_symbols_dict():
@@ -178,7 +183,7 @@ def __compute_buttons_symbols_dict():
     # Add a new logic button by modifying the config.toml entry,
     # 'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP'.
     config_field = \
-        'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP'
+        'display.symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM'
     # --> Construct buttons list
     logic_buttons = config_field.split("_")[1:]
     # --> Get symbols
@@ -199,7 +204,7 @@ def __compute_buttons_symbols_dict():
             __buttons_symbols['use_' + key] = _('use') + ' ' + value
 
 
-def button_symbol(name):
+def button_symbol(name: str):
     """
     Return symbol (i.e. string to be displayed on the button in the ui)
     for the button corresponding to function action_<name>.
@@ -210,7 +215,7 @@ def button_symbol(name):
     """
 
     __compute_buttons_symbols_dict()
-    symbol = __buttons_symbols.get(name)
+    symbol = __buttons_symbols.get(name, name.capitalize().replace('_', ' '))
     symbol = replace_dubious_characters(symbol)
     return symbol
 

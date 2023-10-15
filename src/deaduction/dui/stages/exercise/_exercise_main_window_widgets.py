@@ -173,6 +173,7 @@ class ExerciseCentralWidget(QWidget):
                                             show_label=False)
         self.__logic_1_btns = ActionButtonsLine(exercise.available_logic_1)
         self.__logic_2_btns = ActionButtonsLine(exercise.available_logic_2)
+        self.__compute_btns = ActionButtonsLine(exercise.available_compute)
         self.__magic_proof_btns = ActionButtonsLine(exercise.available_magic +
                                                     exercise.available_proof)
 
@@ -306,7 +307,9 @@ class ExerciseCentralWidget(QWidget):
         # List of (title, [ActionButtonsLine]):
         groups = [(_('Prove:'), [prove_wdg]),
                   (_('Use:'), [use_wdg]),
-                  (None, other_wdgs)]
+                  (None, other_wdgs),
+                  (_('Compute: '), [self.__compute_btns])
+                  ]
         self.__action_btns_lyt = ActionButtonsLyt(groups)
                                                   # display_prove_use=dpu,
                                                   # switcher=switcher)

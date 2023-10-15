@@ -571,8 +571,12 @@ class ActionButtonsGroup(QGroupBox):
         super().__init__()
         self.setTitle(title)
         self.lyt = QVBoxLayout()
+
+        self.no_button = True
         for abw in action_button_lines:
-            self.lyt.addWidget(abw)
+            if abw.buttons:
+                self.no_button = False
+                self.lyt.addWidget(abw)
 
         self.setLayout(self.lyt)
 
@@ -633,7 +637,8 @@ class ActionButtonsLyt(QVBoxLayout):
 
         for (title, group) in action_buttons_lines:
             group_box = ActionButtonsGroup(title, group)
-            self.addWidget(group_box)
+            if not group_box.no_button:
+                self.addWidget(group_box)
 
     @classmethod
     def from_actions(cls, actions_lines: [(str, [[Action]])]):

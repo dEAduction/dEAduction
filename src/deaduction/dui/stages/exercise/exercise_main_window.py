@@ -438,7 +438,7 @@ class ExerciseMainWindow(QMainWindow):
             elif setting == "display.target_display_on_top":
                 self.ecw.organise_main_layout()
             elif setting in (
-                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM",
                     'display.use_symbols_for_logic_button',
                     'display.font_size_for_symbol_buttons'):
                 self.ecw.set_font()

@@ -35,7 +35,8 @@ from copy import      copy
 import deaduction.pylib.config.vars             as cvars
 
 from deaduction.pylib.text                  import (logic_buttons_line_1,
-                                                    logic_buttons_line_2)
+                                                    logic_buttons_line_2,
+                                                    compute_buttons_line)
 import deaduction.pylib.text.text as text
 
 from deaduction.pylib.actions.actiondef     import Action
@@ -56,6 +57,7 @@ LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
 # e.g. key = action_and, value = corresponding instance of the class Action
 PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
 MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+COMPUTE_BUTTONS = deaduction.pylib.actions.compute.__actions__
 
 
 @dataclass
@@ -515,7 +517,7 @@ LEAN_CLASSICAL_LOGIC = "local attribute[instance] classical.prop_decidable\n"
 class Exercise(Theorem):
     """
     The class for storing exercises' info.
-    On top of the parent class info, the attributes stores
+    On top of the parent class, the attributes stores
     - the lists of buttons that will be available for this specific exercise
         (in each three categories, resp. logic, proof and magic buttons)
     - the list of statements that will be available for this specific exercise.
@@ -523,6 +525,7 @@ class Exercise(Theorem):
     available_logic:            List[Action]    = None
     available_magic:            List[Action]    = None
     available_proof:            List[Action]    = None
+    available_compute:          List[Action]    = None
     available_statements:       List[Statement] = None
     # FIXME: not used:
     expected_vars_number:       Dict[str, int]  = None  # e.g. {'X': 3, 'A': 1}
@@ -535,6 +538,12 @@ class Exercise(Theorem):
 
     non_pertinent_course_metadate = ('_raw_metadata', 'description',
                                      'pretty_name')
+
+    # def __init__(self, **data: dict):
+    #     print('init exo')
+    #     for (key, value) in data.items():
+    #         print(str(key))
+    #         self.key = value
 
     @property
     def initial_proof_state(self):
@@ -1061,6 +1070,7 @@ class Exercise(Theorem):
         # Reload history_course to remove deleted entry
         # self.original_exercise.course.set_history_course()
 
+
 #############
 # utilities #
 #############
@@ -1140,13 +1150,14 @@ def extract_available_buttons(data: dict):
     the buttons specified in data.
 
     :param data: dict with pertinent info corresponding to keys
-    data[''available_logic],
-    data[''available_proof],
-    data[''available_magic].
+    data['available_logic'],
+    data['available_proof'],
+    data['available_magic'].
+    data['available_compute'].
 
     :return: no direct return, but modify the data dict.
     """
-    for action_type in ['logic', 'proof', 'magic']:
+    for action_type in ['logic', 'proof', 'magic', 'compute']:
         field_name = 'available_' + action_type
         default_field_name = 'default_' + field_name
         if field_name not in data.keys():
@@ -1178,6 +1189,8 @@ def make_action_from_name(prefix) -> callable:
         dictionary = PROOF_BUTTONS
     elif prefix == 'magic':
         dictionary = MAGIC_BUTTONS
+    elif prefix == 'compute':
+        dictionary = COMPUTE_BUTTONS
 
     def action_from_name(name: str) -> [Action]:
         """

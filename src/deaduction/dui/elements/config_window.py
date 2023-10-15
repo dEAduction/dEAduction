@@ -236,7 +236,7 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "logic.use_color_for_variables",
                          "logic.use_color_for_dummy_variables",
                          # Action buttons
-                         "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                         "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM",
                          'display.use_symbols_for_logic_button',
                          'display.font_size_for_symbol_buttons',
                          'functionality.allow_implicit_use_of_definitions',
