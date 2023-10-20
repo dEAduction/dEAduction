@@ -118,3 +118,5 @@ def extract_var(potential_var: MathObject) -> MathObject:
     else:
         return potential_var
 
+
+

@@ -880,6 +880,12 @@ class MathObject:
                     }
         return decision[contain_left, contain_right]
 
+    def length(self):
+        """
+        Return the number of nodes in self.
+        """
+        return 1 + sum(child.length() for child in self.children)
+
 #######################
 # Tests for math_type #
 #######################
@@ -1183,6 +1189,30 @@ class MathObject:
 
     def is_number(self):
         return any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
+
+    def ring_expr(self) -> Optional[int]:
+        """
+        Test if self is a ring expr, i.e. consists of numbers
+        and operations + - * /.
+        If this is so, then return the nb of arithmetic operations in self.
+        If not, return 0.
+        """
+
+        allowed_nodes = ['PARENTHESES']
+        ring_nodes = ['SUM', 'DIFFERENCE', 'MULT', 'DIV', 'POWER']
+
+        if self.node in ring_nodes + allowed_nodes:
+            total_nb_op = sum(child.ring_expr() for child in self.children)
+            if self.node in ring_nodes:
+                total_nb_op += 1
+            return total_nb_op
+
+        else:
+            return 0
+
+        # if not (self.math_type.is_number()
+        #         or self.node in allowed_nodes):
+        # return 0
 
     def is_iff(self, is_math_type=False) -> bool:
         """

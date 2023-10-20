@@ -236,7 +236,7 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
             nbg = proof_step.nb_of_goals
             more_code0 = CodeForLean.from_string(f"rotate {nbg}")
         # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code1 = compute(goal)
+        more_code1 = compute(proof_step)
         more_code = more_code0.and_then(more_code1).try_()
         more_code.add_success_msg(_("Property {} added to the context").
                                   format(new_hypo_name))

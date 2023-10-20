@@ -122,10 +122,34 @@ def action_simplify(proof_step) -> CodeForLean:
 #     pass
 #
 #
-# @action()
-# def action_transitivity(proof_step) -> CodeForLean:
-#     pass
-#
+@action()
+def action_transitivity(proof_step) -> CodeForLean:
+    """
+    Try several transitivity lemma (the 'smart_trans' tactic).
+    This is a symmetric tactic.
+    """
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+
+    test_selection(selected_objects, target_selected)
+
+    # TODO: if len(selected_objects) == 1:
+    #  MissingParam --> user rentre un nb à ajouter.
+
+    if len(selected_objects) != 2:
+        raise WrongUseModeInput("Transitivity needs exactly two properties")
+
+    H0 = selected_objects[0]
+    H1 = selected_objects[1]
+    new_hypo_name = get_new_hyp(proof_step)
+    code = CodeForLean.from_string(
+        f"smart_trans {H0} {H1} with {new_hypo_name}")
+    code.add_success_msg(_(f"Chaining {H0} and {H1} to get {new_hypo_name}"))
+    code.add_error_msg(f"I cannot chain {H0} and {H1}")
+    # code.add_error_msg(f"Use the + button for inequalities")
+    return code
+
+
 #
 # @action()
 # def action_commute(proof_step) -> CodeForLean:
@@ -152,7 +176,7 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     location = "" if target_selected else selected_name
     new_hyp = get_new_hyp(proof_step)
 
-    code1 = CodeForLean("norm_num")  # To normalise inequalities
+    code1 = CodeForLean("norm_num").try_()  # To normalise inequalities
     simp2 = f"smart_triang_ineq {location} with {new_hyp}"
     code2 = CodeForLean(simp2)
     code = code1.and_then(code2)

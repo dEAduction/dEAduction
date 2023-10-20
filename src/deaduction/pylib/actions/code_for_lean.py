@@ -858,6 +858,8 @@ class CodeForLean:
         code.outcome_operator = _("Principle of induction")
         return code
 
+
+
 # class Induction(CodeForLean):
 #
 #     def __init__(self, var_name):
