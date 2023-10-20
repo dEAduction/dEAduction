@@ -397,7 +397,8 @@ class ExerciseCentralWidget(QWidget):
                 self.__use_btns,
                 self.__logic_1_btns,
                 self.__logic_2_btns,
-                self.__magic_proof_btns]
+                self.__magic_proof_btns,
+                self.__compute_btns]
 
     @property
     def action_buttons(self) -> [ActionButton]:
