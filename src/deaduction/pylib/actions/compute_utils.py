@@ -57,6 +57,10 @@ def pre_unify(H1: MathObject, H2: MathObject):
             (not len(H1.children) == len(H2.children))):
         return False
 
+    if len(H1.children) == 0:
+        return True
+
+    # Now same nb of children, at least 1
     couples = []
     pertinent_children = list(zip(H1.children, H2.children))
     first_child1 = H1.children[0]
