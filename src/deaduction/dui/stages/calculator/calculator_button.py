@@ -124,6 +124,11 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         self.setText(symbol)
         self.shortcut = ''
         self.add_shortcut()
+        self.set_tooltip()
+        symbol_size = deaduction_fonts.symbol_button_font_size
+        self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+
+    def set_tooltip(self):
         tooltip = ""
         if self.shortcut:
             tooltip = "(type " + self.shortcut + ")"
@@ -146,6 +151,11 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 break
 
         calc_buttons.insert(idx, self)
+
+    def reset_text(self, text):
+        self.setText(text)
+        self.shortcut = ''
+        self.add_shortcut()
 
     def add_shortcut(self):
         """

@@ -25,6 +25,7 @@ This file is part of d∃∀duction.
 """
 
 from collections import OrderedDict
+from typing import Optional
 
 from deaduction.pylib.math_display.nodes import Node
 from .marked_pattern_math_object import MarkedPatternMathObject
@@ -129,7 +130,10 @@ class CalculatorAbstractButton:
     A class to store the data needed to build a CalculatorButton.
     """
 
-    def __init__(self, symbol, tooltip, patterns, menu=False):
+    def __init__(self, symbol: str,
+                 tooltip: Optional[str],
+                 patterns: [MarkedPatternMathObject],  # or just one
+                 menu=False):
         self.symbol = symbol
         self.tooltip = tooltip
         if not patterns:
@@ -142,6 +146,15 @@ class CalculatorAbstractButton:
         return cls(symbol=node.button_symbol(),
                    tooltip=node.button_tooltip(),
                    patterns=node.marked_pattern_math_object(),
+                   menu=False)
+
+    @classmethod
+    def from_math_object(cls, math_object):
+        symbol = math_object.to_display(format_='html', use_color=True)
+        marked_pmo = MarkedPatternMathObject.from_math_object(math_object)
+        return cls(symbol=symbol,
+                   tooltip=None,
+                   patterns=marked_pmo,
                    menu=False)
 
     @classmethod
@@ -158,6 +171,8 @@ class CalculatorPatternLines:
     the calculator.
 
     """
+
+    bound_vars_title = _('Bound variables')
 
     marked_patterns = OrderedDict()
     for symbol, string in calculator_pattern_strings.items():
@@ -194,7 +209,7 @@ class CalculatorPatternLines:
 
     @classmethod
     def bound_vars(cls):
-        title = _('Bound variables')
+        title = cls.bound_vars_title
         cpl = cls(title=title, lines=[])
         return cpl
 

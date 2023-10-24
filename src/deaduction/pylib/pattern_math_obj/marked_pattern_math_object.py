@@ -1114,6 +1114,20 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     #         if mvar.is_metavar():
     #             mvar.clear_matching()
 
+    def bound_var_affected_by(self, mvar) -> Optional[BoundVar]:
+        """
+        If mvar is the type of a bound_var, return the bound_var.
+        Also if mvar affects the type of a bound_var.
+        """
+
+        parent = self.parent_of(mvar)
+        if not parent:
+            return
+        if parent.has_bound_var() and mvar == parent.children[0]:
+            return parent.bound_var
+        else:
+            return self.bound_var_affected_by(parent)
+
     def priority_test(self, parent, left_children):
         """
         return True is self can be a left/right child of parent
@@ -1450,6 +1464,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
 
         # mvar = self.marked_descendant()
+        # new_pmo_copy = new_pmo.deep_copy(new_pmo)
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         for mvar in (self.marked_descendant(), self.next_after_marked()):
@@ -1706,7 +1721,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     #     self._assigned_math_object = math_object
 
     @classmethod
-    def deep_copy(cls, self):
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         new_mvar: MarkedMetavar = super().deep_copy(self)
         new_mvar.cursor_pos = self.cursor_pos
         if self.is_marked:
@@ -1763,21 +1778,22 @@ class MarkedBoundVar(BoundVar, MarkedPatternMathObject):
     A BoundVar that can be marked.
     """
 
-    def __init__(self, node, info, children, math_type):
+    def __init__(self, node, info, children, math_type,
+                 parent=None, deep_copy=False):
         name = info.get('name')
         lean_name = info.get('lean_name')
         if (not name or name == 'NO NAME') \
                 and (lean_name and lean_name != 'NO NAME'):
             info['name'] = lean_name
 
-        super().__init__(node, info, children, math_type)
+        super().__init__(node, info, children, math_type, parent, deep_copy)
 
     @property
     def name(self):
         name = self.info.get('name')
         if name == 'NO NAME':
             lean_name = self.info.get('lean_name')
-            name = '(' + lean_name + ')' if lean_name else '(?)'
+            name = '[' + lean_name + ']' if lean_name else '[?]'
         return name
 
 

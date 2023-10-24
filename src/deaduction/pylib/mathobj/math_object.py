@@ -423,20 +423,42 @@ class MathObject:
         return other
 
     @classmethod
-    def deep_copy(cls, self):
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         """
         Return a deep copy of self. This should work for subclasses.
+        NB: constants, local constants (and bound vars) are NOT copied.
+        This is crucial for coherent bound var naming.
         """
+
+        if original_bound_vars is None:
+            original_bound_vars = []
+        if copied_bound_vars is None:
+            copied_bound_vars = []
+
+        if self in original_bound_vars:
+            idx = original_bound_vars.index(self)
+            return copied_bound_vars[idx]
+
         new_info = deepcopy(self.info)
         math_type: cls = self.math_type
         children: [cls] = self.children  # Real type could be different
         new_math_type = (math_type if math_type.is_no_math_type()
-                         else math_type.deep_copy(math_type))
+                         else math_type.deep_copy(math_type,
+                                                  original_bound_vars,
+                                                  copied_bound_vars))
 
-        new_children = [child.deep_copy(child) for child in children]
+        new_children = [child.deep_copy(child,
+                                        original_bound_vars,
+                                        copied_bound_vars)
+                        for child in children]
 
         new_math_object = cls(node=self.node, info=new_info,
                               children=new_children, math_type=new_math_type)
+
+        if self.is_bound_var:
+            original_bound_vars.append(self)
+            copied_bound_vars.append(new_math_object)
+
         return new_math_object
 
     def constants_in_self(self):
@@ -1719,10 +1741,13 @@ MathObject.PROP = MathObject(node="PROP",
 
 class BoundVar(MathObject):
     is_bound_var = True  # Override MathObject attribute
-
+    is_unnamed = False
     untouched_bound_var_names = ["RealSubGroup", "_inst_1", "_inst_2", "inst_3"]
 
-    def __init__(self, node, info, children, math_type, parent=None):
+    identifier_nb = 0
+
+    def __init__(self, node, info, children, math_type,
+                 parent=None, deep_copy=False):
         """
         The local context is the list of BoundVar instances that are
         meaningful where self is introduced. In particular, self's name
@@ -1731,11 +1756,15 @@ class BoundVar(MathObject):
         """
         MathObject.__init__(self, node, info, children, math_type)
         self.parent = parent
-        self.is_unnamed = True
-        self.set_unnamed_bound_var()
-        if self.keep_lean_name():
-            self.name_bound_var(self.lean_name)
+
+        if not deep_copy:
+            self.is_unnamed = True
+            self.set_unnamed_bound_var()
+            if self.keep_lean_name():
+                self.name_bound_var(self.lean_name)
         self._local_context = []
+
+        self.set_id_nb()
 
     def __eq__(self, other):
         """
@@ -1766,6 +1795,25 @@ class BoundVar(MathObject):
     #     return cls(bound_var.node, bound_var.info, bound_var.children,
     #                math_type, parent=parent)
 
+    # @classmethod
+    # def deep_copy(cls, self):
+    #     """
+    #     We want to keep the name during the deep copy.
+    #     """
+    #     new_info = deepcopy(self.info)
+    #     math_type: cls = self.math_type
+    #     children: [cls] = self.children  # Real type could be different
+    #     new_math_type = (math_type if math_type.is_no_math_type()
+    #                      else math_type.deep_copy(math_type))
+    #
+    #     new_children = [child.deep_copy(child) for child in children]
+    #
+    #     new_bound_var = cls(node=self.node, info=new_info,
+    #                         children=new_children, math_type=new_math_type,
+    #                         deep_copy=True)
+    #     new_bound_var.is_unnamed = self.is_unnamed
+    #     return new_bound_var
+
     @classmethod
     def from_math_type(cls, math_type, parent=None):
         """
@@ -1783,6 +1831,25 @@ class BoundVar(MathObject):
                              parent=parent)
         return bound_var
 
+    def set_id_nb(self):
+        """
+        Set a unique identifier nb for self. This nb should be copied
+        identically when self is deep copied.
+        """
+        if not self.info.get('identifier_nb'):
+            BoundVar.identifier_nb += 1
+            self.info['identifier_nb'] = BoundVar.identifier_nb
+
+    def refer_to_the_same_bound_var(self, other):
+        """
+        True iff self and other have the same identifier nb.
+        """
+        if not isinstance(other, BoundVar):
+            return False
+        id_nb1 = self.info.get('identifier_nb')
+        id_nb2 = other.info.get('identifier_nb')
+        return id_nb1 and (id_nb1 == id_nb2)
+
     @property
     def name(self):
         # Fixme: make it an attribute
@@ -1793,8 +1860,9 @@ class BoundVar(MathObject):
         return self.info.get('lean_name')
 
     def keep_lean_name(self):
-        return (self.lean_name in self.untouched_bound_var_names
-                or self.lean_name.startswith("_inst_"))
+        if (self.lean_name in self.untouched_bound_var_names
+                or self.lean_name.startswith("_inst_")):
+            return True
 
     @property
     def local_context(self):

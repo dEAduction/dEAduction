@@ -666,7 +666,7 @@ class MetaVar(PatternMathObject):
         return self.info['nb']
 
     @classmethod
-    def deep_copy(cls, self):
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         new_mvar = super().deep_copy(self)
         mmo = self.assigned_math_object
         if mmo:

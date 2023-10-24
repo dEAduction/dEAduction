@@ -467,7 +467,7 @@ class CalculatorButtonsGroup(QGroupBox):
     col_size = 4
 
     def __init__(self, title, calculator_buttons: [CalculatorButton],
-                 col_size):
+                 col_size=None):
 
         self.title = title
         super().__init__(title)
@@ -492,23 +492,44 @@ class CalculatorButtonsGroup(QGroupBox):
         main_layout.addLayout(self.margin_btns_lyt)
         self.setLayout(main_layout)
 
-    def include_buttons(self):
-        """
-        Add self's buttons in self.buttons_layout
-        """
+    # def include_buttons(self):
+    #     """
+    #     Add self's buttons in self.buttons_layout.
+    #     """
+    #
+    #     for line in range(len(self.buttons) // self.col_size + 1):
+    #         col = 0
+    #         for button in self.buttons[self.col_size * line:
+    #                                    self.col_size * (line + 1)]:
+    #             self.buttons_layout.addWidget(button, line, col)
+    #             col += 1
 
-        for line in range(len(self.buttons) // self.col_size + 1):
-            col = 0
-            for button in self.buttons[self.col_size * line:
-                                       self.col_size * (line + 1)]:
-                self.buttons_layout.addWidget(button, line, col)
-                col += 1
+    def init_btns_lyt(self):
+        # TODO: clear lyt
+        # self.buttons_layout.removeWidget(w)
+
+        calculator_buttons = self.buttons
+        self.buttons = []
+        for btn in calculator_buttons:
+            self.add_button(btn)
 
     def add_button(self, button: CalculatorButton):
         line = len(self.buttons) // self.col_size
         col = len(self.buttons) - (line * self.col_size)
         self.buttons_layout.addWidget(button, line, col)
         self.buttons.append(button)
+
+    def remove_button(self, button):
+        pass
+
+    def patterns(self):
+        """
+        List of all patterns from buttons in the group.
+        """
+        patterns = []
+        for button in self.buttons:
+            patterns.extend(button.patterns)
+        return patterns
 
     @classmethod
     def from_node_subclass(cls, node_class, col_size=4):
@@ -538,6 +559,21 @@ class CalculatorButtonsGroup(QGroupBox):
                             col_size=col_size)
         return buttons_group
 
+    @classmethod
+    def from_bound_vars(cls, bound_vars):
+        title = CalculatorPatternLines.bound_vars_title
+        buttons = [CalculatorButton.from_math_object(bound_var)
+                   for bound_var in bound_vars]
+        btn_group = cls(title=title,
+                        calculator_buttons=buttons)
+        return btn_group
+
+    def deleteLater(self):
+        bad_keys = [key for key, button in CalculatorButton.shortcuts_dic
+                    if button in self.buttons]
+        for key in bad_keys:
+            CalculatorButton.shortcuts_dic.pop(key)
+        super().deleteLater()
 
 # class CalculatorButtons(QHBoxLayout):
 #     """
@@ -600,8 +636,8 @@ class CalculatorMainWindow(QDialog):
             #     btns_lyt.addLayout(buttons_lyt)
             #     self.buttons_groups.append(buttons_lyt)
 
-        for NodeClass, col_size in (  (LogicalNode, 5),
-                                      # (SetTheoryNode, 5),
+        for NodeClass, col_size in ((LogicalNode, 5),
+                                    (SetTheoryNode, 5),
                                     (NumberNode, 4), ):
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
                                                                 col_size)
@@ -663,6 +699,11 @@ class CalculatorMainWindow(QDialog):
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
 
+    def bound_var_group(self):
+        for group in self.buttons_groups:
+            if group.title == CalculatorPatternLines.bound_vars_title:
+                return group
+
 
 class CalculatorController:
     """
@@ -677,6 +718,9 @@ class CalculatorController:
                  goal=None,
                  calculator_groups=None,
                  title="Calculator"):
+
+        self.goal = goal
+        # self.bound_vars = []
 
         if not target_type:
             target_type = MetaVar()
@@ -880,6 +924,7 @@ class CalculatorController:
 
     def set_target_and_update(self):
         self.set_target()
+        # self.update_bound_vars()
         self.update_cursor_and_enable_actions()
 
     ##################
@@ -901,6 +946,94 @@ class CalculatorController:
         # print( self.calculator_ui.calculator_target.document().toHtml())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
         # print(self.calculator_ui.calculator_target.document().toPlainText())
+
+    def bound_var_buttons_group(self):
+        bv_group = self.calculator_ui.bound_var_group()
+        return bv_group
+
+    def bound_vars_from_buttons(self):
+        bound_vars = self.bound_var_buttons_group().patterns()
+        return bound_vars
+
+    def check_new_bound_var(self, assigned_mvar):
+        """
+        If assigned_mvar affected the type of some bound var, then
+        rename this bound var.
+        """
+
+        bv_group = self.calculator_ui.bound_var_group()
+
+        # (0) Record new bound vars
+        if assigned_mvar.has_bound_var():
+            new_bound_var = assigned_mvar.bound_var
+            self.bound_vars.append(new_bound_var)
+            button = CalculatorButton.from_math_object(new_bound_var)
+            bv_group.add_button(button)
+            button.send_pattern.connect(self.calculator_ui.process_clic)
+
+        # (1) Name bound vars that have just been given a type
+        target = self.target
+        bound_var = target.bound_var_affected_by(assigned_mvar)
+        if bound_var:
+            # (1a) Name bound_var
+            bound_var.is_unnamed = True
+            self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
+            # Propagate name in target.bound_vars()
+            # FIXME: should be useless(
+
+            for bv in target.bound_vars():
+                if bound_var.refer_to_the_same_bound_var(bv):
+                    if bv.name != bound_var.name:
+                        # FIXME: does not work
+                        bv.set_unnamed_bound_var()
+                        bv.name_bound_var(bound_var.name)
+
+            # (1b) Propagate name in self.bound_vars fixme: useless??
+            for bv in self.bound_vars:
+                if bound_var.refer_to_the_same_bound_var(bv):
+                    bv.set_unnamed_bound_var()
+                    bv.name_bound_var(bound_var.name)
+            # (1c) And change buttons accordingly
+            for button in bv_group.buttons:
+                button_bv = button.patterns[0]
+                button.reset_text(button_bv.name)
+
+    def update_bound_vars(self, previous_bound_vars, new_bound_vars):
+        """
+        Compare self.bound_vars() and self.target.bound_vars(),
+        create or delete or modify buttons accordingly.
+        """
+        # FIXME
+
+        target = self.target
+        bv_group = self.calculator_ui.bound_var_group()
+
+        set_of_bv1 = set([bv.info.get('identifier_nb')
+                          for bv in self.bound_vars
+                          if bv.info.get('identifier_nb')])
+        set_of_bv2 = set([bv.info.get('identifier_nb')
+                          for bv in target.bound_vars()
+                          if bv.info.get('identifier_nb')])
+        target_ident = [bv.info.get('identifier_nb')
+                          for bv in target.bound_vars()]
+        to_be_removed = []
+        for bv in self.bound_vars:
+            ident = bv.info.get('identifier_nb')
+            if ident not in target_ident:
+                to_be_removed.append(bv)
+
+        if to_be_removed:
+            for bv in to_be_removed:
+                self.bound_vars.remove(bv)
+            new_group = CalculatorButtonsGroup.from_bound_vars(self.bound_vars)
+            ui_lyt = self.calculator_ui.btns_wgt.layout()
+            # ui_lyt.replaceWidget(bv_group, new_group)
+            # bv_group.deleteLater()
+            idx = ui_lyt.indexOf(bv_group)
+            print(f"Idx of bv group: {idx}")
+            ui_lyt.removeWidget(bv_group)
+            bv_group.hide()
+            ui_lyt.insertWidget(idx, new_group)
 
     @Slot()
     def insert_pattern(self, pattern_s):
@@ -937,6 +1070,7 @@ class CalculatorController:
         print(f"New target: {new_target}")
         if assigned_mvar:
             self.target = new_target
+            # self.check_new_bound_var(assigned_mvar)
             self.target.move_after_insert(assigned_mvar)
             self.update()
 
@@ -945,6 +1079,10 @@ class CalculatorController:
         print("Total and cursor lists:")
         print(total)
         print(cursor)
+        # print("Bound vars:")
+        # BV = self.target.bound_vars()
+        # print(BV)
+        # print([bv.info.get('identifier_nb') for bv in BV])
         # print(self.target.math_type)
 
     @Slot()
