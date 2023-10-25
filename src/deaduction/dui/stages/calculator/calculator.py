@@ -898,7 +898,9 @@ class CalculatorController:
         text = doc.toPlainText()
         # print(f"VIRTUAL CURSOR POS: {text}")
         position = text.find(MathDisplay.cursor_tag)
-
+        print(f"vcp in: {text} --> {position}")
+        # print("Marked latex shape:")
+        # print(self.target.latex_shape())
         MathDisplay.mark_cursor = False
         # MathDisplay.cursor_pos = None
         return position
@@ -1077,7 +1079,7 @@ class CalculatorController:
             # self.check_new_bound_var(assigned_mvar)
             self.target.move_after_insert(assigned_mvar)
             self.update()
-
+        print(f"Shape: {self.target.latex_shape()}")
         print(f"New target after move: {new_target}")
         total, cursor = self.target.total_and_cursor_list()
         print("Total and cursor lists:")

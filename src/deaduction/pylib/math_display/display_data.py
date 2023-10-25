@@ -127,6 +127,9 @@ class MathDisplay:
     mark_cursor = False
     # cursor_pos = None
 
+    # TODO: compléter !!
+    macros = [r'\no_text', r'\variable', r'\marked']
+
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
          "PROP_OR": (0, r"\or", 1),
@@ -763,7 +766,7 @@ class MathDisplay:
                 pass
             elif item.startswith('&&'):
                 symbol = item[2:]
-            elif (not symbol and item != r"\no_text"
+            elif (not symbol and item not in MathDisplay.macros
                   and item.strip().startswith('\\')):
                 symbol = item
             if symbol:
@@ -773,7 +776,7 @@ class MathDisplay:
         # (2) Second try: symbol is first str
         counter = 0
         for symbol in shape:
-            if isinstance(symbol, str):
+            if isinstance(symbol, str) and symbol not in MathDisplay.macros:
                 return counter, symbol
             counter += 1
 
@@ -794,25 +797,35 @@ class MathDisplay:
 
         return cls.main_symbol_from_shape(shape)
 
+    # @classmethod
+    # def left_right_children(cls, shape):
+    #     """
+    #     Return the list of children nbs that are before/after main symbol in
+    #     latex tuple.
+    #     """
+    #
+    #     # FIXME: look into sub-lists
+    #     ms_idx, main_symbol = cls.main_symbol_from_shape(shape)
+    #
+    #     left = [item for item in shape[:ms_idx]
+    #             if isinstance(item, int)
+    #             or isinstance(item, tuple)]
+    #
+    #     right = [item for item in shape[ms_idx+1:]
+    #              if isinstance(item, int)
+    #              or isinstance(item, tuple)]
+    #
+    #     return left, right
+
     @classmethod
-    def left_right_children(cls, shape):
+    def remove_macros_from_shape(cls, shape):
         """
-        Return the list of children nbs that are before/after main symbol in
-        latex tuple.
+        Return shape without macros.
         """
 
-        # FIXME: look into sub-lists
-        ms_idx, main_symbol = cls.main_symbol_from_shape(shape)
-
-        left = [item for item in shape[:ms_idx]
-                if isinstance(item, int)
-                or isinstance(item, tuple)]
-
-        right = [item for item in shape[ms_idx+1:]
-                 if isinstance(item, int)
-                 or isinstance(item, tuple)]
-
-        return left, right
+        shape2 = [item for item in shape
+                  if not (isinstance(item, str) and item in cls.macros)]
+        return shape2
 
     @classmethod
     def ordered_children(cls, shape) -> list:
@@ -823,11 +836,14 @@ class MathDisplay:
         """
 
         children = []
-        for item in shape:
+        shape2 = cls.remove_macros_from_shape(shape)
+        for item in shape2:
             if isinstance(item, int) or isinstance(item, tuple):
                 children.append(item)
             elif isinstance(item, list):
                 children.extend(cls.ordered_children(item))
+            # elif isinstance(item, str) and item in cls.macros:
+            #     pass
             else:
                 children.append(None)
 
@@ -840,13 +856,13 @@ class MathDisplay:
         else:
             idx = cursor_pos
         m_latex_shape = list(latex_shape)
-        # print(f"Marking latex shape {m_latex_shape}")
-        # print(f" at index {idx-1}")
-        # m_latex_shape[idx] = [r'\marked', m_latex_shape[idx]]
-        m_latex_shape = [r'\marked'] + m_latex_shape
-        idx += 1
-        if cls.mark_cursor:
+
+        if not cls.mark_cursor:
+            m_latex_shape = [r'\marked'] + m_latex_shape
+            idx += 1
+        else:
             # FIXME: take into account items that are lists
+            m_latex_shape = cls.remove_macros_from_shape(latex_shape)
             m_latex_shape.insert(idx+1, cls.cursor_tag)
         return m_latex_shape
 
@@ -886,15 +902,15 @@ new_objects = _("Examples of syntax:") + "\n \n" + \
               _("In case of error, try with more parentheses.")
 
 
-if __name__ == '__main__':
-    l, r = MathDisplay.left_right_children('QUANT_∀')
-    print(MathDisplay.main_symbol_from_node('QUANT_∀'))
-    print(l, r)
-    l, r = MathDisplay.left_right_children('PROP_AND')
-    print(MathDisplay.main_symbol_from_node('PROP_AND'))
-    print(l, r)
-    l, r = MathDisplay.left_right_children('SUM')
-    print(MathDisplay.main_symbol_from_node('SUM'))
-    print(l, r)
-
-    print(MathDisplay.main_symbol_from_node("MULT"))
+# if __name__ == '__main__':
+#     l, r = MathDisplay.left_right_children('QUANT_∀')
+#     print(MathDisplay.main_symbol_from_node('QUANT_∀'))
+#     print(l, r)
+#     l, r = MathDisplay.left_right_children('PROP_AND')
+#     print(MathDisplay.main_symbol_from_node('PROP_AND'))
+#     print(l, r)
+#     l, r = MathDisplay.left_right_children('SUM')
+#     print(MathDisplay.main_symbol_from_node('SUM'))
+#     print(l, r)
+#
+#     print(MathDisplay.main_symbol_from_node("MULT"))

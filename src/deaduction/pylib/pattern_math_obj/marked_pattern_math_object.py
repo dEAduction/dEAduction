@@ -300,7 +300,7 @@ class MarkedTree:
     def decrease_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
-        print(f"Cursor idx: {idx}")
+        print(f"Cursor idx before: {idx}")
         if idx > 0:
             mvar = total_list[idx-1]
             cursor_pos = cursor_list[idx-1]
@@ -309,10 +309,13 @@ class MarkedTree:
         else:
             self.go_to_beginning()
             # self.set_cursor_at(self, -1)
+        idx = self.current_index_in_total_list()
+        print(f"Cursor idx after: {idx}")
 
     def increase_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
+        print(f"Cursor idx before: {idx}")
         if idx < len(total_list) - 1:
             mvar = total_list[idx+1]
             cursor_pos = cursor_list[idx+1]
@@ -320,6 +323,8 @@ class MarkedTree:
             self.set_cursor_at(mvar, cursor_pos)
         else:
             self.go_to_end()
+        idx = self.current_index_in_total_list()
+        print(f"Cursor idx after: {idx}")
 
     def next_after_marked(self):
         """

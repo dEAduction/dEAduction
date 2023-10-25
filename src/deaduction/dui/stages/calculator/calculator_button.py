@@ -199,8 +199,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         for car in text:
             shortcut += car
-            if shortcut == 'l':
-                print('hlleo')
+            # if shortcut == 'l':
+            #     print('hlleo')
             conflicting_buttons = sdic.get(shortcut, [])
             self.insert_by_length(conflicting_buttons)
             sdic[shortcut] = conflicting_buttons
@@ -255,7 +255,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         """
 
         buttons = cls.shortcuts_dic.get(text_buffer)
-        if len(buttons) == 1 or (buttons and timeout):
+        if buttons and (len(buttons) == 1 or timeout):
             return buttons[0]
 
         # Try to find text in calc_shortcuts_macro
