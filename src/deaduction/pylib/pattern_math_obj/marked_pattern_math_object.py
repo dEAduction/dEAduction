@@ -319,7 +319,7 @@ class MarkedTree:
             self._current_index_in_total_list += 1
             self.set_cursor_at(mvar, cursor_pos)
         else:
-            pass
+            self.go_to_end()
 
     def next_after_marked(self):
         """

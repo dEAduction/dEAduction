@@ -86,7 +86,7 @@ class CalculatorTarget(MathTextWidget):
         super().__init__()
         self.set_highlight(True)
 
-        self.setFixedHeight(40)  # fixme
+        self.setFixedHeight(50)  # fixme
         # self.setReadOnly(True)
         self.setLineWrapMode(QTextEdit.NoWrap)
         # self.setLineWrapColumnOrWidth(10000)
@@ -741,8 +741,9 @@ class CalculatorController:
         if goal:
             context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
-            bound_vars = CalculatorPatternLines.bound_vars()
-            self.calculator_groups.extend([context_line, bound_vars])
+            # bound_vars = CalculatorPatternLines.bound_vars()
+            # self.calculator_groups.extend([context_line, bound_vars])
+            self.calculator_groups.extend([context_line])
             # Compute applications on ContextMathObjects:
             MarkedPatternMathObject.populate_applications_from_context(context)
 
@@ -751,8 +752,10 @@ class CalculatorController:
         # else:  # Standard groups
         #     self.calculator_groups.extend([calculator_group, sci_calc_group])
 
-        cpls = CalculatorPatternLines.constants_from_definitions()
-        self.calculator_groups.extend(cpls)
+        # Add 'constant' from definitions,
+        # e.g. is_bounded, is_even, and so on
+        # cpls = CalculatorPatternLines.constants_from_definitions()
+        # self.calculator_groups.extend(cpls)
 
         self.history: [MarkedPatternMathObject] = []
         self.history_idx = -1
@@ -1138,7 +1141,8 @@ class CalculatorController:
     def move_right(self):
         # TODO: repeat if actual cursor do not move
         cursor_pos = self.virtual_cursor_position()
-        while self.virtual_cursor_position() == cursor_pos:
+        while (self.virtual_cursor_position() == cursor_pos and not
+               self.target.is_at_end()):
             self.target.increase_cursor_pos()
         # self.target.increase_cursor_pos()
         self.set_target_and_update()
@@ -1146,7 +1150,8 @@ class CalculatorController:
     @Slot()
     def move_left(self):
         cursor_pos = self.virtual_cursor_position()
-        while self.virtual_cursor_position() == cursor_pos:
+        while (self.virtual_cursor_position() == cursor_pos and not
+               self.target.is_at_beginning()):
             self.target.decrease_cursor_pos()
         # self.target.decrease_cursor_pos()
         self.set_target_and_update()
