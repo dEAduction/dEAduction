@@ -303,6 +303,7 @@ latex_from_pattern_string_for_type = {
 #################
 #################
 
+# NB: see also lean_from_node
 lean_from_pattern_string = {
     # Universal quant with adequate binders
     # This is useful so that the Lean code that works for
@@ -316,9 +317,11 @@ lean_from_pattern_string = {
         (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
     "CONSTANT/name=_inst_1": ('_inst_1',),
     "CONSTANT/name=_inst_2": ('_inst_2',),
-    "QUANT_∀(?0: set ?3, ?1, ?2)":
+
+    # If type is imperatively 'set ??' then use 'in' (instead of ':')
+    "QUANT_∀(?0: !set ?3, ?1, ?2)":
         (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
-    "QUANT_∃(?0: set ?3, ?1, ?2)":
+    "QUANT_∃(?0: !set ?3, ?1, ?2)":
         (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
     # "APP(CONSTANT, ...)": ((0,), (-1, )),
 }
