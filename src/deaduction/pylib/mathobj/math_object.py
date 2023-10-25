@@ -203,6 +203,9 @@ class MathObject:
     def __repr__(self):
         return self.debug_repr('MO')
 
+    # def __str__(self):
+    #     return self.to_display(format_='lean')
+
     @property
     def node(self):
         return self._node

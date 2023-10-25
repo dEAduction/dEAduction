@@ -31,7 +31,7 @@ from typing import Union
 
 import deaduction.pylib.config.vars as cvars
 
-# from deaduction.pylib.mathobj import ProofStep
+from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.magic
 import logging
@@ -187,8 +187,8 @@ class UserAction:
 
 class AutoStep(UserAction):
     """
-    A class to store one step of proof in deaduction, simulating selection,
-    choice of button or statement, and user input. Attributes error_msg,
+    A class to store one step of proof in deaduction, namely one user_action
+    and deaduction's response. . Attributes error_msg,
     success_msg also allow to store deaduction's answer to the step; this is
     useful for debugging, e.g comparing actual answer to answer in a
     stored exercise.
@@ -388,7 +388,9 @@ class AutoStep(UserAction):
         # User input: int
         user_input = []
         if user_action.user_input:
-            user_input = [str(item) for item in user_action.user_input]
+            user_input = [item.to_display(format_='lean')
+                          if isinstance(item, MathObject) else
+                          str(item) for item in user_action.user_input]
 
         error_msg = proof_step.error_msg
         if error_msg:
@@ -405,7 +407,7 @@ class AutoStep(UserAction):
             string = ' '.join(selection) + ' '
         string += button + statement
         if user_input:
-            # Replace spaces by '__'
+            # Replace spaces by '__' to be able to retrieve items
             user_input = [item.replace(' ', '__') for item in user_input]
             string += ' ' + ' '.join(user_input)
         if proof_step.is_error():

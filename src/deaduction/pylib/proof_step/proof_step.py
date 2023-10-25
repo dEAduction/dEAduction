@@ -269,24 +269,29 @@ class ProofStep:
         should be passed to the next proof_step.
         """
 
-        next_parent = proof_step.proof_nodes[-1]
-        # log.debug(f"Proof nodes: "
-        #           f"{[(pf.txt, pf.parent.txt if pf.parent else None)
-        #           for pf in proof_step.proof_nodes]}")
-        nps = ProofStep(property_counter=proof_step.property_counter,
-                        new_goals=copy(proof_step.new_goals),
-                        parent=next_parent,
-                        current_goal_number=proof_step.current_goal_number,
-                        total_goals_counter=proof_step.total_goals_counter,
-                        proof_state=proof_step.proof_state,
-                        history_nb=history_nb,
-                        proof_nodes=copy(proof_step.proof_nodes)
-                        )
-        log.debug(f"New proof step, n°{nps.pf_nb}")
-        if not proof_step.is_history_move()\
-                and not proof_step.is_error()\
-                and next_parent:
-            next_parent.children.append(nps)
+        if proof_step:
+            next_parent = proof_step.proof_nodes[-1]
+            # log.debug(f"Proof nodes: "
+            #           f"{[(pf.txt, pf.parent.txt if pf.parent else None)
+            #           for pf in proof_step.proof_nodes]}")
+            nps = ProofStep(property_counter=proof_step.property_counter,
+                            new_goals=copy(proof_step.new_goals),
+                            parent=next_parent,
+                            current_goal_number=proof_step.current_goal_number,
+                            total_goals_counter=proof_step.total_goals_counter,
+                            proof_state=proof_step.proof_state,
+                            history_nb=history_nb,
+                            proof_nodes=copy(proof_step.proof_nodes)
+                            )
+            log.debug(f"New proof step, n°{nps.pf_nb}")
+            if not proof_step.is_history_move()\
+                    and not proof_step.is_error()\
+                    and next_parent:
+                next_parent.children.append(nps)
+
+        else:
+            nps = cls()
+
         return nps
 
     def add_new_goals(self, delta):
