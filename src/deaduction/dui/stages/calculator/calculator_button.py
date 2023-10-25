@@ -106,6 +106,13 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
     MarkedPatternMathObjects. Pressing the button insert (one of) the pattern
     at the current cursor position in the MarkedPatternMathObject under
     construction.
+
+    shortcut_dic is a dictionary with
+        keys = shortcuts (strings typed by usr)
+        values = list of CalculatorButton whose shortcut startswith the key,
+                ordered by length
+    A given button appear in the dic for all keys that are starting sub-words
+    of self.shortcut.
     """
 
     send_pattern = Signal(MarkedPatternMathObject)
@@ -133,7 +140,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         if self.shortcut:
             tooltip = "(type " + self.shortcut + ")"
         if self.tooltip:
-            tooltip = tooltip + "\n" + self.tooltip if tooltip else self.tooltip
+            tooltip = self.tooltip + "\n" + "\n" + tooltip if tooltip \
+                else self.tooltip
         if tooltip:
             self.setToolTip(tooltip)
 
@@ -145,12 +153,20 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         Insert string s in list l, ordered by length.
         """
 
-        idx = 0
+        if not calc_buttons:
+            calc_buttons.append(self)
+
+        idx = None  # note that calc_buttons is not the trivial list
+        broken = False
         for idx in range(len(calc_buttons)):
             if len(self.text()) < len(calc_buttons[idx].text()):
+                broken = True
                 break
 
-        calc_buttons.insert(idx, self)
+        if broken:
+            calc_buttons.insert(idx, self)
+        else:  # self is the longest
+            calc_buttons.append(self)
 
     def reset_text(self, text):
         self.setText(text)
@@ -162,13 +178,14 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         Add a pertinent beginning of self.text() as a shortcut for self.
 
         If the text of some button is a beginning word of one or more others,
-        its shortcut will be a tuple containing all buttons.
+        its shortcut will be a tuple containing all these buttons.
 
         If two buttons have the same text, only one will have a shortcut.
         """
 
         text = self.text()
 
+        # (0) Macros
         # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
         for key, value in calc_shortcuts.items():
             if text.startswith(value):
@@ -177,6 +194,10 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         shortcut = ''
         sdic = self.shortcuts_dic
+
+        if text in ['l', "l'"]:
+            print("hello")
+
         for car in text:
             shortcut += car
             # if shortcut in sdic:
