@@ -650,6 +650,7 @@ class CalculatorMainWindow(QDialog):
         # CalculatorTarget
         self.calculator_target = CalculatorTarget()
         self.calculator_target_title = QLabel()
+        self.calculator_target_title.setStyleSheet("font-weight: bold; ")
         main_lyt.addWidget(self.calculator_target_title)
         main_lyt.addWidget(self.calculator_target)
 
@@ -735,7 +736,7 @@ class CalculatorController:
         display_type = target_type.math_type_to_display(format_="utf8",
                                                         is_math_type=True,
                                                         text=True)
-        self.target_title = _("Enter") + " " + display_type
+        self.target_title = _("Enter") + " " + display_type + _(":")
 
         self.calculator_groups = []
         if goal:
