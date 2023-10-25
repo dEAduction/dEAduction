@@ -105,14 +105,14 @@ def populate_automatic_patterns(cls):
         MarkedPatternMathObject.automatic_patterns.append(mpmo)
 
 
-calc_shortcuts = dict()
+calc_shortcuts_macro = dict()
 for key, value in MathDisplay.standard_latex_to_utf8.items():
     if isinstance(value, str):
-        calc_shortcuts[key] = value
+        calc_shortcuts_macro[key] = value
 
-calc_shortcuts.update({'\\implies': '⇒',
-                       '\\and': '∧',
-                       '*': '×'})
+calc_shortcuts_macro.update({'\\implies': '⇒',
+                             '\\and': '∧',
+                             '*': '\\times'})
 
 # greek_list = ['αβγ', 'ε', 'δ', 'η', 'φψ', 'λμν', 'πρ', 'θα', 'στ']
 
@@ -122,7 +122,7 @@ greek_shortcuts = {'\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ',
                    '\\nu':  'ν', '\\pi': 'π', '\\rho': 'ρ', '\\theta': 'θ',
                    '\\sigma': 'σ', '\\tau': 'τ'}
 
-calc_shortcuts.update(greek_shortcuts)
+calc_shortcuts_macro.update(greek_shortcuts)
 
 
 class CalculatorAbstractButton:

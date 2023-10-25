@@ -39,7 +39,7 @@ from PySide2.QtWidgets import (QToolButton,
                                QSizePolicy)
 
 from deaduction.pylib.pattern_math_obj import (MarkedPatternMathObject,
-                                               calc_shortcuts)
+                                               calc_shortcuts_macro)
 from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
 
 from deaduction.dui.primitives          import deaduction_fonts
@@ -159,9 +159,12 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         idx = None  # note that calc_buttons is not the trivial list
         broken = False
         for idx in range(len(calc_buttons)):
-            if len(self.text()) < len(calc_buttons[idx].text()):
+            button = calc_buttons[idx]
+            if len(self.text()) < len(button.text()):
                 broken = True
                 break
+            elif self is button:
+                return
 
         if broken:
             calc_buttons.insert(idx, self)
@@ -186,20 +189,22 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         text = self.text()
 
         # (0) Macros
-        # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
-        for key, value in calc_shortcuts.items():
+        # Case of calc_shortcuts_macro, mainly latex-like patterns, e.g. \implies
+        for key, value in calc_shortcuts_macro.items():
             if text.startswith(value):
                 text = text.replace(value, key)
-                # e.g. " ε' " --> " \epsilon' "
 
         shortcut = ''
         sdic = self.shortcuts_dic
 
-        if text in ['l', "l'"]:
-            print("hello")
-
         for car in text:
             shortcut += car
+            if shortcut == 'l':
+                print('hlleo')
+            conflicting_buttons = sdic.get(shortcut, [])
+            self.insert_by_length(conflicting_buttons)
+            sdic[shortcut] = conflicting_buttons
+
             # if shortcut in sdic:
             #     # Modify conflicting shortcut
             #     conflicting_button = sdic.get(shortcut)
@@ -225,9 +230,6 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
             #
             # else:
             #     sdic[shortcut] = self
-            conflicting_buttons = sdic.get(shortcut, [])
-            self.insert_by_length(conflicting_buttons)
-            sdic[shortcut] = conflicting_buttons
 
         # if ((len(conflicting_buttons) == 1
         #         or (shortcut == text and conflicting_buttons[0] is self))
@@ -238,30 +240,37 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
             self.shortcut = shortcut
 
     @classmethod
-    def find_shortcut(cls, text_buffer, timeout=False):
+    def find_shortcut(cls, text_buffer, timeout=False, text_is_macro=False):
         """
         If timeout is False, and one and only one shortcut match text_buffer,
         return the corresponding button.
 
         If timeout is True:
-        If one shortcut exactly match text_buffer, return the corresponding
+        If only one shortcut match text_buffer (i.e. has text_buffer as a
+        sub-word), return the corresponding
         button, even if there may be some other shortcut starting with
         text_buffer.
+
 
         """
 
         buttons = cls.shortcuts_dic.get(text_buffer)
-        if buttons:
-            if len(buttons) == 1:  # No ambiguity
-                return buttons[0]
-            elif timeout:
-                return buttons[0]
+        if len(buttons) == 1 or (buttons and timeout):
+            return buttons[0]
+
+        # Try to find text in calc_shortcuts_macro
+        if not text_is_macro:
+            macro = calc_shortcuts_macro.get(text_buffer)
+            if macro:
+                button = cls.find_shortcut(text_buffer=macro, timeout=timeout,
+                                           text_is_macro=True)
+                return button
 
         # # FIXME: not optimal
         # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-        # more_match = [calc_shortcuts[key] for key in calc_shortcuts
+        # more_match = [calc_shortcuts_macro[key] for key in calc_shortcuts_macro
         #               if key.startswith(text_buffer)
-        #               and calc_shortcuts[key] in cls.shortcuts_dic]
+        #               and calc_shortcuts_macro[key] in cls.shortcuts_dic]
         # match += more_match
         # if len(match) == 1:
         #     return cls.shortcuts_dic[match[0]]
