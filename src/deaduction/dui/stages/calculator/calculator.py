@@ -56,7 +56,7 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedMetavar,
                                                MetaVar,
                                                CalculatorPatternLines,
-                                               calc_shortcuts,
+                                               calc_shortcuts_macro,
                                                calculator_group,
                                                sci_calc_group)
 from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
@@ -365,8 +365,8 @@ class NavigationBar(AbstractToolBar):
 #
 #         text = self.text()
 #
-#         # Case of calc_shortcuts, mainly latex-like patterns, e.g. \implies
-#         for key, value in calc_shortcuts.items():
+#         # Case of calc_shortcuts_macro, mainly latex-like patterns, e.g. \implies
+#         for key, value in calc_shortcuts_macro.items():
 #             if text.startswith(value):
 #                 text = text.replace(value, key)
 #                 # e.g. " ε' " --> " \epsilon' "
@@ -426,9 +426,9 @@ class NavigationBar(AbstractToolBar):
 #
 #         # # FIXME: not optimal
 #         # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-#         # more_match = [calc_shortcuts[key] for key in calc_shortcuts
+#         # more_match = [calc_shortcuts_macro[key] for key in calc_shortcuts_macro
 #         #               if key.startswith(text_buffer)
-#         #               and calc_shortcuts[key] in cls.shortcuts_dic]
+#         #               and calc_shortcuts_macro[key] in cls.shortcuts_dic]
 #         # match += more_match
 #         # if len(match) == 1:
 #         #     return cls.shortcuts_dic[match[0]]
