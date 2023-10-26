@@ -4,8 +4,9 @@
 ##########################################################################
 
     This file provides the Node class. For now, instances of this class are
-    used to create CalculatorButtons. TODO: use this as nodes for MathObjects,
-    instead of strings, and use them for display.
+    used to create CalculatorButtons.
+    TODO: use this as nodes for MathObjects,
+        instead of strings, and use them for display.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -42,7 +43,12 @@ if __name__ == "__main__":
 
 class Node:
     """
-    TODO: integrate parentheses policy.
+    Instances of this class are used to create CalculatorButtons.
+
+    The node_pattern attribute is turned into a PatternMathObject under the
+    from_string method. It provides in particular the number of children
+    (and their type, if known).
+    The latex_shape is used for displaying the button, via its main symbol.
     """
 
     calculator_nodes = []
@@ -263,10 +269,10 @@ included = SetTheoryNode("PROP_INCLUDED",
 #                             'PROP()(?0: ?2, ?1: SET(?2))',
 #                             (0, r" \not\in ", 1))
 inter = SetTheoryNode("SET_INTER",
-                      'PROP()(?0: SET(?2), ?1: SET(?2))',
+                      'SET(?2)(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cap ", 1))
 union = SetTheoryNode("SET_UNION",
-                      'PROP()(?0: SET(?2), ?1: SET(?2))',
+                      'SET(?2)(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cup ", 1))
 empty = SetTheoryNode("SET_EMPTY",
                       '()',
@@ -285,16 +291,20 @@ pair.set_button_symbol('{·,·}')
 
 # "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
 
-image = SetTheoryNode("SET_IMAGE",
-                      'SET(?3)(?0: FUNCTION(?2, ?3), ?1: SET(?2))',
-                      (0, r'\set_image', r'\parentheses', 1)
-                      )
-image.set_button_symbol("f({})")
-inverse = SetTheoryNode("SET_INVERSE",
-                        'SET(?2)(?0: FUNCTION(?2, ?3), ?1: SET(?3))',
-                        (0, r'\set_inverse', r'\parentheses', 1)
-                        )
-inverse.set_button_symbol("f⁻¹({})")
+image = SetTheoryNode("LAMBDA",
+                      'LAMBDA: FUNCTION(?0, ?3)(?0, ?1: ?0, ?2)',
+                      (1, r"\mapsto", 2))
+
+set_image = SetTheoryNode("SET_IMAGE",
+                          'SET(?3)(?0: FUNCTION(?2, ?3), ?1: SET(?2))',
+                          (0, r'\set_image', r'\parentheses', 1)
+                          )
+set_image.set_button_symbol("f({})")
+set_inverse = SetTheoryNode("SET_INVERSE",
+                            'SET(?2)(?0: FUNCTION(?2, ?3), ?1: SET(?3))',
+                            (0, r'\set_inverse', r'\parentheses', 1)
+                            )
+set_inverse.set_button_symbol("f⁻¹({})")
 
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
 # "SET_UNION+": (r"\bigcup", 0),

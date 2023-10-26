@@ -128,7 +128,7 @@ class MathDisplay:
     # cursor_pos = None
 
     # TODO: compléter !!
-    macros = [r'\no_text', r'\variable', r'\marked']
+    invisible_macros = [r'\no_text', r'\variable', r'\marked']
 
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
@@ -766,7 +766,7 @@ class MathDisplay:
                 pass
             elif item.startswith('&&'):
                 symbol = item[2:]
-            elif (not symbol and item not in MathDisplay.macros
+            elif (not symbol and item not in MathDisplay.invisible_macros
                   and item.strip().startswith('\\')):
                 symbol = item
             if symbol:
@@ -776,7 +776,7 @@ class MathDisplay:
         # (2) Second try: symbol is first str
         counter = 0
         for symbol in shape:
-            if isinstance(symbol, str) and symbol not in MathDisplay.macros:
+            if isinstance(symbol, str) and symbol not in MathDisplay.invisible_macros:
                 return counter, symbol
             counter += 1
 
@@ -797,26 +797,6 @@ class MathDisplay:
 
         return cls.main_symbol_from_shape(shape)
 
-    # @classmethod
-    # def left_right_children(cls, shape):
-    #     """
-    #     Return the list of children nbs that are before/after main symbol in
-    #     latex tuple.
-    #     """
-    #
-    #     # FIXME: look into sub-lists
-    #     ms_idx, main_symbol = cls.main_symbol_from_shape(shape)
-    #
-    #     left = [item for item in shape[:ms_idx]
-    #             if isinstance(item, int)
-    #             or isinstance(item, tuple)]
-    #
-    #     right = [item for item in shape[ms_idx+1:]
-    #              if isinstance(item, int)
-    #              or isinstance(item, tuple)]
-    #
-    #     return left, right
-
     @classmethod
     def remove_macros_from_shape(cls, shape):
         """
@@ -824,8 +804,33 @@ class MathDisplay:
         """
 
         shape2 = [item for item in shape
-                  if not (isinstance(item, str) and item in cls.macros)]
+                  if not (isinstance(item, str) and item in cls.invisible_macros)]
         return shape2
+
+    @staticmethod
+    def flat_shape(shape, add_close_parentheses=False):
+        """
+        Turn shape into a flat list, whose items are not lists.
+        If add_close_parentheses is True, then 'close_parentheses' is added
+        at the right places, to match '\\parentheses' items. This is useful
+        to get the right shape length (in conjunction with mark_cursor).
+        """
+
+        flat_s = []
+        close_paren = False
+        for item in shape:
+            if item == '\\parentheses':
+                close_paren = True
+                flat_s.append('(')
+            elif isinstance(item, list):
+                flat_s.extend(MathDisplay.flat_shape(item))
+            else:
+                flat_s.append(item)
+
+        if close_paren and add_close_parentheses:
+            flat_s.append(')')
+
+        return flat_s
 
     @classmethod
     def ordered_children(cls, shape) -> list:
@@ -836,7 +841,8 @@ class MathDisplay:
         """
 
         children = []
-        shape2 = cls.remove_macros_from_shape(shape)
+        flat_shape = MathDisplay.flat_shape(shape, add_close_parentheses=True)
+        shape2 = cls.remove_macros_from_shape(flat_shape)
         for item in shape2:
             if isinstance(item, int) or isinstance(item, tuple):
                 children.append(item)
@@ -861,16 +867,17 @@ class MathDisplay:
             m_latex_shape = [r'\marked'] + m_latex_shape
             idx += 1
         else:
-            # FIXME: take into account items that are lists
-            m_latex_shape = cls.remove_macros_from_shape(latex_shape)
+            flat_s = MathDisplay.flat_shape(latex_shape,
+                                            add_close_parentheses=True)
+            m_latex_shape = cls.remove_macros_from_shape(flat_s)
             m_latex_shape.insert(idx+1, cls.cursor_tag)
         return m_latex_shape
 
 
-def insert_str_in_shape_at_pos(string: str, shape: [], idx: int):
-    counter = 0
-    for item in shape:
-        pass
+# def insert_str_in_shape_at_pos(string: str, shape: [], idx: int):
+#     counter = 0
+#     for item in shape:
+#         pass
 
 
 # Init MathDIsplay dictionaries

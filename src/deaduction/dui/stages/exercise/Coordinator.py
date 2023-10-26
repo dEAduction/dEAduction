@@ -888,6 +888,7 @@ class Coordinator(QObject):
 
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
+                log.debug(f'--(raw)--> {lean_code.to_code()}')
                 # previous_proof_state = self.proof_step.proof_state
                 task = Task(fct=self.servint.code_insert,
                             kwargs={'proof_step': self.proof_step,

@@ -898,7 +898,7 @@ class CalculatorController:
         text = doc.toPlainText()
         # print(f"VIRTUAL CURSOR POS: {text}")
         position = text.find(MathDisplay.cursor_tag)
-        print(f"vcp in: {text} --> {position}")
+        # print(f"vcp in: {text} --> {position}")
         # print("Marked latex shape:")
         # print(self.target.latex_shape())
         MathDisplay.mark_cursor = False
@@ -1057,8 +1057,7 @@ class CalculatorController:
             pattern_s = [pattern_s]
             
         # (1) Special buttons: parentheses
-        # FIXME!!
-        if pattern_s[0].node == "GENERIC_PARENTHESES":
+        if pattern_s[0].node in ("GENERIC_PARENTHESES", "LAMBDA"):
             assigned_mvar = new_target.insert_app_parentheses()
 
         # (2) Normal insert
@@ -1073,7 +1072,7 @@ class CalculatorController:
             pattern = pattern_s[-1]  # FIXME, why not 0 ??
             assigned_mvar = new_target.generic_insert(pattern)
 
-        print(f"New target: {new_target}")
+        # print(f"New target: {new_target}")
         if assigned_mvar:
             self.target = new_target
             # self.check_new_bound_var(assigned_mvar)
