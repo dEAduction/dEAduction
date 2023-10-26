@@ -306,6 +306,7 @@ class MathDisplay:
             r'\circ': '∘',
             r'\times': '×',
             r'\mul': '×',
+            r'\power': "^",
             r'\in': '∈',  # '∊'
             r'\Leftrightarrow': '⇔',
             r'\Rightarrow': '⇒',

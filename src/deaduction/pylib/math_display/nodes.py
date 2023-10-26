@@ -359,6 +359,11 @@ diff = NumberNode('DIFFERENCE',
                   (0, "-", 1)
                   )
 
+# sqrt = NumberNode('SQRT',
+#                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES)',
+#                   ("√", 0)
+#                   )
+
 instantiate_nb_node(0)
 
 # point = NumberNode('POINT',
@@ -380,7 +385,10 @@ sum_ = NumberNode('SUM',
                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                   (0, "+", 1)
                   )
-
+power = NumberNode('POWER',
+                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *INT_OR_NAT)',
+                   (0, "^", 1)
+                   )
 
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3

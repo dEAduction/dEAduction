@@ -133,6 +133,8 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer.start()
 
         key = event.key()
+        print(f"Key: {key}")
+        print(f"Event: {event}")
         if event.modifiers() & Qt.ControlModifier:
             key += Qt.CTRL
             # print(key_sqc)

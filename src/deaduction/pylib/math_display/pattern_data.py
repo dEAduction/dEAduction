@@ -99,12 +99,17 @@ def is_number_type(math_object):
     return math_object.is_number()
 
 
+def is_int_or_nat(math_object):
+    return math_object.is_N() or math_object.is_Z()
+
+
 def is_inequality(math_object):
     return math_object.is_inequality(is_math_type=True)
 
 
 metanodes = {'*INEQUALITY': is_inequality,
-             '*NUMBER_TYPES': is_number_type}
+             '*NUMBER_TYPES': is_number_type,
+             '*INT_OR_NAT': is_int_or_nat}
 
 
 quant_pattern = dict()
