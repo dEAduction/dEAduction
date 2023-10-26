@@ -133,8 +133,8 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer.start()
 
         key = event.key()
-        print(f"Key: {key}")
-        print(f"Event: {event}")
+        # print(f"Key: {key}")
+        # print(f"Event: {event}")
         if event.modifiers() & Qt.ControlModifier:
             key += Qt.CTRL
             # print(key_sqc)
@@ -1044,7 +1044,7 @@ class CalculatorController:
             ui_lyt.insertWidget(idx, new_group)
 
     @Slot()
-    def insert_pattern(self, pattern_s):
+    def insert_pattern(self, pattern_s: [MarkedPatternMathObject]):
         """
         Try to insert pattern (or patterns) in self.target.
         If several patterns are provided, they are tried in order until
@@ -1069,9 +1069,13 @@ class CalculatorController:
             if assigned_mvar:
                 break
 
-        # (2) Force insertion with LAST pattern
+        pattern = pattern_s[-1]
+        # (2) Automatic patterns
         if not assigned_mvar:
-            pattern = pattern_s[-1]
+            assigned_mvar = new_target.insert_application_with_arg(pattern)
+
+        # (3) Force insertion with LAST pattern
+        if not assigned_mvar:
             assigned_mvar = new_target.generic_insert(pattern)
 
         # print(f"New target: {new_target}")

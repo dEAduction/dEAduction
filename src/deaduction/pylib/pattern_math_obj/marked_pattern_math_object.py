@@ -1170,6 +1170,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             log.debug(f"----> {child_new_pmo} match?")
             if child_new_pmo.match(math_object, use_cls_metavars=True):
                 log.debug("yes!")
+                assignments.append((child_new_pmo,
+                                    math_object))
+                # child_new_pmo.assign_matched_metavars()
                 return True
             elif not check_types:
                 assignments.append((child_new_pmo,
@@ -1453,9 +1456,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         self.do_assign(assignments)
         return True
 
-    # def insert_if_you_can_on_next_mvar(self):
-    #     pass
-
     def insert(self, new_pmo: PatternMathObject):
         """
         Try to insert pmo in self's tree, so that pmo is just after the
@@ -1491,14 +1491,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if mvar and not mvar.is_metavar():
                     continue
 
-        # return self.generic_insert(new_pmo)
-
-        # TODO: try automatic patterns
-
-        # TODO: handle multiple patterns
-
-    # FIXME: obsolete?
-
     def insert_application(self):
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
@@ -1510,6 +1502,29 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 new_pmo = app_pattern.deep_copy(app_pattern)
                 new_pmo.children[0].match(math_object)
                 new_pmo.assign_matched_metavars()
+                if mvar.match(new_pmo):
+                    mvar.assign_matched_metavars()
+                else:
+                    mvar.assigned_math_object = new_pmo
+                return mvar
+
+    def insert_application_with_arg(self, argument: MathObject):
+        mvar = self.marked_descendant()
+        math_object = mvar.assigned_math_object
+        if not math_object:
+            return
+        for app_pattern in self.app_patterns + self.applications_from_ctxt:
+            children = app_pattern.children
+            if len(children) < 2:
+                continue
+
+            child0, child1 = children[0], children[1]
+            if child0.match(math_object) and child1.match(argument):
+                new_pmo = app_pattern.deep_copy(app_pattern)
+                new_pmo.children[0].match(math_object)
+                new_pmo.children[0].assign_matched_metavars()
+                new_pmo.children[1].match(argument)
+                new_pmo.children[1].assign_matched_metavars()
                 if mvar.match(new_pmo):
                     mvar.assign_matched_metavars()
                 else:

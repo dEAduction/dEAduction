@@ -318,7 +318,8 @@ class PatternMathObject(MathObject):
         may be obtained by applying the math_object_from_matching() method.
         These lists are also stored in the corresponding private class
         attributes, so that matching can be done simultaneously on several
-        objects by using the tag clear_previous_matched_metavars=False.
+        objects by using the clear_cls_metavars(), use_cls_metavars() and
+        assigned_matched_metavars().
         """
 
         if use_cls_metavars:

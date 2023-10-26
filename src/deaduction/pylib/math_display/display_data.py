@@ -555,6 +555,7 @@ class MathDisplay:
 
     priorities = [{'COMPOSITE_NUMBER', 'NUMBER'},
                   {'POINT'},  # FIXME: DECIMAL?
+                  {'MINUS'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
                   {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
