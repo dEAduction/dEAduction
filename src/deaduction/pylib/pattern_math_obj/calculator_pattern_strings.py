@@ -145,7 +145,7 @@ class CalculatorAbstractButton:
     def from_node(cls, node: Node):
         return cls(symbol=node.button_symbol(),
                    tooltip=node.button_tooltip(),
-                   patterns=node.marked_pattern_math_object(),
+                   patterns=node.marked_pattern_math_objects(),
                    menu=False)
 
     @classmethod

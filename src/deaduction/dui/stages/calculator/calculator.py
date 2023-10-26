@@ -1057,21 +1057,21 @@ class CalculatorController:
                 
         if not isinstance(pattern_s, list):
             pattern_s = [pattern_s]
-            
-        # (1) Special buttons: parentheses
-        if pattern_s[0].node in ("GENERIC_PARENTHESES", "LAMBDA"):
-            assigned_mvar = new_target.insert_app_parentheses()
 
-        # (2) Normal insert
-        if not assigned_mvar:
-            for pattern in pattern_s:
+        # (1) Normal insert
+        for pattern in pattern_s:
+            if pattern.node == "APPLICATION":
+                # (1a) Special buttons: applications
+                assigned_mvar = new_target.insert_application()
+            else:
+                # (1b) Normal insert
                 assigned_mvar = new_target.insert(pattern)
-                if assigned_mvar:
-                    break
+            if assigned_mvar:
+                break
 
-        # (3) Force insertion
+        # (2) Force insertion with LAST pattern
         if not assigned_mvar:
-            pattern = pattern_s[-1]  # FIXME, why not 0 ??
+            pattern = pattern_s[-1]
             assigned_mvar = new_target.generic_insert(pattern)
 
         # print(f"New target: {new_target}")

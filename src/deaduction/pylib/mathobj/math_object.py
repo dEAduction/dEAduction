@@ -186,7 +186,8 @@ class MathObject:
 
         # ---------- APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) ---------- #
         # (i.e. uncurryfy)
-        if node == 'APPLICATION' and children[0].node == 'APPLICATION':
+        if (node == 'APPLICATION' and children and
+                children[0].node == 'APPLICATION'):
             self.children = self.children[0].children + [self.children[1]]
 
     def debug_repr(self, typ):

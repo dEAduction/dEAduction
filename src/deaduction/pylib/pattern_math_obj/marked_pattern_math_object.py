@@ -1499,7 +1499,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     # FIXME: obsolete?
 
-    def insert_app_parentheses(self):
+    def insert_application(self):
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
         if not math_object:

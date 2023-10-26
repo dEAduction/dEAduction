@@ -175,7 +175,9 @@ if __name__ == "__main__":
     text3 = "APP('composition', ..., ?-2, ?-1)"
     text4 = "NOT(APP(APP(?0, ?-2), ?-1))"
     text5 = "APP(?0: FUNCTION(?1, ?2), ?3)"
-    print(tree_from_str(text5).display())
+    text6 = 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)'
+    tree_ = tree_from_str(text6)
+    print(tree_.display())
 
 
 

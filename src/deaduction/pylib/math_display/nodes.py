@@ -49,6 +49,12 @@ class Node:
     from_string method. It provides in particular the number of children
     (and their type, if known).
     The latex_shape is used for displaying the button, via its main symbol.
+
+    WARNING: do not forget that every NODE needs its children, including types.
+    e.g. write
+        'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)'
+    and NOT
+        'APPLICATION: ?3(?0: FUNCTION(?2, ?3), ?1: ?2)'.
     """
 
     calculator_nodes = []
@@ -58,26 +64,36 @@ class Node:
     PatternMathObject = None
     MarkedPatternMathObject = None
 
-    def __init__(self, node_name, node_pattern,
+    _button_symbol = None
+    _button_tooltip = None
+
+    _pattern_math_objects = None
+    _marked_pattern_math_objects = None
+
+    def __init__(self, node_name, node_patterns: Union[str, list],
                  latex_shape, text_shape=None, lean_shape=None,
                  display_in_calculator=True):
+
         self._node_name = node_name
-        if node_pattern.startswith('('):
-            # No type indication
-            self._node_pattern = node_name + node_pattern
-        elif not node_pattern.startswith(node_name):
-            self._node_pattern = node_name + " :" + node_pattern
-        else:
-            self._node_pattern = node_pattern
+
+        # Populate self._node_patterns
+        self._node_patterns: [str] = []
+        if isinstance(node_patterns, str):
+            node_patterns = [node_patterns]
+
+        for node_pattern_str in node_patterns:
+            # if node_pattern_str.startswith('('):
+            #     # No type indication
+            #     node_pattern = node_name + node_pattern_str
+            # elif not node_pattern_str.startswith(node_name):
+            #     node_pattern = node_name + " :" + node_pattern_str
+            # else:
+            #   node_pattern = node_pattern_str
+            self._node_patterns.append(node_pattern_str)
 
         self._latex_shape = latex_shape
         self._text_shape = text_shape
         self._lean_shape = lean_shape
-        self._button_symbol = None
-        self._button_tooltip = None
-
-        self._pattern_math_object = None
-        self._marked_pattern_math_object = None
 
         if display_in_calculator:
             self.__class__.calculator_nodes.append(self)
@@ -85,13 +101,16 @@ class Node:
     def set_button_symbol(self, symbol):
         self._button_symbol = symbol
 
+    def set_button_tooltip(self, tooltip: str):
+        self._button_tooltip = tooltip
+
     @property
     def node_name(self):
         return self._node_name
 
     @property
-    def node_pattern(self):
-        return self._node_pattern
+    def node_patterns(self):
+        return self._node_patterns
 
     def latex_shape(self, math_object=None):
         return self._latex_shape
@@ -120,26 +139,29 @@ class Node:
                         if isinstance(item, int))
         return max(children_nbs)
 
-    def pattern_math_object(self):
+    def pattern_math_objects(self):
+        """
+        Return the PMOs computed from self.node_patterns.
+        """
+
+        if not self._pattern_math_objects:
+            # if len(self._pattern_math_objects) == 2:
+            #     print("toto")
+            self._pattern_math_objects = \
+                [self.PatternMathObject.from_string(pattern_str)
+                 for pattern_str in self.node_patterns]
+        return self._pattern_math_objects
+
+    def marked_pattern_math_objects(self):
         """
         Return the PMO computed from self.node_type.
         To be overridden in the PMO module.
         """
-
-        if not self._pattern_math_object:
-            self._pattern_math_object = self.PatternMathObject.from_string(
-                                                            self.node_pattern)
-        return self._pattern_math_object
-
-    def marked_pattern_math_object(self):
-        """
-        Return the PMO computed from self.node_type.
-        To be overridden in the PMO module.
-        """
-        if not self._marked_pattern_math_object:
-            self._marked_pattern_math_object = (
-                self.MarkedPatternMathObject.from_string(self.node_pattern))
-        return self._marked_pattern_math_object
+        if not self._marked_pattern_math_objects:
+            self._marked_pattern_math_objects = \
+                [self.MarkedPatternMathObject.from_string(pattern_str)
+                 for pattern_str in self.node_patterns]
+        return self._marked_pattern_math_objects
 
     def main_symbol(self) -> (int, str):
         """
@@ -196,15 +218,14 @@ class Node:
     def button_tooltip(self) -> str:
         """
         Text to serve as a tooltip on the Calculator button corresponding to
-        node. By default, this is the pattern of the node.
+        node. By default, this is the (last) pattern of the node.
         """
         if self._button_tooltip:
             return self._button_tooltip
         else:
-            pattern = self.pattern_math_object()
-            if pattern:
-                tooltip = pattern.to_display(format_='utf8')
-                return tooltip
+            pattern = self.pattern_math_objects()[-1]
+            self._button_tooltip = pattern.to_display(format_='utf8')
+            return self._button_tooltip
 
 
 class LogicalNode(Node):
@@ -227,27 +248,27 @@ class LogicalNode(Node):
 # "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)
 
 implies = LogicalNode("PROP_IMPLIES",
-                      'PROP()(?0: PROP, ?1: PROP)',
+                      'PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)',
                       (r'\if', 0, r"\ms \Rightarrow ", 1)
                       )
 and_ = LogicalNode('PROP_AND',
-                   'PROP()(?0: PROP, ?1: PROP)',
+                   'PROP_AND: PROP()(?0: PROP, ?1: PROP)',
                    (0, r"\and", 1)
                    )
 or_ = LogicalNode('PROP_OR',
-                  'PROP()(?0: PROP, ?1: PROP)',
+                  'PROP_OR: PROP()(?0: PROP, ?1: PROP)',
                   (0, r"\or", 1)
                   )
 not_ = LogicalNode("PROP_NOT",
-                   'PROP()(?0:PROP)',
+                   'PROP_NOT: PROP()(?0:PROP)',
                    (r"\not", 0)
                    )
 iff = LogicalNode("PROP_IFF",
-                  'PROP()(?0: PROP, ?1: PROP)',
+                  'PROP_IFF: PROP()(?0: PROP, ?1: PROP)',
                   (0, r" \Leftrightarrow ", 1)
                   )
 equal = LogicalNode("PROP_EQUAL",
-                    '(?0: ?2, ?1: ?2)',
+                    'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
                     (r"\no_text", 0, r" \equal ", 1)
                     )
 # "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
@@ -260,51 +281,62 @@ class SetTheoryNode(Node):
 
 
 belongs = SetTheoryNode("PROP_BELONGS",
-                        'PROP()(?0: ?2, ?1: SET(?2))',
+                        'PROP_BELONGS: PROP()(?0: ?2, ?1: SET(?2))',
                         (0, r" \in ", 1))
 included = SetTheoryNode("PROP_INCLUDED",
-                         'PROP()(?0: SET(?2), ?1: SET(?2))',
+                         'PROP_INCLUDED: PROP()(?0: SET(?2), ?1: SET(?2))',
                          (0, r" \subset ", 1))
 # not_belongs = SetTheoryNode("PROP_NOT_BELONGS",
 #                             'PROP()(?0: ?2, ?1: SET(?2))',
 #                             (0, r" \not\in ", 1))
 inter = SetTheoryNode("SET_INTER",
-                      'SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                      'SET_INTER: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cap ", 1))
 union = SetTheoryNode("SET_UNION",
-                      'SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                      'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cup ", 1))
 empty = SetTheoryNode("SET_EMPTY",
-                      '()',
+                      'SET_EMPTY()',
                       (r"\emptyset",)
                       )
 singleton = SetTheoryNode("SET_EXTENSION1",
-                          'SET(?1)(?0: ?1)',
+                          'SET_EXTENSION1: SET(?1)(?0: ?1)',
                           (r'\{', 0, r'\}')
                           )
 singleton.set_button_symbol('{·}')
 pair = SetTheoryNode("SET_EXTENSION2",
-                     'SET(?2)(?0: ?2, ?1: ?2)',
+                     'SET_EXTENSION2: SET(?2)(?0: ?2, ?1: ?2)',
                      (r'\{', 0, ', ', 1, r'\}')
                      )
 pair.set_button_symbol('{·,·}')
 
 # "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
 
-image = SetTheoryNode("LAMBDA",
-                      'LAMBDA: FUNCTION(?0, ?3)(?0, ?1: ?0, ?2)',
-                      (1, r"\mapsto", 2))
+# lambda_ = SetTheoryNode("LAMBDA",
+#                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+#                          'LAMBDA: FUNCTION(?2, ?3)(?2, ?0: ?2, ?1: ?3)'],
+#                         (1, r"\mapsto", 2))
+# lambda_.set_button_tooltip(_("Construction of a function"))
 
 set_image = SetTheoryNode("SET_IMAGE",
-                          'SET(?3)(?0: FUNCTION(?2, ?3), ?1: SET(?2))',
+                          'SET_IMAGE: SET(?3)(?0: FUNCTION(?2, ?3), ?1: SET(?2))',
                           (0, r'\set_image', r'\parentheses', 1)
                           )
-set_image.set_button_symbol("f({})")
+set_image.set_button_symbol("f({·})")
 set_inverse = SetTheoryNode("SET_INVERSE",
-                            'SET(?2)(?0: FUNCTION(?2, ?3), ?1: SET(?3))',
+                            'SET_INVERSE: SET(?2)(?0: FUNCTION(?2, ?3), ?1: SET(?3))',
                             (0, r'\set_inverse', r'\parentheses', 1)
                             )
-set_inverse.set_button_symbol("f⁻¹({})")
+set_inverse.set_button_symbol("f⁻¹({·})")
+
+
+application = SetTheoryNode("APPLICATION",
+                            'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            (0, "\\parentheses", 1))
+
+application.set_button_symbol("f(·)")
+application.set_button_tooltip(_("Application of a function on an element"))
+
 
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
 # "SET_UNION+": (r"\bigcup", 0),
@@ -339,7 +371,7 @@ for i in [7, 8, 9]:
     instantiate_nb_node(i)
 
 div_ = NumberNode('DIV',
-                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                   (0, "/", 1)
                   )
 
@@ -347,7 +379,7 @@ for i in [4, 5, 6]:
     instantiate_nb_node(i)
 
 mult_ = NumberNode('MULT',
-                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                   'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                    (0, r"\times", 1)
                    )
 
@@ -355,7 +387,7 @@ for i in [1, 2, 3]:
     instantiate_nb_node(i)
 
 diff = NumberNode('DIFFERENCE',
-                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                   (0, "-", 1)
                   )
 
@@ -376,17 +408,18 @@ point = NumberNode(f'NUMBER',
                    ('.',))
 
 parentheses = NumberNode('GENERIC_PARENTHESES',
-                         '(?0)',
+                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                          'GENERIC_PARENTHESES: ?0()(?0)'],
                          ('(', 0, ')')
                          )
 parentheses.set_button_symbol("()")
 
 sum_ = NumberNode('SUM',
-                  '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                   (0, "+", 1)
                   )
 power = NumberNode('POWER',
-                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *INT_OR_NAT)',
+                   'POWER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *INT_OR_NAT)',
                    (0, "^", 1)
                    )
 
@@ -464,7 +497,7 @@ class PatternNode(Node):
     @classmethod
     def forall_in(cls):
         return cls("QUANT_∀",
-                   "PROP()(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))",
+                   "QUANT_∀: PROP()(?0, ?1, PROP_IMPLIES(PROP_BELONGS(?1, ?2), ?3))",
                    (r"\forall", (2, 0), ", ", (2, 1)))
 
     ##########################
@@ -473,13 +506,13 @@ class PatternNode(Node):
     @classmethod
     def forall_prop(cls):
         return cls("QUANT_∀",
-                   "PROP()(PROP, ?0: PROP, ?1: PROP)",
+                   "QUANT_∀: PROP()(PROP, ?0: PROP, ?1: PROP)",
                    (r"\forall", (1,), r'\proposition', ", ", (2,)))
 
     @classmethod
     def forall_subset(cls):
         return cls("QUANT_∀",
-                   "PROP()(SET(...), ?0, ?1)",
+                   "QUANT_∀: PROP()(SET(...), ?0, ?1)",
                    (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
                    (_("for every subset") + " ", (1,), _(" of "), (0, 0), ", ", 1))
 
