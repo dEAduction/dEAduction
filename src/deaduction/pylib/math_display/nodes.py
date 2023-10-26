@@ -387,9 +387,12 @@ for i in [1, 2, 3]:
     instantiate_nb_node(i)
 
 diff = NumberNode('DIFFERENCE',
-                  'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  ['MINUS: *NUMBER_TYPES()(?0: *NUMBER_TYPES)',
+                      'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)'],
                   (0, "-", 1)
                   )
+diff.set_button_tooltip(_("-? or ?-?"))
+
 
 # sqrt = NumberNode('SQRT',
 #                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES)',
