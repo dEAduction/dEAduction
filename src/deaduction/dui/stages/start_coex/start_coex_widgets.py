@@ -57,7 +57,7 @@ import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
 
 import deaduction.pylib.utils.filesystem as fs
-from deaduction.dui.primitives      import (DisclosureTriangle,
+from deaduction.dui.primitives      import (DisclosureDict,
                                             ButtonsDialog,
                                             MathTextWidget,
                                             YesNoDialog)
@@ -202,7 +202,7 @@ class AbstractCoExChooser(QWidget):
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
         if details:
-            details_wgt = DisclosureTriangle(_('Details:'), details)
+            details_wgt = DisclosureDict(_('Details:'), details)
             details_wgt.expand(expand_details)
 
             layout.addWidget(details_wgt)

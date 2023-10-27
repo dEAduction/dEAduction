@@ -36,7 +36,7 @@ from typing import Union, List
 from PySide2.QtCore import Signal, Slot, Qt, QTimer
 from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
 from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
-                               QPushButton,
+                               QSizePolicy,
                                QHBoxLayout, QVBoxLayout, QGridLayout,
                                QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
@@ -62,7 +62,7 @@ from deaduction.pylib.pattern_math_obj import (PatternMathObject,
 from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
 
 from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
-from deaduction.dui.primitives          import deaduction_fonts
+from deaduction.dui.primitives import DisclosureTriangle
 
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
@@ -460,7 +460,7 @@ class NavigationBar(AbstractToolBar):
 #             return True
 #
 
-class CalculatorButtonsGroup(QGroupBox):
+class CalculatorButtonsGroup(QWidget):
     """
     A widget to display a list of CalculatorButtons, with a title and a
     disclosure triangle.
@@ -469,10 +469,18 @@ class CalculatorButtonsGroup(QGroupBox):
     col_size = 4
 
     def __init__(self, title, calculator_buttons: [CalculatorButton],
-                 col_size=None):
+                 col_size=None, hidden=False):
 
+        super().__init__()
+        self.hidden = hidden
         self.title = title
-        super().__init__(title)
+        self.disclosure_triangle = DisclosureTriangle(
+            slot=self.toggle_disclosure_triangle, hidden=hidden)
+        self.disclosure_triangle.setSizePolicy(QSizePolicy.Fixed,
+                                               QSizePolicy.Fixed)
+
+        self.group_box = QGroupBox(title)
+        # super().__init__(title)
 
         if col_size:
             self.col_size = col_size
@@ -488,11 +496,20 @@ class CalculatorButtonsGroup(QGroupBox):
         self.margin_btns_lyt.addStretch()
 
         # Fill-in main layout
-        main_layout = QVBoxLayout()
+        group_box_layout = QVBoxLayout()
         # self.title_label = QLabel(self.title + _(':'))
         # main_layout.addWidget(self.title_label)
-        main_layout.addLayout(self.margin_btns_lyt)
-        self.setLayout(main_layout)
+        group_box_layout.addLayout(self.margin_btns_lyt)
+        self.group_box.setLayout(group_box_layout)
+
+        main_lyt = QHBoxLayout()
+        main_lyt.addWidget(self.disclosure_triangle)
+        main_lyt.setAlignment(self.disclosure_triangle, Qt.AlignTop)
+        main_lyt.addWidget(self.group_box)
+        self.setLayout(main_lyt)
+
+        if self.hidden:
+            self.toggle_buttons()
 
     # def include_buttons(self):
     #     """
@@ -577,6 +594,18 @@ class CalculatorButtonsGroup(QGroupBox):
             CalculatorButton.shortcuts_dic.pop(key)
         super().deleteLater()
 
+    def toggle_buttons(self):
+        if self.hidden:
+            for button in self.buttons:
+                button.hide()
+        else:
+            for button in self.buttons:
+                button.show()
+
+    def toggle_disclosure_triangle(self):
+        self.hidden = not self.hidden
+        self.toggle_buttons()
+
 # class CalculatorButtons(QHBoxLayout):
 #     """
 #     A class to display a line of CalculatorButton.
@@ -649,6 +678,7 @@ class CalculatorMainWindow(QDialog):
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)
 
+        main_lyt.addStretch()
         # CalculatorTarget
         self.calculator_target = CalculatorTarget()
         self.calculator_target_title = QLabel()

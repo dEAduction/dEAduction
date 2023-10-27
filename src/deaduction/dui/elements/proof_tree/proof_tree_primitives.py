@@ -32,7 +32,7 @@ from PySide2.QtWidgets import (QFrame, QLayout,
 from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Slot
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
-from deaduction.dui.primitives import MathLabel
+from deaduction.dui.primitives import MathLabel, DisclosureTriangle
 import deaduction.pylib.config.vars as cvars
 
 global _
@@ -541,29 +541,29 @@ class HorizontalArrow(QWidget):
 #         self.toggle()
 
 
-class DisclosureTriangle(QToolButton):
-    """
-    A QToolButton that changes appearance and call a function when clicked.
-    """
-
-    def __init__(self, slot: callable, hidden=False):
-        super().__init__()
-        self.slot = slot
-        # self.setText("▷" if hidden else "▽")
-        self.hidden = hidden
-        self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.clicked.connect(self.toggle)
-
-    @Slot()
-    def toggle(self):
-        """
-        Modify self's appearance and call the slot function.
-        """
-        self.hidden = not self.hidden
-        self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
-        self.slot()
-
+# class DisclosureTriangle(QToolButton):
+#     """
+#     A QToolButton that changes appearance and call a function when clicked.
+#     """
+#
+#     def __init__(self, slot: callable, hidden=False):
+#         super().__init__()
+#         self.slot = slot
+#         # self.setText("▷" if hidden else "▽")
+#         self.hidden = hidden
+#         self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#         self.clicked.connect(self.toggle)
+#
+#     @Slot()
+#     def toggle(self):
+#         """
+#         Modify self's appearance and call the slot function.
+#         """
+#         self.hidden = not self.hidden
+#         self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
+#         self.slot()
+#
 
 class VertBar(QFrame):
     """
