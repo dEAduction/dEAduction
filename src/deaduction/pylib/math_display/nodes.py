@@ -330,6 +330,7 @@ set_inverse = SetTheoryNode("SET_INVERSE",
 set_inverse.set_button_symbol("f⁻¹({·})")
 
 
+# NB: 'APPLICATION' is a special pattern
 application = SetTheoryNode("APPLICATION",
                             'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                             (0, "\\parentheses", 1))
@@ -410,6 +411,7 @@ point = NumberNode(f'NUMBER',
                    f"NUMBER/value=.: *NUMBER_TYPES",
                    ('.',))
 
+# NB: 'APPLICATION' is a special pattern
 parentheses = NumberNode('GENERIC_PARENTHESES',
                          ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                           'GENERIC_PARENTHESES: ?0()(?0)'],

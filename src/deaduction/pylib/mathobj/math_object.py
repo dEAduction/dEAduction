@@ -1721,6 +1721,12 @@ class MathObject:
         """
         return self
 
+    def recursive_match(self, other, metavars, metavar_objects):
+        """
+        For compatibility with the PatternMathObject class.
+        """
+        return self == other
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
