@@ -641,32 +641,27 @@ class CalculatorMainWindow(QDialog):
         self.toolbar = CalculatorToolbar()
         self.navigation_bar = NavigationBar()
 
-        # Init target as a QTextedit
-        # calculator_target will process key events and send them to the
-        # toolbars
-
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
 
         self.buttons_groups = []
         # Clear ancient shortcuts!!
         CalculatorButton.shortcuts_dic = {}
+
+        ###############
+        # Add buttons #
+        ###############
         self.btns_wgt = QWidget()
         btns_lyt = QVBoxLayout()
+
+        # Lines from pattern_lines
         for calc_pattern in calc_patterns:
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
                 calc_pattern)
             btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
-            # title = calc_pattern.title
-            # btns_lyt.addWidget(QLabel(calc_pattern.title + _(':')))
-            # for line in calc_pattern.lines:
-            #     buttons_lyt = CalculatorButtons(title, line)
-            #     # FIXME: improve UI1
-            #     # main_lyt.addLayout(buttons_lyt)
-            #     btns_lyt.addLayout(buttons_lyt)
-            #     self.buttons_groups.append(buttons_lyt)
 
+        # Lines from nodes
         for NodeClass, col_size in ((LogicalNode, 5),
                                     (SetTheoryNode, 5),
                                     (NumberNode, 4), ):
@@ -678,8 +673,17 @@ class CalculatorMainWindow(QDialog):
         self.btns_wgt.setLayout(btns_lyt)
         main_lyt.addWidget(self.btns_wgt)
 
+        # Connect button signals
+        for btn in self.buttons():
+            btn.send_pattern.connect(self.process_clic)
+
         main_lyt.addStretch()
-        # CalculatorTarget
+
+        ####################
+        # CalculatorTarget #
+        ####################
+        # calculator_target will process key events and send them to the
+        # toolbars
         self.calculator_target = CalculatorTarget()
         self.calculator_target_title = QLabel()
         self.calculator_target_title.setStyleSheet("font-weight: bold; ")
@@ -688,10 +692,9 @@ class CalculatorMainWindow(QDialog):
 
         self.setLayout(main_lyt)
 
-        for btn in self.buttons():
-            btn.send_pattern.connect(self.process_clic)
-
-        # Navigation btns
+        ###################
+        # Navigation btns #
+        ###################
         # main_lyt.addWidget(self.navigation_bar)
         nav_lyt = QHBoxLayout()
         nav_lyt.addWidget(self.navigation_bar)
@@ -702,7 +705,9 @@ class CalculatorMainWindow(QDialog):
 
         main_lyt.addLayout(nav_lyt)
 
-        # OK / Cancel btns
+        ####################
+        # OK / Cancel btns #
+        ####################
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
                                            # | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
@@ -787,8 +792,8 @@ class CalculatorController:
 
         # Add 'constant' from definitions,
         # e.g. is_bounded, is_even, and so on
-        # cpls = CalculatorPatternLines.constants_from_definitions()
-        # self.calculator_groups.extend(cpls)
+        cpls = CalculatorPatternLines.constants_from_definitions()
+        self.calculator_groups.extend(cpls)
 
         self.history: [MarkedPatternMathObject] = []
         self.history_idx = -1
