@@ -106,6 +106,7 @@ class MarkedTree:
     assigned_math_object = None
     # cursor_pos is the rank of current selected item in self.latex_shape,
     # solely for the marked node. -1 denotes first position.
+    # Not that self is marked iff cursor pos is not None
     cursor_pos = None
     marked_nb = None
     _current_index_in_total_list = None
@@ -288,6 +289,9 @@ class MarkedTree:
         else:
             mvar.cursor_pos = pos
 
+        print(f"Setting cursor pos at {mvar.cursor_pos}")
+        print(mvar.is_marked)
+
     def go_to_beginning(self):
         # first_mvar, first_cursor = self.first_pos()
         # self.set_cursor_at(first_mvar, first_cursor)
@@ -300,7 +304,7 @@ class MarkedTree:
     def decrease_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
-        print(f"Cursor idx before: {idx}")
+        # print(f"Cursor idx before: {idx}")
         if idx > 0:
             mvar = total_list[idx-1]
             cursor_pos = cursor_list[idx-1]
@@ -310,12 +314,13 @@ class MarkedTree:
             self.go_to_beginning()
             # self.set_cursor_at(self, -1)
         idx = self.current_index_in_total_list()
-        print(f"Cursor idx after: {idx}")
+        # print(f"Cursor idx after: {idx}")
+        print(f"Marked element : {self.marked_descendant()}")
 
     def increase_cursor_pos(self):
         total_list, cursor_list = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
-        print(f"Cursor idx before: {idx}")
+        # print(f"Cursor idx before: {idx}")
         if idx < len(total_list) - 1:
             mvar = total_list[idx+1]
             cursor_pos = cursor_list[idx+1]
@@ -324,7 +329,7 @@ class MarkedTree:
         else:
             self.go_to_end()
         idx = self.current_index_in_total_list()
-        print(f"Cursor idx after: {idx}")
+        # print(f"Cursor idx after: {idx}")
 
     def next_after_marked(self):
         """
@@ -407,6 +412,7 @@ class MarkedTree:
                     return child
 
         # (3) Stay just after assigned_mvar!
+        # FIXME: end of mvar, not main_symbol ??
         self.set_cursor_at(assigned_mvar)
         return assigned_mvar
 
@@ -944,6 +950,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         Given a function fct, construct the MPMO corresponding to
         APP(fct, mvar) where mvar is a fresh mvar.
+        TODO: handle the case of several variables.
         """
 
         if not isinstance(fct, cls):
@@ -955,8 +962,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         else:
             arg_type = cls.NO_MATH_TYPE
 
-        mvar = MarkedMetavar(math_type=arg_type)
-        mpmo = cls.application(fct, mvar)
+        mvar0 = MarkedMetavar(math_type=fct.math_type)
+        mvar0.assigned_math_object = fct
+        mvar1 = MarkedMetavar(math_type=arg_type)
+        mpmo = cls.application(mvar0, mvar1)
         return mpmo
 
     @classmethod
@@ -1492,16 +1501,27 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     continue
 
     def insert_application(self):
+        """
+        Try to insert an APPLICATION, with marked_descendant as its first
+        argument (i.e. as the function being applied).
+        """
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
         if not math_object:
             return
-        for app_pattern in self.app_patterns + self.applications_from_ctxt:
+        apps = self.app_patterns + self.applications_from_ctxt
+        # print(len(apps))
+        counter = 0
+        for app_pattern in apps:
+            counter += 1
+            if counter == 27:
+                print("toto")
             child = app_pattern.children[0]
-            if child.match(math_object):
+            if child.is_metavar and child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)
                 new_pmo.children[0].match(math_object)
                 new_pmo.assign_matched_metavars()
+                mvar.assigned_math_object = None
                 if mvar.match(new_pmo):
                     mvar.assign_matched_metavars()
                 else:
@@ -1509,6 +1529,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 return mvar
 
     def insert_application_with_arg(self, argument: MathObject):
+        """
+        Try to insert an APPLICATION, with marked_descendant as its first
+        argument (i.e. as the function being applied), and a given arguùent
+        as its second argument (i.e. the argument at which the function is
+        applied).
+        """
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
         if not math_object:
@@ -1594,13 +1620,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 return mvar
         else:
             mvar = self.next_after_marked()
-            right_child = mvar.assigned_math_object
-            if right_child and right_child.node == 'NUMBER':
-                right = right_child.value
-                new_value = merge_nbs(new_pmo_value, right)
-                if new_value:
-                    right_child.value = new_value
-                    return mvar
+            if mvar:
+                right_child = mvar.assigned_math_object
+                if right_child and right_child.node == 'NUMBER':
+                    right = right_child.value
+                    new_value = merge_nbs(new_pmo_value, right)
+                    if new_value:
+                        right_child.value = new_value
+                        return mvar
 
     def generic_insert(self, new_pmo: PatternMathObject):
         """
@@ -1682,31 +1709,31 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if success:
                     return new_tree
 
-    def insert_after_marked(self, new_pmo: PatternMathObject):
-        """
-        Alternative to the insert() method: reconstruct all the tree.
-        """
-
-        # Non recursive version:
-        # i_list = self.infix_list()
-        # new_tree = MarkedPatternMathObject.deep_copy(i_list[0])
-        # for node in i_list[1:]:
-        #     success = new_tree.insert_at_end(node)
-        #     if not success:
-        #         return False
-        #     if node is self.marked_descendant():
-        #         success = new_tree.insert_at_end(new_pmo)
-        #         if not success:
-        #             return False
-        #
-        # return True
-
-        # Recursive version
-        if self.marked_is_at_end():
-            return self.insert_at_end(new_pmo)
-
-        i_list = self.infix_list()
-        return self.tree_from_list(i_list)
+    # def insert_after_marked(self, new_pmo: PatternMathObject):
+    #     """
+    #     Alternative to the insert() method: reconstruct all the tree.
+    #     """
+    #
+    #     # Non recursive version:
+    #     # i_list = self.infix_list()
+    #     # new_tree = MarkedPatternMathObject.deep_copy(i_list[0])
+    #     # for node in i_list[1:]:
+    #     #     success = new_tree.insert_at_end(node)
+    #     #     if not success:
+    #     #         return False
+    #     #     if node is self.marked_descendant():
+    #     #         success = new_tree.insert_at_end(new_pmo)
+    #     #         if not success:
+    #     #             return False
+    #     #
+    #     # return True
+    #
+    #     # Recursive version
+    #     if self.marked_is_at_end():
+    #         return self.insert_at_end(new_pmo)
+    #
+    #     i_list = self.infix_list()
+    #     return self.tree_from_list(i_list)
 
     def clear_marked_mvar(self):
         """
