@@ -229,17 +229,21 @@ class PatternMathDisplay:
                        'decreasing_seq', 'bounded_above', 'bounded_below',
                        'bounded_sequence', 'cauchy',
                        'continuous', 'uniformly continuous',
-                       'injective', 'relation_equivalence', 'partition',
+                       'injective', 'surjective',
+                       'relation_equivalence', 'partition',
                        'application', 'application_bijective', 'even', 'odd']
     
     # Dicts
     constants_pretty_names = {'converging_seq': _("converging"),
                               'increasing_seq': _(" non decreasing"),
                               'decreasing_seq': _(" non increasing"),
+                              'continuous': _("continuous"),
+                              'uniformly continuous': _("uniformly continuous"),
                               'bounded_above': _("bounded from above"),
                               'bounded_below': _("bounded from below"),
                               'bounded_sequence': _("bounded"),
                               'cauchy': _("a Cauchy sequence"),
+                              'bounded': _("borné(e)"),
                               'relation_equivalence': _('an equivalence '
                                                         'relation'),
                               'partition': _('a partition'),
@@ -326,25 +330,25 @@ class PatternMathDisplay:
     @classmethod
     def latex_shape_for_infix(cls, name):
         """
-        e.g.     "sum": 
+        e.g.     "sum": ((-2,), '+', (-1,))
         """
         nb_args = cls.nb_args(name)
         args = []
-        for idx in range(nb_args):
+        for idx in range(1, nb_args):
             args.extend([(idx - nb_args,), ","])
         args = tuple(args[:-1])
-        pretty_name = cls.constants_pretty_names.get(name, name)
-        shape = (pretty_name, r'\parentheses') + args
+        pretty_name = cls.infix.get(name, name)
+        shape = ((-nb_args, ), pretty_name) + args
         return shape
 
     @classmethod
     def latex_shape_for_predicate(cls, name):
         """
-        e.g.         "converging_seq": (-1, r'\text_is', _(" converging")).
+        e.g.         "converging_seq": ((-1, ), r'\text_is', _(" converging")).
         """
 
         pretty_name = cls.constants_pretty_names.get(name, name)
-        shape = (-1, r'\text_is', pretty_name),
+        shape = ((-1, ), r'\text_is', pretty_name)
         return shape
 
     @classmethod
@@ -379,7 +383,8 @@ class PatternMathDisplay:
         # TODO: negation patterns/shapes
         for name in cls.all_constants_names():
             key = cls.app_pattern_from_cst_name(name)
-            value = cls.latex_shape_for_fcts(name)
+            value = cls.latex_shape_for_app_of_cst(name)
+            # print(value)
             lean_value = cls.lean_shape_for_app_of_cst(name)
             cls.latex_from_app_constant_patterns[key] = value
             cls.lean_from_app_constant_patterns[key] = lean_value

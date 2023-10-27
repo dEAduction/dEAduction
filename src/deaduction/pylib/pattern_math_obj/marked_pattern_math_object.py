@@ -1514,8 +1514,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         counter = 0
         for app_pattern in apps:
             counter += 1
-            if counter == 27:
-                print("toto")
             child = app_pattern.children[0]
             if child.is_metavar and child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)

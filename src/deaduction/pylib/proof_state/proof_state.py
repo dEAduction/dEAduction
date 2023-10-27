@@ -1245,6 +1245,8 @@ class Goal:
             text += _("Conclusion:")
         text += "\n"
         text += " " + target.math_type_to_display(format_="utf8")
+        # except:
+        #     print(target.math_type)
         return text
 
 
