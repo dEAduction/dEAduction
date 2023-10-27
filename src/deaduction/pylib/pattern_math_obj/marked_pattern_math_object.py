@@ -891,7 +891,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     cursor_pos = None
     automatic_patterns = []  # Populated in calculator_pattern_strings.py
-    app_patterns = []
+    app_patterns = dict()
     applications_from_ctxt = []
 
     #
@@ -982,7 +982,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     @classmethod
     def populate_app_marked_patterns(cls):
         patterns = PatternMathDisplay.fake_app_constant_patterns
-        cls.app_patterns = [cls.from_string(pat) for pat in patterns]
+        for name, pattern_str in patterns.items():
+            cls.app_patterns[name] = cls.from_string(pattern_str)
 
     @classmethod
     def generic_node(cls, left_child=None, right_child=None, node=None):
@@ -1509,7 +1510,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         math_object = mvar.assigned_math_object
         if not math_object:
             return
-        apps = self.app_patterns + self.applications_from_ctxt
+        # FIXME: are all these patterns pertinent?
+        apps = list(self.app_patterns.values()) + self.applications_from_ctxt
         # print(len(apps))
         counter = 0
         for app_pattern in apps:
@@ -1537,7 +1539,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         math_object = mvar.assigned_math_object
         if not math_object:
             return
-        for app_pattern in self.app_patterns + self.applications_from_ctxt:
+        for app_pattern in (list(self.app_patterns.values()) +
+                            self.applications_from_ctxt):
             children = app_pattern.children
             if len(children) < 2:
                 continue

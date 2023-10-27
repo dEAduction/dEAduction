@@ -31,7 +31,7 @@ from deaduction.pylib.math_display.nodes import Node
 from .marked_pattern_math_object import MarkedPatternMathObject
 from .definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
-from deaduction.pylib.math_display import MathDisplay
+from deaduction.pylib.math_display import MathDisplay, PatternMathDisplay
 # from deaduction.pylib.math_display.pattern_init import pattern_latex
 
 global _
@@ -216,18 +216,22 @@ class CalculatorPatternLines:
     @classmethod
     def constants_from_definitions(cls):
         csts_dict = DefinitionMathObject.get_constants()
+        patterns_dict = MarkedPatternMathObject.app_patterns
+        pretty_names = PatternMathDisplay.constants_pretty_names
         cpls = []
         for section, constants in csts_dict.items():
             if constants:
                 symbols, patterns = [], OrderedDict()
                 for obj in constants:
-                    marked_pmo = MarkedPatternMathObject.from_math_object(obj)
-                    symbol = marked_pmo.name
-                    # idx, symbol = marked_pmo.main_shape_symbol()
-                    # if symbol == 'max':
-                    #     print(marked_pmo.math_type)
-                    symbols.append(symbol)
-                    patterns[symbol] = marked_pmo
+                    name = obj.name
+                    if name in patterns_dict:
+                        marked_pmo = patterns_dict[name]
+                        symbol = pretty_names.get(name, name)
+                        # idx, symbol = marked_pmo.main_shape_symbol()
+                        # if symbol == 'max':
+                        #     print(marked_pmo.math_type)
+                        symbols.append(symbol)
+                        patterns[symbol] = marked_pmo
                 # Slices of 4
                 symbols = [symbols[4*idx:4*(idx+1)]
                            for idx in range(len(symbols) // 4 + 1)]

@@ -787,9 +787,6 @@ class CalculatorController:
 
         if calculator_groups:
             self.calculator_groups.extend(calculator_groups)
-        # else:  # Standard groups
-        #     self.calculator_groups.extend([calculator_group, sci_calc_group])
-
         # Add 'constant' from definitions,
         # e.g. is_bounded, is_even, and so on
         cpls = CalculatorPatternLines.constants_from_definitions()

@@ -259,7 +259,7 @@ class PatternMathDisplay:
 
     latex_from_app_constant_patterns = {}
     lean_from_app_constant_patterns = {}
-    fake_app_constant_patterns = []
+    fake_app_constant_patterns = {}
 
     @staticmethod
     def pattern_from_cst_name(name):
@@ -393,7 +393,7 @@ class PatternMathDisplay:
             cls.lean_from_app_constant_patterns[cst_key] = (display_name, )
 
             fake_pattern = cls.fake_app_pattern_from_cst_name(name)
-            cls.fake_app_constant_patterns.append(fake_pattern)
+            cls.fake_app_constant_patterns[name] = fake_pattern
 
     @classmethod
     def update_dicts(cls):
