@@ -70,14 +70,18 @@ class RichTextToolButton(QToolButton):
         self.setLayout(self.__lyt)
         self.__lbl.setAttribute(Qt.WA_TranslucentBackground)
         self.__lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.__lbl.setSizePolicy(
-            QSizePolicy.Expanding,
-            QSizePolicy.Expanding,
-        )
+        self.__lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # Horizontal alignment:
+        self.__lbl.setAlignment(Qt.AlignCenter)
+        # self.__lyt.setAlignment(Qt.AlignCenter)
         self.__lbl.setTextFormat(Qt.RichText)
+        self.__lbl.setMaximumHeight(22)
         self.__lyt.addStretch()
         self.__lyt.addWidget(self.__lbl)
         self.__lyt.addStretch()
+
+        # self.setFixedSize(70, 30)
+        self.setMinimumSize(70, 30)
         return
 
     def setText(self, text):
@@ -93,11 +97,16 @@ class RichTextToolButton(QToolButton):
         return text
 
     def sizeHint(self):
+        # FIXME: probably useless?
         s = QToolButton.sizeHint(self)
         w = self.__lbl.sizeHint()
-        s.setWidth(max(w.width() + 10, 30))
-        s.setHeight(max(w.height() + 10, 30))
+        s.setWidth(max(w.width() + 10, 40))
+        # s.setHeight(max(w.height() + 10, 30))
+        s.setHeight(max(w.height(), 30))
         return s
+
+    def set_font(self, font):
+        self.__lbl.setFont(font)
 
 
 class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
@@ -133,7 +142,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         self.add_shortcut()
         self.set_tooltip()
         symbol_size = deaduction_fonts.symbol_button_font_size
-        self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+        self.set_font(deaduction_fonts.math_fonts(size=symbol_size))
 
     def set_tooltip(self):
         tooltip = ""
