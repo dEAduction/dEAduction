@@ -36,8 +36,8 @@ from typing import Union, List
 from PySide2.QtCore import Signal, Slot, Qt, QTimer
 from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
 from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
-                               QSizePolicy,
-                               QHBoxLayout, QVBoxLayout, QGridLayout,
+                               QSizePolicy, QScrollArea,
+                               QHBoxLayout, QVBoxLayout, QGridLayout, QLayout,
                                QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
                                QCheckBox,
@@ -670,14 +670,20 @@ class CalculatorMainWindow(QDialog):
             btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
 
+        btns_lyt.addStretch()
         self.btns_wgt.setLayout(btns_lyt)
-        main_lyt.addWidget(self.btns_wgt)
+        self.btns_scroll_area = QScrollArea()
+        self.btns_scroll_area.setWidgetResizable(True)
+        # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
+        self.btns_scroll_area.setWidget(self.btns_wgt)
+
+        main_lyt.addWidget(self.btns_scroll_area)
 
         # Connect button signals
         for btn in self.buttons():
             btn.send_pattern.connect(self.process_clic)
 
-        main_lyt.addStretch()
+        # main_lyt.addStretch()
 
         ####################
         # CalculatorTarget #
@@ -689,8 +695,6 @@ class CalculatorMainWindow(QDialog):
         self.calculator_target_title.setStyleSheet("font-weight: bold; ")
         main_lyt.addWidget(self.calculator_target_title)
         main_lyt.addWidget(self.calculator_target)
-
-        self.setLayout(main_lyt)
 
         ###################
         # Navigation btns #
@@ -712,6 +716,8 @@ class CalculatorMainWindow(QDialog):
                                            # | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
         main_lyt.addWidget(self.button_box)
+
+        self.setLayout(main_lyt)
 
         # Connect calculator_target
         self.calculator_target.navigation_bar = self.navigation_bar
