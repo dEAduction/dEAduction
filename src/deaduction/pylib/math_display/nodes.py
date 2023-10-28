@@ -332,11 +332,20 @@ set_inverse.set_button_symbol("f⁻¹({·})")
 
 # NB: 'APPLICATION' is a special pattern
 application = SetTheoryNode("APPLICATION",
-                            'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            "GENERIC_APPLICATION",
+                            # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                             (0, "\\parentheses", 1))
 
 application.set_button_symbol("f(·)")
 application.set_button_tooltip(_("Application of a function on an element"))
+
+
+composition = SetTheoryNode("COMPOSITION",
+                            "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
+                            "?5: FUNCTION(?1, ?2))",
+                            (4, r'\circ', 5)
+                            )
+composition.set_button_tooltip("\circ")
 
 
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
@@ -437,7 +446,7 @@ point = NumberNode(f'NUMBER',
 
 # NB: 'APPLICATION' is a special pattern
 parentheses = NumberNode('GENERIC_PARENTHESES',
-                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                         ['GENERIC_APPLICATION',
                           'GENERIC_PARENTHESES: ?0()(?0)'],
                          ('(', 0, ')')
                          )

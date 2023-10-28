@@ -1099,7 +1099,7 @@ class CalculatorController:
 
         # (1) Normal insert
         for pattern in pattern_s:
-            if pattern.node == "APPLICATION":
+            if pattern.node == "GENERIC_APPLICATION":
                 # (1a) Special buttons: applications
                 assigned_mvar = new_target.insert_application()
             else:
@@ -1123,6 +1123,8 @@ class CalculatorController:
             # self.check_new_bound_var(assigned_mvar)
             self.target.move_after_insert(assigned_mvar)
             self.update()
+        else:
+            self.calculator_ui.calculator_target.setFocus()
         print(f"Shape: {self.target.latex_shape()}")
         print(f"New target after move: {new_target}")
         total, cursor = self.target.total_and_cursor_list()

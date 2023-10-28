@@ -1501,7 +1501,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if mvar and not mvar.is_metavar():
                     continue
 
-    def insert_application(self):
+    def insert_application(self, pattern=None):
         """
         Try to insert an APPLICATION, with marked_descendant as its first
         argument (i.e. as the function being applied).
@@ -1511,7 +1511,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if not math_object:
             return
         # FIXME: are all these patterns pertinent?
-        apps = list(self.app_patterns.values()) + self.applications_from_ctxt
+        if not pattern:
+            apps = list(self.app_patterns.values()) + self.applications_from_ctxt
+        else:
+            apps = [pattern]
         # print(len(apps))
         counter = 0
         for app_pattern in apps:
