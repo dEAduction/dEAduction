@@ -966,7 +966,8 @@ class CalculatorController:
     def update_cursor_and_enable_actions(self):
         self.update_cursor()
         self.enable_actions()
-        print(self.target)
+        self.calculator_ui.calculator_target.setFocus()
+        # print(self.target)
 
     def set_target_and_update(self):
         self.set_target()

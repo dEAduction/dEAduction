@@ -362,6 +362,30 @@ class NumberNode(Node):
     name = "Numbers"
 
 
+lt = NumberNode("PROP_<",
+                'PROP_<: PROP()(?0: ?2, ?1: ?2)',
+                (0, " < ", 1)
+                )
+lt.set_button_symbol('&#60;')
+
+leq = NumberNode("PROP_≤",
+                 'PROP_≤: PROP()(?0: ?2, ?1: ?2)',
+                 (0, " ≤ ", 1)
+                 )
+
+
+gt = NumberNode("PROP_>",
+                'PROP_>: PROP()(?0: ?2, ?1: ?2)',
+                (0, " > ", 1)
+                )
+
+
+geq = NumberNode("PROP_≥",
+                 'PROP_≥: PROP()(?0: ?2, ?1: ?2)',
+                 (0, " ≥ ", 1)
+                 )
+
+
 def instantiate_nb_node(i: int):
     node = NumberNode(f'NUMBER',
                       f'NUMBER/value={i}: *NUMBER_TYPES',
@@ -427,6 +451,17 @@ power = NumberNode('POWER',
                    'POWER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *INT_OR_NAT)',
                    (0, "^", 1)
                    )
+
+equal2 = NumberNode("PROP_EQUAL",
+                    'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
+                    (r"\no_text", 0, r" \equal ", 1)
+                    )
+
+# "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
+equal_not = NumberNode("PROP_EQUAL_NOT",
+                       'PROP_EQUAL_NOT: PROP()(?0: ?2, ?1: ?2)',
+                       (r"\no_text", 0, r" \neq ", 1)
+                       )
 
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
