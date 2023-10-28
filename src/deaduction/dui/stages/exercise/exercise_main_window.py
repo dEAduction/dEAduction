@@ -199,8 +199,6 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.toggle_lean_editor_action
         self.help_window.action = \
             self.exercise_toolbar.toggle_help_action
-        if self.proof_tree_window.isVisible():
-            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
 
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beg
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
@@ -220,6 +218,17 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
+
+        # Proof tree visible: (this is a string!)
+        proof_tree_is_visible = (settings.value("emw/ShowProofTree") == "true")
+        ptv = settings.value("emw/ShowProofTree")
+        print(f"Proof tree was shown: {ptv}")
+        if not proof_tree_is_visible:
+            # print("hide")
+            self.proof_tree_window.hide()
+        else:
+            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+
         # proof_tree_is_visible = settings.value("emw/ShowProofTree")
         # if proof_tree_is_visible:
         #     print("Proof tree was shown")
@@ -365,12 +374,6 @@ class ExerciseMainWindow(QMainWindow):
         """
         log.info("Closing ExerciseMainWindow")
 
-        # Close children
-        self.lean_editor.close()
-        self.proof_outline_window.close()
-        self.proof_tree_window.close()
-        self.help_window.close()
-
         # Save window geometry
         # FIXME: does not work
         settings = QSettings("deaduction")
@@ -379,8 +382,14 @@ class ExerciseMainWindow(QMainWindow):
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
-        settings.setValue("emw/ShowProofTree",
-                          self.proof_tree_window.isVisible())
+        proof_tree_is_visible = self.proof_tree_window.isVisible()
+        # print(f"PTV: {proof_tree_is_visible}")
+        settings.setValue("emw/ShowProofTree", proof_tree_is_visible)
+        # Close children
+        self.lean_editor.close()
+        self.proof_outline_window.close()
+        self.proof_tree_window.close()
+        self.help_window.close()
 
         if self.close_coordinator:
             # Set up by Coordinator

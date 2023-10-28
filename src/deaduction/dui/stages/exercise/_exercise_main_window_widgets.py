@@ -776,6 +776,7 @@ class ExerciseToolBar(QToolBar):
         self.go_to_end.setText(_('Jump to end of proof'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
+        self.toggle_proof_tree.setText(_("Toggle proof tree"))
         self.toggle_help_action.setText(_('Toggle help window'))
 
 
