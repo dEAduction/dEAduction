@@ -1052,7 +1052,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             e.g. if <shape is
         (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
 
-            then this methid will return
+            then this method will return
         (self, self.children[1], self, self.descendant(0,0), self,
         self.children[2] )
 
@@ -1078,7 +1078,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         Partition proper children (items of self.ordered_children that are
         not self) into three lists:
         left, central, right.
-        Left children are the ones are before the first of self in
+        Left children are the ones are before the first 'self' in
         self.ordered_children.
         """
         left = []
@@ -1504,7 +1504,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     def insert_application(self, pattern=None):
         """
         Try to insert an APPLICATION, with marked_descendant as its first
-        argument (i.e. as the function being applied).
+        argument (i.e. as the function being applied). Marked descendant is
+        assumed to have an assigned_math_object, which is presumably a function.
+        We try to match this function with all functions we can imagine:
+            - functions from pattern buttons, e.g. "APP(continuous, ?)".
+            - functions from the context.
+        All these functions have been encapsulated in an APP pattern,
+        and these patterns are tried in order.
         """
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
@@ -1534,7 +1540,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     def insert_application_with_arg(self, argument: MathObject):
         """
         Try to insert an APPLICATION, with marked_descendant as its first
-        argument (i.e. as the function being applied), and a given arguùent
+        argument (i.e. as the function being applied), and a given argument
         as its second argument (i.e. the argument at which the function is
         applied).
         """
@@ -1549,11 +1555,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 continue
 
             child0, child1 = children[0], children[1]
-            if child0.match(math_object) and child1.match(argument):
+            child0.clear_cls_metavars()
+            if child0.match(math_object) and child1.match(argument,
+                                                          use_cls_metavars=True):
                 new_pmo = app_pattern.deep_copy(app_pattern)
+                new_pmo.clear_cls_metavars()
                 new_pmo.children[0].match(math_object)
                 new_pmo.children[0].assign_matched_metavars()
-                new_pmo.children[1].match(argument)
+                new_pmo.children[1].match(argument, use_cls_metavars=True)
                 new_pmo.children[1].assign_matched_metavars()
                 if mvar.match(new_pmo):
                     mvar.assign_matched_metavars()

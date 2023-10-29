@@ -40,13 +40,15 @@ global _
 latex_from_app_pattern = {
     # For functions, two patterns: (f circ g)(x) and (f circ g).
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    "?5: FUNCTION(?1, ?2), ?6: ?7)": (4, r'\circ', 5, r"\parentheses", 6),
+    "?5: FUNCTION(?1, ?2), ?6)": ((-3,), r'\circ', (-2,), r"\parentheses",
+                                  (-1,)),
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    "?5: FUNCTION(?1, ?2))": (4, r'\circ', 5),
+    "?5: FUNCTION(?1, ?2))": ((-2,), r'\circ', (-1,)),
+    "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
+    "?5: FUNCTION(?1, ?2))": ((1, ), r'\circ', (2,)),
     # TODO: test Id, Id(x)
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
 
-    # TODO: sequences and set families
     # u_n:
     "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3)(...), ?1: ?2)":
         ('(0, ).name', ['_', (1, )]),
@@ -63,8 +65,6 @@ latex_from_app_pattern = {
 
 # TODO: english translation
 # Negative value = from end of children list
-# Here int stands for children (not metavars), but ONLY IF they are not nested
-# inside lists
 latex_from_constant_name = {
     "symmetric_difference": (-2, r'\Delta', -1),
     # "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)

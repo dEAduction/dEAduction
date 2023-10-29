@@ -297,10 +297,6 @@ class PatternMathObject(MathObject):
         cls.__metavars = []
         cls.__metavar_objects = []
 
-    # def clear_matched_metavars(self):
-    #     self._metavars = []
-    #     self._metavar_objects = []
-
     def match(self,
               math_object: MathObject,
               use_cls_metavars=False,

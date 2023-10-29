@@ -1089,6 +1089,11 @@ class CalculatorController:
         If several patterns are provided, they are tried in order until
         success. If no success, generic insert is applied.
         Then an automatic insertion may happen.
+
+        The case of the special pattern "GENERIC_APPLICATION" is different.
+        This is called when usr push the "()" button, or the "f(·)" button.
+        The difficulty here is that we have to adapt to the number of arguments
+        of the function this will be applied to.
         """
 
         new_target = self.target.deep_copy(self.target)
