@@ -766,14 +766,16 @@ class MathDisplay:
         for item in shape:
             if not isinstance(item, str):
                 pass
-            elif item.startswith('&&'):
-                symbol = item[2:]
-            elif (not symbol and item not in MathDisplay.invisible_macros
+            elif item.startswith(r'\ms'):
+                symbol = item[3:]
+            elif ((not symbol) and item not in MathDisplay.invisible_macros
+                  and item != '\\parentheses'
                   and item.strip().startswith('\\')):
                 symbol = item
-            if symbol:
-                return counter, symbol
             counter += 1
+
+        if symbol:
+            return counter, symbol
 
         # (2) Second try: symbol is first str
         counter = 0

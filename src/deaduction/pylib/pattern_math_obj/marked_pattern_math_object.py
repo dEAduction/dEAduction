@@ -7,7 +7,7 @@ Here this list is induced by the latex_shape, with a choice of a main symbol.
 
 Two cases:
 (1) insertion at a non assigned metavar.
-(2) insertion after a assigned metavar.
+(2) insertion after an assigned metavar.
  In any case, after a successful insertion, the marked node should
     - move to the first non assigned metavar of the inserted object,
     if any,
@@ -15,6 +15,7 @@ Two cases:
     the (main symbol of) the inserted object.
 
 Case (1) is easy: just check that types match.
+Actually, for the moment TYPE IS NOT CHECKED.
 
 Case (2) splits into the following sub-cases. Let (MO) denotes the assigned
 object after which the insertion takes place.
@@ -43,6 +44,17 @@ Then precedence rules must be checked: if the edge between (NN) and its
 parent do not bind dy the rule, then a precedence move must be performed.
 This operation is repeated until the precedence rules are satisfied.
 
+UPDATE:
+- type checking is not done for the moment, we just check the tree structures.
+Note that our trees have an additional structure, which comes from the
+latex_shape of a node : this shape is a list in which each child may appear,
+and also string items. Thus children are ordered, and partitionned into
+left/right/central. For instance a child is left if it appear left of the
+first string item (which is supposed to represent the current node).
+An insertion should respect the order, and this is a big constraint.
+
+- type checking is done for automatic insertion, and the special
+GENERIC_APPLICATION insertion.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -1512,6 +1524,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         All these functions have been encapsulated in an APP pattern,
         and these patterns are tried in order.
         """
+
+        log.debug("Trying to insert an application")
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
         if not math_object:
@@ -1544,6 +1558,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         as its second argument (i.e. the argument at which the function is
         applied).
         """
+
+        log.debug("Trying to insert an application with arg")
         mvar = self.marked_descendant()
         math_object = mvar.assigned_math_object
         if not math_object:
@@ -1648,6 +1664,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         a generic node.
         """
 
+        log.debug("Trying to insert a generic node")
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         new_nb = self.insert_number(new_pmo)

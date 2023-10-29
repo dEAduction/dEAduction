@@ -49,7 +49,8 @@ import deaduction.pylib.utils.filesystem as fs
 
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
-                                                 SetTheoryNode, NumberNode)
+                                                 SetTheoryNode, NumberNode,
+                                                 InequalityNode)
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MarkedPatternMathObject,
@@ -307,7 +308,7 @@ class NavigationBar(AbstractToolBar):
 
         self.delete = QAction(QIcon(str((icons_dir /
                                          'icons8-clear-48.png').resolve())),
-                              _('Delete'), self)
+                              _('Delete selected block'), self)
 
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
@@ -466,7 +467,7 @@ class CalculatorButtonsGroup(QWidget):
     disclosure triangle.
     """
 
-    col_size = 4
+    col_size = 5
 
     def __init__(self, title, calculator_buttons: [CalculatorButton],
                  col_size=None, hidden=False):
@@ -664,7 +665,8 @@ class CalculatorMainWindow(QDialog):
         # Lines from nodes
         for NodeClass, col_size in ((LogicalNode, 5),
                                     (SetTheoryNode, 5),
-                                    (NumberNode, 4), ):
+                                    (NumberNode, 4),
+                                    (InequalityNode, 5)):
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
                                                                 col_size)
             btns_lyt.addWidget(buttons)

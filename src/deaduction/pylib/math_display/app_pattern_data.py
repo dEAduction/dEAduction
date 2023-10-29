@@ -44,6 +44,7 @@ latex_from_app_pattern = {
                                   (-1,)),
     "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
     "?5: FUNCTION(?1, ?2))": ((-2,), r'\circ', (-1,)),
+    # This is just for the calculator:
     "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
     "?5: FUNCTION(?1, ?2))": ((1, ), r'\circ', (2,)),
     # TODO: test Id, Id(x)
@@ -254,8 +255,12 @@ class PatternMathDisplay:
                               'odd': _('odd')
                               }
 
-    special_shapes = {"abs": ('|', -1, '|')
-                      }
+    special_latex_shapes = {"abs": ('|', -1, '|'),
+                            "limit": ("lim ", -2, " = ", -1)
+                            }
+    # special_lean_shapes = {"abs": ('abs ', -1),
+    #                        "limit": ("limit ", -2, -1)
+    #                        }
 
     latex_from_app_constant_patterns = {}
     lean_from_app_constant_patterns = {}
@@ -297,7 +302,7 @@ class PatternMathDisplay:
         """
 
         names = (cls.fcts_one_var + cls.fcts_two_var + cls.unary_predicate
-                 + list(cls.infix.keys()) + list(cls.special_shapes.keys()))
+                 + list(cls.infix.keys()) + list(cls.special_latex_shapes.keys()))
         return names
     
     @classmethod
@@ -310,8 +315,14 @@ class PatternMathDisplay:
         if name in (cls.fcts_one_var + cls.unary_predicate):
             return 1
         
-        if name in (cls.fcts_two_var + list(cls.infix.keys())):
+        elif name in (cls.fcts_two_var + list(cls.infix.keys())):
             return 2
+
+        elif name in cls.special_latex_shapes.keys():
+            shape = cls.special_latex_shapes[name]
+            max_nb = max(item for item in shape if isinstance(item, int))
+            min_nb = min(item for item in shape if isinstance(item, int))
+            return max(max_nb, -min_nb)
 
     @classmethod
     def latex_shape_for_fcts(cls, name):
@@ -360,6 +371,8 @@ class PatternMathDisplay:
             return cls.latex_shape_for_infix(name)
         elif name in cls.unary_predicate:
             return cls.latex_shape_for_predicate(name)
+        else:
+            return cls.special_latex_shapes.get(name)
 
     @classmethod
     def lean_shape_for_app_of_cst(cls, name):
@@ -367,6 +380,9 @@ class PatternMathDisplay:
         e.g.     "max": ("max", ' ', -2, ' ', -1).
         """
         nb_args = cls.nb_args(name)
+        if nb_args is None:
+            # nb_args = 1
+            return
         args = [(0,), ' ']
         for idx in range(nb_args):
             args.extend([(idx - nb_args,), ' '])
@@ -386,8 +402,10 @@ class PatternMathDisplay:
             value = cls.latex_shape_for_app_of_cst(name)
             # print(value)
             lean_value = cls.lean_shape_for_app_of_cst(name)
-            cls.latex_from_app_constant_patterns[key] = value
-            cls.lean_from_app_constant_patterns[key] = lean_value
+            if value:
+                cls.latex_from_app_constant_patterns[key] = value
+            if lean_value:
+                cls.lean_from_app_constant_patterns[key] = lean_value
             # TODO: move elsewhere?
             cst_key = cls.pattern_from_cst_name(name)
             cls.lean_from_app_constant_patterns[cst_key] = (display_name, )

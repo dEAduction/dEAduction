@@ -215,6 +215,11 @@ class CalculatorPatternLines:
 
     @classmethod
     def constants_from_definitions(cls):
+        """
+        Create CalculatorPatternLines from the constants appearing in the
+        definitions of the Lean file. A constant is selected only if it also
+        appears in the PatternMathDisplay class list of constants.
+        """
         csts_dict = DefinitionMathObject.get_constants()
         patterns_dict = MarkedPatternMathObject.app_patterns
         pretty_names = PatternMathDisplay.constants_pretty_names

@@ -173,6 +173,8 @@ class Node:
 
         shape = self.latex_shape()
 
+        return MathDisplay.main_symbol_from_shape(shape)
+
         # (1) First try
         symbol = None
         latex_symbol = None
@@ -249,7 +251,7 @@ class LogicalNode(Node):
 
 implies = LogicalNode("PROP_IMPLIES",
                       'PROP_IMPLIES: PROP()(?0: PROP, ?1: PROP)',
-                      (r'\if', 0, r"\ms \Rightarrow ", 1)
+                      (r'\if', 0, r"\ms\Rightarrow ", 1)
                       )
 and_ = LogicalNode('PROP_AND',
                    'PROP_AND: PROP()(?0: PROP, ?1: PROP)',
@@ -369,30 +371,7 @@ composition.set_button_tooltip("\circ")
 
 class NumberNode(Node):
     name = "Numbers"
-
-
-lt = NumberNode("PROP_<",
-                'PROP_<: PROP()(?0: ?2, ?1: ?2)',
-                (0, " < ", 1)
-                )
-lt.set_button_symbol('&#60;')
-
-leq = NumberNode("PROP_≤",
-                 'PROP_≤: PROP()(?0: ?2, ?1: ?2)',
-                 (0, " ≤ ", 1)
-                 )
-
-
-gt = NumberNode("PROP_>",
-                'PROP_>: PROP()(?0: ?2, ?1: ?2)',
-                (0, " > ", 1)
-                )
-
-
-geq = NumberNode("PROP_≥",
-                 'PROP_≥: PROP()(?0: ?2, ?1: ?2)',
-                 (0, " ≥ ", 1)
-                 )
+    calculator_nodes = []
 
 
 def instantiate_nb_node(i: int):
@@ -461,17 +440,6 @@ power = NumberNode('POWER',
                    (0, "^", 1)
                    )
 
-equal2 = NumberNode("PROP_EQUAL",
-                    'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
-                    (r"\no_text", 0, r" \equal ", 1)
-                    )
-
-# "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
-equal_not = NumberNode("PROP_EQUAL_NOT",
-                       'PROP_EQUAL_NOT: PROP()(?0: ?2, ?1: ?2)',
-                       (r"\no_text", 0, r" \neq ", 1)
-                       )
-
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
 # '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
@@ -500,6 +468,53 @@ equal_not = NumberNode("PROP_EQUAL_NOT",
 # """
 
 
+class InequalityNode(Node):
+    name = "Inequalities"
+    calculator_nodes = []
+
+
+
+lt = InequalityNode("PROP_<",
+                    'PROP_<: PROP()(?0: ?2, ?1: ?2)',
+                    (0, " < ", 1)
+                    )
+lt.set_button_symbol('&#60;')  # Html code
+
+leq = InequalityNode("PROP_≤",
+                     'PROP_≤: PROP()(?0: ?2, ?1: ?2)',
+                     (0, " ≤ ", 1)
+                     )
+
+
+gt = InequalityNode("PROP_>",
+                    'PROP_>: PROP()(?0: ?2, ?1: ?2)',
+                    (0, " > ", 1)
+                    )
+
+
+geq = InequalityNode("PROP_≥",
+                     'PROP_≥: PROP()(?0: ?2, ?1: ?2)',
+                     (0, " ≥ ", 1)
+                     )
+
+# "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
+equal_not = InequalityNode("PROP_EQUAL_NOT",
+                           'PROP_EQUAL_NOT: PROP()(?0: ?2, ?1: ?2)',
+                           (r"\no_text", 0, r" \neq ", 1))
+
+equal2 = InequalityNode("PROP_EQUAL",
+                        'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
+                        (r"\no_text", 0, r" \equal ", 1))
+
+max_ = InequalityNode('max',
+                      'APP(CONSTANT/name=max, ?0: ?2, ?1: ?2)',
+                      ('max ', '\\parentheses', -2, ', ', -1))
+
+min_ = InequalityNode('min',
+                      'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
+                      ('min ', '\\parentheses', -2, ', ', -1))
+
+
 class SpecialNode(Node):
     """
      "COE": (0,),  # We do not want to see bindings
@@ -512,8 +527,8 @@ class SpecialNode(Node):
          "GENERIC_NODE": (0, '¿', 1),
          "COMPOSITE_NUMBER": (0, 1),
          "LOCAL_CONSTANT": ('self.local_constant_shape',),
-         "APPLICATION": (0, r'\parentheses', 1),
-         "LAMBDA": (1, r"\mapsto", 2),
+         # "APPLICATION": (0, '\\parentheses', 1),
+         "LAMBDA": (1, "\\mapsto", 2),
          "CONSTANT": (display_name,),
     """
 
