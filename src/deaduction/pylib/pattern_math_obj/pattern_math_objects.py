@@ -399,6 +399,7 @@ class PatternMathObject(MathObject):
                 node = self_.node
                 self_type = self_.math_type
 
+            # In all other cases we will decide (and return) HERE:
             elif self in metavars:
                 corresponding_object = self.matched_math_object(metavars,
                                                                 metavar_objects)
@@ -406,7 +407,7 @@ class PatternMathObject(MathObject):
                 if not match and debug:
                     log.debug(f"Mismatch: matched mvar {self} vs"
                               f" {math_object}")
-                    return match
+                return match
             else:
                 mvar_type = self.math_type
                 math_type = math_object.math_type

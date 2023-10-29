@@ -200,6 +200,11 @@ def latex_shape(self: MathObject, is_type=False, text=False,
             #             print('debug')
             # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
             #     print("debug")
+            # if (pattern.node == 'APPLICATION' and pattern.children[0].name ==
+            #         'composition') and \
+            #     (self.node == 'APPLICATION' and self.children[0].name ==
+            #      'composition'):
+            #     print('toto')
             if pattern.match(self):
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
