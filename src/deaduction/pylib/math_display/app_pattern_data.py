@@ -255,8 +255,8 @@ class PatternMathDisplay:
                               'odd': _('odd')
                               }
 
-    special_latex_shapes = {"abs": ('|', -1, '|'),
-                            "limit": ("lim ", -2, " = ", -1)
+    special_latex_shapes = {"abs": ('|', (-1,), '|'),
+                            "limit": ("lim ", (-2,), " = ", (-1,))
                             }
     # special_lean_shapes = {"abs": ('abs ', -1),
     #                        "limit": ("limit ", -2, -1)
@@ -279,6 +279,9 @@ class PatternMathDisplay:
 
     @classmethod
     def fake_app_pattern_from_cst_name(cls, name):
+        """
+        FIXME: more than 3 args !!!
+        """
         cst_pattern = cls.pattern_from_cst_name(name)
         nb_args = cls.nb_args(name)
         if nb_args == 1:
@@ -304,25 +307,42 @@ class PatternMathDisplay:
         names = (cls.fcts_one_var + cls.fcts_two_var + cls.unary_predicate
                  + list(cls.infix.keys()) + list(cls.special_latex_shapes.keys()))
         return names
-    
+
+    @staticmethod
+    def exhaustive_nb_list(l):
+        nbs = []
+        for item in l:
+            if isinstance(item, int):
+                nbs.append(item)
+            elif isinstance(item, tuple) and len(item) == 1:
+                nbs.append(item[0])
+            elif isinstance(item, list):
+                nbs.extend(PatternMathDisplay.exhaustive_nb_list(item))
+        return nbs
+
     @classmethod
     def nb_args(cls, name):
         """
         Return the nb of args for constant name.
-        This is crucial for Lean display.        
+        This is crucial for Lean display.
         """
-        
+
         if name in (cls.fcts_one_var + cls.unary_predicate):
             return 1
-        
+
         elif name in (cls.fcts_two_var + list(cls.infix.keys())):
             return 2
 
         elif name in cls.special_latex_shapes.keys():
             shape = cls.special_latex_shapes[name]
-            max_nb = max(item for item in shape if isinstance(item, int))
-            min_nb = min(item for item in shape if isinstance(item, int))
-            return max(max_nb, -min_nb)
+            # nbs = list(item for item in shape if isinstance(item, int))
+            nbs = PatternMathDisplay.exhaustive_nb_list(shape)
+            if nbs:
+                max_nb = max(nbs)
+                min_nb = min(nbs)
+                return max(max_nb, -min_nb)
+            else:
+                return 0
 
     @classmethod
     def latex_shape_for_fcts(cls, name):
