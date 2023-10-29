@@ -440,6 +440,12 @@ power = NumberNode('POWER',
                    (0, "^", 1)
                    )
 
+abs_ = NumberNode('ABS',
+                  'APP(CONSTANT/name=abs, ?0)',
+                  ('|', -1, '|'))
+abs_.set_button_symbol('|·|')
+abs_.set_button_tooltip(_("Absolute value"))
+
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
 # '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',

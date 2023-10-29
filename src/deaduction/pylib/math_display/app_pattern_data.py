@@ -76,19 +76,21 @@ latex_from_constant_name = {
     "interval": (r"\[", -2, ",", -1, r"\]"),
 
     # FIXME: translate to english in Lean files
-    "majorant": (-1, r'\text_is', " majorant de ", -2),
-    "minorant": (-1, r'\text_is', " minorant de ", -2),
-    "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
+    # "majorant": (-1, r'\text_is', " majorant de ", -2),
+    # "minorant": (-1, r'\text_is', " minorant de ", -2),
+    # "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
+    #
+    # "est_majore": (-1, r'\text_is', " majoré"),
+    # "est_minore": (-1, r'\text_is', " minoré"),
+    # "est_borne": (-1, r'\text_is', " borné"),
+    #
+    # # "limit": ("lim ", -2, " = ", -1),
+    # "borne_sup": ("Sup ", -2, " = ", -1),
+    # "borne_inf": ("Inf ", -2, " = ", -1),
+    # "limit_plus_infinity": ("lim ", -1, " = +∞"),
+    # "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
 
-    "est_majore": (-1, r'\text_is', " majoré"),
-    "est_minore": (-1, r'\text_is', " minoré"),
-    "est_borne": (-1, r'\text_is', " borné"),
 
-    "limit": ("lim ", -2, " = ", -1),
-    "borne_sup": ("Sup ", -2, " = ", -1),
-    "borne_inf": ("Inf ", -2, " = ", -1),
-    "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
     # "converging_seq": (-1, r'\text_is', _(" converging")),
     # "increasing_seq": (-1, r'\text_is', _(" non decreasing")),
     # "bounded_above": (-1, r'\text_is', " " + _("bounded from above")),
@@ -97,7 +99,7 @@ latex_from_constant_name = {
     # "continuous": (-1, r'\text_is', _("continuous")),
     # "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
     # "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
-    "abs": ('|', -1, '|'),
+    "abs": ('|', -1, '|'),  # FIXME: does not work in special_shape???
     # "max": ("Max", r'\parentheses', -2, ",", -1),
     # "min": ("Min", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
@@ -218,7 +220,7 @@ class PatternMathDisplay:
     # }
 
     # Constant Lists:
-    fcts_one_var = ['sin', 'sqrt', 'abs']
+    fcts_one_var = ['sin', 'sqrt']
     fcts_two_var = ['max', 'min']
     infix = {'divise': '|',
              'ne': '\\neq',
@@ -238,13 +240,18 @@ class PatternMathDisplay:
     constants_pretty_names = {'converging_seq': _("converging"),
                               'increasing_seq': _(" non decreasing"),
                               'decreasing_seq': _(" non increasing"),
-                              'continuous': _("continuous"),
+                              'continuous': _("cont."),
                               'uniformly continuous': _("uniformly continuous"),
                               'bounded_above': _("bounded from above"),
                               'bounded_below': _("bounded from below"),
                               'bounded_sequence': _("bounded"),
                               'cauchy': _("a Cauchy sequence"),
-                              'bounded': _("borné(e)"),
+                              'bounded': _("bounded"),  # FIXME: bounded_func
+                              'limit': "lim",
+                              'limit_function': "lim",
+                              'limit_plus_infinity': "lim ∞",
+                              'continuous_at': _('cont. at'),
+
                               'relation_equivalence': _('an equivalence '
                                                         'relation'),
                               'partition': _('a partition'),
@@ -255,12 +262,25 @@ class PatternMathDisplay:
                               'odd': _('odd')
                               }
 
-    special_latex_shapes = {"abs": ('|', (-1,), '|'),
-                            "limit": ("lim ", (-2,), " = ", (-1,))
+    # NB: int will be turned to tuples
+    special_latex_shapes = {"abs": ('|', -1, '|'),  # FIXME: does not work ???
+                            "limit": ("lim ", -2, " = ", -1),
+                            "majorant": (-1, r'\text_is', " majorant de ", -2),
+                            "minorant": (-1, r'\text_is', " minorant de ", -2),
+                            "continuous_at": (
+                            -2, r'\text_is', _("continuous at") + " ", -1),
+
+                            "est_majore": (-1, r'\text_is', " majoré"),
+                            "est_minore": (-1, r'\text_is', " minoré"),
+                            "est_borne": (-1, r'\text_is', " borné"),
+
+                            # "limit": ("lim ", -2, " = ", -1),
+                            "borne_sup": ("Sup ", -2, " = ", -1),
+                            "borne_inf": ("Inf ", -2, " = ", -1),
+                            "limit_plus_infinity": ("lim ", -1, " = +∞"),
+                            "limit_function": (
+                            "lim", ['_', (-2,)], (-3,), " = ", (-1,)),
                             }
-    # special_lean_shapes = {"abs": ('abs ', -1),
-    #                        "limit": ("limit ", -2, -1)
-    #                        }
 
     latex_from_app_constant_patterns = {}
     lean_from_app_constant_patterns = {}
@@ -281,6 +301,7 @@ class PatternMathDisplay:
     def fake_app_pattern_from_cst_name(cls, name):
         """
         FIXME: more than 3 args !!!
+        This used for calculator only (?).
         """
         cst_pattern = cls.pattern_from_cst_name(name)
         nb_args = cls.nb_args(name)
@@ -434,7 +455,15 @@ class PatternMathDisplay:
             cls.fake_app_constant_patterns[name] = fake_pattern
 
     @classmethod
+    def adjust_special_shape_dict(cls):
+        for key, value in cls.special_latex_shapes.items():
+            new_value = ((item, ) if isinstance(item, int)
+                         else item for item in value)
+            cls.special_latex_shapes[key] = new_value
+
+    @classmethod
     def update_dicts(cls):
+        cls.adjust_special_shape_dict()
         cls.populate_app_pattern_dict()
 
 
