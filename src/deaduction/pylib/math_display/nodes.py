@@ -439,8 +439,9 @@ point = NumberNode(f'NUMBER',
 
 # NB: 'APPLICATION' is a special pattern
 parentheses = NumberNode('GENERIC_PARENTHESES',
-                         ['GENERIC_APPLICATION',
-                          'GENERIC_PARENTHESES: ?0()(?0)'],
+                         'GENERIC_PARENTHESES: ?0()(?0)',
+                         # ['GENERIC_APPLICATION',
+                         #  'GENERIC_PARENTHESES: ?0()(?0)'],
                          ('(', 0, ')')
                          )
 parentheses.set_button_symbol("()")

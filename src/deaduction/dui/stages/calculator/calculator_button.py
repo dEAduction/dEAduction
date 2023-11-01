@@ -42,8 +42,8 @@ from deaduction.pylib.pattern_math_obj import (MarkedPatternMathObject,
                                                calc_shortcuts_macro)
 from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
 
-from deaduction.dui.primitives          import deaduction_fonts
-
+from deaduction.dui.primitives          import (deaduction_fonts,
+                                                MathLabel)
 
 global _
 log = logging.getLogger(__name__)
@@ -61,7 +61,8 @@ class RichTextToolButton(QToolButton):
             super().__init__(parent)
         else:
             super().__init__()
-        self.__lbl = QLabel(self)
+        # self.__lbl = QLabel(self)
+        self.__lbl = MathLabel()
         if text is not None:
             self.__lbl.setText(text)
         self.__lyt = QHBoxLayout()
