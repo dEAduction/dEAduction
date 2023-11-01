@@ -295,7 +295,8 @@ class MarkedTree:
         return current == self.last_pos()
 
     def set_cursor_at(self, mvar, pos=None):
-        self.marked_descendant().unmark()
+        if self.marked_descendant():
+            self.marked_descendant().unmark()
         if pos is None:
             mvar.set_cursor_at_main_symbol()
         else:
@@ -838,39 +839,40 @@ class MarkedTree:
 
 
 # decreasing precedence
-priorities = [{'COMPOSITE_NUMBER'},
-              {'POINT'},  # FIXME: DECIMAL?
-              {'MULT', 'DIV'},
-              {'SUM', 'DIFFERENCE'},
-              {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
-              # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
-              ]
-
-
-def priority(self: str, other: str) -> str:
-    """
-    Return '=' if self and other have the same priority level,
-    '>' or '<' if they have distinct comparable priority levels,
-    None otherwise.
-    """
-
-    if not self or not other:
-        return None
-    self_found = False
-    other_found = False
-    for nodes in priorities:
-        if self in nodes:
-            if other_found:
-                return '<'
-            if other in nodes:
-                return '='
-            else:
-                self_found = True
-        elif other in nodes:
-            if self_found:
-                return '>'
-            else:
-                other_found = True
+# priorities = [{'COMPOSITE_NUMBER'},
+#               {'POINT'},  # FIXME: DECIMAL?
+#               {'MULT', 'DIV'},
+#               {'SUM', 'DIFFERENCE'},
+#               {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
+#               # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
+#               ]
+#
+#
+# def priority(self: str, other: str) -> str:
+#     """
+#     Return '=' if self and other have the same priority level,
+#     '>' or '<' if they have distinct comparable priority levels,
+#     None otherwise.
+#     """
+#
+#     if not self or not other:
+#         return None
+#     self_found = False
+#     other_found = False
+#     for nodes in MathDisplay.priorities:
+#         if self in nodes:
+#             if other_found:
+#                 return '<'
+#             if other in nodes:
+#                 return '='
+#             else:
+#                 self_found = True
+#         elif other in nodes:
+#             if self_found:
+#                 return '>'
+#             else:
+#                 other_found = True
+priority = MathDisplay.priority
 
 
 def in_this_order(self, other, list_):
@@ -996,6 +998,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         patterns = PatternMathDisplay.fake_app_constant_patterns
         for name, pattern_str in patterns.items():
             cls.app_patterns[name] = cls.from_string(pattern_str)
+        # FIXME
+        # pat1 = ("APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))")
+        # pat2 = ("APP(APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
+        #         "?5: FUNCTION(?1, ?2)), ?6: ?1)")
+        # # cls.app_patterns['composition'] = cls.from_string(pat1)
+        # cls.app_patterns['application_of_composition'] = cls.from_string(pat2)
 
     @classmethod
     def generic_node(cls, left_child=None, right_child=None, node=None):
@@ -1525,24 +1533,43 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         and these patterns are tried in order.
         """
 
-        log.debug("Trying to insert an application")
+        log.debug("Trying to insert an application...")
         mvar = self.marked_descendant()
+        # while self.parent_of(mvar):
+        #     pmvar = self.parent_of(mvar)
+        #     if pmvar.is_composition():
+        #         mvar = pmvar
+        #     else:
+        #         break
+
         math_object = mvar.assigned_math_object
         if not math_object:
             return
+
         # FIXME: are all these patterns pertinent?
         if not pattern:
-            apps = list(self.app_patterns.values()) + self.applications_from_ctxt
+            apps = list(self.applications_from_ctxt)
+                    # + [MarkedPatternMathObject.app_patterns[
+                    #        'application_of_composition']])
         else:
             apps = [pattern]
         # print(len(apps))
         counter = 0
         for app_pattern in apps:
+            log.debug(f"Trying to insert {app_pattern}")
             counter += 1
-            child = app_pattern.children[0]
+            # child = app_pattern.children[0]
+            left_children, _, _ = app_pattern.partionned_children()
+            if not left_children:
+                continue
+            child = left_children[0]
             if child.is_metavar and child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)
-                new_pmo.children[0].match(math_object)
+                left_children, _, _ = new_pmo.partionned_children()
+                if not left_children:
+                    continue
+
+                left_children[0].match(math_object)
                 new_pmo.assign_matched_metavars()
                 mvar.assigned_math_object = None
                 if mvar.match(new_pmo):
@@ -1564,22 +1591,39 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         math_object = mvar.assigned_math_object
         if not math_object:
             return
-        for app_pattern in (list(self.app_patterns.values()) +
-                            self.applications_from_ctxt):
-            children = app_pattern.children
-            if len(children) < 2:
-                continue
+        # (list(self.app_patterns.values()) +
+        # apps = (self.applications_from_ctxt + [
+        #     MarkedPatternMathObject.app_patterns['composition']])
+        apps = self.applications_from_ctxt
+        for app_pattern in apps:
+            log.debug(f"Trying to insert {app_pattern}")
+            # children = app_pattern.children
+            # if len(children) < 2:
+            #     continue
+            # child0, child1 = children[0], children[1]
 
-            child0, child1 = children[0], children[1]
+            l_children, c_children, r_children = app_pattern.partionned_children()
+            if (not l_children) or (not c_children + r_children):
+                continue
+            child0 = l_children[-1]
+            child1 = (c_children + r_children)[0]
+
             child0.clear_cls_metavars()
             if child0.match(math_object) and child1.match(argument,
                                                           use_cls_metavars=True):
                 new_pmo = app_pattern.deep_copy(app_pattern)
                 new_pmo.clear_cls_metavars()
-                new_pmo.children[0].match(math_object)
-                new_pmo.children[0].assign_matched_metavars()
-                new_pmo.children[1].match(argument, use_cls_metavars=True)
-                new_pmo.children[1].assign_matched_metavars()
+
+                l_children, c_children, r_children = new_pmo.partionned_children()
+                if (not l_children) or (not c_children + r_children):
+                    continue
+                child0 = l_children[-1]
+                child1 = (c_children + r_children)[0]
+
+                child0.match(math_object)
+                child0.assign_matched_metavars()
+                child1.match(argument, use_cls_metavars=True)
+                child1.assign_matched_metavars()
                 if mvar.match(new_pmo):
                     mvar.assign_matched_metavars()
                 else:
@@ -1661,7 +1705,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     def generic_insert(self, new_pmo: PatternMathObject):
         """
         Force insertion of new_pmo at self.marked_descendant() by inserting
-        a generic node.
+        a generic node. Currently this is just used to allow composite numbers.
         """
 
         log.debug("Trying to insert a generic node")
@@ -1676,25 +1720,25 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         else:
             return
 
-        mvar = self.marked_descendant()
-        left_child = mvar.assigned_math_object
-        if left_child:
-            mvar.clear_assignment()
-            # if (left_child.node == 'NUMBER'
-            #         and new_pmo_copy.node in ('NUMBER', 'POINT')):
-            #     generic_node = MarkedPatternMathObject.composite_number(
-            #                 left_child=left_child, right_child=new_pmo_copy)
-            # else:
-            generic_node = MarkedPatternMathObject.generic_node(
-                        left_child=left_child, right_child=new_pmo_copy)
-        else:
-            generic_node = MarkedPatternMathObject.generic_node(
-                left_child=new_pmo_copy)
-
-        mvar.assigned_math_object = generic_node
-        self.set_cursor_at(generic_node.children[1], 1)
-
-        return self.marked_descendant()
+        # mvar = self.marked_descendant()
+        # left_child = mvar.assigned_math_object
+        # if left_child:
+        #     mvar.clear_assignment()
+        #     # if (left_child.node == 'NUMBER'
+        #     #         and new_pmo_copy.node in ('NUMBER', 'POINT')):
+        #     #     generic_node = MarkedPatternMathObject.composite_number(
+        #     #                 left_child=left_child, right_child=new_pmo_copy)
+        #     # else:
+        #     generic_node = MarkedPatternMathObject.generic_node(
+        #                 left_child=left_child, right_child=new_pmo_copy)
+        # else:
+        #     generic_node = MarkedPatternMathObject.generic_node(
+        #         left_child=new_pmo_copy)
+        #
+        # mvar.assigned_math_object = generic_node
+        # self.set_cursor_at(generic_node.children[1], 1)
+        #
+        # return self.marked_descendant()
 
     # def automatic_patterns(self):
     #     """
@@ -1787,6 +1831,9 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         rep = super().__repr__()
         if self.is_marked:
             rep = '--> ' + rep
+        # if self.assigned_math_object:
+        #     mt = self.assigned_math_object.math_type.to_display(format_='utf8')
+        #     rep += '[: ' + mt + ']'
         return rep
 
     # @property

@@ -69,7 +69,7 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
-lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, (x ∈ A) → x ∈ B :=
 /- dEAduction
 ImplicitUse
     True

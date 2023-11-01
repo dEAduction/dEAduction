@@ -62,9 +62,9 @@ PrettyName
 -/
 
 
-def even (a: nat) := ∃ b, a = 2*b
+def even (a: nat) := ∃ b, a = 2*b 
 
-def odd (a: nat) := ∃ b, a = 2*b + 1
+def odd (a: nat) := ∃ b, a = 2*b + 1 
 
 def divides (a b:ℤ) := ∃ c, b = a * c
 
@@ -75,7 +75,7 @@ lemma theorem.induction {P: nat → Prop} (H0: P 0)
 :=
 begin
   todo
-end
+end 
 
 
 lemma definition.even {a:nat} : (even a) ↔ ∃ b, a = 2*b :=

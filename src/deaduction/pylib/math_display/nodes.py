@@ -226,7 +226,12 @@ class Node:
             return self._button_tooltip
         else:
             pattern = self.pattern_math_objects()[-1]
+            # print(pattern)
+            # print(pattern.latex_shape())
+            # try:
             self._button_tooltip = pattern.to_display(format_='utf8')
+            # except:
+            #     print("toto")
             return self._button_tooltip
 
 
@@ -334,20 +339,21 @@ set_inverse.set_button_symbol("f⁻¹({·})")
 
 # NB: 'APPLICATION' is a special pattern
 application = SetTheoryNode("APPLICATION",
-                            "GENERIC_APPLICATION",
-                            # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            # "GENERIC_APPLICATION",
+                            'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                             (0, "\\parentheses", 1))
 
 application.set_button_symbol("f(·)")
-application.set_button_tooltip(_("Application of a function on an element"))
+application.set_button_tooltip(_("Application of a function to an element\\n"
+                                 "or term of a sequence."))
 
 
 composition = SetTheoryNode("COMPOSITION",
-                            "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
-                            "?5: FUNCTION(?1, ?2))",
+                            "COMPOSITION: FUNCTION(?1, ?3)"
+                            "(?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))",
                             (4, r'\circ', 5)
                             )
-composition.set_button_tooltip("\circ")
+composition.set_button_tooltip(r"\circ")
 
 
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
@@ -370,6 +376,9 @@ composition.set_button_tooltip("\circ")
 
 
 class NumberNode(Node):
+    """
+    Class to store number and operators nodes. We give up *NUMBER_TYPES.
+    """
     name = "Numbers"
     calculator_nodes = []
 
@@ -384,7 +393,7 @@ for i in [7, 8, 9]:
     instantiate_nb_node(i)
 
 div_ = NumberNode('DIV',
-                  'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  'DIV: ?2()(?0: ?2, ?1: ?2)',
                   (0, "/", 1)
                   )
 
@@ -392,7 +401,7 @@ for i in [4, 5, 6]:
     instantiate_nb_node(i)
 
 mult_ = NumberNode('MULT',
-                   'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                   'MULT: ?2()(?0: ?2, ?1: ?2)',
                    (0, r"\times", 1)
                    )
 
@@ -400,8 +409,8 @@ for i in [1, 2, 3]:
     instantiate_nb_node(i)
 
 diff = NumberNode('DIFFERENCE',
-                  ['MINUS: *NUMBER_TYPES()(?0: *NUMBER_TYPES)',
-                      'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)'],
+                  ['MINUS(?0)',
+                      'DIFFERENCE: ?2()(?0: ?2, ?1: ?2)'],
                   (0, "-", 1)
                   )
 diff.set_button_tooltip(_("-? or ?-?"))
@@ -432,19 +441,13 @@ parentheses = NumberNode('GENERIC_PARENTHESES',
 parentheses.set_button_symbol("()")
 
 sum_ = NumberNode('SUM',
-                  'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
+                  'SUM: ?2()(?0: ?2, ?1: ?2)',
                   (0, "+", 1)
                   )
 power = NumberNode('POWER',
-                   'POWER: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *INT_OR_NAT)',
+                   'POWER(?0, ?1: *INT_OR_NAT)',
                    (0, "^", 1)
                    )
-
-abs_ = NumberNode('ABS',
-                  'APP(CONSTANT/name=abs, ?0)',
-                  ('|', -1, '|'))
-abs_.set_button_symbol('|·|')
-abs_.set_button_tooltip(_("Absolute value"))
 
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
@@ -477,7 +480,6 @@ abs_.set_button_tooltip(_("Absolute value"))
 class InequalityNode(Node):
     name = "Inequalities"
     calculator_nodes = []
-
 
 
 lt = InequalityNode("PROP_<",
@@ -519,6 +521,12 @@ max_ = InequalityNode('max',
 min_ = InequalityNode('min',
                       'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
                       ('min ', '\\parentheses', -2, ', ', -1))
+
+abs_ = InequalityNode('ABS',
+                      'APP(CONSTANT/name=abs, ?0)',
+                      ('|', -1, '|'))
+abs_.set_button_symbol('|·|')
+abs_.set_button_tooltip(_("Absolute value"))
 
 
 class SpecialNode(Node):

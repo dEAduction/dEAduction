@@ -629,6 +629,11 @@ class PatternMathObject(MathObject):
                 mvars.extend(child.all_mvars(unassigned=unassigned))
             return mvars
 
+    # def is_composition(self):
+    #     pattern_s = "APP(CONSTANT/name=composition, ?4, ?5)"
+    #     pattern_ = PatternMathObject.from_string(pattern_s)
+    #     return pattern_.match(self)
+    #
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},

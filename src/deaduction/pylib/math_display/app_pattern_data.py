@@ -39,14 +39,16 @@ global _
 # to display children use tuples, e.g. '(1, )' means second child.
 latex_from_app_pattern = {
     # For functions, two patterns: (f circ g)(x) and (f circ g).
-    "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    "?5: FUNCTION(?1, ?2), ?6)": ((-3,), r'\circ', (-2,), r"\parentheses",
-                                  (-1,)),
-    "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    "?5: FUNCTION(?1, ?2))": ((-2,), r'\circ', (-1,)),
-    # This is just for the calculator:
-    "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
-    "?5: FUNCTION(?1, ?2))": ((1, ), r'\circ', (2,)),
+    # "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
+    # "?5: FUNCTION(?1, ?2), ?6)": ((-3,), r'\circ', (-2,), r"\parentheses",
+    #                               (-1,)),
+    # "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
+    # "?5: FUNCTION(?1, ?2))": ((-2,), r'\circ', (-1,)),
+    # # This is just for the calculator:
+    # "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
+    # "?5: FUNCTION(?1, ?2))": ((1, ), r'\circ', (2,)),
+    # "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
+    # "?5: FUNCTION(?1, ?2), ?6)": ((1, ), r'\circ', (2,), r'\parentheses', 3),
     # TODO: test Id, Id(x)
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
 
@@ -67,7 +69,7 @@ latex_from_app_pattern = {
 # TODO: english translation
 # Negative value = from end of children list
 latex_from_constant_name = {
-    "symmetric_difference": (-2, r'\Delta', -1),
+    # "symmetric_difference": (-2, r'\Delta', -1),
     # "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
     # "prod": (1, r'\times', 2),
     "Identite": ("Id",),# FIXME: use Id for name...
@@ -84,7 +86,7 @@ latex_from_constant_name = {
     # "est_minore": (-1, r'\text_is', " minoré"),
     # "est_borne": (-1, r'\text_is', " borné"),
     #
-    # # "limit": ("lim ", -2, " = ", -1),
+    # "limit": ("lim ", -2, " = ", -1), # FIXME: does not work in special_shape???
     # "borne_sup": ("Sup ", -2, " = ", -1),
     # "borne_inf": ("Inf ", -2, " = ", -1),
     # "limit_plus_infinity": ("lim ", -1, " = +∞"),
@@ -99,7 +101,7 @@ latex_from_constant_name = {
     # "continuous": (-1, r'\text_is', _("continuous")),
     # "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
     # "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
-    "abs": ('|', -1, '|'),  # FIXME: does not work in special_shape???
+    # "abs": ('|', -1, '|'),  # FIXME: does not work in special_shape???
     # "max": ("Max", r'\parentheses', -2, ",", -1),
     # "min": ("Min", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
@@ -221,17 +223,20 @@ class PatternMathDisplay:
 
     # Constant Lists:
     fcts_one_var = ['sin', 'sqrt']
+
     fcts_two_var = ['max', 'min']
+
     infix = {'divise': '|',
              'ne': '\\neq',
              'prod': '\\times',
              'product': ".",
-
+             "symmetric_difference": r'\Delta',
              }
+
     unary_predicate = ['bounded', 'converging_seq', 'increasing_seq',
                        'decreasing_seq', 'bounded_above', 'bounded_below',
                        'bounded_sequence', 'cauchy',
-                       'continuous', 'uniformly continuous',
+                       'continuous', 'uniformly_continuous',
                        'injective', 'surjective',
                        'relation_equivalence', 'partition',
                        'application', 'application_bijective', 'even', 'odd']
@@ -240,8 +245,8 @@ class PatternMathDisplay:
     constants_pretty_names = {'converging_seq': _("converging"),
                               'increasing_seq': _(" non decreasing"),
                               'decreasing_seq': _(" non increasing"),
-                              'continuous': _("cont."),
-                              'uniformly continuous': _("uniformly continuous"),
+                              'continuous': _("continuous"),
+                              'uniformly_continuous': _("uniformly continuous"),
                               'bounded_above': _("bounded from above"),
                               'bounded_below': _("bounded from below"),
                               'bounded_sequence': _("bounded"),
@@ -250,7 +255,7 @@ class PatternMathDisplay:
                               'limit': "lim",
                               'limit_function': "lim",
                               'limit_plus_infinity': "lim ∞",
-                              'continuous_at': _('cont. at'),
+                              'continuous_at': _('continuous at'),
 
                               'relation_equivalence': _('an equivalence '
                                                         'relation'),
@@ -281,6 +286,8 @@ class PatternMathDisplay:
                             "limit_function": (
                             "lim", ['_', (-2,)], (-3,), " = ", (-1,)),
                             }
+
+    # TODO: add a "special_patterns" if both pattern and shape are special??
 
     latex_from_app_constant_patterns = {}
     lean_from_app_constant_patterns = {}
@@ -457,8 +464,8 @@ class PatternMathDisplay:
     @classmethod
     def adjust_special_shape_dict(cls):
         for key, value in cls.special_latex_shapes.items():
-            new_value = ((item, ) if isinstance(item, int)
-                         else item for item in value)
+            new_value = tuple((item, ) if isinstance(item, int)
+                              else item for item in value)
             cls.special_latex_shapes[key] = new_value
 
     @classmethod

@@ -1,6 +1,30 @@
 """
 calculator.py : provide the Calculator and CalculatorWindow class.
 
+The calculator enables usr to construct mathematical objects that will be
+translated into Lean code. The interface tries to echo the global interface,
+with
+- a target area where the object under construction is shown; this is a
+QTextEdit whose keyEvents are hacked to call buttons.
+- ButtonGroups, where each button allows to insert some math patterns.
+There are 3 kinds of buttons:
+    (1) Usual buttons are provided by the Node class
+e.g. 1, +, <=>, and so on
+    (2) Context buttons are associated to context objects
+    (3) Definitions buttons are associated to definitions from the current Lean
+    file. These are built from Lean constants, the condition for a constant
+    to gives rise to a button is to be present both in a definition statement
+    of the currentLean file, and in one of the PatternMathDisplay
+    dictionaries.
+
+Furthermore, there are special buttons who are associated to
+GENERIC_APPLICATION, whose symbols are () and f(·). When pushed,
+the calculator tried to insert an APPLICATION pattern:
+    - either associated to a function of the context
+    -
+
+Every button has a shortcut.
+
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Created       : 06 2023 (creation)
@@ -1089,18 +1113,19 @@ class CalculatorController:
         """
         Try to insert pattern (or patterns) in self.target.
         If several patterns are provided, they are tried in order until
-        success. If no success, generic insert is applied.
-        Then an automatic insertion may happen.
+        success.
 
         The case of the special pattern "GENERIC_APPLICATION" is different.
         This is called when usr push the "()" button, or the "f(·)" button.
-        The difficulty here is that we have to adapt to the number of arguments
-        of the function this will be applied to.
+        If the marked_descendant is a function g from the context, then the
+        insertion will result in the object g(·). This is done by computing
+        beforehand the pattern APP(g, ?) for every context function g.
         """
 
         new_target = self.target.deep_copy(self.target)
         assigned_mvar = None
-                
+        print(f"Target: {new_target}")
+
         if not isinstance(pattern_s, list):
             pattern_s = [pattern_s]
 
@@ -1108,6 +1133,7 @@ class CalculatorController:
         for pattern in pattern_s:
             if pattern.node == "GENERIC_APPLICATION":
                 # (1a) Special buttons: applications
+                # g --> g(·)
                 assigned_mvar = new_target.insert_application()
             else:
                 # (1b) Normal insert
@@ -1117,10 +1143,12 @@ class CalculatorController:
 
         pattern = pattern_s[-1]
         # (2) Automatic patterns
+        # g, x --> g(x)  ; u, n --> u_n
         if not assigned_mvar:
             assigned_mvar = new_target.insert_application_with_arg(pattern)
 
         # (3) Force insertion with LAST pattern
+        #  1, 2 --> 12
         if not assigned_mvar:
             assigned_mvar = new_target.generic_insert(pattern)
 

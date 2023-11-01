@@ -74,11 +74,12 @@ def display_value(mo):
 
 
 def math_type(mo):
-    return mo.math_type
+    if not mo.math_type.is_no_math_type():
+        return [': ', mo.math_type]
 
 
 def display_lean_value(mo):
-    type_ = math_type(mo)
+    type_ = mo.math_type
     val = display_value(mo)
     if type_.is_no_math_type:
         return val
@@ -195,6 +196,7 @@ class MathDisplay:
          ##################
          # GENERAL TYPES: #
          ##################
+         "COMPOSITION": (0, r'\circ', 1),
          "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
          "PROP": (r'\proposition',),
          "TYPE": (r'\set',),
@@ -240,13 +242,14 @@ class MathDisplay:
         "APPLICATION": (lean_application,),
         # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
         "PROP_NOT": (r'\not', 0),
-        "SET_EMPTY": ('(', r'\emptyset', ': ', 'self.math_type', ')'),
+        "SET_EMPTY": ('(', r'\emptyset', 'self.math_type', ')'),  # including ':'
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
         # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
         "NUMBER": (display_lean_value, ),
-        "RAW_LEAN_CODE": (display_name, )
+        "RAW_LEAN_CODE": (display_name, ),
+        'COMPOSITION': ('(', 0, r'\circ', 1, ')'),
     }
 
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
@@ -553,8 +556,10 @@ class MathDisplay:
     # needs_paren_couples = [('MULT', 'SUM')]
     # dont_need_paren_couples = [('SUM', 'MULT'), ()]
 
-    priorities = [{'COMPOSITE_NUMBER', 'NUMBER'},
+    priorities = [{'NUMBER'},
                   {'POINT'},  # FIXME: DECIMAL?
+                  {'COMPOSITION'},
+                  {'APPLICATION'},
                   {'MINUS'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
@@ -812,12 +817,14 @@ class MathDisplay:
         return shape2
 
     @staticmethod
-    def flat_shape(shape, add_close_parentheses=False):
+    def flat_shape(shape: [], add_close_parentheses=False) -> []:
         """
         Turn shape into a flat list, whose items are not lists.
         If add_close_parentheses is True, then 'close_parentheses' is added
         at the right places, to match '\\parentheses' items. This is useful
         to get the right shape length (in conjunction with mark_cursor).
+
+        Return a list whose items are not lists.
         """
 
         flat_s = []
@@ -850,8 +857,8 @@ class MathDisplay:
         for item in shape2:
             if isinstance(item, int) or isinstance(item, tuple):
                 children.append(item)
-            elif isinstance(item, list):
-                children.extend(cls.ordered_children(item))
+            # elif isinstance(item, list):
+            #     children.extend(cls.ordered_children(item))
             # elif isinstance(item, str) and item in cls.macros:
             #     pass
             else:
