@@ -220,6 +220,9 @@ class CalculatorPatternLines:
         definitions of the Lean file. A constant is selected only if it also
         appears in the PatternMathDisplay class list of constants.
         """
+
+        excluded_names = ('max', 'abs', 'limit_function')
+
         csts_dict = DefinitionMathObject.get_constants()
         patterns_dict = MarkedPatternMathObject.app_patterns
         pretty_names = PatternMathDisplay.constants_pretty_names
@@ -229,7 +232,7 @@ class CalculatorPatternLines:
                 symbols, patterns = [], OrderedDict()
                 for obj in constants:
                     name = obj.name
-                    if name in patterns_dict:
+                    if name in patterns_dict and name not in excluded_names:
                         marked_pmo = patterns_dict[name]
                         symbol = pretty_names.get(name, name)
                         # idx, symbol = marked_pmo.main_shape_symbol()
@@ -238,13 +241,14 @@ class CalculatorPatternLines:
                         symbols.append(symbol)
                         patterns[symbol] = marked_pmo
                 # Slices of 4
-                symbols = [symbols[4*idx:4*(idx+1)]
-                           for idx in range(len(symbols) // 4 + 1)]
-                cpl = cls(title=section,
-                          lines=symbols,
-                          patterns=patterns)
+                if symbols:
+                    symbols = [symbols[4*idx:4*(idx+1)]
+                               for idx in range(len(symbols) // 4 + 1)]
+                    cpl = cls(title=section,
+                              lines=symbols,
+                              patterns=patterns)
 
-                cpls.append(cpl)
+                    cpls.append(cpl)
 
         return cpls
 

@@ -98,6 +98,11 @@ class Node:
         if display_in_calculator:
             self.__class__.calculator_nodes.append(self)
 
+    @classmethod
+    def all_nodes_names(cls):
+        names = [node.name for node in cls.calculator_nodes]
+        return names
+
     def set_button_symbol(self, symbol):
         self._button_symbol = symbol
 
@@ -522,7 +527,7 @@ min_ = InequalityNode('min',
                       'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
                       ('min ', '\\parentheses', -2, ', ', -1))
 
-abs_ = InequalityNode('ABS',
+abs_ = InequalityNode('abs',
                       'APP(CONSTANT/name=abs, ?0)',
                       ('|', -1, '|'))
 abs_.set_button_symbol('|·|')
