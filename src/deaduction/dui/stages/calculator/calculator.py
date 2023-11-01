@@ -175,6 +175,9 @@ class CalculatorTarget(MathTextWidget):
         # print(key_sequence == QKeySequence.Undo)
         if key_sequence == QKeySequence("Return"):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
+        elif key_sequence == QKeySequence("Space"):
+            self.key_buffer_timer.stop()
+            self.key_buffer_timeout()
 
         # QAction key sequences
         action = None
@@ -222,7 +225,6 @@ class CalculatorTarget(MathTextWidget):
         # Text shortcuts
         text = event.text()
         if text:
-            # FIXME: process more complex sequences (i.e. more than one letter)
             self.key_event_buffer += text
             # print(self.key_event_buffer, self.key_buffer_timer)
             yes = CalculatorButton.process_key_events(self.key_event_buffer,
