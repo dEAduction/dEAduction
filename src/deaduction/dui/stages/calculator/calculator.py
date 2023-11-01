@@ -57,7 +57,7 @@ import sys
 import logging
 from typing import Union, List
 
-from PySide2.QtCore import Signal, Slot, Qt, QTimer
+from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
 from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
                                QSizePolicy, QScrollArea,
@@ -627,8 +627,11 @@ class CalculatorButtonsGroup(QWidget):
             for button in self.buttons:
                 button.show()
 
-    def toggle_disclosure_triangle(self):
-        self.hidden = not self.hidden
+    def toggle_disclosure_triangle(self, hidden=None):
+        if hidden is None:
+            self.hidden = not self.hidden
+        else:
+            self.hidden = hidden
         self.toggle_buttons()
 
 # class CalculatorButtons(QHBoxLayout):
@@ -740,9 +743,8 @@ class CalculatorMainWindow(QDialog):
         ####################
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
                                            # | QDialogButtonBox.Cancel)
-        self.button_box.accepted.connect(self.accept)
+        self.button_box.accepted.connect(self.close_n_accept)
         main_lyt.addWidget(self.button_box)
-
         self.setLayout(main_lyt)
 
         # Connect calculator_target
@@ -750,6 +752,45 @@ class CalculatorMainWindow(QDialog):
         self.calculator_target.toolbar = self.toolbar
         self.calculator_target.button_box = self.button_box
         self.calculator_target.setFocus()
+
+        self.set_geometry()
+
+    def set_geometry(self, geometry=None):
+        settings = QSettings("deaduction")
+        value = settings.value("calculator/geometry")
+        if value:
+            self.restoreGeometry(value)
+        elif geometry:
+            self.setGeometry(geometry)
+
+        for buttons in self.buttons_groups:
+            hidden = settings.value(f"calculator/{buttons.title}",
+                                     buttons.hidden)
+            hidden = (hidden in (True, "true"))
+            dt = buttons.disclosure_triangle
+            if dt.hidden != hidden:
+                buttons.hidden = not hidden
+                dt.toggle()
+            else:
+                buttons.toggle_disclosure_triangle(hidden=hidden)
+
+    def close(self):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("calculator/geometry", self.saveGeometry())
+
+        # Save states of disclosure triangles
+        for buttons in self.buttons_groups:
+            settings.setValue(f"calculator/{buttons.title}",
+                              buttons.hidden)
+
+    def close_n_accept(self):
+        self.close()
+        self.accept()
+
+    def reject(self):
+        self.close()
+        super().reject()
 
     def set_target_title(self, title):
         self.calculator_target_title.setText(title)
