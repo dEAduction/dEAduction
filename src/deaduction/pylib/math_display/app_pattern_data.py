@@ -54,11 +54,15 @@ latex_from_app_pattern = {
 
     # u_n:
     "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3)(...), ?1: ?2)":
-        ('(0, ).name', ['_', (1, )]),
+        ((0, display_name), ['_', (1, )]),
+    # "APP(LOCAL_CONSTANT: !SEQUENCE(...)(...), ?1)":
+    #     ('(0, ).name', ['_', (1,)]),
+    "APP(LOCAL_CONSTANT: !SEQUENCE(...)(...), ?1)":
+        ((0, display_name), ['_', (1,)]),
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
     "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
-        ('(0,).name', ['_', (1, )]),
+        ((0, display_name), ['_', (1, )]),
     "APP(CONSTANT/name=limit_function, LAMBDA(?2, ?3, ?4), ?0, ?1)":
         (r'\no_text', "lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2),
          " = ", (-1,)),

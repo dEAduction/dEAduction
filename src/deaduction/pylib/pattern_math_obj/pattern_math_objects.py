@@ -299,7 +299,8 @@ class PatternMathObject(MathObject):
 
     def match(self,
               math_object: MathObject,
-              use_cls_metavars=False,
+              successive_matching=False,
+              first_of_successive=False,
               symmetric_match=False,
               debug=False) -> bool:
         """
@@ -312,28 +313,32 @@ class PatternMathObject(MathObject):
         In case of successful matching, the metavars and metavar_objects
         lists are stored as self's attributes. The corresponding MathObject
         may be obtained by applying the math_object_from_matching() method.
-        These lists are also stored in the corresponding private class
-        attributes, so that matching can be done simultaneously on several
-        objects by using the clear_cls_metavars(), use_cls_metavars() and
-        assigned_matched_metavars().
+
+        To perform multiple simultaneous matching,
+        use successive_matchings=True. Then the cumulative
+        metavars/metavars_objects are stored in self.metavars.
+        The matchings can be assigned by using the assigned_matched_metavars()
+        method.
         """
 
-        if use_cls_metavars:
-            # Swallow copy of cls metavars
-            metavars = [mvar for mvar in self.__metavars]
-            metavar_objects = [mvar for mvar in self.__metavar_objects]
-        else:
-            metavars = []
-            metavar_objects = []
+        if not successive_matching or first_of_successive:
+            self.__metavars = []
+            self.__metavar_objects = []
+
+        # Swallow copy of cls private metavars will be used for matching
+        metavars = [mvar for mvar in self.__metavars]
+        metavar_objects = [mvar for mvar in self.__metavar_objects]
 
         match = self.recursive_match(math_object, metavars, metavar_objects,
                                      symmetric_match, debug)
         if match:
             self.metavars = metavars
             self.metavar_objects = metavar_objects
-            if use_cls_metavars:
-                self.__metavars.extend(metavars)
-                self.__metavar_objects.extend(metavar_objects)
+            if successive_matching or first_of_successive:
+                # Add new metavars matching to private
+                length = len(self.__metavars)
+                self.__metavars.extend(metavars[length:])
+                self.__metavar_objects.extend(metavar_objects[length:])
         # log.debug(f"Matching {self.node} and {math_object.node}...")
         # list_ = [(PatternMathObject.__metavars[idx].to_display(),
         #           PatternMathObject.__metavar_objects[idx].to_display())

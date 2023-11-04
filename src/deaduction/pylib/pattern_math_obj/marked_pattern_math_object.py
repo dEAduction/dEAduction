@@ -297,8 +297,10 @@ class MarkedTree:
     def set_cursor_at(self, mvar, pos=None):
         if self.marked_descendant():
             self.marked_descendant().unmark()
+
         if pos is None:
             mvar.set_cursor_at_main_symbol()
+            # _, mvar.cursor_pos = self.last_pos()
         else:
             mvar.cursor_pos = pos
 
@@ -1188,7 +1190,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     #     pass
 
     @staticmethod
-    def assign(mvars, math_object, assignments, check_types=False) -> bool:
+    def assign(mvars, math_object, assignments, check_types=True) -> bool:
         """
         Try to assign math_object to one of the mvar in mvars.
         If check_types is True then assignment is included in the match
@@ -1196,9 +1198,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         In the opposite case, and if the match fails, the assignment will be
         done anyway, and for this it is recorded in the assignments list.
         """
+
+        # DEBUG
+        check_types = True
+        PatternMathObject.clear_cls_metavars()
         for child_new_pmo in mvars:
             log.debug(f"----> {child_new_pmo} match?")
-            if child_new_pmo.match(math_object, use_cls_metavars=True):
+            if child_new_pmo.match(math_object, successive_matching=True):
                 log.debug("yes!")
                 assignments.append((child_new_pmo,
                                     math_object))
@@ -1273,11 +1279,17 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             return []
         children = math_object.children
 
+        # FIXME: here we use more severe criterion
+        # left_children = [child for child in children
+        #                  if not self.appears_right_of_cursor(child)]
+        #
+        # right_children = [child for child in children
+        #                   if not self.appears_left_of_cursor(child)]
         left_children = [child for child in children
-                         if not self.appears_right_of_cursor(child)]
+                         if self.appears_left_of_cursor(child)]
 
         right_children = [child for child in children
-                          if not self.appears_left_of_cursor(child)]
+                          if self.appears_right_of_cursor(child)]
 
         if left_children:
             limit_child = left_children[-1]
@@ -1324,9 +1336,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         re-assignment to the wrong side of new_pmo, and those have to be
         also re-assigned to mvar children of new_pmo.
         """
-
-        # FIXME:
-        #  (2) some previous assignment are cleared even in case of failure??
 
         assert mvar.is_assigned
         # Determine if mvar should be assigned to a left or right child of
@@ -1397,11 +1406,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             while mvars:
                 pmo_mvar = mvars.pop(0)
                 # if math_child:
-                if pmo_mvar.match(math_child,
-                                  use_cls_metavars=True):
+                if pmo_mvar.match(math_child, successive_matching=True):
                     # Success for this child!
-                    # FIXME: only in case of global success?! :
-                    # child.clear_assignment()
                     mvar_to_be_cleared.append(child)
                     success = True
                     break
@@ -1419,15 +1425,17 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 return False
             else:
                 [child.clear_assignment() for child in mvar_to_be_cleared]
-                log.debug(f"Child {child} assigned to {pmo_mvar}")
+                log.debug(f"Child {math_child} assigned to {pmo_mvar}")
 
         return True
 
     def insert_if_you_can(self, new_pmo, mvar, parent_mvar=None,
                           check_types=False):
         """
-        Try to insert new_pmo at mvar, as a left child if
-        mvar is either a term of left_path or a term of right_path.
+        Try to insert new_pmo at mvar.
+        - First, priority rules with parent_mvar are checked.
+        - Then the math_object assigned to mvar, if any, is tentatively
+        re-assigned as a child of new_pmo.
         """
 
         PatternMathObject.clear_cls_metavars()
@@ -1443,7 +1451,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         pmo_display = new_pmo.to_display(format_='utf8')
         log.debug(f"Trying to insert {pmo_display} at {mvar}")
-        log.debug(f"left/right = {left, right}")
+        log.debug(f"left/right of cursor = {left, right}")
         log.debug(f"Parent mvar = {parent_mvar}")
 
         ######################
@@ -1467,9 +1475,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # Last test: new_pmo match mvar?
         mvar.clear_assignment()
         log.debug(f"Last test: try to match {pmo_display} with {mvar}")
-        match_mvar_test = mvar.match(new_pmo,
-                                     # debug=True,
-                                     use_cls_metavars=True)
+        match_mvar_test = mvar.match(new_pmo, successive_matching=True)
         if not match_mvar_test:
             if not check_types:
                 assignments.append((mvar, new_pmo))
@@ -1498,8 +1504,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         after cursor pos.
         """
 
-        # mvar = self.marked_descendant()
-        # new_pmo_copy = new_pmo.deep_copy(new_pmo)
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         for mvar in (self.marked_descendant(), self.next_after_marked()):
@@ -1531,6 +1535,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             - functions from the context.
         All these functions have been encapsulated in an APP pattern,
         and these patterns are tried in order.
+        # FIXME: obsolete?
         """
 
         log.debug("Trying to insert an application...")
@@ -1563,18 +1568,20 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             if not left_children:
                 continue
             child = left_children[0]
+            log.debug(f"Try to match {math_object} with {child}")
             if child.is_metavar and child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)
                 left_children, _, _ = new_pmo.partionned_children()
                 if not left_children:
                     continue
-
-                left_children[0].match(math_object)
-                new_pmo.assign_matched_metavars()
-                mvar.assigned_math_object = None
+                log.debug("--> matched, assigning")
+                child = left_children[0]
+                child.match(math_object)
+                child.assign_matched_metavars()
+                mvar.clear_assignment()
                 if mvar.match(new_pmo):
                     mvar.assign_matched_metavars()
-                else:
+                else:  # Assign anyway
                     mvar.assigned_math_object = new_pmo
                 return mvar
 
@@ -1602,33 +1609,41 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             #     continue
             # child0, child1 = children[0], children[1]
 
-            l_children, c_children, r_children = app_pattern.partionned_children()
-            if (not l_children) or (not c_children + r_children):
+            # l_children, c_children, r_children = app_pattern.partionned_children()
+            # if (not l_children) or (not c_children + r_children):
+            #     continue
+            # child0 = l_children[-1]
+            # child1 = (c_children + r_children)[0]
+
+            new_pmo = app_pattern.deep_copy(app_pattern)
+            children = new_pmo.children
+            if len(children) < 2:
                 continue
-            child0 = l_children[-1]
-            child1 = (c_children + r_children)[0]
-
+            child0, child1 = children[0], children[1]
             child0.clear_cls_metavars()
-            if child0.match(math_object) and child1.match(argument,
-                                                          use_cls_metavars=True):
-                new_pmo = app_pattern.deep_copy(app_pattern)
-                new_pmo.clear_cls_metavars()
+            log.debug(f"Try to match {math_object} with {child0}")
+            if child0.match(math_object, first_of_successive=True):
+                log.debug("-->matched")
+                log.debug(f"Try to match {argument} with {child1}")
+                if child1.match(argument, successive_matching=True):
+                    log.debug("-->matched")
 
-                l_children, c_children, r_children = new_pmo.partionned_children()
-                if (not l_children) or (not c_children + r_children):
-                    continue
-                child0 = l_children[-1]
-                child1 = (c_children + r_children)[0]
+                    # l_children, c_children, r_children = new_pmo.partionned_children()
+                    # if (not l_children) or (not c_children + r_children):
+                    #     continue
+                    # child0 = l_children[-1]
+                    # child1 = (c_children + r_children)[0]
 
-                child0.match(math_object)
-                child0.assign_matched_metavars()
-                child1.match(argument, use_cls_metavars=True)
-                child1.assign_matched_metavars()
-                if mvar.match(new_pmo):
-                    mvar.assign_matched_metavars()
-                else:
-                    mvar.assigned_math_object = new_pmo
-                return mvar
+                    child1.assign_matched_metavars()
+                    mvar.assigned_math_object = None
+                    log.debug(f"Try to match {new_pmo} with {mvar}")
+                    if mvar.match(new_pmo):
+                        log.debug("-->matched")
+                        mvar.assign_matched_metavars()
+                    else:
+                        log.debug("-->failed, assign anyway")
+                        mvar.assigned_math_object = new_pmo
+                    return mvar
 
     def substitute_generic_node(self, mvar, new_pmo, check_types=False):
         """
@@ -1878,6 +1893,15 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         children = (self.assigned_math_object.children
                     if self.assigned_math_object else self._children)
         return children
+
+    @property
+    def math_type(self):
+        """
+        Override super().children in case self has a assigned_math_object.
+        """
+        math_type = (self.assigned_math_object.math_type
+                     if self.assigned_math_object else self._math_type)
+        return self.NO_MATH_TYPE if math_type is None else math_type
 
     @classmethod
     def from_mvar(cls, mvar: MetaVar, parent=None):

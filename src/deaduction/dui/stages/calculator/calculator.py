@@ -1174,7 +1174,7 @@ class CalculatorController:
 
         # (1) Normal insert
         for pattern in pattern_s:
-            if pattern.node == "GENERIC_APPLICATION":
+            if pattern.node == "GENERIC_APPLICATION":  # FIXME: obsolete?
                 # (1a) Special buttons: applications
                 # g --> g(·)
                 assigned_mvar = new_target.insert_application()

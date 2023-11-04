@@ -749,21 +749,27 @@ class MathObject:
         :param line_of_descent:     int or tuple or list
         :return:                    MathObject
         """
-        if type(line_of_descent) == int:
+
+        # if not line_of_descent:
+        #     return self
+        if isinstance(line_of_descent, int):
             # if self.is_application():
             #     return self.implicit_children(line_of_descent)
             # else:
             return self.children[line_of_descent]
-
-        child_number, *remaining = line_of_descent
-        if (child_number >= len(self.children)
-                or child_number < -len(self.children)):
-            return None
-        child = self.children[child_number]
-        if not remaining:
-            return child
-        else:
-            return child.descendant(remaining)
+        elif (isinstance(line_of_descent, tuple)
+              or isinstance(line_of_descent, list)):
+            child_number, *remaining = line_of_descent
+            if not isinstance(child_number, int):
+                return self
+            if (child_number >= len(self.children)
+                    or child_number < -len(self.children)):
+                return None
+            child = self.children[child_number]
+            if not remaining:
+                return child
+            else:
+                return child.descendant(remaining)
 
     def give_name(self, name):
         self.info["name"] = name

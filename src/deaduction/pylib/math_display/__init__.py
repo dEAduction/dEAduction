@@ -26,6 +26,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from .utils import Descendant
 from .pattern_data import metanodes
 # from .pattern_init import pattern_init  !! Circular import !!
 from .app_pattern_data import PatternMathDisplay
