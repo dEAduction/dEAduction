@@ -345,7 +345,12 @@ set_inverse.set_button_symbol("f⁻¹({·})")
 # NB: 'APPLICATION' is a special pattern
 application = SetTheoryNode("APPLICATION",
                             # "GENERIC_APPLICATION",
-                            'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            # 'APPLICATION(?0, ?1)',
+                            ['APPLICATION: ?3()(?0: !SEQUENCE(CONSTANT/name=ℕ, '
+                             '?3), ?1: CONSTANT/name=ℕ)',
+                                'APPLICATION: ?3()(?0: !FUNCTION(?2, ?3), '
+                                '?1: ?2)'],
                             (0, "\\parentheses", 1))
 
 application.set_button_symbol("f(·)")

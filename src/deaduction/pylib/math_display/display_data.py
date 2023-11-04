@@ -73,7 +73,7 @@ def display_value(mo):
     return mo.info.get('value')
 
 
-def math_type(mo):
+def math_type_for_lean(mo):
     if not mo.math_type.is_no_math_type():
         return [': ', mo.math_type]
 
@@ -242,7 +242,7 @@ class MathDisplay:
         "APPLICATION": (lean_application,),
         # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
         "PROP_NOT": (r'\not', 0),
-        "SET_EMPTY": ('(', r'\emptyset', 'self.math_type', ')'),  # including ':'
+        "SET_EMPTY": ('(', r'\emptyset', math_type_for_lean, ')'),  # including ':'
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),

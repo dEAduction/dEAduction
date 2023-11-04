@@ -26,6 +26,8 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import Union
+
 import deaduction.pylib.config.vars as cvars
 
 
@@ -48,6 +50,39 @@ import deaduction.pylib.config.vars as cvars
 #         print("error in list_string_join: argument should be list or "
 #                     f"str, not {type(structured_display)}")
 #         return "**"
+
+
+class Descendant:
+    """
+    A class to store an abstract descendant of a math_object,
+    maybe specifying a given attribute. e.g.
+        Descendant(line_of_descent=(2,0), attribute_or_callable=display_name.
+    """
+
+    line_of_descent: tuple  # of int
+    attribute_or_callable: Union[str, callable]
+
+    def __init__(self, line_of_descent=None, attribute_or_callable=None):
+        self.line_of_descent = line_of_descent
+        self.attribute_or_callable = attribute_or_callable
+
+    def __repr__(self):
+        rep = f"Descendant {self.line_of_descent}"
+        if self.attribute_or_callable:
+            rep = f"attribute {self.attribute_or_callable} of " + rep
+        return rep
+
+    def math_object(self, math_object):
+        descendant = math_object.descendant(self.line_of_descent)
+        return descendant
+
+    def attribute_from_math_object(self, math_object):
+        descendant = self.math_object(math_object)
+        if isinstance(self.attribute_or_callable, str):
+            attribute = descendant.__getattribute__(self.attribute_or_callable)
+            return attribute
+        elif callable(self.attribute_or_callable):
+            return self.attribute_or_callable(descendant)
 
 
 def cut_spaces(string: str) -> str:

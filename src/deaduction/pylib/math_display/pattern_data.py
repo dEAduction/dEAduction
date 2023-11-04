@@ -204,7 +204,9 @@ latex_from_pattern_string = {
         # ("toto",),
         # FIXME: the following crashes!!!
         # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
-        (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
+        # (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
+        (r"\{", display_name, ['_', (1,)], ', ', (1,), r"\in_symbol", (0,),
+         r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
@@ -228,6 +230,7 @@ latex_from_pattern_string = {
 # NB: no parentheses will be put around property P(x)
 # If parentheses are needed then we must switch to children (instead of
 # metavars), e.g. (2,) for indicating P(x).
+# TODO: change metavars refs to children refs
 text_from_pattern_string = {
     "QUANT_∀(SET(...), ?0, ?1)":
         (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", 1),
