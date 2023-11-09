@@ -213,7 +213,7 @@ latex_from_pattern_string = {
         #  'self.bound_var_type', r"\}"),
         (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
-        ('(', display_name, ['_', 1], ')', ['_', 1, r"\in_symbol", 3]),
+        ('(', display_name, ['_', (1,)], ')', ['_', (1,), r"\in_symbol", (0,)]),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)

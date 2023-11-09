@@ -752,10 +752,10 @@ class MathObject:
 
         # if not line_of_descent:
         #     return self
-        if isinstance(line_of_descent, int):
-            # if self.is_application():
-            #     return self.implicit_children(line_of_descent)
-            # else:
+        if not line_of_descent:
+            # e.g. empty tuple or list
+            return self
+        elif isinstance(line_of_descent, int):
             return self.children[line_of_descent]
         elif (isinstance(line_of_descent, tuple)
               or isinstance(line_of_descent, list)):
