@@ -37,7 +37,7 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
                               bf=False,
                               no_text=False) -> str:
     """
-    Turn an abstract string into a string in various formats.
+    Adapt the abstract_string in various format.
     """
     display = ""
     # (1) Replace latex macro by utf8/lean versions

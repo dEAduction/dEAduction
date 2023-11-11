@@ -138,24 +138,45 @@ def shallow_latex_to_text(abstract_string: Union[list, str], text_depth=0) \
     untouched (so they still contain latex macro that are NOT suitable to
     display without either latex compilation or conversion to utf8).
     """
+
+    # TODO: move this as methods of MathString and MathList
+
+    if not abstract_string:
+        return abstract_string
+
     if isinstance(abstract_string, list):
         # Stop conversion to text in some cases
         if abstract_string[0] == r'\no_text':
             text_depth = 0
         # Recursion
-        abstract_string = [shallow_latex_to_text(item, text_depth-1) for
-                           item in abstract_string]
+        # abstract_string = [shallow_latex_to_text(item, text_depth-1) for
+        #                    item in abstract_string]
+        idx = 0
+        for item in abstract_string:
+            new_string = shallow_latex_to_text(item, text_depth-1)
+            # FIXME: classmethod
+            abstract_string.replace_string(idx, new_string)
+            # abstract_string[idx] = shallow_latex_to_text(item, text_depth-1)
+            idx += 1
+
         # log.debug(f"    --> Shallow_to_text: {string}")
         return abstract_string
 
     elif isinstance(abstract_string, str):
         if text_depth > 0:  # Try to convert to text
-            string, success = latex_to_text_func(abstract_string)
+            new_string, success = latex_to_text_func(abstract_string)
             if success:  # Add a tag to indicate this is text (not math).
-                string = [r'\text', string]
+                new_math_str = abstract_string.replace_string(abstract_string,
+                                                              new_string)
+                formatter = abstract_string.formatter(r'\text')
+                string = [formatter, new_math_str]
         else:  # Try to shorten
-            string = shorten(abstract_string)
-        return string
+            new_string = shorten(abstract_string)
+            if new_string != abstract_string:
+                new_string = abstract_string.replace_string(abstract_string,
+                                                            new_string)
+
+        return new_string
 
 
 

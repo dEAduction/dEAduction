@@ -80,7 +80,7 @@ def remove_leading_parentheses(l: list):
     """
     if isinstance(l, list) and len(l) == 1 and isinstance(l[0], list):
         remove_leading_parentheses(l[0])
-    elif len(l) > 0 and  l[0] == r'\parentheses':
+    elif len(l) > 0 and l[0] == r'\parentheses':
         l.pop(0)
         if len(l) == 1:
             remove_leading_parentheses(l)

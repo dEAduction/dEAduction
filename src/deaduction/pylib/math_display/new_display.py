@@ -1,5 +1,29 @@
+"""
+# new_display.py : compute display for MathObject #
 
-from typing import Union
+Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
+Created       : 12 2021 (creation)
+Repo          : https://github.com/dEAduction/dEAduction
+
+Copyright (c) 2020 the d∃∀duction team
+
+This file is part of d∃∀duction.
+
+    d∃∀duction is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    d∃∀duction is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+"""
+from typing import Union, Optional
 import logging
 
 from deaduction.pylib.mathobj import MathObject
@@ -28,21 +52,40 @@ class MathDescendant:
     """
     def __init__(self, root_math_object: MathObject,
                  line_of_descent=tuple()):
-        self.root_math_object = root_math_object
+        self._root_math_object = root_math_object
         self.line_of_descent = line_of_descent
+        assert self.root_math_object.descendant(line_of_descent) is not None
 
-    def math_object(self):
+    @property
+    def root_math_object(self):
+        if self._root_math_object:
+            return self._root_math_object
+        else:
+            return MathObject.NO_MATH_TYPE
+
+    @property
+    def descendant(self):
         if self.line_of_descent:
             return self.root_math_object.descendant(self.line_of_descent)
         else:
             return self.root_math_object
 
 
-class StringMath(str, MathDescendant):
+class MathString(str, MathDescendant):
+    """
+    A string with annotations:
+    - the root_math_object is the MathObject from which the request of display
+        originates.
+    - the line_of_descent is the place in root_math_object corresponding to
+    the string.
+    """
+
+    marked_cursor = r'\DeadCursor'
+
     def __new__(cls, string, root_math_object: MathObject,
                 line_of_descent: tuple = None):
         instance = str.__new__(cls, string)
-        instance.root_math_object = root_math_object
+        instance._root_math_object = root_math_object
         instance.line_of_descent = line_of_descent
         return instance
 
@@ -51,40 +94,190 @@ class StringMath(str, MathDescendant):
         MathDescendant.__init__(self, root_math_object=root_math_object,
                                 line_of_descent=line_of_descent)
 
+    @classmethod
+    def formatter(cls, format_name: str):
+        """
+        This class method is supposed to be used for inserting a formatter
+        expression, e.g. '\\used_property'.
+        """
 
-class ListMath(list, MathDescendant):
+        return cls(string=format_name, root_math_object=None)
+
+    @classmethod
+    def replace_string(cls, math_string, new_string):
+        """
+        Return a copy of math_string with string replaced by new_string.
+        """
+        new_math_str = cls(new_string,
+                           math_string.root_math_object,
+                           math_string.line_of_descent)
+        return new_math_str
+
+    def last_address_of(self, math_object):
+        """
+        For compatibility with MathList.
+        """
+        if self.descendant == math_object:
+            return tuple()
+        else:
+            return None
+
+    # @property
+    # def address_of_first_leaf_descendant(self):
+    #     """
+    #     This is just for compatibility with MathList.
+    #     """
+    #     return tuple()
+
+    # @classmethod
+    # def cursor(cls):
+    #     return cls(string = cls.marked_cursor, root_math_object=None)
+
+
+MathString.error_string = MathString("***", MathObject.NO_MATH_TYPE)
+
+
+class MathList(list, MathDescendant):
     """
     This class is used to store structured strings in order to display
-    MathObject. Its core data is a list whose elements are either
-    MathObjectDisplay or
-
-
+    MathObject. Its core data is a list whose items must be of one the
+    following types (as processed by the process_shape_item() method):
+    - MathList,
+    - MathString,
+    - int (coding for a child nb)
+    - tuple of int (coding for a descendant address)
+    - MathObject, e.g. coming from metavars in a pattern shape (they will be
+    replaced by its own shape). FIXME: this should not happen?
     """
+
+    variable = MathString(r"\variable", root_math_object=None)
 
     def __init__(self, iterable,
                  root_math_object: MathObject,
                  line_of_descent=tuple(),
                  pattern=None,
-                 pattern_dic=None):
+                 pattern_dic=None,
+                 format_="utf8",
+                 text=False
+                 ):
         super().__init__(iterable)
         MathDescendant.__init__(self, root_math_object, line_of_descent)
+
+        self.format_ = format_
+        self.text = text
 
         # For debugging:
         self.pattern = pattern
         self.pattern_dic = pattern_dic
 
+    def __str__(self):
+        flat_list = [str(item) for item in self]
+        return ''.join(flat_list)
 
-class CompleteListMath(ListMath):
-    """
-    A ListMath which is certified to have only two kinds of items:
-    CompleteListMath and  StringMath.
-    """
+    def replace_string(self, idx, new_string: str) -> bool:
+        """
+        Replace the string of item self[idx] ny new_string, converted to a
+        MathString with the same root and line ode descent.
+        """
+        math_string = self[idx]
+        if not isinstance(math_string, MathString):
+            return False
+        elif isinstance(new_string, MathString):
+            # Just replace
+            self[idx] = new_string
+        else:
+            # Convert and replace
+            new_math_str = MathString.replace_str(math_string, new_string)
+            self[idx] = new_math_str
+            return True
 
-    # TODO: expanded_latex_shape should be a classmethod here?
+    @property
+    def lean_format(self):
+        return self.format_ == "lean"
 
-    @classmethod
-    def expanded_latex_shape(cls):
-        pass
+    def item_for_address(self, position: tuple):
+        """
+        Return the item at the given position, considered as an address in
+        the tree of strings.
+        """
+
+        if not position:
+            # Empty tuple
+            return self
+        else:
+            child_idx, *further_descendant = position
+            assert isinstance(self, MathList) and len(self) > child_idx
+            return self[child_idx].item_for_position(further_descendant)
+
+    def last_address_of(self, math_object) -> tuple:
+        """
+        Recursively find the last address whose item corresponds to given
+        math_object. Return None if not found.
+        """
+
+        for idx in range(len(self)).__reversed__():
+            item = self[idx]
+            if item.descendant == math_object:
+                return (idx,)
+            else:
+                partial_address = item.last_address_of(math_object)
+                if partial_address is not None:  # Maybe the empty tuple!
+                    return (idx,) + partial_address
+
+    @property
+    def address_of_first_leaf_descendant(self):
+        """
+        Return a pertinent tuple of zeros.
+        """
+        descendant = self[0]
+        if not isinstance(descendant, MathList):
+            return (0,)
+        else:
+            return (0,) + descendant.address_of_first_leaf_descendant
+
+    # TODO: expanded_latex_shape should be a here?
+
+    def check_completeness(self) -> bool:
+        """
+        Recursively checks that self's items are MathString or MathLists.
+        Change pure strings to MathStrings.
+        """
+
+        idx = 0
+        for item in self:
+            if isinstance(item, MathString):
+                return True
+            elif isinstance(item, str):
+                self[idx] = MathString(item, root_math_object=None)
+            elif isinstance(item, MathList):
+                return item.check_completeness()
+            else:
+                raise TypeError(f"Item {item} of a complete MathList"
+                                f"should be either MathList or MathString")
+            idx += 1
+
+    def expand_latex_shape(self):
+        """
+        Expand latex shape. The resulting self is a MathList whose items are
+        either MathString or MathList with the same property.
+        """
+        new_expanded_latex_shape(self)
+        self.check_completeness()
+
+    def process_text(self):
+        """
+        Replace some symbols by plain text, or shorten some text:
+        """
+
+        text_depth = 100 if self.text else 0
+        if not self.lean_format:
+            shallow_latex_to_text(self, text_depth)
+
+    def format(self):
+        """
+        Modify self to a specific format (Lean, html, utf8).
+        """
+        # TODO
 
 
 def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
@@ -116,7 +309,8 @@ def process_shape_macro(self, shape_item: str) -> Union[str, MathObject]:
         descent = tuple(int(item) for item in chain if item.isdigit())
         math_object = self.descendant(line_of_descent=descent)
 
-    else:#############################
+    else:
+        #############################
         return shape_item
 
     # B - Apply attributes iteratively:
@@ -213,7 +407,7 @@ def lean_shape(self: MathObject) -> []:
 
 
 def latex_shape(self: MathObject, is_type=False, text=False,
-                lean_format=False) -> ListMath:
+                lean_format=False) -> MathList:
     """
     Return the shape of self, e.g.
             [r'\forall', 1, r'\subset', 0, (2, )]
@@ -232,7 +426,9 @@ def latex_shape(self: MathObject, is_type=False, text=False,
     """
 
     shape = None
-    shape_math = ListMath((), self)
+    shape_math = MathList((), self,
+                          format_="lean" if lean_format else "utf8",
+                          text=text)
 
     # FIXME?
     if lean_format:
@@ -280,13 +476,13 @@ def latex_shape(self: MathObject, is_type=False, text=False,
         if isinstance(item, str):
             new_item = process_shape_macro(self, item)
             if isinstance(new_item, str):
-                new_item = StringMath(new_item, root_math_object=self)
+                new_item = MathString(new_item, root_math_object=self)
                 # print(f"Stringmath of {new_item.math_object()}: {new_item}")
             shape_math.append(new_item)
             # print(isinstance(s, str))
         else:
             shape_math.append(item)
-    # print(f"ListMath of {shape_math.math_object()}: {shape_math}")
+    # print(f"MathList of {shape_math.math_object()}: {shape_math}")
     # print(isinstance(shape_math, list))
     return shape_math
 
@@ -343,6 +539,7 @@ def process_shape_item(item, math_object=None, text=False,
     # PARENTHESES?
     if (new_math_object != math_object and
             MathDisplay.needs_paren(math_object, new_math_object, item)):
+        # Fixme
         new_item = [r'\parentheses', new_item]
 
     return new_item
@@ -381,13 +578,13 @@ def full_latex_shape_with_descendants(math_object, shape=None, text=False,
     \parentheses
     ...
     """
-
+    # Fixme: obsolete?
     # FIXME: text is useless?
 
     if not shape:
         shape = math_object.latex_shape(text=text, lean_format=lean_format)
 
-    full_shape = ListMath([], root_math_object=math_object)
+    full_shape = MathList([], root_math_object=math_object)
     for item in shape:
         if isinstance(item, int) or isinstance(item, tuple):
             child = math_object.descendant(item)
@@ -442,23 +639,26 @@ def expanded_latex_shape(math_object=None, shape=None, text=False,
 
 
 def new_process_shape_item(item, math_object=None, line_of_descent=tuple(),
-                           text=False, lean_format=False):
+                           text=False, lean_format=False) -> Union[MathString,
+                                                                   MathList]:
     """
     Replace item by its expanded shape.
     tuples corresponds to children (or descendants) and are also replaced.
     """
 
-    # FIXME: should return only StringMath or ListMath instances?
+    # FIXME: should return only MathString or MathList instances?
 
     if isinstance(item, str):
-        if isinstance(item, StringMath):
+        if isinstance(item, MathString):
+            # MathString
             return item
         else:
-            return StringMath(item, root_math_object=math_object,
+            # MathString
+            return MathString(item, root_math_object=math_object,
                               line_of_descent=line_of_descent)
 
     # Default values
-    new_item = '***'
+    new_item = MathString.error_string
     new_shape = None
     new_line = line_of_descent
 
@@ -476,20 +676,25 @@ def new_process_shape_item(item, math_object=None, line_of_descent=tuple(),
         descendant = math_object.descendant(new_line)
         new_shape = item(descendant)
         if isinstance(new_shape, str):
-            return StringMath(new_shape, math_object, line_of_descent)
+            # MathString
+            return MathString(new_shape, math_object, line_of_descent)
 
     elif isinstance(item, int):
         new_line = line_of_descent + (item,)
 
     elif isinstance(item, list):
-        new_shape = ListMath(item, math_object, line_of_descent)
+        new_shape = MathList(item, math_object, line_of_descent)
 
     elif isinstance(item, MathObject):
+        print(1/0)
         # FIXME: improve info?
-        new_item = item.latex_shape(text=text, lean_format=lean_format)
+        #  Root Math Object will NOT be the good one.
+        new_item = full_latex_shape_with_descendants(item, text=text,
+                                                     lean_format=lean_format)
 
     # Recursively expand item
     if new_shape or new_line != line_of_descent:
+        # Fixme: MathList?
         new_item = new_expanded_latex_shape(math_object=math_object,
                                             line_of_descent=new_line,
                                             shape=new_shape,
@@ -500,16 +705,18 @@ def new_process_shape_item(item, math_object=None, line_of_descent=tuple(),
         parent = math_object.descendant(line_of_descent)
         child = math_object.descendant(new_line)
         if MathDisplay.needs_paren(parent, child, item):
-            new_item = ListMath([r'\parentheses', new_item],
+            # MathList
+            new_item = MathList([r'\parentheses', new_item],
                                 new_item.root_math_object,
                                 new_item.line_of_descent)
 
     return new_item
 
 
-def new_expanded_latex_shape(math_object=None, line_of_descent=tuple(),
-                             shape=None, text=False,
-                             lean_format=False) -> ListMath:
+def new_expanded_latex_shape(shape: Optional[MathList] = None,
+                             math_object=None, line_of_descent=None,
+                             text=None,
+                             lean_format=None) -> MathList:
     """
     Recursively replace each MathObject by its shape.
     tuples corresponds to children (or descendants) and are also replaced.
@@ -517,21 +724,39 @@ def new_expanded_latex_shape(math_object=None, line_of_descent=tuple(),
     """
 
     if not shape:
-        descendant = math_object.descendant(line_of_descent)
-        shape = descendant.latex_shape(text=text, lean_format=lean_format)
+        if not math_object:
+            raise ValueError("At least one of shape and math_object must be "
+                             "provided")
+        else:
+            descendant = math_object.descendant(line_of_descent)
+            shape = descendant.latex_shape(text=text, lean_format=lean_format)
+    else:
+        if math_object is None:
+            math_object = shape.root_math_object
+        if line_of_descent is None:
+            line_of_descent = shape.line_of_descent
+        if text is None:
+            text = shape.text
+        if lean_format is None:
+            lean_format = shape.lean_format
 
-    expanded_shape = ListMath([],
-                              root_math_object=math_object,
-                              line_of_descent=line_of_descent)
+    # expanded_shape = MathList([],
+    #                           root_math_object=math_object,
+    #                           line_of_descent=line_of_descent)
+
+    idx = 0
     for item in shape:
         new_item = new_process_shape_item(item,
                                           math_object=math_object,
                                           line_of_descent=line_of_descent,
                                           text=text,
                                           lean_format=lean_format)
-        expanded_shape.append(new_item)
+        shape[idx] = new_item
+        idx += 1
+        # expanded_shape.append(new_item)
 
-    return expanded_shape
+    # return expanded_shape
+    return shape
 
 
 def to_display(self: MathObject, format_="html", text=False,
@@ -543,29 +768,31 @@ def to_display(self: MathObject, format_="html", text=False,
     (namely: we need PatternMathObject to get the right shape to display).
     """
 
-    # if len(self.children) >0 and self.children[1].name == 'v':
-    #     print('debug')
-
     lean_format = (format_ == "lean")
 
     # (1) Compute expanded shape
-    shape = self.latex_shape(is_type=is_type, text=text,
-                             lean_format=lean_format)
+    shape: MathList = self.latex_shape(is_type=is_type, text=text,
+                                       lean_format=lean_format)
 
     if used_in_proof and not lean_format:
-        shape = [r'\used_property'] + shape
+        # shape = [r'\used_property'] + shape
+        shape.insert(0, MathString.formatter(r'\used_property'))
 
-    abstract_string = new_expanded_latex_shape(math_object=self, shape=shape,
-                                           text=text, lean_format=lean_format)
+    # abstract_string = new_expanded_latex_shape(math_object=self, shape=shape,
+    #                                        text=text, lean_format=lean_format)
 
-    # log.debug(f"Abstract string: {abstract_string}")
+    # new_expanded_latex_shape(shape=shape)
+    shape.expand_latex_shape()
+
     # (3) Replace some symbols by plain text, or shorten some text:
-    text_depth = 100 if text else 0
-    if not lean_format:
-        abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+    # text_depth = 100 if text else 0
+    # if not lean_format:
+    #     # abstract_string = shallow_latex_to_text(abstract_string, text_depth)
+    # shallow_latex_to_text(shape, text_depth)
+    shape.process_text()
 
     # (4) Format into a displayable string
-    display = abstract_string_to_string(abstract_string, format_,
+    display = abstract_string_to_string(shape, format_,
                                         use_color=use_color, bf=bf,
                                         no_text=not text)
 
