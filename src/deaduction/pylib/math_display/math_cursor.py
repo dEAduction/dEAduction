@@ -1,5 +1,5 @@
 """
-# math_list.py : class MathCursor #
+# math_cursor.py : class MathCursor #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -51,11 +51,49 @@ class MathCursor:
         self.cursor_is_after = True
         self.__cursor_is_shown = False
 
+    @property
+    def cursor_is_before(self):
+        return not self.cursor_is_after
+
     def set_cursor_before(self):
         self.cursor_is_after = False
 
     def set_cursor_after(self):
         self.cursor_is_after = True
+
+    def go_up(self):
+        ca = self.cursor_address
+        if len(ca) > 0:
+            self.cursor_address = ca[:-1]
+            return True
+        else:
+            return False
+
+    def go_down(self):
+        if isinstance(self.current_item, MathList):
+            self.cursor_address += (1,)
+            return True
+        else:
+            return False
+
+    def go_right(self):
+        parent = self.parent_of_current_item
+        if parent:
+            idx = self.current_idx
+            if idx < len(parent):
+                self.cursor_address = (self.cursor_address[:-1] +
+                                       (idx + 1,))
+                return True
+        return False
+
+    def go_left(self):
+        idx = self.current_idx
+        if idx and idx > 0:
+            self.cursor_address = (self.cursor_address[:-1] +
+                                   (idx - 1,))
+            return True
+        else:
+            return False
 
     @property
     def root_math_object(self):
@@ -72,7 +110,9 @@ class MathCursor:
     #######################
     @property
     def current_idx(self):
-        return self.cursor_address[-1]
+        ca = self.cursor_address
+        if len(ca) > 0:
+            return ca[-1]
 
     def item_for_address(self, address: tuple) -> Union[MathString,
                                                           MathList]:
@@ -85,8 +125,10 @@ class MathCursor:
 
     @property
     def parent_of_current_item(self) -> MathList:
-        ml = self.item_for_address(self.current_idx)
-        return ml
+        ca = self.cursor_address
+        if len(ca) > 0:
+            math_list = self.item_for_address(self.cursor_address[:-1])
+            return math_list
 
     def show_cursor(self):
         """
@@ -140,8 +182,9 @@ class MathCursor:
 
     @property
     def is_cursor_at_end(self):
-        test = ((len(self.cursor_address) == 1) and
-                (self.current_idx == len(self.math_list)))
+        # test = ((len(self.cursor_address) == 1) and
+        #         (self.current_idx == len(self.math_list)))
+        test = self.cursor_address == tuple() and self.cursor_is_after
         return test
 
     def increase_pos(self):
@@ -149,57 +192,63 @@ class MathCursor:
         Increase cursor position by one.
         """
 
-        # FIXME: cursor is NOT an element, it takes the place of an element.
-        # FIXME: take into account before/after
-
         self.hide_cursor()
 
         if self.is_cursor_at_end:
             return
 
-        # (1) Try to go down
-        current_item = self.current_item
-        if isinstance(current_item, MathList):
-            self.cursor_address += (0,)
-            return
+        # (1) Cursor is before:
+        if self.cursor_is_before:
+            # (1.1) Try to go down:
+            go_down = self.go_down()
 
-        # (2) Try to go left
-        parent = self.parent_of_current_item
-        if self.current_idx < len(parent):
-            # Case 1: not at the end of the current (parent) list
-            self.cursor_address = (self.cursor_address[:-1] +
-                                   (self.current_idx + 1,))
-            return
+            # (1.2) Otherwise, put cursor after current item:
+            if not go_down:
+                self.set_cursor_after()
 
-        # (3) Try to go up and increase idx
-        if len(self.cursor_address) > 1:
+        # (2) Cursor is after
+        else:
+            # (2.1) Try to go right:
+            go_right = self.go_right()
 
-            new_idx = self.cursor_address[-2] + 1
-            head = self.cursor_address[:-2] + (new_idx,)
-            item = self.item_for_address(head)
-            tail = item.address_of_first_leaf_descendant
-            self.cursor_address = head + tail
-
-
-
+            # (2.2) Otherwise, try to go up:
+            if not go_right:
+                self.go_up()
 
     @property
     def is_cursor_at_beginning(self):
-        test = ((len(self.cursor_address) == 1) and
-                (self.current_idx == 0))
+        # test = ((len(self.cursor_address) == 1) and
+        #         (self.current_idx == 0))
+        test = self.cursor_address == tuple() and self.cursor_is_before
         return test
 
     def decrease_pos(self):
         """
-        Decrease cursor position by one.
-        Note that is NOT the symetric of the previous method, because the
-        cursor take the place of an item, shifting items to the right.
+        Decrease cursor position by one. Symmetric to the increase() method.
         """
 
-        # FIXME
+        self.hide_cursor()
 
         if self.is_cursor_at_beginning:
             return
+
+        # (1) Cursor is after:
+        if self.cursor_is_after:
+            # (1.1) Try to go down:
+            go_down = self.go_down()
+
+            # (1.2) Otherwise, put cursor after current item:
+            if not go_down:
+                self.set_cursor_before()
+
+        # (2) Cursor is before
+        else:
+            # (2.1) Try to go left:
+            go_left = self.go_left()
+
+            # (2.2) Otherwise, try to go up:
+            if not go_left:
+                self.go_up()
 
 
 
