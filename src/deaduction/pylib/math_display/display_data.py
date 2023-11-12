@@ -687,59 +687,61 @@ class MathDisplay:
         return True
 
     @classmethod
-    def latex_to_utf8(cls, string: Union[str, list]):
+    def latex_to_utf8(cls, string: str):
         """
         Convert a string or a list of string from latex to utf8.
         """
+        # FIXME: this should be used only for strings.
+
         utf8_string = None
 
-        if isinstance(string, list):
-            return string.recursive_map(cls.latex_to_utf8)
-        if isinstance(string, list) or isinstance(string, tuple):
-            return [cls.latex_to_utf8(item) for item in string]
-        elif isinstance(string, str):
-            striped_string = string.strip()  # Remove spaces
-            if striped_string in cls.latex_to_utf8_dic:
-                utf8_string = cls.latex_to_utf8_dic[striped_string]
-            elif striped_string in cls.latex_to_text:  # Useful for and,
-                # \typeElement...
-                utf8_string = cls.latex_to_text[striped_string]
-            if utf8_string is not None:
-                if isinstance(utf8_string, str):
-                    utf8_string = string.replace(striped_string, utf8_string)
-                else:
-                    utf8_string = list(utf8_string)
+        # if isinstance(string, list):
+        #     return string.recursive_map(cls.latex_to_utf8)
+        # if isinstance(string, list) or isinstance(string, tuple):
+        #     return [cls.latex_to_utf8(item) for item in string]
+        # elif isinstance(string, str):
+        striped_string = string.strip()  # Remove spaces
+        if striped_string in cls.latex_to_utf8_dic:
+            utf8_string = cls.latex_to_utf8_dic[striped_string]
+        elif striped_string in cls.latex_to_text:  # Useful for and,
+            # \typeElement...
+            utf8_string = cls.latex_to_text[striped_string]
+        if utf8_string is not None:
+            if isinstance(utf8_string, str):
+                utf8_string = string.replace(striped_string, utf8_string)
+            else:
+                utf8_string = list(utf8_string)
 
         return utf8_string if utf8_string is not None else string
 
     @classmethod
-    def latex_to_lean(cls, string: Union[str, list]):
+    def latex_to_lean(cls, string: str):
         """
         Convert a string or a list of string from latex to Lean.
         Warning, this has not really been tested.
         (Used only in logic.py.)
         """
-        # Fixme: this is FAR from being fully functional.
-        #  In particular, this should also handles lambda expression
-        #  (including sequences, set families, and so on)
-        if isinstance(string, list):
-            return [cls.latex_to_lean(item) for item in string]
-        elif isinstance(string, str):
-            striped_string = string.strip()  # Remove spaces
-            if striped_string in cls.latex_to_lean_dic:
-                lean_string = cls.latex_to_lean_dic[striped_string]
-                if isinstance(lean_string, str):
-                    lean_string = string.replace(striped_string, lean_string)
-                return lean_string
-            elif striped_string in cls.latex_to_utf8_dic:
-                utf8_string = cls.latex_to_utf8_dic[striped_string]
-                if isinstance(utf8_string, str):
-                    utf8_string = string.replace(striped_string, utf8_string)
-                return utf8_string
-            else:
-                return string
+
+        # FIXME: this should be used only for strings.
+
+        # if isinstance(string, list):
+        #     return [cls.latex_to_lean(item) for item in string]
+        # elif isinstance(string, str):
+        striped_string = string.strip()  # Remove spaces
+        if striped_string in cls.latex_to_lean_dic:
+            lean_string = cls.latex_to_lean_dic[striped_string]
+            if isinstance(lean_string, str):
+                lean_string = string.replace(striped_string, lean_string)
+            return lean_string
+        elif striped_string in cls.latex_to_utf8_dic:
+            utf8_string = cls.latex_to_utf8_dic[striped_string]
+            if isinstance(utf8_string, str):
+                utf8_string = string.replace(striped_string, utf8_string)
+            return utf8_string
         else:
             return string
+        # else:
+        #     return string
 
     @staticmethod
     def wrap_lean_shape_with_type(mo, lean_shape) -> []:

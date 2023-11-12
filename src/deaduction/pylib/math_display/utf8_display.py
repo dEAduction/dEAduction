@@ -31,7 +31,7 @@ from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
                                                               replace_dubious_characters)
 
 
-def subscript(s: str) -> str:
+def subscript(s: Union[list, str]) -> str:
     text = text_to_subscript_or_sup(s, format_="utf8", sup=False)
     if isinstance(text, list):
         text = "".join(text)

@@ -33,7 +33,7 @@ from deaduction.pylib.math_display.pattern_init import (pattern_latex,
                                                         pattern_lean,
                                                         pattern_text,
                                                         pattern_latex_for_type)
-from deaduction.pylib.math_display.display import abstract_string_to_string
+from deaduction.pylib.math_display.display import format_math_list, html_display
 from deaduction.pylib.math_display.display_utils import (shallow_latex_to_text,
                                                          latex_to_text_func)
 from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
@@ -173,6 +173,87 @@ def lean_shape(self: MathObject) -> []:
         shape = MathDisplay.wrap_lean_shape_with_type(self, shape)
 
     return shape
+
+
+def latex_shape(self: MathObject, is_type=False, text=False,
+                lean_format=False):
+    """
+    Return the shape of self, e.g.
+            [r'\forall', 1, r'\subset', 0, (2, )]
+    where 0, 1 are replaced by pertinent MathObjects (but not (2, ) that
+    stands for children[2], not for metavars).
+
+    If is_type is True, then pattern is first looked for in the
+    pattern_latex_for_type list. This should be used for math_types of
+    context objects.
+
+    If text is True, then the pattern_text list is used first.
+
+    Here we make as few substitution as possible, namely we only substitute
+    metavars and not children or descendant, since descendant nb are useful
+    to add appropriate parentheses.
+    """
+
+    shape = None
+    shape_math = MathList((), self,
+                          format_="lean" if lean_format else "utf8",
+                          text=text)
+
+    # FIXME?
+    if lean_format:
+        shape = self.lean_shape()
+        if shape:  # Really, no more processing??
+            return shape
+
+    # (0) Dictionaries to be used (order matters!):
+    dicts = []
+    if is_type:
+        dicts.append(pattern_latex_for_type)
+    if text:
+        dicts.append(pattern_text)
+    dicts.append(pattern_latex)
+
+    # (1) Search for patterns
+    for dic in dicts:
+        for pattern, pre_shape, metavars in dic:
+            if pattern.match(self):
+                # Now metavars are matched
+                # log.debug(f"Matching pattern --> {pre_shape}")
+                shape = tuple(substitute_metavars(item, metavars, pattern)
+                              for item in pre_shape)
+                break
+        if shape:
+            shape_math.pattern = pattern
+            shape_math.pattern_dic = dic
+            break
+
+    # (2) Generic cases: use only node
+    if not shape:
+        if self.node in MathDisplay.latex_from_node:
+            shape = list(MathDisplay.latex_from_node[self.node])
+        else:
+            shape = ["***"]  # Default
+
+    # (3) Process macros
+    if shape[0] == "global":
+        shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
+
+    # shape = [process_shape_macro(self, item) if isinstance(item, str)
+    #          else item for item in shape]
+
+    for item in shape:
+        if isinstance(item, str):
+            new_item = process_shape_macro(self, item)
+            if isinstance(new_item, str):
+                new_item = MathString(new_item, root_math_object=self)
+                # print(f"Stringmath of {new_item.math_object()}: {new_item}")
+            shape_math.append(new_item)
+            # print(isinstance(s, str))
+        else:
+            shape_math.append(item)
+    # print(f"MathList of {shape_math.math_object()}: {shape_math}")
+    # print(isinstance(shape_math, list))
+    return shape_math
 
 
 ###################################
@@ -329,17 +410,13 @@ class MathList(list, MathDescendant):
         self.pattern = pattern
         self.pattern_dic = pattern_dic
 
-    def to_string(self):
-        for item in self:
-            if not isinstance(item, MathList) and not isinstance(item,
-                                                                MathString):
-                print("Bug")  # Fixme
-        flat_list = [item.to_string() for item in self]
-        return ''.join(flat_list)
-
     # def __str__(self):
     #     flat_list = [str(item) for item in self]
     #     return ''.join(flat_list)
+
+    @property
+    def lean_format(self):
+        return self.format_ == "lean"
 
     def replace_string(self, idx, new_string: str) -> bool:
         """
@@ -388,10 +465,6 @@ class MathList(list, MathDescendant):
         """
         self.insert(0, pre)
         self.append(post)
-
-    @property
-    def lean_format(self):
-        return self.format_ == "lean"
 
     def item_for_address(self, position: tuple):
         """
@@ -459,6 +532,29 @@ class MathList(list, MathDescendant):
 
     # TODO: expanded_latex_shape should be a method here?
 
+    @classmethod
+    def latex_shape(cls, math_object: MathObject,
+                    is_type=False, text=False, lean_format=False):
+        """
+        Return the shape of self, e.g.
+                [r'\forall', 1, r'\subset', 0, (2, )]
+        where 0, 1 are replaced by pertinent MathObjects (but not (2, ) that
+        stands for children[2], not for metavars).
+
+        If is_type is True, then pattern is first looked for in the
+        pattern_latex_for_type list. This should be used for math_types of
+        context objects.
+
+        If text is True, then the pattern_text list is used first.
+
+        Here we make as few substitution as possible, namely we only substitute
+        metavars and not children or descendant, since descendant nb are useful
+        to add appropriate parentheses.
+        """
+
+        return math_object.latex_shape(is_type=False, text=False,
+                                       lean_format=False)
+
     def check_completeness(self) -> bool:
         """
         Recursively checks that self's items are MathString or MathLists.
@@ -505,11 +601,60 @@ class MathList(list, MathDescendant):
 
         self.check_completeness()
 
-    def format(self):
+    def format(self, use_color=True, bf=False):
         """
         Modify self to a specific format (Lean, html, utf8).
         """
-        # TODO
+
+        # FIXME: works only for html
+        # (1) Replace latex macro by utf8/lean versions
+        if self.lean_format:
+            # math_list = MathDisplay.latex_to_lean(math_list)
+            self.recursive_map(MathDisplay.latex_to_lean)
+
+        if self.format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by
+            # utf8:
+            # abstract_string = MathDisplay.latex_to_utf8(abstract_string)
+            self.recursive_map(MathDisplay.latex_to_utf8)
+        else:
+            raise ValueError(
+                "Wrong format_ type, must be one of 'lean', 'utf8', "
+                "'html'")
+        # (2) Format
+        if self.format_ == 'html':
+            no_text = not self.text
+            html_display(self, use_color=use_color, bf=bf, no_text=no_text)
+
+        elif self.format_ == 'utf8':  # FIXME:
+            pass  # TODO
+        elif self.format_ == 'lean':  # FIXME:
+            pass  # TODO
+
+    @classmethod
+    def complete_latex_shape(cls, math_object, format_="html", text=False,
+                             use_color=True, bf=False, is_type=False,
+                             used_in_proof=False):
+
+        # FIXME: format() works only for html
+
+        lean_format = (format_ == "lean")
+
+        shape = cls.latex_shape(math_object, is_type=is_type, text=text,
+                                lean_format=lean_format)
+
+        if used_in_proof and not lean_format:
+            # shape = [r'\used_property'] + shape
+            shape.insert(0, MathString.formatter(r'\used_property'))
+
+        # (2) Expand shape into a complete MathList
+        shape.expand_latex_shape()
+
+        # (3) Replace some symbols by plain text, or shorten some text:
+        shape.process_text()
+
+        shape.format(use_color=use_color, bf=bf)
+
+        return shape
 
     def cut_spaces(self, previous_item=None):
         """
@@ -544,86 +689,16 @@ class MathList(list, MathDescendant):
         self.recursive_map(replace_dubious_characters)
         self.cut_spaces()
 
-
-def latex_shape(self: MathObject, is_type=False, text=False,
-                lean_format=False) -> MathList:
-    """
-    Return the shape of self, e.g.
-            [r'\forall', 1, r'\subset', 0, (2, )]
-    where 0, 1 are replaced by pertinent MathObjects (but not (2, ) that
-    stands for children[2], not for metavars).
-
-    If is_type is True, then pattern is first looked for in the
-    pattern_latex_for_type list. This should be used for math_types of
-    context objects.
-
-    If text is True, then the pattern_text list is used first.
-
-    Here we make as few substitution as possible, namely we only substitute
-    metavars and not children or descendant, since descendant nb are useful
-    to add appropriate parentheses.
-    """
-
-    shape = None
-    shape_math = MathList((), self,
-                          format_="lean" if lean_format else "utf8",
-                          text=text)
-
-    # FIXME?
-    if lean_format:
-        shape = self.lean_shape()
-        if shape:  # Really, no more processing??
-            return shape
-
-    # (0) Dictionaries to be used (order matters!):
-    dicts = []
-    if is_type:
-        dicts.append(pattern_latex_for_type)
-    if text:
-        dicts.append(pattern_text)
-    dicts.append(pattern_latex)
-
-    # (1) Search for patterns
-    for dic in dicts:
-        for pattern, pre_shape, metavars in dic:
-            if pattern.match(self):
-                # Now metavars are matched
-                # log.debug(f"Matching pattern --> {pre_shape}")
-                shape = tuple(substitute_metavars(item, metavars, pattern)
-                              for item in pre_shape)
-                break
-        if shape:
-            shape_math.pattern = pattern
-            shape_math.pattern_dic = dic
-            break
-
-    # (2) Generic cases: use only node
-    if not shape:
-        if self.node in MathDisplay.latex_from_node:
-            shape = list(MathDisplay.latex_from_node[self.node])
-        else:
-            shape = ["***"]  # Default
-
-    # (3) Process macros
-    if shape[0] == "global":
-        shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
-
-    # shape = [process_shape_macro(self, item) if isinstance(item, str)
-    #          else item for item in shape]
-
-    for item in shape:
-        if isinstance(item, str):
-            new_item = process_shape_macro(self, item)
-            if isinstance(new_item, str):
-                new_item = MathString(new_item, root_math_object=self)
-                # print(f"Stringmath of {new_item.math_object()}: {new_item}")
-            shape_math.append(new_item)
-            # print(isinstance(s, str))
-        else:
-            shape_math.append(item)
-    # print(f"MathList of {shape_math.math_object()}: {shape_math}")
-    # print(isinstance(shape_math, list))
-    return shape_math
+    def to_string(self) -> str:
+        """
+        Concatenate self into an actual string.
+        """
+        for item in self:
+            if not isinstance(item, MathList) and not isinstance(item,
+                                                                MathString):
+                print("Bug")  # Fixme
+        flat_list = [item.to_string() for item in self]
+        return ''.join(flat_list)
 
 
 # def process_shape_item(item, math_object=None, text=False,
@@ -914,8 +989,12 @@ def to_display(self: MathObject, format_="html", text=False,
     shape.process_text()
 
     # (4) Format into a displayable string
-    display = abstract_string_to_string(shape, format_, use_color=use_color,
-                                        bf=bf, no_text=not text)
+    # TODO; this should be a MathList method
+    display = format_math_list(shape, format_, use_color=use_color, bf=bf,
+                               no_text=not text)
+
+    # TODO: concatenate here:
+    # display = math_list.to_string()
 
     return display
 
