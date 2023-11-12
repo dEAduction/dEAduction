@@ -37,7 +37,7 @@ This file is part of d∃∀duction.
 """
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.utils import replace_dubious_characters
+from deaduction.pylib.math_display.more_display_utils import replace_dubious_characters
 
 
 ########################################################################

@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from typing import Union
+from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
 
@@ -85,15 +85,33 @@ class Descendant:
             return self.attribute_or_callable(descendant)
 
 
-def cut_spaces(string: str) -> str:
+def cut_spaces(string: str) -> Optional[str]:
     """
     Remove unnecessary spaces inside string.
     """
-    while string.find("  ") != -1:
-        string = string.replace("  ", " ")
-    string = string.replace("( ", "(")
-    string = string.replace(" )", ")")
-    return string
+
+    new_string = string
+    while new_string.find("  ") != -1:
+        new_string = new_string.replace("  ", " ")
+    new_string = new_string.replace("( ", "(")
+    new_string = new_string.replace(" )", ")")
+
+    if new_string != string:
+        return new_string
+
+
+def cut_successive_spaces(string1, string2: str) -> Optional[str]:
+    """
+    Remove unnecessary spaces between sucessive strings.
+    """
+
+    if not (string1 and string2):
+        return
+
+    if string1[-1] in (' ', '(', ')'):
+        if string2[0] == ' ':
+            string2 = string2[:-1]
+            return string2
 
 
 def text_to_subscript_or_sup(structured_string,

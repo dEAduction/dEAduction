@@ -32,7 +32,7 @@ from deaduction.pylib.math_display import MathDisplay
 # latex_to_lean = MathDisplay.latex_to_lean
 
 
-def abstract_string_to_string(abstract_string: Union[list, str], format_,
+def abstract_string_to_string(math_list: Union[list, str], format_,
                               use_color=True,
                               bf=False,
                               no_text=False) -> str:
@@ -42,20 +42,22 @@ def abstract_string_to_string(abstract_string: Union[list, str], format_,
     display = ""
     # (1) Replace latex macro by utf8/lean versions
     if format_ == 'lean':
-        abstract_string = MathDisplay.latex_to_lean(abstract_string)
+        math_list = MathDisplay.latex_to_lean(math_list)
 
     if format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by utf8:
-        abstract_string = MathDisplay.latex_to_utf8(abstract_string)
+        # abstract_string = MathDisplay.latex_to_utf8(abstract_string)
+        math_list.recursive_map(MathDisplay.latex_to_utf8)
     else:
         raise ValueError("Wrong format_ type, must be one of 'lean', 'utf8', "
                          "'html'")
     # (2) Concatenate and format
     if format_ == 'html':
-        display = html_display(abstract_string, use_color=use_color, bf=bf,
-                               no_text=no_text)
+        html_display(math_list, use_color=use_color, bf=bf, no_text=no_text)
+        display = math_list.to_string()
+
     elif format_ == 'utf8':
-        display = utf8_display(abstract_string)
+        display = utf8_display(math_list)
     elif format_ == 'lean':
-        display = lean_display(abstract_string)
+        display = lean_display(math_list)
 
     return display

@@ -26,49 +26,11 @@ Copyright (c) 2020 the dEAduction team
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# OBSOLETE DOC
-# ##############################################
-# # display_math: display mathematical objects #
-# ##############################################
-#
-# Contain the data for processing MathObject into a displayable format:
-# latex, utf8, text, or lean (to be inserted in Lean code).
-#
-# The basic data for representing math objects is the latex_from_node dictionary.
-# It associates, to each MathObject.node attribute, the shape to display, e.g.
-#     "PROP_INCLUDED": [0, " \\subset ", 1],
-# where the numbers refer to the MathObject's children.
-# For generic nodes at least, the from_math_object method picks the right shape
-# from this dictionary, and then call the Shape.from_shape method.
-#
-# utf8 and lean format are also provided. The utf8 format is obtained from
-# the latex string using latex_to_utf8_dic that converts latex commands.
-# For Lean format some nodes have to be computed from scratch, these are in
-# lean_from_node; but for most nodes the utf8 string is also OK for Lean.
-#
-# TO IMPLEMENT A NEW NODE FOR DISPLAY:
-# - for standards nodes, it suffices to add an entry in the latex_from_node
-# dictionary (and in the latex_to_ut8, utf8_to_lean, node_to_lean if
-# necessary). Those dictionaries are in display_data.py.
-# - for some specific constant, use the latex_from_constant_name dictionary
-# These constant are displayed through display_application,
-# e.g. APP(injective, f).
-# - for more specific nodes, one can define a new display function and call it
-# via the from_specific_node function.
-
 
 import logging
 from typing import Union
 
 from deaduction.pylib.math_display import MathDisplay
-
-# latex_to_text = MathDisplay.latex_to_text
-
-# from deaduction.pylib.math_display.display_data \
-#                                         import (latex_from_quant_node,
-#                                                 needs_paren,
-#                                                 couples_of_nodes_to_latex,
-#                                                 dic_of_first_nodes_latex)
 
 log = logging.getLogger(__name__)
 global _
@@ -130,7 +92,7 @@ def latex_to_text_func(string: str) -> (str, bool):
     return string, False
 
 
-def shallow_latex_to_text(abstract_string: Union[list, str], text_depth=0) \
+def shallow_latex_to_text(math_list: Union[list, str], text_depth=0) \
         -> Union[list, str]:
     """
     Try to change symbols for text in a tree representing some MathObject,
@@ -141,40 +103,40 @@ def shallow_latex_to_text(abstract_string: Union[list, str], text_depth=0) \
 
     # TODO: move this as methods of MathString and MathList
 
-    if not abstract_string:
-        return abstract_string
+    if not math_list:
+        return math_list
 
-    if isinstance(abstract_string, list):
+    if isinstance(math_list, list):
         # Stop conversion to text in some cases
-        if abstract_string[0] == r'\no_text':
+        if math_list[0] == r'\no_text':
             text_depth = 0
         # Recursion
         # abstract_string = [shallow_latex_to_text(item, text_depth-1) for
         #                    item in abstract_string]
         idx = 0
-        for item in abstract_string:
-            new_string = shallow_latex_to_text(item, text_depth-1)
-            # FIXME: classmethod
-            abstract_string.replace_string(idx, new_string)
+        for item in math_list:
+            new_string = shallow_latex_to_text(item, text_depth - 1)
+            # FIXME: class method
+            math_list.replace_string(idx, new_string)
             # abstract_string[idx] = shallow_latex_to_text(item, text_depth-1)
             idx += 1
 
         # log.debug(f"    --> Shallow_to_text: {string}")
-        return abstract_string
+        return math_list
 
-    elif isinstance(abstract_string, str):
+    elif isinstance(math_list, str):
         if text_depth > 0:  # Try to convert to text
-            new_string, success = latex_to_text_func(abstract_string)
+            new_string, success = latex_to_text_func(math_list)
             if success:  # Add a tag to indicate this is text (not math).
-                new_math_str = abstract_string.replace_string(abstract_string,
-                                                              new_string)
-                formatter = abstract_string.formatter(r'\text')
+                new_math_str = math_list.replace_string(math_list,
+                                                        new_string)
+                formatter = math_list.formatter(r'\text')
                 string = [formatter, new_math_str]
         else:  # Try to shorten
-            new_string = shorten(abstract_string)
-            if new_string != abstract_string:
-                new_string = abstract_string.replace_string(abstract_string,
-                                                            new_string)
+            new_string = shorten(math_list)
+            if new_string != math_list:
+                new_string = math_list.replace_string(math_list,
+                                                      new_string)
 
         return new_string
 

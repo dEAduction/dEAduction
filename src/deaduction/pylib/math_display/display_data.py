@@ -693,6 +693,8 @@ class MathDisplay:
         """
         utf8_string = None
 
+        if isinstance(string, list):
+            return string.recursive_map(cls.latex_to_utf8)
         if isinstance(string, list) or isinstance(string, tuple):
             return [cls.latex_to_utf8(item) for item in string]
         elif isinstance(string, str):

@@ -25,10 +25,10 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
-from deaduction.pylib.math_display.utils import (cut_spaces,
-                                                 text_to_subscript_or_sup,
-                                                 first_descendant,
-                                                 replace_dubious_characters)
+from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
+                                                              text_to_subscript_or_sup,
+                                                              first_descendant,
+                                                              replace_dubious_characters)
 
 
 def subscript(s: str) -> str:
@@ -98,11 +98,11 @@ def add_parentheses(l: list, depth):
 
     for index in range(len(l) - 1):
         if l[index] == r'\parentheses':
-            l[index] = "("
+            l[index] = l.formatter("(")
             if index == len(l)-2 and isinstance(l[-1], list):
                 remove_leading_parentheses(l[-1])
 
-            l.append(")")
+            l.append(l.formatter(")"))
 
 
 def recursive_utf8_display(l: list, depth) -> str:
@@ -136,6 +136,9 @@ def utf8_display(abstract_string: Union[str, list], depth=0):
     Return a utf8 version of the string represented by abstract_string,
     which is a tree of string.
     """
+    if abstract_string is None:
+        return ""
+
     if isinstance(abstract_string, list):
         string = recursive_utf8_display(abstract_string, depth)
     else:
