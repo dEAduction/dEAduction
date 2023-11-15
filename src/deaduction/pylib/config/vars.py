@@ -77,7 +77,8 @@ def save():
     global __dict_user
 
     log.info(_("Saving configuration file"))
-    with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
+    with open(str(USER_CONFIG_FILE_PATH),
+              mode="w", encoding='utf-8') as fhandle:
         toml.dump(__dict_user, fhandle)
 
 

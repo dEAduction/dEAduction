@@ -149,7 +149,7 @@ __logic_translation =\
      _('USE FORALL'), _('USE EXISTS'), _('USE IMPLIES'), _('USE AND'),
      _('USE OR'),
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
-     _('NEW OBJECT'), _('PROOF METHODS')]
+     _('NEW OBJECT'), _('PROOF METHODS'), _('ASSUMPTION')]
 
 
 def __compute_buttons_symbols_dict():

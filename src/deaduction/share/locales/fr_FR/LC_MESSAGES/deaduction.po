@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-07-24 20:15+0200\n"
-"PO-Revision-Date: 2023-07-24 20:15+0200\n"
+"POT-Creation-Date: 2023-11-15 10:33+0100\n"
+"PO-Revision-Date: 2023-11-15 10:35+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.3.2\n"
+"X-Generator: Poedit 3.4.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
@@ -47,11 +47,11 @@ msgstr ""
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
 
-#: dui/elements/actions_widgets_classes.py:199
+#: dui/elements/actions_widgets_classes.py:202
 msgid "Button"
 msgstr "Bouton"
 
-#: dui/elements/actions_widgets_classes.py:199
+#: dui/elements/actions_widgets_classes.py:202
 #: dui/elements/config_window.py:536
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_triangle.py:82
@@ -61,43 +61,47 @@ msgstr "Bouton"
 msgid ":"
 msgstr " :"
 
-#: dui/elements/actions_widgets_classes.py:356
+#: dui/elements/actions_widgets_classes.py:359
 msgid "Prove mode"
 msgstr "Mode Démontrer"
 
-#: dui/elements/actions_widgets_classes.py:357
+#: dui/elements/actions_widgets_classes.py:360
 msgid "Use mode"
 msgstr "Mode Utiliser"
 
-#: dui/elements/actions_widgets_classes.py:405
-#: dui/elements/actions_widgets_classes.py:443
+#: dui/elements/actions_widgets_classes.py:408
+#: dui/elements/actions_widgets_classes.py:450
+#: dui/elements/actions_widgets_classes.py:659
+#: dui/stages/exercise/_exercise_main_window_widgets.py:307
 msgid "Prove:"
 msgstr "Démontrer :"
 
-#: dui/elements/actions_widgets_classes.py:406
-#: dui/elements/actions_widgets_classes.py:447
+#: dui/elements/actions_widgets_classes.py:409
+#: dui/elements/actions_widgets_classes.py:454
+#: dui/elements/actions_widgets_classes.py:660
+#: dui/stages/exercise/_exercise_main_window_widgets.py:308
 msgid "Use:"
 msgstr "Utiliser :"
 
-#: dui/elements/actions_widgets_classes.py:744
+#: dui/elements/actions_widgets_classes.py:858
 msgid "saved on "
 msgstr "sauvegarde du "
 
-#: dui/elements/actions_widgets_classes.py:745
+#: dui/elements/actions_widgets_classes.py:859
 msgid "steps"
 msgstr "étapes"
 
-#: dui/elements/actions_widgets_classes.py:1021
+#: dui/elements/actions_widgets_classes.py:1135
 #: dui/stages/start_coex/start_coex_widgets.py:876
 #: dui/stages/start_coex/start_coex_widgets.py:1177
 msgid "Exercises"
 msgstr "Exercices"
 
-#: dui/elements/actions_widgets_classes.py:1021
+#: dui/elements/actions_widgets_classes.py:1135
 msgid "Saved proofs"
 msgstr "Sauvegardes"
 
-#: dui/elements/actions_widgets_classes.py:1023
+#: dui/elements/actions_widgets_classes.py:1137
 msgid "Statements"
 msgstr "Enoncés"
 
@@ -448,7 +452,7 @@ msgid " ({} pending)"
 msgstr " ({} en attente)"
 
 #: dui/elements/help.py:58 dui/elements/help.py:147
-#: dui/stages/exercise/_exercise_main_window_widgets.py:593
+#: dui/stages/exercise/_exercise_main_window_widgets.py:598
 msgid "Help"
 msgstr "Aide"
 
@@ -611,8 +615,8 @@ msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
 #: dui/stages/exercise/Coordinator.py:1215
-#: dui/stages/exercise/_exercise_main_window_widgets.py:794
-#: dui/stages/exercise/_exercise_main_window_widgets.py:810
+#: dui/stages/exercise/_exercise_main_window_widgets.py:799
+#: dui/stages/exercise/_exercise_main_window_widgets.py:815
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
@@ -620,86 +624,86 @@ msgstr "Changer d’exercice"
 msgid "Save history"
 msgstr "Sauver l'historique"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:162
-#: dui/stages/exercise/_exercise_main_window_widgets.py:249
-#: dui/stages/exercise/_exercise_main_window_widgets.py:475
+#: dui/stages/exercise/_exercise_main_window_widgets.py:163
+#: dui/stages/exercise/_exercise_main_window_widgets.py:252
+#: dui/stages/exercise/_exercise_main_window_widgets.py:480
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:312
+#: dui/stages/exercise/_exercise_main_window_widgets.py:317
 msgid "Actions (logical rules and statements)"
 msgstr "Actions (règles logiques et énoncés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:473
+#: dui/stages/exercise/_exercise_main_window_widgets.py:478
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:621
+#: dui/stages/exercise/_exercise_main_window_widgets.py:626
 msgid "    Thinking"
 msgstr "    Je réfléchis"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:626
+#: dui/stages/exercise/_exercise_main_window_widgets.py:631
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:718
-#: dui/stages/exercise/_exercise_main_window_widgets.py:779
+#: dui/stages/exercise/_exercise_main_window_widgets.py:723
+#: dui/stages/exercise/_exercise_main_window_widgets.py:784
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:723
-#: dui/stages/exercise/_exercise_main_window_widgets.py:768
+#: dui/stages/exercise/_exercise_main_window_widgets.py:728
+#: dui/stages/exercise/_exercise_main_window_widgets.py:773
 msgid "Jump to beginning of proof"
 msgstr "Aller au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:726
-#: dui/stages/exercise/_exercise_main_window_widgets.py:769
+#: dui/stages/exercise/_exercise_main_window_widgets.py:731
+#: dui/stages/exercise/_exercise_main_window_widgets.py:774
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:729
-#: dui/stages/exercise/_exercise_main_window_widgets.py:770
+#: dui/stages/exercise/_exercise_main_window_widgets.py:734
+#: dui/stages/exercise/_exercise_main_window_widgets.py:775
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:732
-#: dui/stages/exercise/_exercise_main_window_widgets.py:771
+#: dui/stages/exercise/_exercise_main_window_widgets.py:737
+#: dui/stages/exercise/_exercise_main_window_widgets.py:776
 msgid "Jump to end of proof"
 msgstr ""
 "Aller à la fin\n"
 " de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:736
-#: dui/stages/exercise/_exercise_main_window_widgets.py:773
+#: dui/stages/exercise/_exercise_main_window_widgets.py:741
+#: dui/stages/exercise/_exercise_main_window_widgets.py:778
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:740
+#: dui/stages/exercise/_exercise_main_window_widgets.py:745
 msgid "Toggle proof global view"
 msgstr "Aperçu global de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:744
-#: dui/stages/exercise/_exercise_main_window_widgets.py:772
+#: dui/stages/exercise/_exercise_main_window_widgets.py:749
+#: dui/stages/exercise/_exercise_main_window_widgets.py:777
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:748
-#: dui/stages/exercise/_exercise_main_window_widgets.py:774
+#: dui/stages/exercise/_exercise_main_window_widgets.py:753
+#: dui/stages/exercise/_exercise_main_window_widgets.py:779
 msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:784
-#: dui/stages/exercise/_exercise_main_window_widgets.py:812
+#: dui/stages/exercise/_exercise_main_window_widgets.py:789
+#: dui/stages/exercise/_exercise_main_window_widgets.py:817
 msgid "Stop me from thinking!"
 msgstr "Arrêter la requête"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:789
-#: dui/stages/exercise/_exercise_main_window_widgets.py:811
+#: dui/stages/exercise/_exercise_main_window_widgets.py:794
+#: dui/stages/exercise/_exercise_main_window_widgets.py:816
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:797
-#: dui/stages/exercise/_exercise_main_window_widgets.py:813
+#: dui/stages/exercise/_exercise_main_window_widgets.py:802
+#: dui/stages/exercise/_exercise_main_window_widgets.py:818
 msgid "Save proof"
 msgstr "Sauvegarder la preuve"
 
@@ -3122,6 +3126,10 @@ msgstr "NOUVEL OBJET"
 #: pylib/text/tooltips.py:152
 msgid "PROOF METHODS"
 msgstr "METHODES DE PREUVES"
+
+#: pylib/text/tooltips.py:152
+msgid "ASSUMPTION"
+msgstr "BUT!"
 
 #: pylib/text/tooltips.py:168
 msgid "Proof methods..."

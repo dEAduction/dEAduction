@@ -1404,8 +1404,9 @@ class Coordinator(QObject):
             else:
                 # No proof state!? Maybe empty analysis?
                 self.__process_error(error_type=5, errors=[])
-                log.debug(f"Analysis: {lean_response.analysis[0]} ///"
-                          f" {lean_response.analysis[1]}")
+                if lean_response.analysis:
+                    log.debug(f"Analysis: {lean_response.analysis[0]} ///"
+                              f" {lean_response.analysis[1]}")
                 self.abort_process()
                 return
 
