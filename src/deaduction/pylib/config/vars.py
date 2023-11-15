@@ -69,7 +69,9 @@ else:
     print('path DOES NOT exist')
 
 if USER_CONFIG_FILE_PATH.exists():
-    __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+    # __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+    with open(str(USER_CONFIG_FILE_PATH), 'rb') as f:
+        __dict_user.update(toml.loads(f.read().decode('utf-8')))
 
 
 def save():
