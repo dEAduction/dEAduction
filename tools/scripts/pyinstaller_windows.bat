@@ -23,6 +23,8 @@ REM python3 -m pip install -r ..\requirements.txt
 
 cd ..\..\src
 
+REM THe following line will NOT work, unless the path to Python Scripts
+REM has been added to the PATH environment variable
 REM Find your own python/Scripts address by searching in the
 REM %HOMEPATH%\AppData\Local\
 REM and add it to the PATH variable by
