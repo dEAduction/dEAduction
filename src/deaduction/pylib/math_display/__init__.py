@@ -41,6 +41,9 @@ from .display_data import (MathDisplay,
                            new_objects,
                            new_properties
                            )
+from .pattern_init import PatternInit
 
 from .html_display import html_display
 from .utf8_display import utf8_display
+from .new_display import MathDescendant, MathString, MathList
+# from .math_cursor import MathCursor  --> circular import??

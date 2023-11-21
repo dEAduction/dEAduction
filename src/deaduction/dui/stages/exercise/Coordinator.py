@@ -87,8 +87,8 @@ from deaduction.pylib.actions           import (generic,
 from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
                                                 DefinitionMathObject)
 
-# Just for import
-from deaduction.pylib.math_display.new_display import to_display
+# Just for import??
+# from deaduction.pylib.math_display.new_display import to_display
 
 from deaduction.pylib.memory            import Journal
 

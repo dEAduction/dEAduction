@@ -88,12 +88,15 @@ if __name__ == '__main__':
 
 from typing import Optional
 
+
 from deaduction.pylib.mathobj import MathObject, BoundVar
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
 # from deaduction.pylib.math_display.pattern_init import all_app_patterns
 from deaduction.pylib.math_display import PatternMathDisplay
 # from .calculator_pattern_strings import automatic_matching_patterns
+
+from deaduction.pylib.math_display.math_cursor import MathCursor
 
 log = logging.getLogger(__name__)
 
@@ -120,14 +123,19 @@ class MarkedTree:
     # solely for the marked node. -1 denotes first position.
     # Not that self is marked iff cursor pos is not None
     cursor_pos = None
-    marked_nb = None
+    # marked_nb = None
     _current_index_in_total_list = None
+    _is_marked = False
 
     @property
     def is_marked(self):
-        return self.cursor_pos is not None
+        return self._is_marked
+        # return self.cursor_pos is not None
 
     # Most of the following properties should be handled by derived classes #
+
+    def set_marked(self, yes=True):
+        self._is_marked = yes
 
     @property
     def min_cursor_pos(self):
@@ -173,12 +181,19 @@ class MarkedTree:
         if self.is_marked:
             return self
 
+        marked_descendant = []
         for child in self.ordered_children():
             if child is self:
                 continue
-            marked_descendant = child.marked_descendant()
-            if marked_descendant:
-                return marked_descendant
+            new_marked_descendant = child.marked_descendant()
+            if new_marked_descendant:
+                marked_descendant.append(new_marked_descendant)
+
+        if marked_descendant:
+            if len(marked_descendant) == 1:
+                return marked_descendant[0]
+            else:
+                raise ValueError(f"Several marked descendants in {self}")
 
     @property
     def has_marked_descendant(self) -> bool:
@@ -192,20 +207,26 @@ class MarkedTree:
     def mark(self):
         # self.is_marked = True
         # self.cursor_pos = 1
-        if self.cursor_pos is None:
-            self.set_cursor_at_main_symbol()
+        # if self.cursor_pos is None:
+        #     self.set_cursor_at_main_symbol()
+        self.set_marked(True)
 
     def unmark(self):
         """
         Unmark self's marked node.
         """
-        if self.is_marked:
-            # self.is_marked = False
-            self.cursor_pos = None
-        else:
-            child = self.child_with_marked_descendant()
-            if child:
-                child.unmark()
+
+        descendant = self.marked_descendant()
+        if descendant:
+            descendant.set_marked(yes=False)
+        # if self.is_marked:
+        #     # self.is_marked = False
+        #     # self.cursor_pos = None
+        #     self.set_marked(False)
+        # else:
+        #     child = self.child_with_marked_descendant()
+        #     if child:
+        #         child.unmark()
 
     #######################
     # Total list of nodes #
@@ -443,7 +464,7 @@ class MarkedTree:
 
     def appears_left_of_cursor(self, other) -> bool:
         """
-        True iff other appears left of cursor.
+        True iff other appears left of cursor of self.
         """
         l, _ = self.total_and_cursor_list()
         idx = self.current_index_in_total_list()
@@ -910,6 +931,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     app_patterns = dict()
     applications_from_ctxt = []
 
+    _math_cursor: MathCursor = None
+
+    # def __init__(self, node, info, children, math_type, imperative_matching):
+    #     super().__init__(node, info, children, math_type, imperative_matching)
+    #
+    #     _math_cursor: MathCursor
     #
     # @classmethod
     # def populate_automatic_patterns(cls):
@@ -960,6 +987,24 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         pmo = super().from_string(s, metavars)
         mpmo = cls.from_pattern_math_object(pmo)
         return mpmo
+
+    def set_math_cursor(self, marked_descendant=None):
+        """
+        Set the MathCursor corresponding to current target, with the address
+        of marked_descendant (which will be marked).
+        """
+
+        # FIXME: use MathList.complete_latex_shape() method.
+        #  Even better: delegate this to MathList
+        # math_list = self.target.latex_shape()
+        self._math_cursor = MathCursor(self, marked_descendant)
+
+    @property
+    def math_cursor(self):
+        if not self._math_cursor:
+            self.set_math_cursor()
+
+        return self._math_cursor
 
     @classmethod
     def application_from_function(cls, fct):
@@ -1049,11 +1094,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         shape = super().latex_shape(is_type=is_type,
                                     text=text,
                                     lean_format=lean_format)
-        if not self.is_marked:
-            return shape
 
-        marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
-        return marked_shape
+        if self.is_marked:
+            # marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
+            shape.mark()
+
+        return shape
 
     @property
     def max_cursor_pos(self):
@@ -1140,6 +1186,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 new_l.extend(child.all_mvars(unassigned=unassigned))
 
         return descendant_lists
+
+    def set_cursor_at(self, mvar, pos=None):
+        self.math_cursor.go_to(mvar)
 
     def set_cursor_at_main_symbol(self):
         idx, ms = self.main_shape_symbol()
@@ -1841,6 +1890,8 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     """
     A Metavar which can be marked.
     """
+
+    _math_cursor: MathCursor = None
 
     def __repr__(self):
         rep = super().__repr__()

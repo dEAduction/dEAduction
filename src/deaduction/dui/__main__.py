@@ -125,7 +125,7 @@ def set_logger():
                        # 'logic',
                        # 'magic',
                        # 'coursedata',
-                       # 'deaduction.pylib.math_display',
+                       'deaduction.pylib.math_display.math_cursor',
                        # 'patterns'
                        # 'math_object'
                        ]

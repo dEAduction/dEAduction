@@ -35,12 +35,11 @@ from PySide2.QtGui     import  QTextDocument
 from PySide2.QtWidgets import (QToolButton,
                                # QPushButton,
                                QHBoxLayout,
-                               QLabel,
                                QSizePolicy)
 
-from deaduction.pylib.pattern_math_obj import (MarkedPatternMathObject,
-                                               calc_shortcuts_macro)
-from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
+from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject,
+                                                         calc_shortcuts_macro)
+from deaduction.pylib.marked_pattern_math_object.calculator_pattern_strings import CalculatorAbstractButton
 
 from deaduction.dui.primitives          import (deaduction_fonts,
                                                 MathLabel)

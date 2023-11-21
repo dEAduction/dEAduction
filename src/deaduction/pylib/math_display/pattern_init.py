@@ -51,74 +51,101 @@ from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants, generic_app_dict, \
     PatternMathDisplay
 
-from deaduction.pylib.pattern_math_obj.pattern_parser import tree_from_str
-from deaduction.pylib.pattern_math_obj import PatternMathObject
+# from deaduction.pylib.pattern_math_obj.pattern_parser import tree_from_str
+# from deaduction.pylib.pattern_math_obj import PatternMathObject
 
 log = logging.getLogger(__name__)
 
-#############################
-# These are the useful lists #
-#############################
-# items are tuples (pattern, latex_shape, metavars)
-pattern_latex = []
-pattern_lean = []
-pattern_text = []
-pattern_latex_for_type = []
 
-# This list indicates how to populate pattern lists from dictionaries:
-# Careful, order matters.
-dic_list_pairs = \
-    [(PatternMathDisplay.lean_from_app_constant_patterns, pattern_lean),
-     (lean_from_pattern_string, pattern_lean),
-     (latex_from_app_pattern, pattern_latex),
-     # The order matters! The generic patterns must come at the end.
-     (quant_pattern, pattern_latex),
-     (PatternMathDisplay.latex_from_app_constant_patterns, pattern_latex),
-     (latex_from_pattern_string, pattern_latex),
-     (generic_app_dict, pattern_latex),
-     (latex_from_pattern_string_for_type, pattern_latex_for_type),
-     (text_from_pattern_string, pattern_text)]
+# OK: in PMO, import PatternInit and after the deftn of the PMO class,
+#   call PI.pattern_init(PMO.from_string)
+# FIXME: (OK) in new-display, import this class instead of all the dict.
+#  (OK) Then import the MathList class in MathObject, and include to_display as
+#  an ordinary method!!
+#  (OK) Include as well math_type_to_display
+#  (OK) Suppress all references to MathObject in new_display.
+#  (YES) To decide: do we maintain latex_shape as a MathObject method? It is
+#  overridden in MarkedPatternMathObject
+#  to mark patterns. The def in the MO class would just be: return MathList.latex_shape(self)
 
-
-def string_to_pattern():
+class PatternInit:
     """
-    Fill-in the patterns_from_string dict by turning the keys of
-    latex_from_pattern_string into PatternMathObject.
+    This instanceless class is responsible for initialising the PatternMathObjects that will be used to diaply math
+    object. It makes use of the class method PatternMathObject.from_string.
+    Note that the PatternMathObject class inherits from MathObject, which makes crucial use of this class to display
+    its instances. To avoid circular import, the present module DO NOT import PatternMathObject.
+    Instead, the module containing the PatternMathObject class import the present class, and call the pattern_init()
+    method, providing the from_string() method as an argument.
     """
 
-    log.info("Pattern from strings:")
-    # (1) Clear pattern lists
-    for dict_, list_ in dic_list_pairs:
-        list_.clear()
+    pattern_from_string: callable = None  # To be set in pattern_math_object
 
-    # (2) Fill in pattern dicts
-    for dict_, list_ in dic_list_pairs:
-        for key, latex_shape in dict_.items():
-            tree = tree_from_str(key)
-            metavars = []
-            pattern = PatternMathObject.from_tree(tree, metavars)
-            list_.append((pattern, latex_shape, metavars))
-            # print(key)
-            # print(tree.display())
+    #############################
+    # These are the useful lists #
+    #############################
+    # items are tuples (pattern, latex_shape, metavars)
+    pattern_latex = []
+    pattern_lean = []
+    pattern_text = []
+    pattern_latex_for_type = []
+
+    # This list indicates how to populate pattern lists from dictionaries:
+    # Careful, order matters.
+    dic_list_pairs = \
+        [(PatternMathDisplay.lean_from_app_constant_patterns, pattern_lean),
+         (lean_from_pattern_string, pattern_lean),
+         (latex_from_app_pattern, pattern_latex),
+         # The order matters! The generic patterns must come at the end.
+         (quant_pattern, pattern_latex),
+         (PatternMathDisplay.latex_from_app_constant_patterns, pattern_latex),
+         (latex_from_pattern_string, pattern_latex),
+         (generic_app_dict, pattern_latex),
+         (latex_from_pattern_string_for_type, pattern_latex_for_type),
+         (text_from_pattern_string, pattern_text)]
+
+    @classmethod
+    def string_to_pattern(cls):
+        """
+        Fill-in the patterns_from_string dict by turning the keys of
+        latex_from_pattern_string into PatternMathObject.
+        """
+
+        log.info("Pattern from strings:")
+        # (1) Clear pattern lists
+        for dict_, list_ in cls.dic_list_pairs:
+            list_.clear()
+
+        # (2) Fill in pattern dicts
+        for dict_, list_ in cls.dic_list_pairs:
+            for key, latex_shape in dict_.items():
+                metavars = []
+                # tree = tree_from_str(key)
+                # pattern = PatternMathObject.from_tree(tree, metavars)
+                # pattern = pattern_from_tree(tree, metavars)
+                pattern = cls.pattern_from_string(key, metavars)
+                list_.append((pattern, latex_shape, metavars))
+                # print(key)
+                # print(tree.display())
+
+    @classmethod
+    def pattern_init(cls, additional_constants=None):
+        set_quant_pattern()
+        app_pattern_from_constants(additional_data=additional_constants)
+        cls.string_to_pattern()
+
+    @classmethod
+    def all_app_patterns(cls):
+        paren_pat = []
+        for pattern in cls.pattern_latex:
+            if pattern.node == 'APPLICATION':
+                paren_pat.append(pattern)
+        return paren_pat
 
 
-def pattern_init(additional_constants=None):
-    set_quant_pattern()
-    app_pattern_from_constants(additional_data=additional_constants)
-    string_to_pattern()
+# ########################################
+# ########################################
+# # We need some code to create the data #
+# ########################################
+# ########################################
+# pattern_init()
 
-
-def all_app_patterns():
-    paren_pat = []
-    for pattern in pattern_latex:
-        if pattern.node == 'APPLICATION':
-            paren_pat.append(pattern)
-    return paren_pat
-
-
-########################################
-########################################
-# We need some code to create the data #
-########################################
-########################################
-pattern_init()

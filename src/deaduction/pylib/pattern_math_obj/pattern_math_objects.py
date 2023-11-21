@@ -34,7 +34,10 @@ from copy import copy
 from deaduction.pylib.utils import tree_list
 from .pattern_parser import tree_from_str
 from deaduction.pylib.math_display.nodes import Node
-from deaduction.pylib.mathobj import MathObject, BoundVar
+# from deaduction.pylib.mathobj import MathObject, BoundVar
+
+from deaduction.pylib.math_display import PatternInit
+from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 
 log = logging.getLogger(__name__)
@@ -634,16 +637,14 @@ class PatternMathObject(MathObject):
                 mvars.extend(child.all_mvars(unassigned=unassigned))
             return mvars
 
-    # def is_composition(self):
-    #     pattern_s = "APP(CONSTANT/name=composition, ?4, ?5)"
-    #     pattern_ = PatternMathObject.from_string(pattern_s)
-    #     return pattern_.match(self)
-    #
 
 PatternMathObject.NO_MATH_TYPE = PatternMathObject(node="not provided",
                                                    info={},
                                                    children=[],
                                                    math_type=None)
+
+
+POMPOMPOM = PatternMathObject(node="...", info={}, children=[])
 
 
 class MetaVar(PatternMathObject):
@@ -722,20 +723,15 @@ class MetaVar(PatternMathObject):
         if isinstance(self.math_type, MetaVar):
             self.math_type.clear_assignment()
 
-    # def math_object_from_metavar(self):
-    #     return (self.assigned_math_object if self.assigned_math_object
-    #             else MathObject.NO_MATH_TYPE)
 
-    # def to_display(self: MathObject, format_="html", text=False,
-    #                use_color=True, bf=False, is_type=False):
-    #     display = MathObject.to_display(self, format_="html", text=False,
-    #                                     use_color=True, bf=False, is_type=False)
-    #
-    #     # return "?=" + display
-    #     return display
+##################################################
+##################################################
+# Initialisation of the PatternInit dictionaries #
+##################################################
+##################################################
 
-
-POMPOMPOM = PatternMathObject(node="...", info={}, children=[])
+PatternInit.pattern_from_string = PatternMathObject.from_string
+PatternInit.pattern_init()
 
 
 #########

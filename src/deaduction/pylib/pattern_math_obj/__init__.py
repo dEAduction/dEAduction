@@ -26,7 +26,3 @@ This file is part of dEAduction.
 
 from .pattern_math_objects import PatternMathObject, MetaVar
 from .definition_math_object import DefinitionMathObject
-from .marked_pattern_math_object import MarkedPatternMathObject, MarkedMetavar
-from .calculator_pattern_strings import (CalculatorPatternLines, calc_shortcuts_macro,
-                                         calculator_group,
-                                         sci_calc_group)

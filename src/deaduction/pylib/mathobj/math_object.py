@@ -53,6 +53,10 @@ import logging
 from functools import partial
 
 import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.math_display import MathList, MathDescendant
+
+
 log = logging.getLogger(__name__)
 global _
 
@@ -1701,30 +1705,38 @@ class MathObject:
 # Display methods: implemented in math_display #
 ################################################
     def to_display(self, format_="html", text=False,
-                   use_color=True, bf=False, is_type=False) -> str:
+                   use_color=True, bf=False, is_type=False,
+                   used_in_proof=False) -> str:
         """
         This method is actually defined in math_display/new_display.
         """
-        return self
+        display = MathList.display(self, format_=format_, text=text,
+                                   use_color=use_color, bf=bf, is_type=is_type,
+                                   used_in_proof=used_in_proof)
+        return display
 
     def math_type_to_display(self, format_="html", text=False,
-                             is_math_type=False,
-                             used_in_proof=False) -> str:
-        """
-        This method is actually defined in math_display/new_display.
-        """
-        return self
+                             is_math_type=False, used_in_proof=False) -> str:
+
+        math_type = self if is_math_type else self.math_type
+        return math_type.to_display(format_, text=text, is_type=True,
+                                    used_in_proof=used_in_proof)
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
         This method is actually defined in math_display/new_display.
         """
-        return self
+        shape = MathList.latex_shape(self, is_type=is_type, text=text,
+                                     lean_format=lean_format)
+        return shape
 
     def lean_shape(self, is_type=False, text=False, lean_format=False):
         """
         This method is actually defined in math_display/new_display.
         """
+
+        # FIXME !!
+
         return self
 
     def recursive_match(self, other, metavars, metavar_objects):
@@ -1738,6 +1750,10 @@ MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
                                      children=[],
                                      math_type=None)
+
+
+MathDescendant.NO_MATH_TYPE = MathObject.NO_MATH_TYPE
+
 
 MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       info={},

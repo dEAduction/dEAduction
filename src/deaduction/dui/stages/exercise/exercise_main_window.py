@@ -45,8 +45,8 @@ import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import MathObject
 from deaduction.pylib.proof_step        import ProofStep
-from deaduction.pylib.math_display      import MathDisplay
-from deaduction.pylib.math_display.pattern_init import pattern_init
+# from deaduction.pylib.math_display      import MathDisplay
+from deaduction.pylib.math_display.pattern_init import PatternInit
 
 from deaduction.dui.primitives          import deaduction_fonts
 
@@ -54,10 +54,10 @@ from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
                                                 StatementsTreeWidgetItem,
                                                 StatementsTreeWidgetNode,
-                                                MathObjectWidget,
+                                                # MathObjectWidget,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
-                                                MenuBarAction,
+                                                # MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow,
                                                 ProofTreeController,
@@ -457,7 +457,7 @@ class ExerciseMainWindow(QMainWindow):
             #     self.ecw.init_action_btns_layout()
             #     self.ecw.set_action_gb()
             elif setting == "logic.use_bounded_quantification_notation":
-                pattern_init()
+                PatternInit.pattern_init()
                 update_ecw_display = True
             # elif setting == "i18n.select_language":
             #     MathDisplay.update_dict()

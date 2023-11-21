@@ -58,7 +58,7 @@ import logging
 from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.display_data import new_objects
+# from deaduction.pylib.math_display.display_data import new_objects
 
 from deaduction.pylib.actions.utils import (add_type_indication,
                                             pre_process_lean_code)

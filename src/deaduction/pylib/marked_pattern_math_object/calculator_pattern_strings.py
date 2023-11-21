@@ -29,7 +29,7 @@ from typing import Optional
 
 from deaduction.pylib.math_display.nodes import Node
 from .marked_pattern_math_object import MarkedPatternMathObject
-from .definition_math_object import DefinitionMathObject
+from deaduction.pylib.pattern_math_obj.definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
 from deaduction.pylib.math_display import MathDisplay, PatternMathDisplay
 # from deaduction.pylib.math_display.pattern_init import pattern_latex

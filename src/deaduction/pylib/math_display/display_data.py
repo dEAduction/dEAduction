@@ -870,23 +870,23 @@ class MathDisplay:
 
         return children
 
-    @classmethod
-    def marked_latex_shape(cls, latex_shape, cursor_pos):
-        if cursor_pos is None:
-            idx, main_symbol = cls.main_symbol_from_shape(latex_shape)
-        else:
-            idx = cursor_pos
-        m_latex_shape = list(latex_shape)
-
-        if not cls.mark_cursor:
-            m_latex_shape = [r'\marked'] + m_latex_shape
-            idx += 1
-        else:
-            flat_s = MathDisplay.flat_shape(latex_shape,
-                                            add_close_parentheses=True)
-            m_latex_shape = cls.remove_macros_from_shape(flat_s)
-            m_latex_shape.insert(idx+1, cls.cursor_tag)
-        return m_latex_shape
+    # @classmethod
+    # def marked_latex_shape(cls, latex_shape, cursor_pos):
+    #     if cursor_pos is None:
+    #         idx, main_symbol = cls.main_symbol_from_shape(latex_shape)
+    #     else:
+    #         idx = cursor_pos
+    #     m_latex_shape = list(latex_shape)
+    #
+    #     if not cls.mark_cursor:
+    #         m_latex_shape = [r'\marked'] + m_latex_shape
+    #         idx += 1
+    #     else:
+    #         flat_s = MathDisplay.flat_shape(latex_shape,
+    #                                         add_close_parentheses=True)
+    #         m_latex_shape = cls.remove_macros_from_shape(flat_s)
+    #         m_latex_shape.insert(idx+1, cls.cursor_tag)
+    #     return m_latex_shape
 
 
 # def insert_str_in_shape_at_pos(string: str, shape: [], idx: int):

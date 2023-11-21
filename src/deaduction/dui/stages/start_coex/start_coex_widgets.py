@@ -75,7 +75,7 @@ from deaduction.dui.utils           import (replace_widget_layout,
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
-from deaduction.pylib.math_display.pattern_init import pattern_init
+from deaduction.pylib.math_display.pattern_init import PatternInit
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -406,7 +406,7 @@ class CourseChooser(AbstractCoExChooser):
         display_constant = course.metadata.get('display')
         # print(display_constant)
         if display_constant:
-            pattern_init(display_constant)
+            PatternInit.pattern_init(display_constant)
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,

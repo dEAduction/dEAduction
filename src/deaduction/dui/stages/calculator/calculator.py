@@ -53,38 +53,31 @@ if __name__ == '__main__':
 
     language_check()
 
-import sys
 import logging
-from typing import Union, List
+from typing import Union
 
 from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
-from PySide2.QtGui     import  QKeySequence, QIcon, QTextDocument
-from PySide2.QtWidgets import (QApplication, QTextEdit, QToolButton, QWidget,
+from PySide2.QtGui     import  QKeySequence, QIcon
+from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
                                QSizePolicy, QScrollArea,
-                               QHBoxLayout, QVBoxLayout, QGridLayout, QLayout,
-                               QLabel, QToolBar,
+                               QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
                                QCheckBox,
                                QGroupBox)
 
-import deaduction.pylib.config.vars as cvars
 import deaduction.pylib.config.dirs as cdirs
-import deaduction.pylib.utils.filesystem as fs
 
-from deaduction.pylib.math_display import MathDisplay
+# from deaduction.pylib.math_display.math_cursor import MathCursor
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, NumberNode,
                                                  InequalityNode)
 
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
-                                               MarkedPatternMathObject,
-                                               MarkedMetavar,
-                                               MetaVar,
-                                               CalculatorPatternLines,
-                                               calc_shortcuts_macro,
-                                               calculator_group,
-                                               sci_calc_group)
-from deaduction.pylib.pattern_math_obj.calculator_pattern_strings import CalculatorAbstractButton
+                                               MetaVar)
+
+from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject,
+                                                         MarkedMetavar,
+                                                         CalculatorPatternLines)
 
 from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
 from deaduction.dui.primitives import DisclosureTriangle
@@ -827,13 +820,15 @@ class CalculatorController:
     various buttons groups.
     """
 
+    _target: MarkedPatternMathObject
+    # math_cursor: MathCursor
+
     def __init__(self, target_type=None,
                  goal=None,
                  calculator_groups=None,
                  title="Calculator"):
 
         self.goal = goal
-        # self.bound_vars = []
 
         if not target_type:
             target_type = MetaVar()
@@ -843,7 +838,7 @@ class CalculatorController:
             p_target_type = MarkedPatternMathObject.from_math_object(target_type)
 
         target_mvar = MetaVar(math_type=p_target_type)
-        self.target = MarkedMetavar.from_mvar(target_mvar)  # FIXME!!!!!!!!
+        self.target = MarkedMetavar.from_mvar(target_mvar)
         self.target.mark()
         display_type = target_type.math_type_to_display(format_="utf8",
                                                         is_math_type=True,
@@ -903,6 +898,24 @@ class CalculatorController:
 
     def show(self):
         self.calculator_ui.show()
+
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self, target):
+        """
+        Set target and ensure that self.math_cursor always corresponds to
+        target.
+        """
+        self._target = target
+        # self.set_math_cursor()
+
+    @property
+    def math_cursor(self):
+        if self.target:
+            return self.target.math_cursor
 
     @classmethod
     def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
@@ -993,26 +1006,35 @@ class CalculatorController:
     def set_target(self):
         self.calculator_ui.set_html(self.html_target)
 
+    # def set_math_cursor(self, marked_descendant=None):
+    #     """
+    #     Set the MathCursor corresponding to current target, with the address
+    #     of marked_descendant (which will be marked).
+    #     """
+    #
+    #     # FIXME: use MathList.complete_latex_shape() method.
+    #     #  Even better: delegate this to MathList
+    #     # math_list = self.target.latex_shape()
+    #     self.target.set_math_cursor(marked_descendant)
+
     def virtual_cursor_position(self):
         """
         Return the position at which the cursor should be seen, corresponding to
         the current marked node of self.target, if any, or the end.
-        FIXME: probably not accurate, e.g. with subscript?
         """
-        # Fixme: take cursor pos into account
-        doc = QTextDocument()
-        MathDisplay.mark_cursor = True
-        # MathDisplay.cursor_pos = self.target.marked_descendant().cursor_pos
-        doc.setHtml(self.html_target)
-        text = doc.toPlainText()
-        # print(f"VIRTUAL CURSOR POS: {text}")
-        position = text.find(MathDisplay.cursor_tag)
-        # print(f"vcp in: {text} --> {position}")
-        # print("Marked latex shape:")
-        # print(self.target.latex_shape())
-        MathDisplay.mark_cursor = False
-        # MathDisplay.cursor_pos = None
-        return position
+        # doc = QTextDocument()
+        # MathDisplay.mark_cursor = True
+        # # MathDisplay.cursor_pos = self.target.marked_descendant().cursor_pos
+        # doc.setHtml(self.html_target)
+        # text = doc.toPlainText()
+        # # print(f"VIRTUAL CURSOR POS: {text}")
+        # position = text.find(MathDisplay.cursor_tag)
+        # # print(f"vcp in: {text} --> {position}")
+        # # print("Marked latex shape:")
+        # # print(self.target.latex_shape())
+        # MathDisplay.mark_cursor = False
+        # # MathDisplay.cursor_pos = None
+        return self.math_cursor.linear_cursor_position()
 
     def update_cursor(self):
         # self.target.adjust_cursor_pos()
@@ -1022,13 +1044,14 @@ class CalculatorController:
 
     def enable_actions(self):
         target = self.target
-        self.beginning_action.setEnabled(not target.is_at_beginning())
+        cursor = self.math_cursor
+        self.beginning_action.setEnabled(not cursor.is_at_beginning())
         # self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
-        self.left_action.setEnabled(not target.is_at_beginning())
+        self.left_action.setEnabled(not cursor.is_at_beginning())
         self.up_action.setEnabled(bool(target.parent_of_marked()))
-        self.right_action.setEnabled(not target.is_at_end())
+        self.right_action.setEnabled(not cursor.is_at_end())
         # self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
-        self.end_action.setEnabled(not target.is_at_end())
+        self.end_action.setEnabled(not cursor.is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
 
@@ -1266,31 +1289,38 @@ class CalculatorController:
 
     @Slot()
     def move_right(self):
-        # TODO: repeat if actual cursor do not move
-        cursor_pos = self.virtual_cursor_position()
-        while (self.virtual_cursor_position() == cursor_pos and not
-               self.target.is_at_end()):
-            self.target.increase_cursor_pos()
+        # cursor_pos = self.virtual_cursor_position()
+        # while (self.virtual_cursor_position() == cursor_pos and not
+        #        self.target.is_at_end()):
+        #     self.target.increase_cursor_pos()
+
         # self.target.increase_cursor_pos()
+
+        self.math_cursor.increase_pos()
         self.set_target_and_update()
 
     @Slot()
     def move_left(self):
-        cursor_pos = self.virtual_cursor_position()
-        while (self.virtual_cursor_position() == cursor_pos and not
-               self.target.is_at_beginning()):
-            self.target.decrease_cursor_pos()
+        # cursor_pos = self.virtual_cursor_position()
+        # while (self.virtual_cursor_position() == cursor_pos and not
+        #        self.target.is_at_beginning()):
+        #     self.target.decrease_cursor_pos()
+
         # self.target.decrease_cursor_pos()
+
+        self.math_cursor.decrease_pos()
         self.set_target_and_update()
 
     @Slot()
     def go_to_beginning(self):
-        self.target.go_to_beginning()
+        # self.target.go_to_beginning()
+        self.math_cursor.go_to_beginning()
         self.set_target_and_update()
 
     @Slot()
     def go_to_end(self):
-        self.target.go_to_end()
+        # self.target.go_to_end()
+        self.math_cursor.go_to_end()
         self.set_target_and_update()
 
     @Slot()

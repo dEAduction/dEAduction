@@ -25,10 +25,10 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
+from deaduction.pylib.text import replace_dubious_characters
 from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
-                                                              text_to_subscript_or_sup,
-                                                              first_descendant,
-                                                              replace_dubious_characters)
+                                                              text_to_subscript_or_sup
+                                                              )
 
 
 def subscript(s: Union[list, str]) -> str:

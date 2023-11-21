@@ -25,7 +25,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .tooltips import (button_symbol,
+from .tooltips import (replace_dubious_characters,
+                       button_symbol,
                        button_tool_tip,
                        logic_buttons_line_1,
                        logic_buttons_line_2)

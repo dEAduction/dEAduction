@@ -26,10 +26,10 @@ This file is part of d∃∀duction.
 from typing import Union
 import logging
 
-import deaduction.pylib.config.vars as cvars
-
-from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
-                                                              replace_dubious_characters)
+# import deaduction.pylib.config.vars as cvars
+#
+# from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
+#                                                               replace_dubious_characters)
 from deaduction.pylib.math_display.utf8_display import add_parentheses
 
 log = logging.getLogger(__name__)
