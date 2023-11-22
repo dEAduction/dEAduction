@@ -65,25 +65,25 @@ def superscript(s: str) -> str:
     return html_pre + s + html_post
 
 
-def html_color(s: str, color: str) -> str:
-    # html_pre = f"<div style='color:{color};'>"
-    # html_post = '</div>'
-    html_pre = f"<font style='color:{color};'>"
-    html_post = '</font>'
-    # html_pre = f"<font id='color'>"
-    # html_post = '</font>'
-    return html_pre + s + html_post
+# def html_color(s: str, color: str) -> str:
+#     # html_pre = f"<div style='color:{color};'>"
+#     # html_post = '</div>'
+#     html_pre = f"<font style='color:{color};'>"
+#     html_post = '</font>'
+#     # html_pre = f"<font id='color'>"
+#     # html_post = '</font>'
+#     return html_pre + s + html_post
 
 
-def variable_style(s) -> str:
-    # FIXME: not used
-    italic = False
-    html_pre = ""
-    html_post = ""
-    if italic:
-        html_pre = '<i> '
-        html_post = ' </i>'
-    return html_pre + s + html_post
+# def variable_style(s) -> str:
+#     # FIXME: not used
+#     italic = False
+#     html_pre = ""
+#     html_post = ""
+#     if italic:
+#         html_pre = '<i> '
+#         html_post = ' </i>'
+#     return html_pre + s + html_post
 
 
 def sub_sup_to_html(string: str) -> str:

@@ -861,10 +861,6 @@ class MathDisplay:
         for item in shape2:
             if isinstance(item, int) or isinstance(item, tuple):
                 children.append(item)
-            # elif isinstance(item, list):
-            #     children.extend(cls.ordered_children(item))
-            # elif isinstance(item, str) and item in cls.macros:
-            #     pass
             else:
                 children.append(None)
 

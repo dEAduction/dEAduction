@@ -57,7 +57,9 @@ class MathCursor:
     deaduction_cursor = MathString.cursor
 
     def __init__(self, root_math_object, cursor_math_object):
-        self.math_list = MathList.complete_latex_shape(math_object=root_math_object)
+        self.math_list = MathList.complete_latex_shape(
+            math_object=root_math_object,
+            format_='html')
         self.target_math_object = root_math_object
 
         self.cursor_address = tuple()
@@ -77,49 +79,13 @@ class MathCursor:
     def set_cursor_after(self):
         self.cursor_is_after = True
 
-    def go_up(self):
-        ca = self.cursor_address
-        if len(ca) > 0:
-            self.cursor_address = ca[:-1]
-            return True
-        else:
-            return False
-
-    def go_down(self):
-        if isinstance(self.current_item, MathList):
-            if self.cursor_is_before:  # Go to beginning of current_item
-                self.cursor_address += (0,)
-            else:  # Go to end of current item
-                self.cursor_address += (len(self.current_item)-1,)
-            return True
-        else:
-            return False
-
-    def go_right(self):
-        parent = self.parent_of_current_item
-        if parent:
-            idx = self.current_idx
-            if idx < len(parent) - 1:
-                self.cursor_address = (self.cursor_address[:-1] +
-                                       (idx + 1,))
-                return True
-        return False
-
-    def go_left(self):
-        idx = self.current_idx
-        if idx and idx > 0:
-            self.cursor_address = (self.cursor_address[:-1] +
-                                   (idx - 1,))
-            return True
-        else:
-            return False
-
     @property
     def root_math_object(self):
         return self.math_list.root_math_object
 
     @property
     def current_math_object(self):
+        # return self.current_item.descendant
         line = self.current_item.line_of_descent
         cmo = self.root_math_object.descendant(line)
         return cmo
@@ -238,14 +204,115 @@ class MathCursor:
                   f" {self.cursor_address}")
         log.debug(f"Current item: "
                   f" {self.current_item}")
+        log.debug(f"Current math object: "
+                  f" {self.current_math_object}")
         log.debug(f"Marked descendant: "
                   f"{self.root_math_object.marked_descendant()}")
+
+        log.debug("")
 
     def set_marked_element(self, yes=True):
         math_object = self.current_math_object
         if hasattr(math_object, "set_marked"):
             self.root_math_object.unmark()
             math_object.set_marked(yes)
+
+    def go_up(self):
+        ca = self.cursor_address
+        if len(ca) > 0:
+            self.cursor_address = ca[:-1]
+            return True
+        else:
+            return False
+
+    def go_down(self):
+        """
+        Go either to first child if cursor_is_before, or to last child if
+        not.
+        """
+        if isinstance(self.current_item, MathList):
+            if self.cursor_is_before:  # Go to beginning of current_item
+                self.cursor_address += (0,)
+            else:  # Go to end of current item
+                self.cursor_address += (len(self.current_item)-1,)
+            return True
+        else:
+            return False
+
+    def go_right(self):
+        """
+        Move from before current item to after,
+        or from after current item to before next item at the same level.
+        """
+        if self.cursor_is_before:
+            self.set_cursor_after()
+            return
+
+        parent = self.parent_of_current_item
+        if parent:
+            idx = self.current_idx
+            if idx < len(parent) - 1:
+                self.cursor_address = (self.cursor_address[:-1] +
+                                       (idx + 1,))
+                self.set_cursor_before()
+                return True
+
+        return False
+
+    def go_left(self):
+
+        if self.cursor_is_after:
+            self.set_cursor_before()
+            return
+
+        idx = self.current_idx
+        if idx and idx > 0:
+            self.cursor_address = (self.cursor_address[:-1] +
+                                   (idx - 1,))
+            self.set_cursor_after()
+            return True
+
+        return False
+
+    def decrease_through_identical_positions(self):
+        """
+        Change position from before an item to after the previous item at the
+        same level, unless the current item is first at its level.
+        """
+
+        # if self.cursor_is_after or self.current_idx == 0:  # Nothing to do
+        #     return
+
+        # if self.current_item.is_formatter() or self.cursor_is_before:
+        #     success = self.go_left()
+        #     if success:
+        #         self.decrease_through_identical_positions()
+
+        if self.cursor_is_after and not self.current_item.is_formatter():
+            return
+        if self.is_at_beginning():
+            return
+
+        parent = self.parent_of_current_item
+        if not parent:
+            return
+
+        first_children = parent[:self.current_idx]
+        if not all(child.is_formatter() for child in first_children):
+            success = self.go_left()
+            if success:
+                self.decrease_through_identical_positions()
+
+    def increase_through_identical_positions(self):
+        """
+        Change position from before an item to after the previous item at the
+        same level, unless the current item is first at its level.
+        """
+
+        if self.current_item.is_formatter() or self.cursor_is_after:
+            success = self.go_right()
+            if success:
+                self.increase_through_identical_positions()
 
     def go_to(self, math_object, after=True, set_marked=True) -> bool:
         """
@@ -285,6 +352,8 @@ class MathCursor:
         if set_marked:
             self.set_marked_element(True)
 
+        self.debug()
+
     def go_to_beginning(self, set_marked=True):
         # self.set_marked_element(False)
         self.cursor_address = tuple()
@@ -293,20 +362,9 @@ class MathCursor:
         if set_marked:
             self.set_marked_element(True)
 
-    def adjust_position(self, set_marked=True):
-        """
-        If cursor is before a single-term list, go down to the term.
-        Do so inductively. Symmetrically if cursor is after.
-        """
+        self.debug()
 
-        while (isinstance(self.current_item, MathList) and
-               len(self.current_item) == 1):
-            self.go_down()
-
-        if set_marked:
-            self.set_marked_element()
-
-    def increase_pos(self, set_marked=True):
+    def minimal_increase_pos(self):
         """
         Increase cursor position by one.
         """
@@ -337,12 +395,26 @@ class MathCursor:
 
         # self.adjust_position(set_marked=set_marked)
 
-        # if set_marked:
-        #     self.set_marked_element(True)
+    def increase_pos(self, set_marked=True):
+
+        # Adjust position (free move, both positions are considered identical)
+        self.increase_through_identical_positions()
+
+        # FIXME: replace by current_math_object??
+        # current_mo, before = self.current_math_object, self.cursor_is_before
+        current_item, before = self.current_item, self.cursor_is_before
+        while (((current_item, before) == (self.current_item,
+                                           self.cursor_is_before)
+                or self.current_item.is_formatter())
+                and not self.is_at_end()):
+            self.minimal_increase_pos()
+
+        if set_marked:
+            self.set_marked_element(True)
 
         self.debug()
 
-    def decrease_pos(self, set_marked=True):
+    def minimal_decrease_pos(self):
         """
         Decrease cursor position by one. Symmetric to the increase() method.
         """
@@ -370,6 +442,23 @@ class MathCursor:
             # (2.2) Otherwise, try to go up:
             if not go_left:
                 self.go_up()
+
+    def decrease_pos(self, set_marked=True):
+
+        # if self.is_at_end():
+        #     return
+
+        # FIXME: replace by current_math_object??
+        # current_mo, before = self.current_math_object, self.cursor_is_before
+        current_item, before = self.current_item, self.cursor_is_before
+        while (((current_item, before) == (self.current_item,
+                                           self.cursor_is_before)
+                or self.current_item.is_formatter())
+               and not self.is_at_beginning()):
+            self.minimal_decrease_pos()
+
+        # Adjust position (free move)
+        self.decrease_through_identical_positions()
 
         if set_marked:
             self.set_marked_element(True)

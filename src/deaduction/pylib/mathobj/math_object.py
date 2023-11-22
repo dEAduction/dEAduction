@@ -1730,14 +1730,13 @@ class MathObject:
                                      lean_format=lean_format)
         return shape
 
-    def lean_shape(self, is_type=False, text=False, lean_format=False):
+    def lean_shape(self, is_type=False, text=False, lean_format=True):
         """
         This method is actually defined in math_display/new_display.
         """
 
-        # FIXME !!
-
-        return self
+        shape = MathList.lean_shape(self)
+        return shape
 
     def recursive_match(self, other, metavars, metavar_objects):
         """

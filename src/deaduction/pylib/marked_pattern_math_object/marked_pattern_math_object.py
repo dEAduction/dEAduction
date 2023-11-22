@@ -182,7 +182,8 @@ class MarkedTree:
             return self
 
         marked_descendant = []
-        for child in self.ordered_children():
+        # for child in self.ordered_children():
+        for child in self.children:
             if child is self:
                 continue
             new_marked_descendant = child.marked_descendant()
