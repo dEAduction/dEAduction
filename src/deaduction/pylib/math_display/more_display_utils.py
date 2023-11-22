@@ -31,85 +31,6 @@ from typing import Optional
 import deaduction.pylib.config.vars as cvars
 
 
-# def structured_display_to_string(structured_display) -> str:
-#     """
-#     Turn a (structured) latex or utf-8 display into a latex string.
-#
-#     :param structured_display:  type is recursively defined as str or list of
-#                                 structured_display
-#     """
-#     if isinstance(structured_display, str):
-#         return structured_display
-#     elif isinstance(structured_display, list):
-#         string = ""
-#         for lr in structured_display:
-#             lr = structured_display_to_string(lr)
-#             string += lr
-#         return cut_spaces(string)
-#     else:
-#         print("error in list_string_join: argument should be list or "
-#                     f"str, not {type(structured_display)}")
-#         return "**"
-
-# def replace_dubious_characters(s: str) -> str:
-#     if not s:
-#         return ""
-#     dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
-#     replacement_characters: str = cvars.get("display.dubious_characters")
-#     if replacement_characters == dubious_characters:
-#         return s
-#     else:
-#         character_translation_dic = {}
-#         default_list = dubious_characters.split(', ')
-#         new_list = replacement_characters.split(',')
-#         if len(default_list) != len(new_list):
-#             return s
-#
-#         for default, new in zip(default_list, new_list):
-#             character_translation_dic[default] = new.strip()
-#
-#         new_string = ""
-#         for char in s:
-#             new_char = (character_translation_dic[char]
-#                         if char in character_translation_dic
-#                         else char)
-#             new_string += new_char
-#         return new_string
-#
-
-# class Descendant:
-#     """
-#     A class to store an abstract descendant of a math_object,
-#     maybe specifying a given attribute. e.g.
-#         Descendant(line_of_descent=(2,0), attribute_or_callable=display_name.
-#     """
-#
-#     line_of_descent: tuple  # of int
-#     attribute_or_callable: Union[str, callable]
-#
-#     def __init__(self, line_of_descent=None, attribute_or_callable=None):
-#         self.line_of_descent = line_of_descent
-#         self.attribute_or_callable = attribute_or_callable
-#
-#     def __repr__(self):
-#         rep = f"Descendant {self.line_of_descent}"
-#         if self.attribute_or_callable:
-#             rep = f"attribute {self.attribute_or_callable} of " + rep
-#         return rep
-#
-#     def math_object(self, math_object):
-#         descendant = math_object.descendant(self.line_of_descent)
-#         return descendant
-#
-#     def attribute_from_math_object(self, math_object):
-#         descendant = self.math_object(math_object)
-#         if isinstance(self.attribute_or_callable, str):
-#             attribute = descendant.__getattribute__(self.attribute_or_callable)
-#             return attribute
-#         elif callable(self.attribute_or_callable):
-#             return self.attribute_or_callable(descendant)
-#
-
 def cut_spaces(string: str) -> Optional[str]:
     """
     Remove unnecessary spaces inside string.
@@ -154,9 +75,15 @@ def text_to_subscript_or_sup(structured_string,
     # log.debug(f"converting into sub/superscript {structured_string}")
     if format_ == 'latex':
         if sup:
-            return [r'^{', structured_string, r'}']
+            structured_string.insert(0, r'^{')
+            structured_string.append(r'}')
+            # return [r'^{', structured_string, r'}']
+            return structured_string
         else:
-            return [r'_{', structured_string, r'}']
+            structured_string.insert(0, r'_{')
+            structured_string.append(r'}')
+            # return [r'_{', structured_string, r'}']
+            return structured_string
     else:
         sub_or_sup, is_subscriptable = recursive_subscript(structured_string,
                                                            sup)
@@ -167,7 +94,7 @@ def text_to_subscript_or_sup(structured_string,
                 sub_or_sup = ['_', structured_string]
             # [sub] necessary in case sub is an (unstructured) string
         # log.debug(f"--> {sub_or_sup}")
-        return sub_or_sup
+        return sub_or_sup, is_subscriptable
 
 
 SOURCE = {'sub': " 0123456789" + "aeioruv",

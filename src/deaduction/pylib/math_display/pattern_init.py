@@ -57,17 +57,6 @@ from deaduction.pylib.math_display.app_pattern_data import \
 log = logging.getLogger(__name__)
 
 
-# OK: in PMO, import PatternInit and after the deftn of the PMO class,
-#   call PI.pattern_init(PMO.from_string)
-# FIXME: (OK) in new-display, import this class instead of all the dict.
-#  (OK) Then import the MathList class in MathObject, and include to_display as
-#  an ordinary method!!
-#  (OK) Include as well math_type_to_display
-#  (OK) Suppress all references to MathObject in new_display.
-#  (YES) To decide: do we maintain latex_shape as a MathObject method? It is
-#  overridden in MarkedPatternMathObject
-#  to mark patterns. The def in the MO class would just be: return MathList.latex_shape(self)
-
 class PatternInit:
     """
     This instanceless class is responsible for initialising the PatternMathObjects that will be used to diaply math

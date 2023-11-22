@@ -25,52 +25,49 @@ This file is part of d∃∀duction.
 """
 from typing import Union
 
-from deaduction.pylib.text import replace_dubious_characters
+# from deaduction.pylib.text import replace_dubious_characters
 from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
                                                               text_to_subscript_or_sup
                                                               )
 
 
-def subscript(s: Union[list, str]) -> str:
-    text = text_to_subscript_or_sup(s, format_="utf8", sup=False)
+# FIXME: use MathString.map / replace_string
+def subscript(s: Union[list, str]) -> (str, bool):
+    text, is_subscriptable = text_to_subscript_or_sup(s, format_="utf8",
+                                                      sup=False)
     if isinstance(text, list):
         text = "".join(text)
-    return text
+    return text, is_subscriptable
 
 
-def superscript(s: str) -> str:
-    text = text_to_subscript_or_sup(s, format_="utf8", sup=True)
+# FIXME: use MathString.map / replace_string
+def superscript(s: Union[list, str]) -> (str, bool):
+    text, is_subscriptable = text_to_subscript_or_sup(s, format_="utf8",
+                                                      sup=True)
     if isinstance(text, list):
         text = "".join(text)
-    return text
+    return text, is_subscriptable
 
 
-def sub_sup_to_utf8(string: str) -> str:
+# FIXME: use MathString.map / replace_string
+def sub_sup_to_utf8(string: str) -> (str, bool):
     string = string.replace(r'_', r'\sub')
     string = string.replace(r'^', r'\super')
+
+    is_subscriptable = True
     if string.find(r'\sub') != -1:
         before, _, after = string.partition(r'\sub')
-        string = before + subscript(after)
+        before, is_subscriptable = subscript(after)
+        string = before + after
     if string.find(r'\super') != -1:
         before, _, after = string.partition(r'\super')
-        string = before + superscript(after)
+        after, is_subscriptable = superscript(after)
+        string = before + after
 
-    return string
-
-
-# def color_dummy_vars():
-#     return (cvars.get('display.color_for_dummy_vars', None)
-#             if cvars.get('logic..use_color_for_dummy_vars', True)
-#             else None)
-#
-#
-# def color_props():
-#     return (cvars.get('display.color_for_applied_properties', None)
-#             if cvars.get('logic.use_color_for_applied_properties', True)
-#             else None)
+    return string, is_subscriptable
 
 
-def remove_leading_parentheses(l: list):
+def remove_leading_parentheses(math_list: list):
     """Remove leading parentheses. e.g.
     ['parentheses', ...] --> [...]
     ['parentheses', [['parentheses', ...]] --> [...]
@@ -78,15 +75,16 @@ def remove_leading_parentheses(l: list):
     but keep parentheses in
     [['parentheses', ...], ... ]
     """
-    if isinstance(l, list) and len(l) == 1 and isinstance(l[0], list):
-        remove_leading_parentheses(l[0])
-    elif len(l) > 0 and l[0] == r'\parentheses':
-        l.pop(0)
-        if len(l) == 1:
-            remove_leading_parentheses(l)
+    if (isinstance(math_list, list) and len(math_list) == 1
+            and isinstance(math_list[0], list)):
+        remove_leading_parentheses(math_list[0])
+    elif len(math_list) > 0 and math_list[0] == r'\parentheses':
+        math_list.pop(0)
+        if len(math_list) == 1:
+            remove_leading_parentheses(math_list)
 
 
-def add_parentheses(l: list, depth):
+def add_parentheses(math_list: list, depth):
     """
     Search for the \\parentheses macro and replace it by a pair of
     parentheses. Remove redundant parentheses, i.e.
@@ -94,93 +92,148 @@ def add_parentheses(l: list, depth):
     """
     # Remove unnecessary leading parentheses #
     if depth == 0:
-        remove_leading_parentheses(l)
+        remove_leading_parentheses(math_list)
 
-    for index in range(len(l) - 1):
-        if l[index] == r'\parentheses':
-            l[index] = l.formatter("(")
-            if index == len(l)-2 and isinstance(l[-1], list):
-                remove_leading_parentheses(l[-1])
+    for index in range(len(math_list) - 1):
+        if math_list[index] == r'\parentheses':
+            math_list[index] = math_list.formatter("(")
+            if index == len(math_list)-2 and isinstance(math_list[-1], list):
+                remove_leading_parentheses(math_list[-1])
 
-            l.append(l.formatter(")"))
+            math_list.append(math_list.formatter(")"))
 
 
-def recursive_utf8_display(l: list, depth) -> str:
+def recursive_utf8_display(math_list, depth):
     """
     Use the following tags as first child:
     - \sub, \super for subscript/superscript
-    - \dummy_var for dummy vars
-    - \applied_property for properties that have already been applied
+
+    Note that math_list itself is formatted; we return the formatted
+    math_list just for the leaf case of a string.
+
+    The parameter depth is used to remove leading parentheses.
     """
-    if not l:
+    if not math_list:
         return ""
 
-    head = l[0]
+    if isinstance(math_list, str):  # Real type = MathString
+        new_string, is_subscriptable = sub_sup_to_utf8(math_list)
+        # Replace even if not subscriptable ('\sub' --> '_')
+        math_list = math_list.replace_string(math_list, new_string)
+        return math_list
+
+    prefix = None
+    head = math_list[0]
     if head == r'\sub' or head == '_':
-        return subscript(recursive_utf8_display(l[1:], depth))
+        math_list.pop(0)
+        prefix = '_'
     elif head == r'\super' or head == '^':
-        return superscript(recursive_utf8_display(l[1:], depth))
+        math_list.pop(0)
+        prefix = '^'
     # No color in utf8 :-(
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
                   r'\text', r'\no_text', r'\marked'):
-        return recursive_utf8_display(l[1:], depth)
+        math_list.pop(0)
 
-    else:  # Generic case
-        add_parentheses(l, depth)
-        strings = [utf8_display(child, depth+1) for child in l]
-        return ''.join(strings)
+    add_parentheses(math_list, depth)
+
+    # Recursively format children
+    idx = 0
+    for child in math_list:
+        if child:
+            formatted_child = recursive_utf8_display(child, depth + 1)
+            math_list[idx] = formatted_child
+        idx += 1
+
+    # Process sup/sub prefix
+    if prefix == '_':
+        tentative_string, is_subscriptable = subscript(math_list.to_string())
+        if is_subscriptable:
+            return tentative_string
+        else:
+            math_list.insert(0, prefix)
+    elif prefix == '^':
+        tentative_string, is_subscriptable = superscript(math_list.to_string())
+        if is_subscriptable:
+            return tentative_string
+        else:
+            math_list.insert(0, prefix)
+
+    return math_list
 
 
-def utf8_display(abstract_string: Union[str, list], depth=0):
+def utf8_display(math_list, depth=0):
     """
     Return a utf8 version of the string represented by abstract_string,
     which is a tree of string.
     """
-    if abstract_string is None:
+
+    # if abstract_string is None:
+    #     return ""
+
+    recursive_utf8_display(math_list, depth)
+
+    # return math_list
+
+
+def recursive_lean_display(math_list: list, depth):
+    """
+    Identical to recursive_utf8_display??
+    """
+    if not math_list:
         return ""
 
-    if isinstance(abstract_string, list):
-        string = recursive_utf8_display(abstract_string, depth)
-    else:
-        string = sub_sup_to_utf8(abstract_string)
+    if isinstance(math_list, str):  # Actual type = MathString
+        new_string, is_subscriptable = sub_sup_to_utf8(math_list)
+        # Replace even if not subscriptable ('\sub' --> '_')
+        math_list = math_list.replace_string(math_list, new_string)
+        return math_list
 
-    if isinstance(string, list):  # debug
-        print(f"Variable string {string} should be a string, not a list!")
-    return replace_dubious_characters(cut_spaces(string))
-
-
-def recursive_lean_display(l: list, depth) -> str:
-    """
-    """
-    if not l:
-        return ""
-
-    head = l[0]
+    head = math_list[0]
+    prefix = None
     if head == r'\sub' or head == '_':
-        return subscript(recursive_lean_display(l[1:], depth))
+        prefix = "_"
+        return subscript(recursive_lean_display(math_list[1:], depth))
     elif head == r'\super' or head == '^':
-        return superscript(recursive_lean_display(l[1:], depth))
+        prefix = "^"
+        return superscript(recursive_lean_display(math_list[1:], depth))
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
                   r'\text', r'\no_text', r'\marked'):
-        return recursive_lean_display(l[1:], depth)
+        return recursive_lean_display(math_list[1:], depth)
 
-    else:  # Generic case
-        add_parentheses(l, depth=depth)
-        strings = [lean_display(child, depth+1) for child in l]
-        return ''.join(strings)
+    add_parentheses(math_list, depth=depth)
+
+    # Recursively format children
+    idx = 0
+    for child in math_list:
+        if child:
+            formatted_child = recursive_lean_display(child, depth + 1)
+            math_list[idx] = formatted_child
+        idx += 1
+
+    # Process sup/sub prefix
+    if prefix == '_':
+        tentative_string, is_subscriptable = subscript(math_list.to_string())
+        if is_subscriptable:
+            return tentative_string
+        else:
+            math_list.insert(0, prefix)
+    elif prefix == '^':
+        tentative_string, is_subscriptable = superscript(math_list.to_string())
+        if is_subscriptable:
+            return tentative_string
+        else:
+            math_list.insert(0, prefix)
+
+    return math_list
 
 
-def lean_display(abstract_string: Union[str, list], depth=0):
+def lean_display(math_list, depth=0):
     """
-    Return a Lean version of the string represented by abstract_string,
-    which is a tree of string.
+    Return a Lean version of the string represented by math_list.
     """
-    if isinstance(abstract_string, list):
-        string = recursive_lean_display(abstract_string, depth)
-    else:  # FIXME
-        # string = sub_sup_to_utf8(abstract_string)
-        string = abstract_string
-    if isinstance(string, list):  # debug
-        print(f"Variable string {string} should be a string, not a list!")
-    return cut_spaces(string)
+
+    recursive_utf8_display(math_list, depth)
+
+    # return math_list
 
