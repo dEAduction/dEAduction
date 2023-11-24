@@ -65,8 +65,10 @@ class MathCursor:
         self.cursor_address = tuple()
         self.cursor_is_after = True
 
-        self.go_to(cursor_math_object if cursor_math_object
-                   else root_math_object)
+        if cursor_math_object:
+            self.go_to(cursor_math_object)
+        else:
+            self.go_to_end()
         self.__cursor_is_shown = False
 
     @property
@@ -172,7 +174,22 @@ class MathCursor:
 
         self.__cursor_is_shown = False
 
-    def linear_cursor_position(self):
+    def current_item_linear_idx(self):
+        """
+        Return idx of the current item in the linear math_list.
+        """
+
+        linear_list: list = self.math_list.linear_list()
+
+        idx = 0
+        for item in linear_list:
+            if item is self.current_item:
+                break
+            idx += 1
+        if idx < len(linear_list):
+            return idx
+
+    def linear_text_cursor_position(self):
         """
         Return the position at which the cursor should be seen, in a text
         document.

@@ -1034,7 +1034,7 @@ class CalculatorController:
         # # print(self.target.latex_shape())
         # MathDisplay.mark_cursor = False
         # # MathDisplay.cursor_pos = None
-        return self.math_cursor.linear_cursor_position()
+        return self.math_cursor.linear_text_cursor_position()
 
     def update_cursor(self):
         # self.target.adjust_cursor_pos()
@@ -1228,10 +1228,15 @@ class CalculatorController:
             self.calculator_ui.calculator_target.setFocus()
         print(f"Shape: {self.target.latex_shape()}")
         print(f"New target after move: {new_target}")
-        total, cursor = self.target.total_and_cursor_list()
-        print("Total and cursor lists:")
-        print(total)
-        print(cursor)
+        print("Math list:")
+        print(self.target.math_list())
+        print("Linear list, idx:")
+        print(self.target.ordered_descendants())
+        print(self.target.current_index_in_ordered_descendants())
+        # total, cursor = self.target.total_and_cursor_list()
+        # print("Total and cursor lists:")
+        # print(total)
+        # print(cursor)
         # print("Bound vars:")
         # BV = self.target.bound_vars()
         # print(BV)

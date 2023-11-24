@@ -301,7 +301,9 @@ class MathString(str, MathDescendant):
 
     format_strings = [error_string, cursor, marked, dummy_var, var]
 
-    def __new__(cls, string, root_math_object,
+    is_tagged = False
+
+    def __new__(cls, string, root_math_object=None,
                 line_of_descent: tuple = None):
         instance = str.__new__(cls, string)
         instance._root_math_object = root_math_object
@@ -438,6 +440,8 @@ class MathList(list, MathDescendant):
     formatter = MathString.formatter
     variable = formatter(r"\variable")  # FIXME: used?
     parentheses = formatter(r'\parentheses')
+
+    is_tagged = False
 
     def __init__(self, iterable,
                  root_math_object,
@@ -854,6 +858,21 @@ class MathList(list, MathDescendant):
             previous_item = item.last_descendant()
             idx += 1
 
+    def linear_list(self):
+        """
+        Return the linear MathList of self.
+        """
+
+        linear_list = MathList([], self.root_math_object,
+                               format_=self.format_,
+                               text=self.text)
+        for item in self:
+            if isinstance(item, MathList):
+                linear_list.extend(item.linear_list())
+            else:
+                linear_list.append(item)
+        return linear_list
+
     def to_string(self) -> str:
         """
         Concatenate self into an actual string.
@@ -863,9 +882,11 @@ class MathList(list, MathDescendant):
                                                                  MathString):
                 print("Bug")  # Fixme
 
-        flat_list = [item.to_string() for item in self]
+        # flat_list = [item.to_string() for item in self]
 
-        return ''.join(flat_list)
+        linear_list = self.linear_list()
+        string = ''.join(linear_list)
+        return string
 
     def mark(self):
         self.insert(0, MathString.marked_object)
