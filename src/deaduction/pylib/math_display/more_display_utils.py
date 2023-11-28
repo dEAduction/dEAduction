@@ -54,10 +54,10 @@ def cut_successive_spaces(string1, string2: str) -> Optional[str]:
     if not (string1 and string2):
         return
 
-    if string1[-1] in (' ', '(', ')'):
+    # if string1[-1] in (' ', '(', ')'):
+    if string1[-1] in (' ', '('):
         if string2[0] == ' ':
-            string2 = string2[:-1]
-            return string2
+            return string2[:-1]
 
 
 def text_to_subscript_or_sup(structured_string,

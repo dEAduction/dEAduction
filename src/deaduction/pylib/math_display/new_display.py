@@ -963,6 +963,7 @@ class MathList(list, MathDescendant):
         idx = 0
         for item in self:
             if isinstance(item, MathString):  # Immediately cut space
+                # pass
                 new_string = cut_successive_spaces(previous_item, item)
                 if new_string:
                     self.replace_string(idx, new_string)
