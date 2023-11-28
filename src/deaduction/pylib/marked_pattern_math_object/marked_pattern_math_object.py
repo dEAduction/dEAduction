@@ -1853,6 +1853,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     # child1 = (c_children + r_children)[0]
 
                     child1.assign_matched_metavars()
+                    child1.adjust_type_of_assigned_math_object()
                     mvar.assigned_math_object = None
                     log.debug(f"Try to match {new_pmo} with {mvar}")
                     if mvar.match(new_pmo):

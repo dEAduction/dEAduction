@@ -359,14 +359,6 @@ class PatternMathObject(MathObject):
         index in the metavar_objects list.
         """
 
-        # FIXME: does not work in case of an assigned_math_object (which is
-        #  not taken into account). Furthermore this object can be a pure
-        #  MathObject or a PatternMathObject...
-        #  --> in this case, substitute self's attributes by the
-        #  assigned_math_object's corresponding attribute,
-        #  but this suppose to have a recursive_match() method for MathObject
-        #  (which could be just equality?)
-
         # debug = True
         self_ = self  # Can be substituted, e.g. case of assigned_math_object
         children = self.children
@@ -736,7 +728,7 @@ class MetaVar(PatternMathObject):
             return
 
         if math_object.math_type.node in self.adjustable_math_types:
-            math_object.math_type = self.math_type
+            math_object.math_type = self._math_type  # Not self.math_type!!
             return True
 
 ##################################################
