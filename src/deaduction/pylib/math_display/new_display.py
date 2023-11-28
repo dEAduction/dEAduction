@@ -316,6 +316,9 @@ class MathString(str, MathDescendant):
 
     def __new__(cls, string, root_math_object=None,
                 line_of_descent: tuple = None):
+        if not isinstance(string, str):
+            log.warning(f"Attempt to create a MathString with non str object"
+                        f" {string}")
         instance = str.__new__(cls, string)
         instance._root_math_object = root_math_object
         instance.line_of_descent = line_of_descent
@@ -422,8 +425,8 @@ class MathString(str, MathDescendant):
         display anything on screen by themselves (e.g. a parenthesis is NOT
         a formatter).
         """
-        if format_name == '':
-            print('')
+        # if format_name == '':
+        #     print('')
         cls._format_strings.add(format_name)
         return cls(string=format_name, root_math_object=None)
 
@@ -439,8 +442,17 @@ class MathString(str, MathDescendant):
 
     def map(self, func):
         new_string = func(self)
-        if new_string is not None:
-            return self.replace_string(self, func(self))
+        if (isinstance(new_string, str) and
+                not isinstance(new_string, MathString)):
+            new_string = self.replace_string(self, new_string)
+        elif (isinstance(new_string, list) and
+                not isinstance(new_string, MathList)):
+            new_string = MathList(new_string,
+                                  root_math_object=self.root_math_object,
+                                  line_of_descent=self.line_of_descent)
+            new_string.check_completeness()
+
+        return new_string
 
     def last_address_of(self, math_object):
         """
@@ -619,6 +631,15 @@ class MathList(list, MathDescendant):
         for item in self:
             if isinstance(item, MathString):
                 new_item = item.map(func)
+                # if (isinstance(new_item, str) and
+                #         not isinstance(new_item, MathString)):
+                #     new_item = MathString(new_item,
+                #                           root_math_object=item.root_math_object)
+                # if (isinstance(new_item, list) and
+                #         not isinstance(new_item, MathList)):
+                #     new_item = MathList(new_item,
+                #                         root_math_object=item.root_math_object)
+                #     new_item.check_completeness()
                 if new_item is not None:
                     self[idx] = new_item
             elif isinstance(item, MathList):
@@ -859,7 +880,7 @@ class MathList(list, MathDescendant):
             return True
 
         idx = 0
-        root_appears_in_self = False
+        # root_appears_in_self = False
         for item in self:
             if isinstance(item, MathString):
                 if item.descendant == self.root_math_object:

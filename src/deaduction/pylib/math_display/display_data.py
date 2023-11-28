@@ -332,7 +332,7 @@ class MathDisplay:
             r'\neq': '≠',
             r'\leq': '≤',
             r'\geq': '≥',
-            r'\set_inverse': [r'^', '-1'],
+            r'\set_inverse': ['^', '-1'],
         }
 
         cls.latex_to_utf8_dic = {

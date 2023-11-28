@@ -214,6 +214,8 @@ def recursive_html_display(math_list: Union[list, str], depth,
 
     # Add pre and post if pertinent
     if pre or post:
+        # if pre == "<sup>":
+        #     log.debug("")
         wrap(math_list, pre=pre, post=post)
 
     return math_list
