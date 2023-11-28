@@ -56,30 +56,54 @@ class MathCursor:
 
     deaduction_cursor = MathString.cursor
 
-    def __init__(self, root_math_object, cursor_math_object):
+    def __init__(self, root_math_object, cursor_math_object, go_to_end=True):
         self.math_list = MathList.complete_latex_shape(
             math_object=root_math_object,
             format_='html')
+        self.math_list = self.math_list.remove_formatters()
         self.target_math_object = root_math_object
 
         self.cursor_address = tuple()
         self.cursor_is_after = True
+        self.__cursor_is_shown = False
 
         if cursor_math_object:
             self.go_to(cursor_math_object)
-        else:
+        elif go_to_end:
             self.go_to_end()
-        self.__cursor_is_shown = False
+
+    def __repr__(self):
+        rmo = self.target_math_object.__repr__()
+        repr = f"MathCursor(target_math_object={rmo})"
+        self.show_cursor()
+        ml = f"MathList: {self.math_list}"
+        self.hide_cursor()
+        address = (f"Cursor address: "
+                   f"{'after' if self.cursor_is_after else 'before'} "
+                   f"{self.cursor_address}")
+        item = f"Current item:  {self.current_item}"
+        mo = f"Current math object:  {self.current_math_object}"
+        md = f"Marked descendant: {self.root_math_object.marked_descendant()}"
+        repr = '\n'.join([repr, ml, address, item, mo, md])
+        return repr
 
     @property
     def cursor_is_before(self):
         return not self.cursor_is_after
 
-    def set_cursor_before(self):
-        self.cursor_is_after = False
+    def set_cursor_before(self, yes=True):
+        self.cursor_is_after = not yes
 
-    def set_cursor_after(self):
-        self.cursor_is_after = True
+    def set_cursor_after(self, yes=True):
+        self.cursor_is_after = yes
+
+    def set_cursor_at_the_same_position_as(self, other):
+        assert isinstance(other, MathCursor)
+        # self.go_to_address(other.cursor_address,
+        #                    set_cursor_after=other.cursor_is_after,
+        #                    set_marked=False)
+        self.cursor_address = other.cursor_address
+        self.cursor_is_after = other.cursor_is_after
 
     @property
     def root_math_object(self):
@@ -88,8 +112,9 @@ class MathCursor:
     @property
     def current_math_object(self):
         # return self.current_item.descendant
-        line = self.current_item.line_of_descent
-        cmo = self.root_math_object.descendant(line)
+        # line = self.current_item.line_of_descent
+        # cmo = self.root_math_object.descendant(line)
+        cmo = self.current_item.descendant
         return cmo
 
     #######################
@@ -215,18 +240,22 @@ class MathCursor:
         return position
 
     def debug(self):
-        log.debug(f"Math cursor: {self.math_list}")
-        log.debug(f"Cursor address: "
-                  f"{'after' if self.cursor_is_after else 'before'}"
-                  f" {self.cursor_address}")
-        log.debug(f"Current item: "
-                  f" {self.current_item}")
-        log.debug(f"Current math object: "
-                  f" {self.current_math_object}")
-        log.debug(f"Marked descendant: "
-                  f"{self.root_math_object.marked_descendant()}")
-
-        log.debug("")
+        log.debug(str(self))
+        # pass
+        # self.show_cursor()
+        # log.debug(f"Math cursor: {self.math_list}")
+        # self.hide_cursor()
+        # log.debug(f"Cursor address: "
+        #           f"{'after' if self.cursor_is_after else 'before'}"
+        #           f" {self.cursor_address}")
+        # log.debug(f"Current item: "
+        #           f" {self.current_item}")
+        # log.debug(f"Current math object: "
+        #           f" {self.current_math_object}")
+        # log.debug(f"Marked descendant: "
+        #           f"{self.root_math_object.marked_descendant()}")
+        #
+        # log.debug("")
 
     def set_marked_element(self, yes=True):
         math_object = self.current_math_object
@@ -291,45 +320,53 @@ class MathCursor:
 
         return False
 
-    def decrease_through_identical_positions(self):
-        """
-        Change position from before an item to after the previous item at the
-        same level, unless the current item is first at its level.
-        """
+    # def decrease_through_identical_positions(self):
+    #     """
+    #     Change position from before an item to after the previous item at the
+    #     same level, unless the current item is first at its level.
+    #     """
+    #
+    #     # if self.cursor_is_after or self.current_idx == 0:  # Nothing to do
+    #     #     return
+    #
+    #     # if self.current_item.is_formatter() or self.cursor_is_before:
+    #     #     success = self.go_left()
+    #     #     if success:
+    #     #         self.decrease_through_identical_positions()
+    #
+    #     if self.cursor_is_after and not self.current_item.is_formatter():
+    #         return
+    #     if self.is_at_beginning():
+    #         return
+    #
+    #     parent = self.parent_of_current_item
+    #     if not parent:
+    #         return
+    #
+    #     first_children = parent[:self.current_idx]
+    #     if not all(child.is_formatter() for child in first_children):
+    #         success = self.go_left()
+    #         if success:
+    #             self.decrease_through_identical_positions()
 
-        # if self.cursor_is_after or self.current_idx == 0:  # Nothing to do
-        #     return
+    # def increase_through_identical_positions(self):
+    #     """
+    #     Change position from before an item to after the previous item at the
+    #     same level, unless the current item is first at its level.
+    #     """
+    #
+    #     if self.current_item.is_formatter() or self.cursor_is_after:
+    #         success = self.go_right()
+    #         if success:
+    #             self.increase_through_identical_positions()
 
-        # if self.current_item.is_formatter() or self.cursor_is_before:
-        #     success = self.go_left()
-        #     if success:
-        #         self.decrease_through_identical_positions()
-
-        if self.cursor_is_after and not self.current_item.is_formatter():
-            return
-        if self.is_at_beginning():
-            return
-
-        parent = self.parent_of_current_item
-        if not parent:
-            return
-
-        first_children = parent[:self.current_idx]
-        if not all(child.is_formatter() for child in first_children):
-            success = self.go_left()
-            if success:
-                self.decrease_through_identical_positions()
-
-    def increase_through_identical_positions(self):
-        """
-        Change position from before an item to after the previous item at the
-        same level, unless the current item is first at its level.
-        """
-
-        if self.current_item.is_formatter() or self.cursor_is_after:
-            success = self.go_right()
-            if success:
-                self.increase_through_identical_positions()
+    # def go_to_address(self, address: tuple, set_cursor_after=None,
+    #                   set_marked=True):
+    #     self.cursor_address = address
+    #     if set_cursor_after is not None:
+    #         self.set_cursor_after(set_cursor_after)
+    #     if set_marked:
+    #         self.set_marked_element(True)
 
     def go_to(self, math_object, after=True, set_marked=True) -> bool:
         """
@@ -381,6 +418,18 @@ class MathCursor:
 
         self.debug()
 
+    def dont_wanna_park_at_current_item(self):
+        """
+        True if current_item is a reasonable position to stand at.
+        """
+
+        item = self.current_item
+        test1 = any((item.is_formatter(), item.is_format_parenthesis(),
+                    item.is_marker()))
+        type_ = type(self.current_math_object)
+        test2 = str(type_).endswith(".MarkedMetavar'>")
+        return test1 or not test2
+
     def minimal_increase_pos(self):
         """
         Increase cursor position by one.
@@ -412,19 +461,41 @@ class MathCursor:
 
         # self.adjust_position(set_marked=set_marked)
 
+    # @staticmethod
+    # def equal_up_to_single_list(item1, item2):
+    #     """
+    #     Return True if item1 == [item2], or vice versa; or more generally if
+    #     item 2 is the only non formatter term of the list.
+    #     """
+    #
+    #     # if isinstance(item1, list):
+    #     #     if len(item1) == 1 and item1[0] == item2:
+    #     #         return True
+    #     # elif isinstance(item2, list):
+    #     #     if len(item2) == 1 and item2[0] == item1:
+    #     #         return True
+    #
+    #     test1 = item1.significant_items() == [item2]
+    #     test2 = item2.significant_items() == [item1]
+    #     return test1 or test2
+
     def increase_pos(self, set_marked=True):
 
         # Adjust position (free move, both positions are considered identical)
-        self.increase_through_identical_positions()
+        # self.increase_through_identical_positions()
 
-        # FIXME: replace by current_math_object??
+        # FIXME: replace current_math_object by current_item?
         # current_mo, before = self.current_math_object, self.cursor_is_before
-        current_item, before = self.current_item, self.cursor_is_before
-        while (((current_item, before) == (self.current_item,
-                                           self.cursor_is_before)
-                or self.current_item.is_formatter())
-                and not self.is_at_end()):
+        current_mo, before = self.current_math_object, self.cursor_is_before
+        new_mo, new_before = current_mo, before
+        # new_item = self.current_item
+        while ((not self.is_at_end()) and
+               (self.dont_wanna_park_at_current_item()
+                or (current_mo, before) == (new_mo, new_before))):
             self.minimal_increase_pos()
+            new_mo = self.current_math_object
+            # new_item = self.current_item
+            new_before = self.cursor_is_before
 
         if set_marked:
             self.set_marked_element(True)
@@ -462,43 +533,61 @@ class MathCursor:
 
     def decrease_pos(self, set_marked=True):
 
-        # if self.is_at_end():
-        #     return
-
-        # FIXME: replace by current_math_object??
         # current_mo, before = self.current_math_object, self.cursor_is_before
-        current_item, before = self.current_item, self.cursor_is_before
-        while (((current_item, before) == (self.current_item,
-                                           self.cursor_is_before)
-                or self.current_item.is_formatter())
-               and not self.is_at_beginning()):
+        current_mo, before = self.current_math_object, self.cursor_is_before
+        new_mo, new_before = current_mo, before
+        # new_item = self.current_item
+        # while ((not self.is_at_beginning()) and
+        #        (new_item.is_formatter() or new_item.is_format_parenthesis()
+        #        or new_item.is_marker()
+        #         or (current_mo, before) == (new_mo, new_before)
+        #        )):
+        while ((not self.is_at_beginning()) and
+               (self.dont_wanna_park_at_current_item()
+                or (current_mo, before) == (new_mo, new_before))):
             self.minimal_decrease_pos()
+            new_mo = self.current_math_object
+            # new_item = self.current_item
+            new_before = self.cursor_is_before
 
         # Adjust position (free move)
-        self.decrease_through_identical_positions()
+        # self.decrease_through_identical_positions()
 
         if set_marked:
             self.set_marked_element(True)
 
         self.debug()
 
-    def fast_increase(self):
+    def fast_increase(self, set_marked=True):
         """
         Increase pos until cursor pos in the linear order has actually
         changed (and not only pos in the tree).
         """
 
-        # TODO
-        pass
+        current_item = self.current_item
+        while self.current_item == current_item and not self.is_at_end():
+            self.minimal_increase_pos()
 
-    def fast_decrease(self):
+        if set_marked:
+            self.set_marked_element(True)
+
+        self.debug()
+
+    def fast_decrease(self, set_marked=True):
         """
-        Increase pos until cursor pos in the linear order has actually
+        Decrease pos until cursor pos in the linear order has actually
         changed (and not only pos in the tree).
         """
 
-        # TODO
-        pass
+        current_item = self.current_item
+        while self.current_item == current_item and not self.is_at_beginning():
+            self.minimal_decrease_pos()
+
+        if set_marked:
+            self.set_marked_element(True)
+
+        self.debug()
+
 
 
 

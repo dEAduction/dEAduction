@@ -754,13 +754,11 @@ class MathObject:
         :return:                    MathObject
         """
 
-        # if not line_of_descent:
-        #     return self
-        if not line_of_descent:
-            # e.g. empty tuple or list
-            return self
-        elif isinstance(line_of_descent, int):
+        if isinstance(line_of_descent, int):  # Including 0!!!
             return self.children[line_of_descent]
+        elif not line_of_descent:
+            # e.g. empty tuple or list but not 0!
+            return self
         elif (isinstance(line_of_descent, tuple)
               or isinstance(line_of_descent, list)):
             child_number, *remaining = line_of_descent

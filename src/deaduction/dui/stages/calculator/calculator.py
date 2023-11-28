@@ -1189,8 +1189,20 @@ class CalculatorController:
         """
 
         new_target = self.target.deep_copy(self.target)
+        # Do not affect marked_descendant:
+        new_target.set_math_cursor(go_to_end=False)
+        new_target.math_cursor.set_cursor_at_the_same_position_as(
+            self.target.math_cursor)
+        assert (new_target.math_cursor.cursor_address ==
+                self.target.math_cursor.cursor_address)
+        assert (new_target.math_cursor.cursor_is_after ==
+                self.target.math_cursor.cursor_is_after)
+        # print("Target, new target ordered descendants:")
+        # print(self.target.ordered_descendants(include_cursor=True))
+        # print(new_target.ordered_descendants(include_cursor=True))
+
         assigned_mvar = None
-        print(f"Target: {new_target}")
+        print(f"New target: {new_target}")
 
         if not isinstance(pattern_s, list):
             pattern_s = [pattern_s]
@@ -1203,7 +1215,8 @@ class CalculatorController:
                 assigned_mvar = new_target.insert_application()
             else:
                 # (1b) Normal insert
-                assigned_mvar = new_target.insert(pattern)
+                # assigned_mvar = new_target.insert(pattern)
+                assigned_mvar = new_target.new_insert(pattern)
             if assigned_mvar:
                 break
 
@@ -1222,17 +1235,23 @@ class CalculatorController:
         if assigned_mvar:
             self.target = new_target
             # self.check_new_bound_var(assigned_mvar)
-            self.target.move_after_insert(assigned_mvar)
+            was_at_end = (self.target.math_cursor.is_at_end()
+                          or self.target.marked_descendant() ==
+                          self.target.ordered_descendants()[-1])
+            self.target.move_after_insert(assigned_mvar,
+                                          was_at_end=was_at_end)
             self.update()
         else:
             self.calculator_ui.calculator_target.setFocus()
-        print(f"Shape: {self.target.latex_shape()}")
-        print(f"New target after move: {new_target}")
-        print("Math list:")
-        print(self.target.math_list())
-        print("Linear list, idx:")
-        print(self.target.ordered_descendants())
-        print(self.target.current_index_in_ordered_descendants())
+        # print(f"Shape: {self.target.latex_shape()}")
+        # print(f"New target after move: {new_target}")
+        # print("Math list:")
+        # self.math_cursor.show_cursor()
+        # print(self.target.math_list())
+        # self.math_cursor.hide_cursor()
+        # print("Linear list, idx:")
+        # print(self.target.ordered_descendants())
+        # print(self.target.current_index_in_ordered_descendants())
         # total, cursor = self.target.total_and_cursor_list()
         # print("Total and cursor lists:")
         # print(total)
@@ -1246,6 +1265,8 @@ class CalculatorController:
     @Slot()
     def delete(self):
         new_target = self.target.deep_copy(self.target)
+        # FIXME: record element previous to marked, and go_to that element
+        #  after deletion
         success = new_target.clear_marked_mvar()
         # print(new_target)
         if success:

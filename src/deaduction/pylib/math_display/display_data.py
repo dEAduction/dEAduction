@@ -66,7 +66,7 @@ def lean_application(mo):
 
 
 def display_name(mo):
-    return mo.info.get('name', "NO NAME")
+    return mo.display_name
 
 
 def display_value(mo):
@@ -156,7 +156,7 @@ class MathDisplay:
          "SET_DIFF": (0, r" \backslash ", 1),
          "SET_COMPLEMENT": (0, r" \backslash ", 1),
          "SET_DIFF_SYM": (0, r" \Delta ", 1),
-         "SET_UNIVERSE": (0,),
+         "SET_UNIVERSE": (0,),  # Fixme add empty strings?
          "SET_EMPTY": (r"\emptyset",),
          "SET_EXTENSION1": (r'\{', 0, r'\}'),
          "SET_EXTENSION2": (r'\{', 0, ', ', 1, r'\}'),
@@ -215,7 +215,7 @@ class MathDisplay:
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
-         "COMPOSITE_NUMBER": (0, 1),
+         # "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
          }

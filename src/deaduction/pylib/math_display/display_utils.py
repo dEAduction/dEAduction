@@ -110,6 +110,7 @@ def shallow_latex_to_text(math_list: Union[list, str], text_depth=0) \
         # Stop conversion to text in some cases
         if math_list[0] == r'\no_text':
             text_depth = 0
+            math_list.pop(0)
         # Recursion
         # abstract_string = [shallow_latex_to_text(item, text_depth-1) for
         #                    item in abstract_string]

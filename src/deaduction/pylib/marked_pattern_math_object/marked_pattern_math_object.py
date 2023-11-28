@@ -87,8 +87,9 @@ if __name__ == '__main__':
     language_check()
 
 from typing import Optional
+from copy import deepcopy
 
-from deaduction.pylib.math_display import MathCursor, MathList
+from deaduction.pylib.math_display import MathCursor, MathList, MathString
 
 from deaduction.pylib.mathobj import MathObject, BoundVar
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
@@ -122,7 +123,7 @@ class MarkedTree:
     # cursor_pos is the rank of current selected item in self.latex_shape,
     # solely for the marked node. -1 denotes first position.
     # Not that self is marked iff cursor pos is not None
-    cursor_pos = None
+    # cursor_pos = None
     # marked_nb = None
     _current_index_in_total_list = None
     _is_marked = False
@@ -217,20 +218,12 @@ class MarkedTree:
 
     def unmark(self):
         """
-        Unmark self's marked node.
+        Unmark (all) self's marked node(s).
         """
 
-        descendant = self.marked_descendant()
-        if descendant:
-            descendant.set_marked(yes=False)
-        # if self.is_marked:
-        #     # self.is_marked = False
-        #     # self.cursor_pos = None
-        #     self.set_marked(False)
-        # else:
-        #     child = self.child_with_marked_descendant()
-        #     if child:
-        #         child.unmark()
+        self.set_marked(yes=False)
+        for child in self.children:
+            child.unmark()
 
     #######################
     # Total list of nodes #
@@ -296,93 +289,93 @@ class MarkedTree:
     # Moving in the tree #
     ######################
 
-    def first_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        first_mvar = total_list[0]
-        first_cursor = cursor_list[0]
-        return first_mvar, first_cursor
-
-    def is_at_beginning(self):
-        return self.marked_descendant().cursor_pos == -1
-        # current = self.marked_descendant(), self.marked_descendant().cursor_pos
-        # return current == self.first_pos()
-
-    def last_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        last_mvar = total_list[-1]
-        last_cursor = cursor_list[-1]
-        return last_mvar, last_cursor
-
-    def is_at_end(self):
-        # total_list, cursor_list = self.total_and_cursor_list()
-        # test1 = self.marked_descendant() is total_list[-1]
-        # test2 = self.marked_descendant().cursor_pos >= cursor_list[-1]
-        # return test1 and test2
-        current = self.marked_descendant(), self.marked_descendant().cursor_pos
-        return current == self.last_pos()
-
-    def set_cursor_at(self, mvar, pos=None):
-        if self.marked_descendant():
-            self.marked_descendant().unmark()
-
-        if pos is None:
-            mvar.set_cursor_at_main_symbol()
-            # _, mvar.cursor_pos = self.last_pos()
-        else:
-            mvar.cursor_pos = pos
-
-        print(f"Setting cursor pos at {mvar.cursor_pos}")
-        print(mvar.is_marked)
-
-    def go_to_beginning(self):
-        # first_mvar, first_cursor = self.first_pos()
-        # self.set_cursor_at(first_mvar, first_cursor)
-        self.set_cursor_at(self, -1)
-
-    def go_to_end(self):
-        last_mvar, last_cursor = self.last_pos()
-        self.set_cursor_at(last_mvar, last_cursor)
-
-    def decrease_cursor_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        # print(f"Cursor idx before: {idx}")
-        if idx > 0:
-            mvar = total_list[idx-1]
-            cursor_pos = cursor_list[idx-1]
-            self._current_index_in_total_list += -1
-            self.set_cursor_at(mvar, cursor_pos)
-        else:
-            self.go_to_beginning()
-            # self.set_cursor_at(self, -1)
-        idx = self.current_index_in_total_list()
-        # print(f"Cursor idx after: {idx}")
-        print(f"Marked element : {self.marked_descendant()}")
-
-    def increase_cursor_pos(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        # print(f"Cursor idx before: {idx}")
-        if idx < len(total_list) - 1:
-            mvar = total_list[idx+1]
-            cursor_pos = cursor_list[idx+1]
-            self._current_index_in_total_list += 1
-            self.set_cursor_at(mvar, cursor_pos)
-        else:
-            self.go_to_end()
-        idx = self.current_index_in_total_list()
-        # print(f"Cursor idx after: {idx}")
-
-    def next_after_marked(self):
-        """
-        Return the node which is just after the marked node, i.e. right of
-        cursor.
-        """
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        if idx < len(total_list) - 1:
-            mvar = total_list[idx+1]
-            return mvar
+    # def first_pos(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     first_mvar = total_list[0]
+    #     first_cursor = cursor_list[0]
+    #     return first_mvar, first_cursor
+    #
+    # def is_at_beginning(self):
+    #     return self.marked_descendant().cursor_pos == -1
+    #     # current = self.marked_descendant(), self.marked_descendant().cursor_pos
+    #     # return current == self.first_pos()
+    #
+    # def last_pos(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     last_mvar = total_list[-1]
+    #     last_cursor = cursor_list[-1]
+    #     return last_mvar, last_cursor
+    #
+    # def is_at_end(self):
+    #     # total_list, cursor_list = self.total_and_cursor_list()
+    #     # test1 = self.marked_descendant() is total_list[-1]
+    #     # test2 = self.marked_descendant().cursor_pos >= cursor_list[-1]
+    #     # return test1 and test2
+    #     current = self.marked_descendant(), self.marked_descendant().cursor_pos
+    #     return current == self.last_pos()
+    #
+    # def set_cursor_at(self, mvar, pos=None):
+    #     if self.marked_descendant():
+    #         self.marked_descendant().unmark()
+    #
+    #     if pos is None:
+    #         mvar.set_cursor_at_main_symbol()
+    #         # _, mvar.cursor_pos = self.last_pos()
+    #     else:
+    #         mvar.cursor_pos = pos
+    #
+    #     print(f"Setting cursor pos at {mvar.cursor_pos}")
+    #     print(mvar.is_marked)
+    #
+    # def go_to_beginning(self):
+    #     # first_mvar, first_cursor = self.first_pos()
+    #     # self.set_cursor_at(first_mvar, first_cursor)
+    #     self.set_cursor_at(self, -1)
+    #
+    # def go_to_end(self):
+    #     last_mvar, last_cursor = self.last_pos()
+    #     self.set_cursor_at(last_mvar, last_cursor)
+    #
+    # def decrease_cursor_pos(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     # print(f"Cursor idx before: {idx}")
+    #     if idx > 0:
+    #         mvar = total_list[idx-1]
+    #         cursor_pos = cursor_list[idx-1]
+    #         self._current_index_in_total_list += -1
+    #         self.set_cursor_at(mvar, cursor_pos)
+    #     else:
+    #         self.go_to_beginning()
+    #         # self.set_cursor_at(self, -1)
+    #     idx = self.current_index_in_total_list()
+    #     # print(f"Cursor idx after: {idx}")
+    #     print(f"Marked element : {self.marked_descendant()}")
+    #
+    # def increase_cursor_pos(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     # print(f"Cursor idx before: {idx}")
+    #     if idx < len(total_list) - 1:
+    #         mvar = total_list[idx+1]
+    #         cursor_pos = cursor_list[idx+1]
+    #         self._current_index_in_total_list += 1
+    #         self.set_cursor_at(mvar, cursor_pos)
+    #     else:
+    #         self.go_to_end()
+    #     idx = self.current_index_in_total_list()
+    #     # print(f"Cursor idx after: {idx}")
+    #
+    # def next_after_marked(self):
+    #     """
+    #     Return the node which is just after the marked node, i.e. right of
+    #     cursor.
+    #     """
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     if idx < len(total_list) - 1:
+    #         mvar = total_list[idx+1]
+    #         return mvar
 
     def parent_of_marked(self):
         mvar = self.marked_descendant()
@@ -930,7 +923,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     A PatternMathObject with a marked node.
     """
 
-    cursor_pos = None
+    # cursor_pos = None
     automatic_patterns = []  # Populated in calculator_pattern_strings.py
     app_patterns = dict()
     applications_from_ctxt = []
@@ -992,13 +985,24 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mpmo = cls.from_pattern_math_object(pmo)
         return mpmo
 
-    def set_math_cursor(self, marked_descendant=None):
+    def set_math_cursor(self, marked_descendant=None, go_to_end=True):
         """
         Set the MathCursor corresponding to current target, with the address
         of marked_descendant (which will be marked).
+        Th potential marked_descendant is unmarked during the computation of
+        MathCursor, to avoid perturbing formatters ('highlight').
         """
 
-        self._math_cursor = MathCursor(self, marked_descendant)
+        marked_descendant = None
+        if self.marked_descendant():
+            marked_descendant = self.marked_descendant()
+            marked_descendant.unmark()
+
+        self._math_cursor = MathCursor(self, marked_descendant, go_to_end)
+
+        if marked_descendant:
+            marked_descendant.mark()
+
 
     @property
     def math_cursor(self):
@@ -1018,17 +1022,25 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         math_object it comes from. Only MarkedPatternMathObject are kept.
         """
 
+        # Fixme: include descendant of MathList, not only MathString
+        #  when a MathList has no symbol whose descendant is self
+
         if include_cursor or only_before or only_after:
             self.math_cursor.show_cursor()
 
-        linear_list = self.math_list().linear_list()
+        until = self.math_cursor.deaduction_cursor if only_before else None
+        from_ = self.math_cursor.deaduction_cursor if only_after else None
 
-        # descendants = [item.descendant for item in linear_list]
+        # Fixme: use linear_list
+        linear_list = self.math_list().linear_list(until=until, from_=from_)
+
+        log.debug(f"Linear list with nodes: {linear_list}")
+        # Fixme: most of the following is useless
         descendants = []
         for item in linear_list:
             descendant = item.descendant
             # We need to remove MathObject.NO_MATH_TYPE
-            if include_cursor and item == self.math_cursor.deaduction_cursor:
+            if item == self.math_cursor.deaduction_cursor:
                 if only_before:  # List completed
                     break
                 elif only_after:  # Actual list starts here
@@ -1049,10 +1061,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return idx
 
     def left_descendants(self):
-        return self.ordered_descendants(only_before=True)
+        ld = self.ordered_descendants(only_before=True)
+        log.debug(f"Left descendants: {ld}")
+        return ld
 
     def right_descendants(self):
-        return self.ordered_descendants(only_after=True)
+        rd = self.ordered_descendants(only_after=True)
+        log.debug(f"Right descendants: {rd}")
+        return rd
 
     def appears_left_of_cursor(self, other) -> bool:
         """
@@ -1169,6 +1185,23 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     # def composite_number(cls, left_child, right_child):
     #     return cls.generic_node(left_child, right_child,
     #                             node="COMPOSITE_NUMBER")
+
+    # @property
+    # def display_name(self):
+    #     name = super().display_name
+    #     if self.is_marked:
+    #         name = [r'\marked', name]
+    #     return name
+
+    @property
+    def local_constant_shape(self) -> []:
+        shape = super().local_constant_shape
+        if self.is_marked:
+            # marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
+            # FIXME:
+            # shape.insert(0, MathString.marked_object)
+            pass
+        return shape
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
@@ -1570,13 +1603,16 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return True
 
     def insert_if_you_can(self, new_pmo, mvar, parent_mvar=None,
-                          check_types=False):
+                          check_types=False, old_target=None):
         """
         Try to insert new_pmo at mvar.
         - First, priority rules with parent_mvar are checked.
         - Then the math_object assigned to mvar, if any, is tentatively
         re-assigned as a child of new_pmo.
         """
+
+        if not old_target:
+            old_target = self
 
         PatternMathObject.clear_cls_metavars()
         assignments = []
@@ -1663,10 +1699,47 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
                 if success:
                     return mvar
+
                 mvar = parent_mvar
                 parent_mvar = self.parent_of(parent_mvar)
                 if mvar and not mvar.is_metavar():
                     continue
+
+    def new_insert(self, new_pmo: PatternMathObject):
+        """
+        Try to insert pmo in self's tree, so that pmo is just after the
+        marked node in the infix order. In case of success, return the mvar
+        at which insertion has been done.
+
+        We first try insertion at the marked mvar, which is supposed to be
+        just before cursor pos, and all the way up from
+        there. If none works, then we try again starting from the mvar just
+        after cursor pos.
+        """
+
+        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+
+        adjacent_items = (self.marked_descendant(), self.on_the_other_side())
+        for mvar in adjacent_items:
+            if not isinstance(mvar, MarkedMetavar):
+                continue
+            # if mvar.node == "GENERIC_NODE":
+            #     success = self.substitute_generic_node(mvar, new_pmo_copy)
+            #     if success:
+            #         return mvar
+
+            parent_mvar = self.parent_of(mvar)
+
+            # while mvar:
+            success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+            if success:
+                return mvar
+
+                # continue  # FIXME: we do not try to climb in the tree
+                # mvar = parent_mvar
+                # parent_mvar = self.parent_of(parent_mvar)
+                # if mvar and not mvar.is_metavar():
+                #     continue
 
     def insert_application(self, pattern=None):
         """
@@ -1738,6 +1811,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         log.debug("Trying to insert an application with arg")
         mvar = self.marked_descendant()
+        if not mvar:
+            return
         math_object = mvar.assigned_math_object
         if not math_object:
             return
@@ -1842,24 +1917,36 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         new_pmo_value = new_pmo.value if new_pmo.node == 'NUMBER' else '.'
 
         # FIXME: wrong sides??
-        mvar = self.marked_descendant()
-        left_child = mvar.assigned_math_object
-        if left_child and left_child.node == 'NUMBER':
-            left = left_child.value
-            new_value = merge_nbs(left, new_pmo_value)
-            if new_value:
-                left_child.value = new_value
-                return mvar
-        else:
-            mvar = self.on_the_other_side()
-            if mvar:
-                right_child = mvar.assigned_math_object
-                if right_child and right_child.node == 'NUMBER':
-                    right = right_child.value
-                    new_value = merge_nbs(new_pmo_value, right)
-                    if new_value:
-                        right_child.value = new_value
-                        return mvar
+        # mvar = self.marked_descendant()
+        # left_child = mvar.assigned_math_object
+        # if left_child and left_child.node == 'NUMBER':
+        #     left = left_child.value
+        #     new_value = merge_nbs(left, new_pmo_value)
+        #     if new_value:
+        #         left_child.value = new_value
+        #         return mvar
+        # else:
+        #     mvar = self.on_the_other_side()
+        #     if mvar:
+        #         right_child = mvar.assigned_math_object
+        #         if right_child and right_child.node == 'NUMBER':
+        #             right = right_child.value
+        #             new_value = merge_nbs(new_pmo_value, right)
+        #             if new_value:
+        #                 right_child.value = new_value
+        #                 return mvar
+        for mvar in (self.marked_descendant(), self.on_the_other_side()):
+            if not mvar:
+                continue
+            number = mvar.assigned_math_object
+            if number and number.node == 'NUMBER':
+                left_number, right_number = (number.value, new_pmo_value)
+                if not self.appears_left_of_cursor(mvar):
+                    left_number, right_number = right_number, left_number
+                new_value = merge_nbs(left_number, right_number)
+                if new_value:
+                    number.value = new_value
+                    return mvar
 
     def generic_insert(self, new_pmo: PatternMathObject):
         """
@@ -1925,7 +2012,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         #
         # return self
 
-    def move_after_insert(self, assigned_mvar):
+    def move_after_insert(self, assigned_mvar, was_at_end=False):
         """
         This method is supposed to be called just after an insertion involving
         the marked node. It tries to move the marked node down to the first
@@ -1935,7 +2022,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # (0) if cursor was at end before insertion, then it will be put at
         # end unless there are some new unassigned mvars.
-        was_at_end = self.math_cursor.is_at_end()
+        # was_at_end = self.math_cursor.is_at_end()
         self.set_math_cursor()
         math_cursor = self.math_cursor
 
@@ -2013,8 +2100,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if self.marked_descendant():
             success = self.marked_descendant().delete()
             if success:
-                self.set_cursor_at(self.marked_descendant(), 0)
-                self.decrease_cursor_pos()
+                # FIXME: this does not work anymore
+                # self.set_cursor_at(self.marked_descendant(), 0)
+                # self.decrease_cursor_pos()
                 return True
 
 
@@ -2045,7 +2133,12 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         new_mvar: MarkedMetavar = super().deep_copy(self)
-        new_mvar.cursor_pos = self.cursor_pos
+        # deepcopy(self._math_cursor)
+        # if self._math_cursor:
+        #     new_mvar.math_cursor.set_cursor_at_the_same_position_as(
+        #         self._math_cursor)
+
+        # new_mvar.cursor_pos = self.cursor_pos
         if self.is_marked:
             new_mvar.mark()
         return new_mvar

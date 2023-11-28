@@ -73,6 +73,7 @@ import logging
 
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.math_display.display_data import (display_name,
+                                                        local_constant_shape,
                                                         display_value)
 
 log = logging.getLogger(__name__)
@@ -205,15 +206,18 @@ latex_from_pattern_string = {
         # FIXME: the following crashes!!!
         # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
         # (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
-        (r"\{", display_name, ['_', (1,)], ', ', (1,), r"\in_symbol", (0,),
-         r"\}"),
+        (r"\{", local_constant_shape, ['_', (1,)], ', ',
+         (1,), r"\in_symbol", (0,), r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
         #  'self.bound_var_type', r"\}"),
         (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
-        ('(', display_name, ['_', (1,)], ')', ['_', (1,), r"\in_symbol", (0,)]),
+        ('(', local_constant_shape, ['_', (1,)], ')',
+         ['_', (1,), r"\in_symbol", (0,)]),
+        # ('(', display_name, '<sub>', (1,), '</sub>', ')',
+        #  '<sub>', (1,), r"\in_symbol", (0,), '</sub>'),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
@@ -299,8 +303,8 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=ℝ": (r'\type_R',),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
     # This is maybe too strong: any guy with undefined math_type will match!! :
-    "?:TYPE": (r'\type_element', display_name),  # NB: TYPE is treated above
-    "?:CONSTANT/name=MetricSpace": (r'\type_point', display_name),  # a point of...
+    "?:TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is treated above
+    "?:CONSTANT/name=MetricSpace": (r'\type_point', local_constant_shape),  # a point of...
     "?:SET(?0)": (r'\type_element', 'self'),
     "CONSTANT/name=_inst_1": ('Hypo1',)
 }

@@ -56,7 +56,7 @@ def process_shape_macro(self, shape_item: str):  # -> Union[str, MathObject]:
         then item is substituted with the corresponding object.
 
     Note that the attribute part may be empty, e.g. 'self' just display self;
-    this is useful for math_type_to_display, 'self' with be displayed with
+    this is useful for math_type_to_display, 'self' will be displayed with
     the to_display() method. (Beware of infinite recursion).
     """
 
@@ -213,6 +213,12 @@ def process_shape_item(item, root_math_object=None, line_of_descent=tuple(),
         if isinstance(new_item, str):
             # MathString
             return MathString(new_item, root_math_object, new_line)
+        elif isinstance(new_item, list):
+            # Fixme?
+            ml = MathList(new_item, root_math_object, new_line)
+            ml.recursive_expand_latex_shape(text=text, lean_format=lean_format)
+            ml.check_completeness()
+            return ml
 
     elif isinstance(item, int):
         new_line = line_of_descent + (item,)
@@ -298,8 +304,11 @@ class MathString(str, MathDescendant):
     marked = r'\marked'
     dummy_var = r'\dummy_variable'
     var = r'\variable'
+    begin_sub = '<sub>'
+    end_sub = '</sub>'
 
-    format_strings = [error_string, cursor, marked, dummy_var, var]
+    _format_strings = {error_string, cursor, marked, dummy_var, var,
+                       begin_sub, end_sub}
 
     is_tagged = False
 
@@ -321,6 +330,14 @@ class MathString(str, MathDescendant):
     def add_line_of_descent(self, line_of_descent):
         self.line_of_descent = line_of_descent + self.line_of_descent
 
+    @classmethod
+    def format_strings(cls):
+        """
+        We remove the empty string since it should not be considered
+        as a formatter.
+        """
+        return cls._format_strings.difference("")
+
     ######################################################
     # Some methods for compatibility with MathList items #
     ######################################################
@@ -330,12 +347,38 @@ class MathString(str, MathDescendant):
         """
         return self
 
+    def is_marker(self):
+        """
+        The empty string may be used to mark beginning/end of some MathList,
+        so it is not considered as a formatter.  Fixme
+        """
+        return self == '' and self.root_math_object is not None
+
     def is_formatter(self):
         """
         True iff self is in self.format_strings list, which is extended
         dynamically when the formatter() method is used.
         """
-        return self in self.format_strings
+        return self in self.format_strings()  # and not self.is_marker()
+
+    def is_format_parenthesis(self):
+        """
+        True if self is a priority parenthesis (NOT added by user).
+        """
+
+        test1 = (self in ('(', ')'))
+
+        # Added by usr?
+        test2 = (self.descendant.node.endswith('PARENTHESES') or
+                 self.descendant.node.endswith('PARENTHESIS'))
+
+        return test1 and not test2
+
+    def significant_items(self):
+        return [] if self.is_formatter() else [self]
+
+    def remove_formatters(self):
+        return None if self.is_formatter() else self
 
     def first_descendant(self):
         """
@@ -372,8 +415,9 @@ class MathString(str, MathDescendant):
         display anything on screen by themselves (e.g. a parenthesis is NOT
         a formatter).
         """
-
-        cls.format_strings.append(format_name)
+        if format_name == '':
+            print('')
+        cls._format_strings.add(format_name)
         return cls(string=format_name, root_math_object=None)
 
     @classmethod
@@ -388,7 +432,7 @@ class MathString(str, MathDescendant):
 
     def map(self, func):
         new_string = func(self)
-        if new_string:
+        if new_string is not None:
             return self.replace_string(self, func(self))
 
     def last_address_of(self, math_object):
@@ -437,6 +481,7 @@ class MathList(list, MathDescendant):
     replaced by its own shape). FIXME: this should not happen?
     """
 
+    string = MathString  # For reference from instances of this class
     formatter = MathString.formatter
     variable = formatter(r"\variable")  # FIXME: used?
     parentheses = formatter(r'\parentheses')
@@ -493,8 +538,46 @@ class MathList(list, MathDescendant):
         True is self is a single term list with a formatter MathString,
         e.g. [[[r'\dummy_variable']]].
         """
-
         return len(self) == 1 and self[0].is_formatter()
+
+    def is_marker(self):
+        """
+        True is self is a single term list with a marker MathString,
+        e.g. [[['']]].
+        """
+        return len(self) == 1 and self[0].is_marker()
+
+    def significant_items(self):
+        """
+        Return a list of all MathString in self or a sub-list which are not
+        formatters.
+        """
+
+        items = []
+        for item in self:
+            items.extend(item.significant_items())
+
+        return items
+
+    def is_format_parenthesis(self):
+        return len(self) == 1 and self[0].is_format_parenthesis()
+
+    def remove_formatters(self):
+        """
+        Remove all formatters from self.
+        """
+
+        idx = 0
+        while idx < len(self):
+            new_item = self[idx].remove_formatters()
+            if new_item is None:
+                self.pop(idx)
+            else:
+                self[idx] = new_item
+                idx += 1
+
+        if len(self) > 0:  # Do not return empty list!
+            return self
 
     def replace_string(self, idx, new_string: str) -> bool:
         """
@@ -529,7 +612,7 @@ class MathList(list, MathDescendant):
         for item in self:
             if isinstance(item, MathString):
                 new_item = item.map(func)
-                if new_item:
+                if new_item is not None:
                     self[idx] = new_item
             elif isinstance(item, MathList):
                 item.recursive_map(func)
@@ -556,13 +639,13 @@ class MathList(list, MathDescendant):
             return self
         else:
             child_idx, *further_descendant = position
-            assert isinstance(self, MathList) and len(self) > child_idx
+            assert len(self) > child_idx
             try:
                 item = self[child_idx].item_for_address(further_descendant)
+                return item
             except:  # FIXME
                 log.warning(f"In MathList.item_for_address, item {child_idx}"
                             f"of {self} has no {further_descendant}")
-            return item
 
     def last_address_of(self, math_object) -> tuple:
         """
@@ -630,12 +713,12 @@ class MathList(list, MathDescendant):
             self.insert(0, MathString.left_paren)
             self.insert(0, MathString.left_paren)
             self.append(MathString.right_paren)
-            self.append(MathString(" :"))
+            self.append(MathString(": ", root_math_object=None))
             self.append(MathString(lean_type))
             self.append(MathString.right_paren)
             
     @classmethod
-    def lean_shape(cls, math_object) -> []:
+    def lean_shape(cls, math_object):
         """
         Shape for lean format. See the latex_shape() method doc.
         """
@@ -741,7 +824,7 @@ class MathList(list, MathDescendant):
             if isinstance(item, str):
                 new_item = process_shape_macro(math_object, item)
                 if isinstance(new_item, str):
-                    if new_item in MathString.format_strings:
+                    if new_item in MathString.format_strings():
                         new_item = MathString.formatter(new_item)
                     else:
                         new_item = MathString(new_item,
@@ -756,6 +839,8 @@ class MathList(list, MathDescendant):
         Recursively checks that self's items are MathString or MathLists.
         Change pure strings to MathStrings.
         Change [[]] to [].
+        Add an empty MathString at vbeginning and end if and only if self has no
+        non formatter MathString whose descendant is self.root_math_object.
         """
 
         # Remove useless nested lists [[]]
@@ -766,9 +851,11 @@ class MathList(list, MathDescendant):
             return True
 
         idx = 0
+        root_appears_in_self = False
         for item in self:
             if isinstance(item, MathString):
-                pass
+                if item.descendant == self.root_math_object:
+                    root_appears_in_self = True
             elif isinstance(item, str):
                 self[idx] = MathString(item, root_math_object=None)
             elif isinstance(item, MathList):
@@ -778,6 +865,13 @@ class MathList(list, MathDescendant):
                                 f"should be either MathList or MathString,"
                                 f"but is {type(item)}")
             idx += 1
+
+        # FIXME
+        # if not root_appears_in_self:
+        #     log.warning(f"Root does not appear in {self}")
+        #     marker = MathString('', root_math_object=self.root_math_object)
+        #     self.insert(0, marker)
+        #     self.append(marker)
 
     def expand_latex_shape(self):
         """
@@ -845,7 +939,8 @@ class MathList(list, MathDescendant):
 
         if not previous_item:
             self.recursive_map(cut_spaces)
-            previous_item = self.formatter("")
+            # previous_item = self.formatter("")
+            previous_item = ""
 
         idx = 0
         for item in self:
@@ -858,9 +953,13 @@ class MathList(list, MathDescendant):
             previous_item = item.last_descendant()
             idx += 1
 
-    def linear_list(self):
+    def linear_list(self, until=None, from_=None):
         """
         Return the linear MathList of self.
+        If until is not None, then stop
+        at first item equal to until (including until).
+        If from_ is not None, then start at last item equal to from_ (
+        excluding from_).
         """
 
         linear_list = MathList([], self.root_math_object,
@@ -871,6 +970,46 @@ class MathList(list, MathDescendant):
                 linear_list.extend(item.linear_list())
             else:
                 linear_list.append(item)
+            if until and linear_list[-1] == until:
+                break
+            if from_ and linear_list[-1] == from_:
+                linear_list = []
+
+        return linear_list
+
+    def descendants_with_nodes(self, until=None, from_=None):
+        """
+        Return the linear MathList of descendants of self.
+        If until is not None, then stop
+        at first item equal to until (including until, but NOT including ).
+        If from_ is not None, then start at last item equal to from_ (
+        excluding from_).
+
+        Contrarily to the preceding method, this one includes nodes, if and
+        only if they do not appear in their own sub-list.
+        """
+
+        linear_list = MathList([], self.root_math_object,
+                               format_=self.format_,
+                               text=self.text)
+        include_self = True
+        for item in self:
+            if item.descendant == self.descendant:
+                include_self = False
+            if isinstance(item, MathList):
+                linear_list.extend(item.linear_list())
+            else:
+                linear_list.append(item)
+            if until and linear_list[-1] == until:
+                include_self = False
+                break
+            if from_ and linear_list[-1] == from_:
+                linear_list = []
+                include_self = False
+
+        if include_self:
+            linear_list.append(self)
+
         return linear_list
 
     def to_string(self) -> str:
