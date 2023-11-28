@@ -180,15 +180,17 @@ def process_shape_item(item, root_math_object=None, line_of_descent=tuple(),
     #################################
     # Process case of a math_object #
     #################################
-    elif str(type(item)) == 'MathObject':
+    # elif str(type(item)).endswith("MathObject>'"):
+    elif not (isinstance(item, int) or isinstance(item, tuple) or callable(
+            item)):
         # print(1/0)
         # FIXME: improve info?
         #  Root Math Object will NOT be the good one.
         log.warning(f"Found MathObject {item} in shape, proceed and cross "
                     f"fingers...")
-        shape = item.latex_shape(text=text, lean_format=lean_format)
-        new_item = shape.recursive_expand_latex_shape(text=text,
-                                                      lean_format=lean_format)
+        new_item = item.latex_shape(text=text, lean_format=lean_format)
+        new_item.recursive_expand_latex_shape(text=text,
+                                              lean_format=lean_format)
         return new_item
 
     ####################################
