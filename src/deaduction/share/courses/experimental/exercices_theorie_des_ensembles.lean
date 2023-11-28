@@ -605,7 +605,7 @@ begin
     todo
 end
 
-lemma exercices.image_reciproque.composition
+lemma exercise.image_reciproque.composition
 (C: set Z)
 :
 ((composition g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)
