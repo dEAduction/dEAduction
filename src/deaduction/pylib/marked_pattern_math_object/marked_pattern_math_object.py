@@ -1633,7 +1633,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         ######################
         # (A) Priority tests #
         ######################
-        # FIXME: no priority test
+        # FIXME: this priority test has been suppressed
         # if not self.priority_tests(new_pmo, mvar, parent_mvar):
         #     return False
 
@@ -1686,7 +1686,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         adjacent_items = (self.marked_descendant(), self.on_the_other_side())
 
         for mvar in adjacent_items:
-            if not mvar:
+            if not isinstance(mvar, MarkedMetavar):
                 continue
             if mvar.node == "GENERIC_NODE":
                 success = self.substitute_generic_node(mvar, new_pmo_copy)
@@ -1705,41 +1705,41 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if mvar and not mvar.is_metavar():
                     continue
 
-    def new_insert(self, new_pmo: PatternMathObject):
-        """
-        Try to insert pmo in self's tree, so that pmo is just after the
-        marked node in the infix order. In case of success, return the mvar
-        at which insertion has been done.
-
-        We first try insertion at the marked mvar, which is supposed to be
-        just before cursor pos, and all the way up from
-        there. If none works, then we try again starting from the mvar just
-        after cursor pos.
-        """
-
-        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
-
-        adjacent_items = (self.marked_descendant(), self.on_the_other_side())
-        for mvar in adjacent_items:
-            if not isinstance(mvar, MarkedMetavar):
-                continue
-            # if mvar.node == "GENERIC_NODE":
-            #     success = self.substitute_generic_node(mvar, new_pmo_copy)
-            #     if success:
-            #         return mvar
-
-            parent_mvar = self.parent_of(mvar)
-
-            # while mvar:
-            success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
-            if success:
-                return mvar
-
-                # continue  # FIXME: we do not try to climb in the tree
-                # mvar = parent_mvar
-                # parent_mvar = self.parent_of(parent_mvar)
-                # if mvar and not mvar.is_metavar():
-                #     continue
+    # def new_insert(self, new_pmo: PatternMathObject):
+    #     """
+    #     Try to insert pmo in self's tree, so that pmo is just after the
+    #     marked node in the infix order. In case of success, return the mvar
+    #     at which insertion has been done.
+    #
+    #     We first try insertion at the marked mvar, which is supposed to be
+    #     just before cursor pos, and all the way up from
+    #     there. If none works, then we try again starting from the mvar just
+    #     after cursor pos.
+    #     """
+    #
+    #     new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+    #
+    #     adjacent_items = (self.marked_descendant(), self.on_the_other_side())
+    #     for mvar in adjacent_items:
+    #         if not isinstance(mvar, MarkedMetavar):
+    #             continue
+    #         # if mvar.node == "GENERIC_NODE":
+    #         #     success = self.substitute_generic_node(mvar, new_pmo_copy)
+    #         #     if success:
+    #         #         return mvar
+    #
+    #         parent_mvar = self.parent_of(mvar)
+    #
+    #         # while mvar:
+    #         success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+    #         if success:
+    #             return mvar
+    #
+    #             # continue  # FIXME: we do not try to climb in the tree
+    #             # mvar = parent_mvar
+    #             # parent_mvar = self.parent_of(parent_mvar)
+    #             # if mvar and not mvar.is_metavar():
+    #             #     continue
 
     def insert_application(self, pattern=None):
         """

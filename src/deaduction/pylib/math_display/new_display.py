@@ -747,7 +747,8 @@ class MathList(list, MathDescendant):
             shape = MathList([process_shape_macro(math_object, item)
                              if isinstance(item, str)
                              else item for item in shape],
-                             root_math_object=math_object)
+                             root_math_object=math_object,
+                             format_='lean')
 
             shape.wrap_lean_shape_with_type(math_object)
 

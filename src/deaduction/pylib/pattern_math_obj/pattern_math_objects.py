@@ -653,6 +653,8 @@ class MetaVar(PatternMathObject):
     is that MVAR can be affected to a MathObject. This modifies their display.
     """
 
+    adjustable_math_types = ["*NUMBER_TYPES"]
+
     _assigned_math_object: Optional[MathObject] = None
 
     metavar_nb: int = 0  # Class attribute (counter)
@@ -723,6 +725,19 @@ class MetaVar(PatternMathObject):
         if isinstance(self.math_type, MetaVar):
             self.math_type.clear_assignment()
 
+    def adjust_type_of_assigned_math_object(self):
+        """
+        Try to adapt the math_type of self's assigned math_object, if any,
+        to self's math_type.
+        """
+
+        math_object = self.assigned_math_object
+        if not math_object or self.math_type is PatternMathObject.NO_MATH_TYPE:
+            return
+
+        if math_object.math_type.node in self.adjustable_math_types:
+            math_object.math_type = self.math_type
+            return True
 
 ##################################################
 ##################################################

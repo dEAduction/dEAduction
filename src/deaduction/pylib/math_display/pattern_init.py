@@ -83,8 +83,8 @@ class PatternInit:
     dic_list_pairs = \
         [(PatternMathDisplay.lean_from_app_constant_patterns, pattern_lean),
          (lean_from_pattern_string, pattern_lean),
-         (latex_from_app_pattern, pattern_latex),
          # The order matters! The generic patterns must come at the end.
+         (latex_from_app_pattern, pattern_latex),
          (quant_pattern, pattern_latex),
          (PatternMathDisplay.latex_from_app_constant_patterns, pattern_latex),
          (latex_from_pattern_string, pattern_latex),

@@ -1215,8 +1215,8 @@ class CalculatorController:
                 assigned_mvar = new_target.insert_application()
             else:
                 # (1b) Normal insert
-                # assigned_mvar = new_target.insert(pattern)
-                assigned_mvar = new_target.new_insert(pattern)
+                assigned_mvar = new_target.insert(pattern)
+                # assigned_mvar = new_target.new_insert(pattern)
             if assigned_mvar:
                 break
 
@@ -1233,6 +1233,7 @@ class CalculatorController:
 
         # print(f"New target: {new_target}")
         if assigned_mvar:
+            assigned_mvar.adjust_type_of_assigned_math_object()
             self.target = new_target
             # self.check_new_bound_var(assigned_mvar)
             was_at_end = (self.target.math_cursor.is_at_end()

@@ -69,6 +69,10 @@ def display_name(mo):
     return mo.display_name
 
 
+def raw_display_name(mo):
+    return mo.info.get('name', 'no_name')
+
+
 def display_value(mo):
     return mo.info.get('value')
 
