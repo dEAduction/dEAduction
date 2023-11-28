@@ -84,7 +84,7 @@ def remove_leading_parentheses(math_list: list):
             remove_leading_parentheses(math_list)
 
 
-def add_parentheses(math_list: list, depth):
+def add_parentheses(math_list: list, depth=1):
     """
     Search for the \\parentheses macro and replace it by a pair of
     parentheses. Remove redundant parentheses, i.e.
@@ -176,64 +176,27 @@ def utf8_display(math_list, depth=0):
     # return math_list
 
 
-def recursive_lean_display(math_list: list, depth):
+def lean_display(math_list: list):
     """
-    Identical to recursive_utf8_display??
+    Just remove formatters.
     """
     if not math_list:
         return ""
 
-    if isinstance(math_list, str):  # Actual type = MathString
-        new_string, is_subscriptable = sub_sup_to_utf8(math_list)
-        # Replace even if not subscriptable ('\sub' --> '_')
-        math_list = math_list.replace_string(math_list, new_string)
+    if not isinstance(math_list, list):
         return math_list
 
-    head = math_list[0]
-    prefix = None
-    if head == r'\sub' or head == '_':
-        prefix = "_"
-        return subscript(recursive_lean_display(math_list[1:], depth))
-    elif head == r'\super' or head == '^':
-        prefix = "^"
-        return superscript(recursive_lean_display(math_list[1:], depth))
-    elif head in (r'\variable', r'\dummy_variable', r'\used_property',
-                  r'\text', r'\no_text', r'\marked'):
-        return recursive_lean_display(math_list[1:], depth)
 
-    add_parentheses(math_list, depth=depth)
-
-    # Recursively format children
-    idx = 0
-    for child in math_list:
-        if child:
-            formatted_child = recursive_lean_display(child, depth + 1)
-            math_list[idx] = formatted_child
-        idx += 1
-
-    # Process sup/sub prefix
-    if prefix == '_':
-        tentative_string, is_subscriptable = subscript(math_list.to_string())
-        if is_subscriptable:
-            return tentative_string
-        else:
-            math_list.insert(0, prefix)
-    elif prefix == '^':
-        tentative_string, is_subscriptable = superscript(math_list.to_string())
-        if is_subscriptable:
-            return tentative_string
-        else:
-            math_list.insert(0, prefix)
 
     return math_list
 
 
-def lean_display(math_list, depth=0):
-    """
-    Return a Lean version of the string represented by math_list.
-    """
-
-    recursive_utf8_display(math_list, depth)
-
-    # return math_list
+# def lean_display(math_list, depth=0):
+#     """
+#     Return a Lean version of the string represented by math_list.
+#     """
+#
+#     recursive_utf8_display(math_list, depth)
+#
+#     # return math_list
 

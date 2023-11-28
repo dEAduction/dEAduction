@@ -377,8 +377,13 @@ class MathString(str, MathDescendant):
     def significant_items(self):
         return [] if self.is_formatter() else [self]
 
-    def remove_formatters(self):
-        return None if self.is_formatter() else self
+    def remove_formatters(self, warning=False):
+        if self.is_formatter():
+            if warning:
+                log.warning(f"Found unused formatter: {self}")
+            return None
+        else:
+            return self
 
     def first_descendant(self):
         """
@@ -562,14 +567,14 @@ class MathList(list, MathDescendant):
     def is_format_parenthesis(self):
         return len(self) == 1 and self[0].is_format_parenthesis()
 
-    def remove_formatters(self):
+    def remove_formatters(self, warning=False):
         """
         Remove all formatters from self.
         """
 
         idx = 0
         while idx < len(self):
-            new_item = self[idx].remove_formatters()
+            new_item = self[idx].remove_formatters(warning)
             if new_item is None:
                 self.pop(idx)
             else:
@@ -892,17 +897,6 @@ class MathList(list, MathDescendant):
         Return a tree of string, structured by lists.
         """
 
-        # Adjust self.line_of_descent and root_math_orbject!
-        # if line_of_descent is not None:
-        #     self.line_of_descent = line_of_descent
-        # else:
-        #     line_of_descent = self.line_of_descent
-        #
-        # if root_math_object is not None:
-        #     self.root_math_object = root_math_object
-        # else:
-        #     root_math_object = self.root_math_object
-
         if text is None:
             text = self.text
         if lean_format is None:
@@ -1052,17 +1046,19 @@ class MathList(list, MathDescendant):
         if format_ == 'html':
             html_display(self, use_color=use_color, bf=bf, no_text=no_text)
 
-        elif format_ == 'utf8' or format_ == 'lean':
+        elif format_ == 'utf8':  # or format_ == 'lean':
             utf8_display(self)
-        # elif format_ == 'lean':  # FIXME:
-        #     display = lean_display(self)
 
         # Put here general hygiene, and remove to_string
         if format_ in ('utf8', 'html'):
             self.recursive_map(replace_dubious_characters)
 
+        # Finally
         self.check_completeness()
         self.cut_spaces()
+
+        if format_ == 'lean':
+            self.remove_formatters(warning=(format_ != 'lean'))
 
     @classmethod
     def complete_latex_shape(cls, math_object, format_="html", text=False,
