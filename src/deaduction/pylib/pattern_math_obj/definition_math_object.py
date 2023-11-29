@@ -100,8 +100,10 @@ class DefinitionMathObject(MathObject, Definition):
         # FIXME: croiser avec PatternMathDisplay.all_constants_names
         all_constants = dict()
         for defi in cls.instances:
-            hierarchy_of_sections = (title.capitalize() for title in
-                                     defi.definition.ugly_hierarchy())
+            # hierarchy_of_sections = (_(title).capitalize() for title in
+            #                          defi.definition.ugly_hierarchy())
+            outline = defi.definition.course.outline
+            hierarchy_of_sections = defi.definition.pretty_hierarchy(outline)
             section = ' / '.join(hierarchy_of_sections)
             if section not in all_constants:
                 all_constants[section] = []
