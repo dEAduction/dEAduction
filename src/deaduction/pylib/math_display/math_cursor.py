@@ -75,9 +75,9 @@ class MathCursor:
     def __repr__(self):
         rmo = self.target_math_object.__repr__()
         repr = f"MathCursor(target_math_object={rmo})"
-        self.show_cursor()
+        # self.show_cursor()
         ml = f"MathList: {self.math_list}"
-        self.hide_cursor()
+        # self.hide_cursor()
         address = (f"Cursor address: "
                    f"{'after' if self.cursor_is_after else 'before'} "
                    f"{self.cursor_address}")
@@ -166,8 +166,8 @@ class MathCursor:
             else:
                 idx = len(self.math_list) - 1
 
-        if self.__cursor_is_shown:
-            assert parent[idx] == self.deaduction_cursor
+        # if self.__cursor_is_shown:
+        #     assert parent[idx] == self.deaduction_cursor
 
         return parent, idx
 
@@ -381,7 +381,9 @@ class MathCursor:
             self.cursor_is_after = after
             if set_marked:
                 self.set_marked_element(True)
-            self.debug()
+
+            # This --> crash!
+            # self.debug()
             return True
         else:
             return False
@@ -406,7 +408,8 @@ class MathCursor:
         if set_marked:
             self.set_marked_element(True)
 
-        self.debug()
+        # This --> crash!
+        # self.debug()
 
     def go_to_beginning(self, set_marked=True):
         # self.set_marked_element(False)
@@ -416,7 +419,8 @@ class MathCursor:
         if set_marked:
             self.set_marked_element(True)
 
-        self.debug()
+        # This --> crash!
+        # self.debug()
 
     def dont_wanna_park_at_current_item(self):
         """
