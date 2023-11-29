@@ -195,7 +195,7 @@ class MathDisplay:
          "PRODUCT": (0, r" \times ", 1),
          "DIV": (0, r"/", 1),
          "MINUS": ("-", 0),
-         "POWER": (0, [r'\super', 1]),  # FIXME: remove list??
+         "POWER": ('', 0, [r'^', 1], ''),  # Paren for Calculator
          "SQRT": ('√', -1),
          ##################
          # GENERAL TYPES: #

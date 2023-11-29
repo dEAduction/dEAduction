@@ -414,7 +414,7 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
                                      target=input_target)
     x = user_input[0]
     if isinstance(x, MathObject):
-        x_lean = x.to_display(format_='lean').strip('()')
+        x_lean = x.to_display(format_='lean')
         x = x.to_display(format_='utf8')
     elif isinstance(x, str):
         x_lean = x.strip('()')
