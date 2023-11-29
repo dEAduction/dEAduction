@@ -265,6 +265,8 @@ class CalculatorToolbar(AbstractToolBar):
         super().__init__()
         icons_dir = cdirs.icons
 
+        undo_shortcut = QKeySequence.keyBindings(QKeySequence.Undo)[0].toString()
+        redo_shortcut = QKeySequence.keyBindings(QKeySequence.Redo)[0].toString()
         self.rewind = QAction(QIcon(str((icons_dir /
                                      'goback-begining.png').resolve())),
                 _('Undo all'), self)
@@ -302,9 +304,21 @@ class NavigationBar(AbstractToolBar):
         # TODO: add icons
 
         beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
+        
+        beginning_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToPreviousWord)[0].toString()
+        beginning_shortcut = f"({_('type')} {beginning_shortcut})"
+        left_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToPreviousChar)[0].toString()
+        right_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToNextChar)[0].toString()
+        end_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToNextWord)[0].toString()
+        delete_shortcut = QKeySequence.keyBindings(
+            QKeySequence.Delete)[0].toString()
         self.beginning_action = QAction(QIcon(beg_path),
-                                        _('Go to beginning'), self)
-
+                                        _('Go to beginning'),
+                                        self)
         # self.left_unassigned_action = QAction(_('?←'), self)
 
         left_path = str((icons_dir / 'icons8-back-48.png').resolve())
