@@ -221,6 +221,8 @@ def process_shape_item(item, root_math_object=None, line_of_descent=tuple(),
             ml.recursive_expand_latex_shape(text=text, lean_format=lean_format)
             ml.check_completeness()
             return ml
+        elif new_item is None:
+            return MathString.error_string
 
     elif isinstance(item, int):
         new_line = line_of_descent + (item,)
