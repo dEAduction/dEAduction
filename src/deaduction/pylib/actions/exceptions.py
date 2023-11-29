@@ -45,16 +45,17 @@ class InputType(IntEnum):
     Text = 0
     Choice = 1
     YesNo = 2
+    Calculator = 3
 
 
 class MissingParametersError(Exception):
     def __init__(self, input_type, choices=None, title="", output="",
-                 converter=lambda n: n):
-        self.input_type           = input_type
-        self.choices              = choices
-        self.title                = title
-        self.output               = output
-        self.local_to_complete_nb = converter
+                 target=None):
+        self.input_type         = input_type
+        self.choices            = choices
+        self.title              = title
+        self.output             = output
+        self.input_target = target
 
 
 class WrongUserInput(Exception):

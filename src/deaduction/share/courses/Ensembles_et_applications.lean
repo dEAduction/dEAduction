@@ -142,7 +142,7 @@ end
 
 lemma definition.singleton
 {x x_0: X} :
-(x ∈  (sing x_0) ) ↔ x=x_0
+x ∈ ({x_0}:set X) ↔ x=x_0
 :=
 begin
     refl,
@@ -150,7 +150,7 @@ end
 
 lemma definition.paire
 {x x_0 x_1: X} :
-(x ∈ (pair x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ ({x_0, x_1}:set X) ) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,
@@ -280,7 +280,7 @@ end
 
 lemma theorem.image_singleton :
 ∀ {f: X→Y}, ∀{x_0: X},
- f '' (sing x_0) = sing (f(x_0))
+ f '' {x_0} = {f(x_0)}
 :=
 /- dEAduction
 PrettyName
@@ -754,7 +754,29 @@ AvailableTheorems
   UNTIL_NOW
 -/
 begin
-  todo
+  -- todo
+  intro f,
+contrapose,
+intro H1,
+push_neg_once, simp only [ne.def],
+rw ensembles_et_applications.definitions.applications.definition.injectivite at H1,
+push_neg_once at H1,
+cases H1 with x H2,
+push_neg_once at H2,
+cases H2 with y H4,
+push_neg_once at H4, simp only [ne.def] at H4,
+cases H4 with H6 H7,
+use ({x}),
+rw ensembles_et_applications.definitions.generalites.definition.double_inclusion,
+push_neg_once,
+right,
+rw ensembles_et_applications.definitions.generalites.definition.inclusion,
+push_neg_once,
+push_neg_once,
+use (y),
+split,
+rw ensembles_et_applications.definitions.applications.definition.image_reciproque,
+rw definitions.applications.theorem.image_singleton,
 end
 
 lemma exercise.caracterisation_surjectivite :

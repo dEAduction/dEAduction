@@ -45,7 +45,7 @@ structure = """
     node = node_name info_type?
     info_type = type_sep expr
     node_name = ~"[a-z A-Z 0-9 *?_∀∃+<>≥≤!.'/= - ℕℤℚℝ]"+
-    children = (open_paren expr more_expr closed_paren)?
+    children = (open_paren (expr more_expr)? closed_paren)?
     more_expr = (comma expr)*
     """
 separators = """
@@ -129,8 +129,12 @@ class PatternEntryVisitor(NodeVisitor):
         """
         if not visited_children:
             return []
-        [[_, first_child, other_children, _]] = visited_children
-        return [first_child] + other_children
+        [[_, children, _]] = visited_children
+        if children:
+            [[first_child, other_children]] = children
+            return [first_child] + other_children
+        else:
+            return []
 
     def visit_more_expr(self, _, visited_children) -> [Tree]:
         """
@@ -171,7 +175,9 @@ if __name__ == "__main__":
     text3 = "APP('composition', ..., ?-2, ?-1)"
     text4 = "NOT(APP(APP(?0, ?-2), ?-1))"
     text5 = "APP(?0: FUNCTION(?1, ?2), ?3)"
-    print(tree_from_str(text5).display())
+    text6 = 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)'
+    tree_ = tree_from_str(text6)
+    print(tree_.display())
 
 
 

@@ -132,10 +132,16 @@ namespace maximum
 -- but allows to treat the cases of integers or rationals.
 variables {RealSubGroup : Type} [decidable_linear_order RealSubGroup] 
 
+lemma definition.max (a b c : RealSubGroup) :
+a = max b c ↔ (b ≤ a ∧ c ≤ a ∧ (a=b ∨ a=c))
+:=
+begin
+  todo
+end
+
 lemma theorem.ppe_max_gauche :
 ∀ a b : RealSubGroup, a ≤ max a b :=
 begin
-  -- targets_analysis,
   intros a b,
   -- hypo_analysis,
   -- norm_num, tautology,
@@ -174,6 +180,13 @@ variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup
 -- [has_zero RealSubGroup]
 
 -- A modifier : faire une classe "nombres" ?
+lemma definition.valeur_absolue (a b : RealSubGroup) :
+a = abs b ↔ (a ≥ 0 ∧ (a=b ∨ a=-b))
+:=
+begin
+  todo
+end
+
 lemma theorem.valeur_absolue :
 ∀ x : RealSubGroup,
 ((0:RealSubGroup) ≤ x) → (abs x = x) and ((x ≤ 0) → (abs x = -x)) :=
@@ -382,6 +395,25 @@ end definitions
 -----------------
 --  exercices  --
 -----------------
+
+namespace preliminaires
+/- dEAduction
+PrettyName
+  Un exercice préliminaire
+-/
+
+lemma exercise.plus_petit_que_tout_pos (x: ℝ):
+(∀ ε>0, x < ε) → x ≤ 0 :=
+/- dEAduction
+PrettyName
+  Plus petit que tout
+-/
+begin
+  todo
+end
+
+end preliminaires
+
 namespace exercices_suites_I
 /- dEAduction
 PrettyName
@@ -466,12 +498,13 @@ Description
 -/
 begin
   todo,
-  -- contrapose H'' with H1,
+  -- contrapose, intro H1,
   -- push_neg,
   -- push_neg at H1,
   -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
   -- rw limit at H H',
   -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
+  -- compute_n 10,
   -- solve1 {norm_num at *, apply mul_pos, linarith only [H1], apply inv_pos.mpr, linarith},
   -- have H5 := H' e H3,
   -- cases H4 with n H6,
@@ -542,20 +575,48 @@ Description
   Aide : il peut être judicieux d'utiliser le résultat
   d'un exercice précédent...
 -/
+
+
 begin
---   rw definitions.definition.limit,
--- rw definitions.definition.limit at H H',
--- intro ε, intro H1,
--- have H2 := H _ H1,
--- have H3 := H' _ H1,
--- cases H2 with n H4,
--- cases H3 with n' H5,
--- let x2 := max n n', have H7 : x2 = max n n', refl,
--- have H9 := @definitions.maximum.theorem.ppe_max_gauche,
--- have H10 := H9 n n',
--- -- norm_num at H10,
--- rw H7 at H10,
-  todo,
+  todo
+-- rw definitions.suites.definition.limit, intro ε, intro H1,
+-- have Haux := (ε/2 >0), rotate,
+
+-- have H2 := H (ε/2) _, rotate, linarith,
+-- cases H2 with N H3,
+-- have H5 := H' (ε/2) _, rotate, linarith,
+-- cases H5 with N' H6,
+-- use max N N',
+-- intro n, intro H8,
+-- have H9: (n:ℕ) ≥ N, rotate, have H10 := H3 n H9, rotate, solve1 {norm_num at *, compute_n 10 },
+-- have H11: (n:ℕ) ≥ N', rotate, have H12 := H6 n H11, rotate, solve1 {norm_num at *, compute_n 10 },
+-- smart_add H10 H12 with H13,
+-- try {norm_num at H13}, 
+-- smart_triang_ineq H13 with H14,
+-- smart_trans H13 H14  with H15,
+-- -- have H15 := lt_of_le_of_lt H14 H13,
+-- -- norm_num at H15,
+-- have H16: (u n - l + (v n - l') = u n + v n - (l + l')), by ring,
+-- rw ← H16,
+-- assumption, 
+
+  -- rw definitions.suites.definition.limit,
+  -- rw definitions.suites.definition.limit at H H',
+  -- intro ε, intro H1,
+  -- -- have H2: ((2) : real) * ε > ((0) : @real), rotate,
+  -- --  have H3 := H (((2) : real) * ε) H2,
+  -- have H2 : ((1/2:ℝ):ℝ) > 0, rotate,
+  -- have H3 := H _ H2, rotate, norm_num,
+  -- have H3' := H' _ H2, rotate, norm_num,
+  -- cases H3 with n H4,
+  -- cases H3' with n' H4',
+  -- let x2 := max n n', have H7 : x2 = max n n', refl,
+  -- have H9 := @definitions.generalites.maximum.theorem.ppe_max_gauche,
+  -- have H10 := H9 n n',
+  -- clear H9,
+  -- -- norm_num at H10,
+  -- rw ← H7 at H10,
+  -- todo,
   -- rw limit,
   -- intro ε, intro H1,
   -- rw limit at H H',
@@ -567,14 +628,28 @@ begin
   -- intro n'', intro H8,
   -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
   -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  
+  -- -- smart_have H10 H12 with H13 ==> Success with thm add_lt_add
+  -- have H13 := add_lt_add H10 H12,
+  -- norm_num at H13,
+
   -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10 H12,
   -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue,
   -- cases H12 with Ha Hb, cases H10 with Hc Hd,
   -- split,
   -- linarith only [Ha, Hc],
   -- linarith only [Hb, Hc, Hd],
+  -- todo,
+--    intro ε, intro H1,
+-- have H2 := H _ H1,
+-- cases H2 with N H3,
+-- have H5 := H' _ H1,
+-- cases H5 with N' H6,
+-- let N'' := (@max nat nat.decidable_linear_order N N'),
+-- have H7: N'' = max N N', by refl,
+-- hypo_analysis2 1,
 end
+
+-- #check @max
 
 lemma exercise.limite_unique
 (u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limit u l) (H' : limit u l') :
@@ -674,13 +749,26 @@ Description
 -/
 begin
   todo,
-  -- have H2 := (H0 0) 1 _,
-  -- rcases H2 with ⟨δ, H3, H4⟩,
-  -- norm_num at H4,
-  -- rw H1 at H4,
-  -- use δ, split, rotate,
-  -- intros x x_del,
-  -- have H5 := H4 _ x_del,
+-- have H2 := H0 ((0) : @real),
+-- rw definitions.fonctions.definition.continuous_at at H2,
+-- have H3: ((1) : @real) > ((0) : @real), rotate, have H4 := H2 ((1) : @real) H3, rotate 1, solve1 {norm_num at * },
+-- rcases H4 with ⟨ δ, ⟨ H5, H6 ⟩ ⟩,
+-- use (δ),
+-- rw and.comm, split,
+-- intro x, intro H7,
+-- have H8 := H6 x, norm_num at H8,
+
+--   have H2 := H0 ((0) : @real),
+-- rw definitions.fonctions.definition.continuous_at at H2,
+-- have H3: 1/2 > ((0) : @real), rotate, have H4 := H2 (1/2) H3, 
+-- norm_num at H4,
+-- rotate 1, solve1 {norm_num at * },
+-- rcases H4 with ⟨ δ, ⟨ H5, H6 ⟩ ⟩,
+-- use (δ),
+-- rw and.comm, split,
+-- intro x, intro H7,
+-- have H8 := H6 x,
+
   -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at *,
   -- cases H5 with H5a H5b,
   -- linarith only [H5a], linarith, assumption,
@@ -698,7 +786,9 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  todo,
+  -- have H2: sqrt 3 > ((0) : @real), rotate, 
+  -- have H3 := H0 (((3) : real)^((-2))) H2,
+  todo
 end
 
 

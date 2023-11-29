@@ -166,6 +166,17 @@ class DeaductionFonts:
              # Tooltips:
              f"ExerciseCentralWidget QToolTip"
              f"{{ font-size : {self.tooltips_font_size}pt; }}"
+             ####################
+             # Calculator sizes #
+             ####################
+             # Target:
+             f"CalculatorTarget"
+             f"{{ font-size : {self.target_font_size}pt; }}"
+             ####################
+             # Proof Tree #
+             ####################
+             f"RawLabelMathObject"
+             f"{{ font-size : {cvars.get('display.proof_tree_font_size')}pt; }}"
              )
         return s
 

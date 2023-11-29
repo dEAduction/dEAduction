@@ -492,6 +492,7 @@ class CodeForLean:
                 exclude_skip=False) -> str:
         """
         Format CodeForLean into a string which can be sent to Lean.
+        No side-effects.
 
         :param exclude_no_meta_vars:    if True, 'no_meta_vars' instructions
                                         are discarded

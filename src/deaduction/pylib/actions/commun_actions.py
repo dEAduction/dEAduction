@@ -27,7 +27,7 @@ This file is part of dEAduction.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from deaduction.pylib.actions.utils import pre_process_lean_code
 from deaduction.pylib.actions import (InputType,
@@ -59,12 +59,24 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
 
     # (B) User enter sub-goal
     elif len(user_input) == 1:
-        output = new_properties
-        raise MissingParametersError(InputType.Text,
+        # output = new_properties
+        # raise MissingParametersError(InputType.Text,
+        #                              title=_("Introduce a new subgoal"),
+        #                              output=output)
+        raise MissingParametersError(InputType.Calculator,
                                      title=_("Introduce a new subgoal"),
-                                     output=output)
+                                     target=MathObject.PROP)  # FIXME
+        # raise MissingParametersError(InputType.Text,
+        #                                  title=_("Introduce a new object"),
+        #                                  output=output)
+        # else:  # Send code
+        #     name = pre_process_lean_code(user_input[1])
+        #     new_hypo_name = get_new_hyp(proof_step, name='Def')
+        #     new_object = user_input[2].to_display(format_='lean')
     elif len(user_input) == 2:
-        sub_goal = pre_process_lean_code(user_input[1])
+        sub_goal = user_input[1]
+        if isinstance(sub_goal, MathObject):
+            sub_goal = sub_goal.to_display(format_='lean')
 
     # (C) Code:
     if sub_goal:
@@ -123,7 +135,7 @@ def inequality_from_pattern_matching(math_object: MathObject,
 
 
 def have_new_property(arrow: MathObject,
-                      variable_names: [str],
+                      variables: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
                       iff_direction='') -> CodeForLean:
@@ -133,8 +145,8 @@ def have_new_property(arrow: MathObject,
 
     :param arrow:           a MathObject which is either an implication or a
                             universal property
-    :param variable_names:  a list of names of variables (or properties) to
-                            which "arrow" will be applied
+    :param variables:       a list of MathObjects to which "arrow" will be
+                            applied
     :param new_hypo_name:   a fresh name for the new property
 
     :param success_msg:     A success msg, if None then the standard one will be
@@ -167,6 +179,11 @@ def have_new_property(arrow: MathObject,
     # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
     # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
     # = "mp")
+
+    variable_names = [variable.to_display(format_='lean')
+                      if isinstance(variable, MathObject)
+                      else variable for variable in variables]
+
     selected_hypo = arrow.info["name"]
     have = f'have {new_hypo_name} := '
     arguments = ' '.join(variable_names)

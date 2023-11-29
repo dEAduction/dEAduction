@@ -46,14 +46,18 @@ from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
 from deaduction.pylib.utils import inj_list
 from deaduction.pylib.give_name.name_hint import NameHint
 
-from deaduction.pylib.math_display import (plural_types, numbers, plurals,
-                                           update_plurals)
+from deaduction.pylib.math_display import MathDisplay
 
 log = logging.getLogger(__name__)
 
 global _
 
 DEBUG = False
+
+
+# plurals = MathDisplay.plurals
+# plural_types = MathDisplay.plural_types
+# numbers = MathDisplay.numbers
 
 
 ##################
@@ -1241,6 +1245,8 @@ class Goal:
             text += _("Conclusion:")
         text += "\n"
         text += " " + target.math_type_to_display(format_="utf8")
+        # except:
+        #     print(target.math_type)
         return text
 
 
@@ -1378,7 +1384,7 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
     # Fixme: changing i18n does not update the following dic,
     #  even if module is reloaded (see config_window)
     # from deaduction.pylib.math_display import plural_types, numbers, plurals
-    update_plurals()
+    # update_plurals() FIXME: done in settings?
     new_sentence = ""
     if not objects:
         return new_sentence
@@ -1393,16 +1399,16 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
     else:  # More than one object
         names = ", ".join([obj.to_display(format_) for obj in objects])
         number = len(objects)
-        if len(objects) <= len(numbers):
-            number = numbers[number]  # text version of the number
+        if len(objects) <= len(MathDisplay.numbers):
+            number = MathDisplay.numbers[number]  # text version of the number
         utf8_type = objects[0].math_type_to_display(format_='utf8',
                                                     text=True)
         type_ = objects[0].math_type_to_display(format_=format_,
                                                 text=True)
-        plural_type = plural_types(type_, utf8_type)
+        plural_type = MathDisplay.plural_types(type_, utf8_type)
 
         if plural_type:
-            shape = plurals[_("Let {} be {}")]
+            shape = MathDisplay.plurals[_("Let {} be {}")]
             new_sentence = shape.format(names, number, plural_type) + "."
 
     if not new_sentence:  # No plural found: introduce one by one.

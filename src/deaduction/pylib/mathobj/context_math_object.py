@@ -31,12 +31,15 @@ import logging
 import deaduction.pylib.config.vars as cvars
 
 # from deaduction.pylib.text                  import use, prove
-from deaduction.pylib.math_display.display_data import single_to_every
+from deaduction.pylib.math_display.display_data import MathDisplay
 import deaduction.pylib.text.help_msgs as help_msgs
 from deaduction.pylib.mathobj.math_object   import MathObject
 
 log = logging.getLogger(__name__)
 global _
+
+
+single_to_every = MathDisplay.single_to_every
 
 
 class ContextMathObject(MathObject):
@@ -203,7 +206,7 @@ class ContextMathObject(MathObject):
 
         params: Dict[str, str] = dict()
         params['solving_obj'] = solving_obj
-        from deaduction.pylib.math_display import plural_types
+        # from deaduction.pylib.math_display import plural_types
         if not obj:
             obj = self.math_type
         children = obj.children
@@ -217,7 +220,7 @@ class ContextMathObject(MathObject):
             ch0_type = ch0.math_type_to_display(format_=format_,
                                                 text=True)
             utf8 = ch0.math_type_to_display(format_='utf8', text=True)
-            plural_type = plural_types(ch0_type, utf8)
+            plural_type = MathDisplay.plural_types(ch0_type, utf8)
             params['elements_of_ch0_type'] = (plural_type if plural_type else
                                               _('elements of') + ' ' + ch0_type)
             if len(children) > 1:

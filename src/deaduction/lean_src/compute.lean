@@ -119,7 +119,7 @@ do
 
 meta def get_pos_from_pos_eq : tactic unit :=
 /- To be applied after "norm_num at *"
-    This tactic search in the hypotheses for two hypotheses of the for
+    This tactic search in the hypotheses for two hypotheses of the form
     a ≤ b  and a ≠ b
     and deduces
     a < b

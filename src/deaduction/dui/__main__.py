@@ -117,13 +117,16 @@ def set_logger():
                        # Includes Coordinator, start_coex:
                        'deaduction.dui.stages',
                        'deaduction.dui.elements',
-                       'deaduction.pylib.actions',
-                       'deaduction.pylib.coursedata',
-                       'deaduction.pylib.editing',
+                       # 'deaduction.pylib'
+                       # 'deaduction.pylib.actions',
+                       # 'deaduction.pylib.coursedata',
+                       # 'deaduction.pylib.editing',
+                       'deaduction.pylib.pattern_math_obj',
+                       'deaduction.pylib.marked_pattern_math_obj',
                        # 'logic',
                        # 'magic',
-                       'coursedata',
-                       # 'deaduction.pylib',
+                       # 'coursedata',
+                       'deaduction.pylib.math_display.math_cursor',
                        # 'patterns'
                        # 'math_object'
                        ]

@@ -1,11 +1,11 @@
 """
-###########################################################
-# __init__.py : __init__.py for deaduction.dui.primitives #
-###########################################################
+#############################################
+# __init__.py : for deaduction.dui.stages #
+#############################################
 
-Author(s)      : Kryzar <antoine@hugounet.com>
-Maintainers(s) : Kryzar <antoine@hugounet.com>
-Date           : March 2021
+Author(s)      : F Le Roux
+Maintainers(s) : F Le Roux
+Date           : July 2023
 
 Copyright (c) 2021 the dEAduction team
 
@@ -25,10 +25,4 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .buttons_dialog      import ButtonsDialog
-from .disclosure_dict import DisclosureDict
-from .text_edit_logger    import TextEditLogger, TextEditLoggerHandler
-from .yes_no_dialog       import YesNoDialog
-from .font_config         import deaduction_fonts
-from .base_math_widgets_styling     import MathLabel, MathItem, MathTextWidget
-from .disclosure_triangle import DisclosureTriangle
+from .calculator import CalculatorController

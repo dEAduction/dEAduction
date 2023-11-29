@@ -58,7 +58,7 @@ import logging
 from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.display_data import new_objects
+# from deaduction.pylib.math_display.display_data import new_objects
 
 from deaduction.pylib.actions.utils import (add_type_indication,
                                             pre_process_lean_code)
@@ -166,18 +166,18 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
     proof_step.prove_or_use = "use"
 
     if not new_hypo_name:
-        new_hypo_name = get_new_hyp()
+        new_hypo_name = get_new_hyp(proof_step)
 
     goal = proof_step.goal
     universal_property = selected_objects[-1]
     unsolved_inequality_counter = 0
     # Variable_names will contain the list of variables and proofs of
     # inequalities that will be passed to universal_property
-    variable_names = []
+    variables = []
     used_inequalities = []
     # Check for "∀x>0" (and variations)
     variable = inequality.children[0]
-    variable_names.append(variable.name)
+    variables.append(variable)
     math_types = [p.math_type for p in goal.context]
     code = CodeForLean.empty_code()
 
@@ -187,17 +187,17 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
         index = math_types.index(inequality)
         context_inequality = goal.context[index]
         used_inequalities.append(context_inequality)
-        inequality_name = context_inequality.display_name
-        variable_names.append(inequality_name)
+        variables.append(context_inequality)
     else:
         ineq_in_ctxt = False
         # If not, assert inequality as a new goal:
         inequality_name = new_hypo_name
-        variable_names.append(inequality_name)
+        variables.append(inequality_name)
         unsolved_inequality_counter += 1
         # Add type indication to the variable in inequality
         math_type = inequality.children[1].math_type
         # Variable is not used explicitly, but this affects inequality:
+        # FIXME: now useless, this is included in Lean display?
         variable = add_type_indication(variable, math_type)
         ineq_with_type = MathObject(node=inequality.node,
                                     info=inequality.info,
@@ -213,11 +213,11 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
 
     # (2) Apply universal_property, with no success_msg #
     # Add remaining variables:
-    variable_names.extend([var.name for var in selected_objects[1:-1]])
+    variables.extend(selected_objects[1:-1])
     if not ineq_in_ctxt:  # Hypo_name has been used
         new_hypo_name = get_new_hyp(proof_step)
     code = code.and_then(have_new_property(universal_property,
-                                           variable_names,
+                                           variables,
                                            new_hypo_name,
                                            success_msg=""))
     if used_inequalities:
@@ -252,27 +252,26 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
     return code
 
 
-def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
+def use_forall(proof_step) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
     (or equivalent to such after unfolding definitions).
-
-    selected_objects: list of MathObjects of length ≥ 2.
     """
     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
     #  to some object of wrong type (e.g. implication)
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
+    selected_objects = proof_step.user_input + proof_step.selection
     proof_step.prove_or_use = "use"
 
     universal_property = selected_objects[-1]  # The property to be applied
     new_hypo_name = get_new_hyp(proof_step)
-    var_names = [var.info['name'] for var in selected_objects[:-1]]
+    variables = selected_objects[:-1]
     # Replace first var if pertinent:
     potential_var = extract_var(selected_objects[0])
-    var_names[0] = potential_var.to_display(format_='lean')
-    simple_code = have_new_property(universal_property, var_names,
+    variables[0] = potential_var
+    simple_code = have_new_property(universal_property, variables,
                                     new_hypo_name)
     simple_code.add_success_msg(_("Property {} added to the context").
                                 format(new_hypo_name))
@@ -341,23 +340,30 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
                       "P(x)'")
             raise WrongUserInput(error)
         elif not user_input:
-            raise MissingParametersError(InputType.Text,
+            quant = selected_objects[0].math_type
+            input_target = quant.type_of_explicit_quant()
+            raise MissingParametersError(InputType.Calculator,
                                          title=_("Use a universal property"),
-                                         output=_(
-                                             "Enter element on which you "
-                                             "want to use this property:"))
+                                         target=input_target)
+        # raise MissingParametersError(InputType.Text,
+        #                                  title=_("Use a universal property"),
+        #                                  output=_(
+        #                                      "Enter element on which you "
+        #                                      "want to use this property:"))
         else:
-            item = pre_process_lean_code(user_input[0])
-            item = add_type_indication(item)  # e.g. (0:ℝ)
-            if item[0] != '(':
-                item = '(' + item + ')'
-            potential_var = MathObject(node="LOCAL_CONSTANT",
-                                       info={'name': item, 'user_input': True},
-                                       children=[],
-                                       math_type=None)
-            selected_objects.insert(0, potential_var)
-            # selection_object_added = True
-            # Now len(l) == 2
+            math_object = user_input[0]
+            # This will be a str either from Calculator in "Lean mode",
+            #   or from history file.
+            #  In this case we artificially change this to a "MathObject".
+            if isinstance(math_object, str):
+                math_object = MathObject(node="RAW_LEAN_CODE",
+                                         info={'name': '(' + math_object + ')'},
+                                         children=[],
+                                         math_type=None)
+                user_input[0] = math_object
+
+            code = use_forall(proof_step)
+            return code
 
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
@@ -369,7 +375,7 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            code = use_forall(proof_step, selected_objects)
+            code = use_forall(proof_step)
             # if selection_object_added:  # Remove it (for auto-test)
             #     selected_objects.pop(0)
             return code
@@ -387,15 +393,26 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
     """
 
     proof_step.prove_or_use = "prove"
-
+    target: MathObject = proof_step.goal.target.math_type
     if not user_input:
-        output = _("Enter element you want to use:") + "\n \n \n" + new_objects
-        raise MissingParametersError(InputType.Text,
-                                     title=_("Exist"),
-                                     output=output)
-    x = pre_process_lean_code(str(user_input[0]))
-    code = CodeForLean.from_string(f'use {x}')  # (f'use {x}, dsimp')
-    # code = code.or_else(f'use {x}')
+        # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
+        # raise MissingParametersError(InputType.Text,
+        #                              title=_("Exist"),
+        #                              output=output)
+        # if not goal.target.is_exists(implicit=False):
+        #     # implicit exists
+        input_target = target.type_of_explicit_quant()
+        raise MissingParametersError(InputType.Calculator,
+                                     title=_("Prove an existential property"),
+                                     target=input_target)
+    x = user_input[0]
+    if isinstance(x, MathObject):
+        x_lean = x.to_display(format_='lean').strip('()')
+        x = x.to_display(format_='utf8')
+    elif isinstance(x, str):
+        x_lean = x.strip('()')
+        x = x_lean
+    code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
 
@@ -552,7 +569,8 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             else:
                 return use_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
-            witness = selected_objects[0].info.get("name")
+            # witness = selected_objects[0].info.get("name")
+            witness = selected_objects[0]
             return prove_exists_with_selected_witness(prove, witness,
                                                       proof_step)
     elif len(selected_objects) == 2:
@@ -690,15 +708,14 @@ def use_implies_to_hyp(proof_step,
 
     implication = selected_objects[-1]
     new_hypo_name = get_new_hyp(proof_step)
-    variable_names = [variable.info['name'] for variable in
-                      selected_objects[:-1]]
+    variables = selected_objects[:-1]
     if implication.can_be_used_for_implication(implicit=True,
                                                include_iff=False):
-        code = have_new_property(implication, variable_names, new_hypo_name)
+        code = have_new_property(implication, variables, new_hypo_name)
     else:  # implication is an iff or a universal iff
-        code1 = have_new_property(implication, variable_names, new_hypo_name,
+        code1 = have_new_property(implication, variables, new_hypo_name,
                                   iff_direction='mp')
-        code2 = have_new_property(implication, variable_names, new_hypo_name,
+        code2 = have_new_property(implication, variables, new_hypo_name,
                                   iff_direction='mpr')
         code = code1.or_else(code2)
 
@@ -1675,7 +1692,7 @@ def action_equal(proof_step) -> CodeForLean:
         d_n_d = proof_step.drag_n_drop
         selected_objects = [d_n_d.premise, d_n_d.operator]
         equality = d_n_d.operator.math_type
-    elif not selected_objects:
+    if not selected_objects:
         if not target_selected:
             msg = _("Select an equality to perform a substitution")
         else:

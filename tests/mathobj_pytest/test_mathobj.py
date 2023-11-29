@@ -60,7 +60,7 @@ def test_display_contexts(contexts, context_displays):
     """
     test MathObject.to_display()
     which creates a displayable version of MathObjects
-    this tests all the content of display_math.py
+    this tests all the content of display_utils.py
     """
     for (context, displays) in zip(contexts, context_displays):
         for (math_object, display) in zip(context, displays):
