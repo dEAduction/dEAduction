@@ -95,12 +95,19 @@ def add_parentheses(math_list: list, depth=1):
         remove_leading_parentheses(math_list)
 
     for index in range(len(math_list) - 1):
-        if math_list[index] == r'\parentheses':
-            math_list[index] = math_list.string("(")
+        paren = math_list[index]
+        if paren == r'\parentheses':
+            if not hasattr(paren, 'replace_string'):
+                math_list[index] = math_list.string("(")
+            else:
+                math_list[index] = paren.replace_string(paren, "(")
             if index == len(math_list)-2 and isinstance(math_list[-1], list):
                 remove_leading_parentheses(math_list[-1])
 
-            math_list.append(math_list.string(")"))
+            if not hasattr(paren, 'replace_string'):
+                math_list.append(math_list.string(")"))
+            else:
+                math_list.append(paren.replace_string(paren, ")"))
 
 
 def recursive_utf8_display(math_list, depth):

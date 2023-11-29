@@ -416,7 +416,7 @@ class MathString(str, MathDescendant):
                              f"position{position}.")
 
     @classmethod
-    def formatter(cls, format_name: str):
+    def formatter(cls, format_name: str, root_math_object=None):
         """
         This class method is supposed to be used for inserting a formatter
         expression, e.g. '\\used_property'.
@@ -428,7 +428,7 @@ class MathString(str, MathDescendant):
         # if format_name == '':
         #     print('')
         cls._format_strings.add(format_name)
-        return cls(string=format_name, root_math_object=None)
+        return cls(string=format_name, root_math_object=root_math_object)
 
     @classmethod
     def replace_string(cls, math_string, new_string):
@@ -854,7 +854,8 @@ class MathList(list, MathDescendant):
                 new_item = process_shape_macro(math_object, item)
                 if isinstance(new_item, str):
                     if new_item in MathString.format_strings():
-                        new_item = MathString.formatter(new_item)
+                        new_item = MathString.formatter(new_item,
+                                                        root_math_object=math_object)
                     else:
                         new_item = MathString(new_item,
                                               root_math_object=math_object)
