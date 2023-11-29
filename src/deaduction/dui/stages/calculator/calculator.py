@@ -499,7 +499,7 @@ class CalculatorButtonsGroup(QWidget):
         self.disclosure_triangle.setSizePolicy(QSizePolicy.Fixed,
                                                QSizePolicy.Fixed)
 
-        self.group_box = QGroupBox(title)
+        self.group_box = QGroupBox()
         # super().__init__(title)
 
         if col_size:
@@ -522,9 +522,18 @@ class CalculatorButtonsGroup(QWidget):
         group_box_layout.addLayout(self.margin_btns_lyt)
         self.group_box.setLayout(group_box_layout)
 
-        main_lyt = QHBoxLayout()
-        main_lyt.addWidget(self.disclosure_triangle)
-        main_lyt.setAlignment(self.disclosure_triangle, Qt.AlignTop)
+        # main_lyt = QHBoxLayout()
+        # main_lyt.addWidget(self.disclosure_triangle)
+        # main_lyt.setAlignment(self.disclosure_triangle, Qt.AlignTop)
+        # main_lyt.addWidget(self.group_box)
+        disclosure_lyt = QHBoxLayout()
+        disclosure_lyt.addWidget(self.disclosure_triangle)
+        disclosure_lyt.addWidget(QLabel(self.title))
+        disclosure_lyt.addStretch()
+        disclosure_lyt.setAlignment(Qt.AlignLeft)
+
+        main_lyt = QVBoxLayout()
+        main_lyt.addLayout(disclosure_lyt)
         main_lyt.addWidget(self.group_box)
         self.setLayout(main_lyt)
 
@@ -616,9 +625,11 @@ class CalculatorButtonsGroup(QWidget):
 
     def toggle_buttons(self):
         if self.hidden:
+            self.group_box.hide()
             for button in self.buttons:
                 button.hide()
         else:
+            self.group_box.show()
             for button in self.buttons:
                 button.show()
 
