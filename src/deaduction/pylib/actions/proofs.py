@@ -299,6 +299,7 @@ def method_induction(proof_step,
     Try to do a proof by induction.
     """
 
+    implicit = False
     target = proof_step.goal.target
     if not target.is_for_all(implicit=True):
         error = _("Proof by induction only applies to prove "
@@ -307,14 +308,16 @@ def method_induction(proof_step,
 
     if not target.is_for_all(is_math_type=False):
         # Implicit "for all"
+        implicit = True
         math_object = MathObject.last_rw_object
     else:
         math_object = target.math_type
 
     math_type, var, body = math_object.children
     if not var.is_nat():
-        error = _(f"{var} is not a natural number") + ", " + \
-                _("proof by induction does not apply")
+        if not implicit:
+            error = _(f"{var} is not a natural number") + ", " + \
+                    _("proof by induction does not apply")
         raise WrongUserInput(error)
 
     var_name = proof_step.goal.provide_good_name(math_type,
