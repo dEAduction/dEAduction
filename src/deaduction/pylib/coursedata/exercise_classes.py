@@ -1033,7 +1033,7 @@ class Exercise(Theorem):
                                               version_nb)
 
         # (4) Save!
-        with open(path, mode='wt') as output:
+        with open(path, mode='wt', encoding='utf-8') as output:
             output.write(content)
 
         # (5) Reload history_course to get new entry

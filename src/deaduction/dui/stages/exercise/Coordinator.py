@@ -1352,7 +1352,6 @@ class Coordinator(QObject):
         # Fixme: Remove negate statement??
         cvars.set(default_key, default_level)
 
-
     @Slot()
     def process_lean_response(self, lean_response):
         """
