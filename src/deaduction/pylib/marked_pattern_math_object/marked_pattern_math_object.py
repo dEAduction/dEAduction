@@ -1525,22 +1525,20 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         right_insertion = False
         math_object = mvar.assigned_math_object
         if left:
-            log.debug(f"--> Trying to match left mvars {left_mvars} of {pmo_display} "
-                      f"with {math_object}")
+            log.debug(f"--> Trying to match left mvars {left_mvars}"
+                      f" of {pmo_display} with {math_object}")
             left_insertion = self.assign(left_mvars, math_object,
                                          assignments, check_types)
 
         if not left_insertion and right:
-            log.debug(f"--> Trying to match right mvars {right_mvars} of {
-            pmo_display} with"
-                      f" {math_object}")
+            log.debug(f"--> Trying to match right mvars {right_mvars}"
+                      f" of{pmo_display} with {math_object}")
             right_insertion = self.assign(right_mvars, math_object,
                                           assignments, check_types)
 
         if not (left_insertion or right_insertion):
-            log.debug(f"--> Trying to match central mvars {central_mvars} of {
-            pmo_display} "
-                      f"with {math_object}")
+            log.debug(f"--> Trying to match central mvars {central_mvars}"
+                      f" of {pmo_display} with {math_object}")
             central_insertion = self.assign(central_mvars, math_object,
                                             assignments, check_types)
 

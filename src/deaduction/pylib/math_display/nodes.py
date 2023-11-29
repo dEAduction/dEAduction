@@ -238,14 +238,10 @@ class Node:
         """
         if self._button_tooltip:
             return self._button_tooltip
-        else:
+        else:  # Take display and replace spaces
             pattern = self.pattern_math_objects()[-1]
-            # print(pattern)
-            # print(pattern.latex_shape())
-            # try:
-            self._button_tooltip = pattern.to_display(format_='utf8')
-            # except:
-            #     print("toto")
+            tooltip: str = pattern.to_display(format_='utf8')
+            self._button_tooltip = tooltip.replace(' ', '_')
             return self._button_tooltip
 
 
@@ -327,11 +323,14 @@ singleton = SetTheoryNode("SET_EXTENSION1",
                           (r'\{', 0, r'\}')
                           )
 singleton.set_button_symbol('{·}')
+singleton.set_button_tooltip(_("A singleton (set with one element)"))
+
 pair = SetTheoryNode("SET_EXTENSION2",
                      'SET_EXTENSION2: SET(?2)(?0: ?2, ?1: ?2)',
                      (r'\{', 0, ', ', 1, r'\}')
                      )
 pair.set_button_symbol('{·,·}')
+pair.set_button_tooltip(_("A pair (set with two elements"))
 
 # "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
 
@@ -346,11 +345,14 @@ set_image = SetTheoryNode("SET_IMAGE",
                           (0, r'\set_image', r'\parentheses', 1)
                           )
 set_image.set_button_symbol("f({·})")
+set_image.set_button_tooltip(_("The image of a subset under a function"))
 set_inverse = SetTheoryNode("SET_INVERSE",
                             'SET_INVERSE: SET(?2)(?0: FUNCTION(?2, ?3), ?1: SET(?3))',
                             (0, r'\set_inverse', r'\parentheses', 1)
                             )
 set_inverse.set_button_symbol("f⁻¹({·})")
+set_inverse.set_button_tooltip(_("The inverse image of a subset under a "
+                                 "function"))
 
 
 # NB: 'APPLICATION' is a special pattern
@@ -374,7 +376,7 @@ composition = SetTheoryNode("COMPOSITION",
                             "(?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))",
                             (4, r'\circ', 5)
                             )
-composition.set_button_tooltip(r"\circ")
+composition.set_button_tooltip(_("Composition of two functions"))
 
 
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂

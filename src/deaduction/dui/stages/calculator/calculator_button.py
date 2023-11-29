@@ -203,6 +203,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
             if text.startswith(value):
                 text = text.replace(value, key)
 
+        # Replace spaces (space is used to end shortcut)
+        text = text.replace(' ', '_')
         shortcut = ''
         sdic = self.shortcuts_dic
 
