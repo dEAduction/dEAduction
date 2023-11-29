@@ -71,6 +71,10 @@ class DefinitionMathObject(MathObject, Definition):
         # Definition.__init__(self, **definition_args)
         self.check_proof_state()
 
+    @classmethod
+    def clear_instances(cls):
+        cls.instances = []
+
     @property
     def target(self):
         """

@@ -578,7 +578,7 @@ class CalculatorButtonsGroup(QWidget):
         """
         buttons = [CalculatorButton.from_node(node)
                    for node in node_class.calculator_nodes]
-        buttons_group = cls(title=node_class.name,
+        buttons_group = cls(title=node_class.name(),
                             calculator_buttons=buttons,
                             col_size=col_size)
         return buttons_group
@@ -817,7 +817,10 @@ class CalculatorController:
     - a MarkedPatternMathObject, typically just a Metavar, that stands for
     the object under construction.
     - a dictionary of CalculatorGroup instances, that is used to build the
-    various buttons groups.
+    various buttons groups. This is in general empty, since buttons are
+    automatically generated:
+        - context and definition buttons, in __init__()
+        - standard buttons, in CalculatorMainWindow.
     """
 
     _target: MarkedPatternMathObject
@@ -828,6 +831,9 @@ class CalculatorController:
                  calculator_groups=None,
                  title="Calculator"):
 
+        ##############
+        # Set target #
+        ##############
         self.goal = goal
 
         if not target_type:
@@ -845,7 +851,13 @@ class CalculatorController:
                                                         text=True)
         self.target_title = _("Enter") + " " + display_type + _(":")
 
+        ###########
+        # Buttons #
+        ###########
         self.calculator_groups = []
+        ###################
+        # Context buttons #
+        ###################
         if goal:
             context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
@@ -859,12 +871,18 @@ class CalculatorController:
             self.calculator_groups.extend(calculator_groups)
         # Add 'constant' from definitions,
         # e.g. is_bounded, is_even, and so on
+        ######################
+        # Definition buttons #
+        ######################
         cpls = CalculatorPatternLines.constants_from_definitions()
         self.calculator_groups.extend(cpls)
 
         self.history: [MarkedPatternMathObject] = []
         self.history_idx = -1
 
+        ##################
+        # User interface #
+        ##################
         self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
         self.calculator_ui.setWindowTitle(title)
         self.calculator_ui.set_target_title(self.target_title)

@@ -316,6 +316,7 @@ class Coordinator(QObject):
 
     def __set_math_object_definitions(self):
         definitions = self.exercise.definitions
+        DefinitionMathObject.clear_instances()
         DefinitionMathObject.set_definitions(definitions)
 
     @Slot()

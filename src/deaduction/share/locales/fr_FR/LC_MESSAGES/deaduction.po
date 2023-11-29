@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-11-28 21:04+0100\n"
-"PO-Revision-Date: 2023-11-28 21:09+0100\n"
+"POT-Creation-Date: 2023-11-29 08:47+0100\n"
+"PO-Revision-Date: 2023-11-29 08:48+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -54,7 +54,7 @@ msgstr "Bouton"
 #: dui/elements/actions_widgets_classes.py:183
 #: dui/elements/config_window.py:539
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
-#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:846
+#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:852
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:338
 #: pylib/math_display/display_data.py:402 pylib/proof_tree/proof_tree.py:526
@@ -250,7 +250,7 @@ msgstr "Fonctionnalités"
 msgid "Display"
 msgstr "Affichage"
 
-#: dui/elements/config_window_text.py:42
+#: dui/elements/config_window_text.py:42 pylib/math_display/nodes.py:249
 msgid "Logic"
 msgstr "Logique"
 
@@ -549,12 +549,12 @@ msgid "(browsed)"
 msgstr "(navigué)"
 
 #: dui/primitives/buttons_dialog.py:86 dui/primitives/yes_no_dialog.py:73
-#: dui/stages/exercise/Coordinator.py:1059
+#: dui/stages/exercise/Coordinator.py:1060
 msgid "Yes"
 msgstr "Oui"
 
 #: dui/primitives/buttons_dialog.py:87 dui/primitives/yes_no_dialog.py:74
-#: dui/stages/exercise/Coordinator.py:1060
+#: dui/stages/exercise/Coordinator.py:1061
 msgid "No"
 msgstr "Non"
 
@@ -598,69 +598,69 @@ msgstr "Aller à la fin"
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
-#: dui/stages/calculator/calculator.py:846
+#: dui/stages/calculator/calculator.py:852
 msgid "Enter"
 msgstr "Entrer"
 
-#: dui/stages/exercise/Coordinator.py:565
+#: dui/stages/exercise/Coordinator.py:566
 msgid "Server restarted"
 msgstr "Redémarrage du serveur"
 
-#: dui/stages/exercise/Coordinator.py:569
+#: dui/stages/exercise/Coordinator.py:570
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1056
+#: dui/stages/exercise/Coordinator.py:1057
 msgid "Do you want to prove the premise \"{}\" as a new sub-goal?"
 msgstr "Voulez-vous démontrer la prémisse {}  ?"
 
-#: dui/stages/exercise/Coordinator.py:1139 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1140 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1155
+#: dui/stages/exercise/Coordinator.py:1156
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1158
+#: dui/stages/exercise/Coordinator.py:1159
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1165
+#: dui/stages/exercise/Coordinator.py:1166
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1168
+#: dui/stages/exercise/Coordinator.py:1169
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1170
+#: dui/stages/exercise/Coordinator.py:1171
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1172 pylib/actions/logic.py:1347
+#: dui/stages/exercise/Coordinator.py:1173 pylib/actions/logic.py:1347
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1216
+#: dui/stages/exercise/Coordinator.py:1217
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1217
+#: dui/stages/exercise/Coordinator.py:1218
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1221
+#: dui/stages/exercise/Coordinator.py:1222
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1223
+#: dui/stages/exercise/Coordinator.py:1224
 #: dui/stages/exercise/_exercise_main_window_widgets.py:800
 #: dui/stages/exercise/_exercise_main_window_widgets.py:816
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1231
+#: dui/stages/exercise/Coordinator.py:1232
 msgid "Save history"
 msgstr "Sauver l'historique"
 
@@ -1510,10 +1510,8 @@ msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
 #: pylib/actions/proofs.py:292
-#, fuzzy
-#| msgid "Name your object:"
 msgid "Give a name for your new object:"
-msgstr "Choisir une notation pour l’objet :"
+msgstr "Choisir une notation pour le nouvel objet :"
 
 #: pylib/actions/proofs.py:300
 msgid "This name already exists, please give a new name:"
@@ -2183,25 +2181,37 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/math_display/nodes.py:357
+#: pylib/math_display/nodes.py:297
+msgid "Set Theory"
+msgstr "Théorie Des Ensembles"
+
+#: pylib/math_display/nodes.py:363
 msgid "Application of a function to an element\\nor term of a sequence."
 msgstr ""
 "Application d'une fonction à un élément\n"
 "ou terme d'une suite"
 
-#: pylib/math_display/nodes.py:426
+#: pylib/math_display/nodes.py:399
+msgid "Numbers"
+msgstr "Nombres"
+
+#: pylib/math_display/nodes.py:433
 msgid "-? or ?-?"
 msgstr "-? ou ?-?"
 
-#: pylib/math_display/nodes.py:540
+#: pylib/math_display/nodes.py:500
+msgid "Inequalities"
+msgstr "Inégalités"
+
+#: pylib/math_display/nodes.py:548
 msgid "Absolute value"
 msgstr "Valeur absolue"
 
-#: pylib/math_display/nodes.py:606 pylib/math_display/pattern_data.py:241
+#: pylib/math_display/nodes.py:614 pylib/math_display/pattern_data.py:241
 msgid "for every subset"
 msgstr "pour toute partie"
 
-#: pylib/math_display/nodes.py:606 pylib/math_display/pattern_data.py:241
+#: pylib/math_display/nodes.py:614 pylib/math_display/pattern_data.py:241
 msgid " of "
 msgstr " de "
 

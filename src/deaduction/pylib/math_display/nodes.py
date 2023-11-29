@@ -58,7 +58,9 @@ class Node:
     """
 
     calculator_nodes = []
-    name = ""
+    _name = ""
+    # sub-class so that name is registered for translation:
+    __name_for_translation = ""
 
     # Access to utility classes, to be set somewhere else:
     PatternMathObject = None
@@ -97,6 +99,13 @@ class Node:
 
         if display_in_calculator:
             self.__class__.calculator_nodes.append(self)
+
+    @classmethod
+    def name(cls):
+        """
+        Translate self._name on the fly.
+        """
+        return _(cls._name)
 
     @classmethod
     def all_nodes_names(cls):
@@ -241,7 +250,8 @@ class Node:
 
 
 class LogicalNode(Node):
-    name = "Logic"
+    _name = "Logic"
+    __name_for_translation = _("Logic")
     calculator_nodes = []
 
 
@@ -288,7 +298,8 @@ equal = LogicalNode("PROP_EQUAL",
 
 
 class SetTheoryNode(Node):
-    name = "Set Theory"
+    _name = "Set Theory"
+    __name_for_translation = _("Set Theory")
     calculator_nodes = []
 
 
@@ -389,7 +400,8 @@ class NumberNode(Node):
     """
     Class to store number and operators nodes. We give up *NUMBER_TYPES.
     """
-    name = "Numbers"
+    _name = "Numbers"
+    __name_for_translation = _("Numbers")
     calculator_nodes = []
 
 
@@ -489,7 +501,8 @@ power = NumberNode('POWER',
 
 
 class InequalityNode(Node):
-    name = "Inequalities"
+    _name = "Inequalities"
+    __name_for_translation = _("Inequalities")
     calculator_nodes = []
 
 
