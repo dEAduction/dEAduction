@@ -17,13 +17,15 @@ e.g. 1, +, <=>, and so on
     of the currentLean file, and in one of the PatternMathDisplay
     dictionaries.
 
-Furthermore, there are special buttons who are associated to
-GENERIC_APPLICATION, whose symbols are () and f(·). When pushed,
-the calculator tried to insert an APPLICATION pattern:
-    - either associated to a function of the context
-    -
+Furthermore, there are a special button who are associated to
+GENERIC_APPLICATION, whose symbol is f(·). When pushed,
+the calculator tried to insert an APPLICATION pattern: for instance if the
+context contain local constants u and f, respectively a sequence and a
+function, and if selected object in target is u or f, then it will be
+replaced by APP(f, ,?) or APP(u, ?).
 
-Every button has a shortcut.
+Every button has a shortcut, which is either set "manually" or computed
+automatically.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -67,7 +69,6 @@ from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
 
 import deaduction.pylib.config.dirs as cdirs
 
-# from deaduction.pylib.math_display.math_cursor import MathCursor
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, NumberNode,
                                                  InequalityNode)
@@ -100,7 +101,14 @@ Node.MarkedPatternMathObject = MarkedPatternMathObject
 
 
 class CalculatorTarget(MathTextWidget):
-
+    """
+    This is the class for the Calculator "target", whose purpose is to
+    display the MathObject (or more precisely, MarkedPatternMathObject) that
+    usr is building. Note that the text from kbd is not processed by the
+    super class QTextEdit, unless Calculator is in Lean mode. Instead,
+    kbd events are intercepted and serve as shorcuts from buttons. All input
+    come from the buttons.
+    """
     def __init__(self):
         super().__init__()
         self.set_highlight(True)
@@ -118,8 +126,6 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer = QTimer()
         self.key_buffer_timer.setSingleShot(True)
         self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
-        # self.cursorForPosition()
-        # self.cursorPositionChanged()  (signal)
 
         self.lean_mode = False  # TODO: change behavior in Lean mode
         self.check_types = False  # TODO: add button?
@@ -206,9 +212,6 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.Redo:
             bar = self.toolbar
             action = bar.redo_action
-        # elif key_sequence == QKeySequence.Delete:
-        #     bar = self.toolbar
-        #     action = bar.delete
 
         if bar and action:
             bar.animate_click(action)
@@ -266,6 +269,7 @@ class CalculatorToolbar(AbstractToolBar):
         super().__init__()
         icons_dir = cdirs.icons
 
+        # TODO: implement tooltips for shortcuts
         undo_shortcut = QKeySequence.keyBindings(QKeySequence.Undo)[0].toString()
         redo_shortcut = QKeySequence.keyBindings(QKeySequence.Redo)[0].toString()
         self.rewind = QAction(QIcon(str((icons_dir /
@@ -281,34 +285,28 @@ class CalculatorToolbar(AbstractToolBar):
                                             'go-end-96.png').resolve())),
                 _('Redo all'), self)
 
-        # self.delete = QAction(QIcon(str((icons_dir /
-        #                                  'cancel.png').resolve())),
-        #     _('Delete'), self)
-
         self.addAction(self.rewind)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
         self.addAction(self.go_to_end)
-        # self.addSeparator()
-        # self.addAction(self.delete)
 
 
 class NavigationBar(AbstractToolBar):
     """
-    A toolbar with navigation buttons: left, up, right arrow.
+    A toolbar with navigation buttons: left, right, delete arrows.
     """
     def __init__(self):
         super().__init__()
         # self.setLayoutDirection(Qt.RightToLeft)
 
         icons_dir = cdirs.icons
-        # TODO: add icons
-
         beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
-        
+
+        # TODO: implement tooltips for shortcuts
         beginning_shortcut = QKeySequence.keyBindings(
             QKeySequence.MoveToPreviousWord)[0].toString()
         beginning_shortcut = f"({_('type')} {beginning_shortcut})"
+
         left_shortcut = QKeySequence.keyBindings(
             QKeySequence.MoveToPreviousChar)[0].toString()
         right_shortcut = QKeySequence.keyBindings(
@@ -320,7 +318,6 @@ class NavigationBar(AbstractToolBar):
         self.beginning_action = QAction(QIcon(beg_path),
                                         _('Go to beginning'),
                                         self)
-        # self.left_unassigned_action = QAction(_('?←'), self)
 
         left_path = str((icons_dir / 'icons8-back-48.png').resolve())
         self.left_action = QAction(QIcon(left_path),
@@ -334,8 +331,6 @@ class NavigationBar(AbstractToolBar):
         self.right_action = QAction(QIcon(right_path),
                                    _('Move right'), self)
 
-        # self.right_unassigned_action = QAction(_('→?'), self)
-
         end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
         self.end_action = QAction(QIcon(end_path),
                                    _('Go to end'), self)
@@ -346,160 +341,19 @@ class NavigationBar(AbstractToolBar):
 
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
-        # self.addAction(self.left_unassigned_action)
         self.addAction(self.up_action)
         self.addAction(self.right_action)
         self.addAction(self.end_action)
-        # self.addAction(self.right_unassigned_action)
         self.addAction(self.delete)
 
-        # self.addSeparator()
-        # self.lean_mode_wdg = QCheckBox("Lean mode")
-        # self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
-        # self.addWidget(self.lean_mode_wdg)
-
-
-# class CalculatorButton(QToolButton, CalculatorAbstractButton):
-#     """
-#     A class to display a button associated to a (list of)
-#     MarkedPatternMathObjects. Pressing the button insert (one of) the pattern
-#     at the current cursor position in the MarkedPatternMathObject under
-#     construction.
-#     """
-#
-#     send_pattern = Signal(MarkedPatternMathObject)
-#
-#     shortcuts_dic = dict()
-#
-#     def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
-#         super().__init__()
-#         CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
-#         # self.patterns = CalculatorPatternLines.marked_patterns[symbol]
-#
-#         action = QAction(self.symbol)
-#         action.triggered.connect(self.process_click)
-#         self.setDefaultAction(action)
-#         self.shortcut = ''
-#         self.add_shortcut()
-#         if self.tooltip:
-#             tooltip = self.tooltip
-#             if self.shortcut:
-#                 tooltip = "(type " + self.shortcut + ")" + "\n" + tooltip
-#             self.setToolTip(tooltip)
-#
-#         symbol_size = deaduction_fonts.symbol_button_font_size
-#         self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
-#
-#     def add_shortcut(self):
-#         """
-#         Add a pertinent beginning of self.text() as a shortcut for self.
-#
-#         If the text of some button is a beginning word of one or more others,
-#         its shortcut will be a tuple containing all buttons.
-#
-#         If two buttons have the same text, only one will have a shortcut.
-#         """
-#
-#         text = self.text()
-#
-#         # Case of calc_shortcuts_macro, mainly latex-like patterns, e.g. \implies
-#         for key, value in calc_shortcuts_macro.items():
-#             if text.startswith(value):
-#                 text = text.replace(value, key)
-#                 # e.g. " ε' " --> " \epsilon' "
-#
-#         shortcut = ''
-#         sdic = self.shortcuts_dic
-#         for car in text:
-#             shortcut += car
-#             if shortcut in sdic:
-#                 # Modify conflicting shortcut
-#                 conflicting_button = sdic.pop(shortcut)
-#                 if isinstance(conflicting_button, tuple):
-#                     conflicting_button = conflicting_button[0]
-#                 conflicting_text = conflicting_button.text()
-#                 new_length = len(shortcut) + 1
-#
-#                 if len(conflicting_text) >= new_length:
-#                     new_shortcut = conflicting_button.text()[:new_length]
-#                     sdic[new_shortcut] = conflicting_button
-#                     if len(text) == new_length - 1:
-#                         # conflicting_text is a proper starting word of
-#                         # self.text()
-#                         sdic[shortcut] = (self, conflicting_button)
-#                 elif len(text) >= new_length:
-#                     # self.text() is a proper starting word of
-#                     # conflicting_text
-#                     sdic[shortcut] = (conflicting_button, self)
-#                 # NB: if both conflicting_text and self.text() have length <
-#                 # new_length, then they coincide, and self will have no
-#                 # shortcut.
-#
-#             else:
-#                 sdic[shortcut] = self
-#
-#         if shortcut in sdic and sdic[shortcut] == self:
-#             self.shortcut = shortcut
-#
-#     @classmethod
-#     def find_shortcut(cls, text_buffer, timeout=False):
-#         """
-#         If timeout is False, and one and only one shortcut match text_buffer,
-#         return the corresponding button.
-#
-#         If timeout is True:
-#         If one shortcut exactly match text_buffer, return the corresponding
-#         button, even if there may be some other shortcut starting with
-#         text_buffer.
-#
-#         """
-#
-#         buttons = cls.shortcuts_dic.get(text_buffer)
-#         if buttons:
-#             if not isinstance(buttons, tuple):  # buttons is a single button
-#                 return buttons
-#             elif timeout:
-#                 return buttons[0]
-#
-#         # # FIXME: not optimal
-#         # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-#         # more_match = [calc_shortcuts_macro[key] for key in calc_shortcuts_macro
-#         #               if key.startswith(text_buffer)
-#         #               and calc_shortcuts_macro[key] in cls.shortcuts_dic]
-#         # match += more_match
-#         # if len(match) == 1:
-#         #     return cls.shortcuts_dic[match[0]]
-#         # elif len(match) > 1:
-#         #     # OK if all shortcuts refer to the same text
-#         #     first_match = match[0]
-#         #     test = all(cls.shortcuts_dic[other_match].text() ==
-#         #                cls.shortcuts_dic[first_match].text()
-#         #                for other_match in match[1:])
-#         #     if test:
-#         #         # Several match of 'the same' button
-#         #         return cls.shortcuts_dic[match[0]]
-#
-#     @Slot()
-#     def process_click(self):
-#         """
-#         Send a signal so that Calculator process the click.
-#         """
-#         self.send_pattern.emit(self.patterns)
-#
-#     @classmethod
-#     def process_key_events(cls, key_event_buffer, timeout=False):
-#         # button = cls.shortcuts_dic.get(key_event_buffer)
-#         button = cls.find_shortcut(key_event_buffer, timeout)
-#         if button:
-#             button.animateClick(100)
-#             return True
-#
 
 class CalculatorButtonsGroup(QWidget):
     """
     A widget to display a list of CalculatorButtons, with a title and a
     disclosure triangle.
     """
+
+    # TODO: API for including new (e.g. context) buttons on the fly.
 
     col_size = 5
 
@@ -532,8 +386,6 @@ class CalculatorButtonsGroup(QWidget):
 
         # Fill-in main layout
         group_box_layout = QVBoxLayout()
-        # self.title_label = QLabel(self.title + _(':'))
-        # main_layout.addWidget(self.title_label)
         group_box_layout.addLayout(self.margin_btns_lyt)
         self.group_box.setLayout(group_box_layout)
 
@@ -654,24 +506,6 @@ class CalculatorButtonsGroup(QWidget):
         else:
             self.hidden = hidden
         self.toggle_buttons()
-
-# class CalculatorButtons(QHBoxLayout):
-#     """
-#     A class to display a line of CalculatorButton.
-#     """
-#
-#     def __init__(self, title: str, line: [str]):
-#         super().__init__()
-#         self.title = title
-#         self.line = line
-#         self.buttons = [CalculatorButton(symbol) for symbol in line]
-#         self.addStretch()
-#         for button in self.buttons:
-#             self.addWidget(button)
-#         self.addStretch()
-#
-#     def from_calculator_pattern_lines(self):
-#         pass
 
 
 class CalculatorMainWindow(QDialog):
@@ -850,7 +684,6 @@ class CalculatorController:
     """
 
     _target: MarkedPatternMathObject
-    # math_cursor: MathCursor
 
     def __init__(self, target_type=None,
                  goal=None,
@@ -929,13 +762,9 @@ class CalculatorController:
 
         n_bar = calc_ui.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-        # n_bar.left_unassigned_action.triggered.connect(
-        #     self.move_to_previous_unassigned)
         n_bar.left_action.triggered.connect(self.move_left)
         n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
-        # n_bar.right_unassigned_action.triggered.connect(
-        #     self.move_to_next_unassigned)
         n_bar.end_action.triggered.connect(self.go_to_end)
         calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
@@ -954,7 +783,6 @@ class CalculatorController:
         target.
         """
         self._target = target
-        # self.set_math_cursor()
 
     @property
     def math_cursor(self):
@@ -1021,10 +849,6 @@ class CalculatorController:
     def beginning_action(self):
         return self.calculator_ui.navigation_bar.beginning_action
 
-    # @property
-    # def left_unassigned_action(self):
-    #     return self.calculator_ui.navigation_bar.left_unassigned_action
-
     @property
     def left_action(self):
         return self.calculator_ui.navigation_bar.left_action
@@ -1036,10 +860,6 @@ class CalculatorController:
     @property
     def right_action(self):
         return self.calculator_ui.navigation_bar.right_action
-
-    # @property
-    # def right_unassigned_action(self):
-    #     return self.calculator_ui.navigation_bar.right_unassigned_action
 
     @property
     def end_action(self):
@@ -1057,34 +877,11 @@ class CalculatorController:
     def set_target(self):
         self.calculator_ui.set_html(self.html_target)
 
-    # def set_math_cursor(self, marked_descendant=None):
-    #     """
-    #     Set the MathCursor corresponding to current target, with the address
-    #     of marked_descendant (which will be marked).
-    #     """
-    #
-    #     # FIXME: use MathList.complete_latex_shape() method.
-    #     #  Even better: delegate this to MathList
-    #     # math_list = self.target.latex_shape()
-    #     self.target.set_math_cursor(marked_descendant)
-
     def virtual_cursor_position(self):
         """
         Return the position at which the cursor should be seen, corresponding to
         the current marked node of self.target, if any, or the end.
         """
-        # doc = QTextDocument()
-        # MathDisplay.mark_cursor = True
-        # # MathDisplay.cursor_pos = self.target.marked_descendant().cursor_pos
-        # doc.setHtml(self.html_target)
-        # text = doc.toPlainText()
-        # # print(f"VIRTUAL CURSOR POS: {text}")
-        # position = text.find(MathDisplay.cursor_tag)
-        # # print(f"vcp in: {text} --> {position}")
-        # # print("Marked latex shape:")
-        # # print(self.target.latex_shape())
-        # MathDisplay.mark_cursor = False
-        # # MathDisplay.cursor_pos = None
         return self.math_cursor.linear_text_cursor_position()
 
     def update_cursor(self):
@@ -1129,13 +926,9 @@ class CalculatorController:
         """
 
         self.history_idx += 1
-        # self.calculator_ui.set_target(self.target)
         self.history = self.history[:self.history_idx]
         self.history.append(self.target)
         self.set_target_and_update()
-        # print( self.calculator_ui.calculator_target.document().toHtml())
-        # print(self.calculator_ui.calculator_target.document().toPlainText())
-        # print(self.calculator_ui.calculator_target.document().toPlainText())
 
     def bound_var_buttons_group(self):
         bv_group = self.calculator_ui.bound_var_group()
@@ -1148,7 +941,7 @@ class CalculatorController:
     def check_new_bound_var(self, assigned_mvar):
         """
         If assigned_mvar affected the type of some bound var, then
-        rename this bound var.
+        rename this bound var. FIXME: no bound vars in Calculator.
         """
 
         bv_group = self.calculator_ui.bound_var_group()
@@ -1278,6 +1071,7 @@ class CalculatorController:
             assigned_mvar = new_target.insert_application_with_arg(pattern)
 
         # (3) Force insertion with LAST pattern
+        # FOr now this just fusions digits
         #  1, 2 --> 12
         if not assigned_mvar:
             assigned_mvar = new_target.generic_insert(pattern)
@@ -1323,8 +1117,6 @@ class CalculatorController:
         # print(new_target)
         if success:
             self.target = new_target
-            # if not self.target.is_at_beginning():
-            #     self.target.decrease_cursor_pos()
             self.update()
 
     #################
@@ -1367,37 +1159,21 @@ class CalculatorController:
 
     @Slot()
     def move_right(self):
-        # cursor_pos = self.virtual_cursor_position()
-        # while (self.virtual_cursor_position() == cursor_pos and not
-        #        self.target.is_at_end()):
-        #     self.target.increase_cursor_pos()
-
-        # self.target.increase_cursor_pos()
-
         self.math_cursor.increase_pos()
         self.set_target_and_update()
 
     @Slot()
     def move_left(self):
-        # cursor_pos = self.virtual_cursor_position()
-        # while (self.virtual_cursor_position() == cursor_pos and not
-        #        self.target.is_at_beginning()):
-        #     self.target.decrease_cursor_pos()
-
-        # self.target.decrease_cursor_pos()
-
         self.math_cursor.decrease_pos()
         self.set_target_and_update()
 
     @Slot()
     def go_to_beginning(self):
-        # self.target.go_to_beginning()
         self.math_cursor.go_to_beginning()
         self.set_target_and_update()
 
     @Slot()
     def go_to_end(self):
-        # self.target.go_to_end()
         self.math_cursor.go_to_end()
         self.set_target_and_update()
 

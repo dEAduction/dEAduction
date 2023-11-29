@@ -1,5 +1,7 @@
 """
-calculator.py : provide the CalculatorButton class.
+calculator.py : provide the CalculatorButton class, whose main feature is
+that the text displayed is in html. There is also a sophisticated system of (
+automatically computed) shortcuts.
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -55,6 +57,9 @@ if __name__ == "__main__":
 
 
 class RichTextToolButton(QToolButton):
+    """
+    An html QToolButton.
+    """
     def __init__(self, parent=None, text=None):
         if parent is not None:
             super().__init__(parent)
@@ -131,11 +136,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
     def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
         super().__init__()
         CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
-        # self.patterns = CalculatorPatternLines.marked_patterns[symbol]
 
-        # action = QAction(self.symbol)
-        # action.triggered.connect(self.process_click)
-        # self.setDefaultAction(action)
         self.clicked.connect(self.process_click)
         self.setText(symbol)
         self.shortcut = ''
@@ -210,42 +211,9 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         for car in shortcut_text:
             shortcut += car
-            # if shortcut == 'l':
-            #     print('hlleo')
             conflicting_buttons = sdic.get(shortcut, [])
             self.insert_by_length(conflicting_buttons)
             sdic[shortcut] = conflicting_buttons
-
-            # if shortcut in sdic:
-            #     # Modify conflicting shortcut
-            #     conflicting_button = sdic.get(shortcut)
-            #     if isinstance(conflicting_button, tuple):
-            #         conflicting_button = conflicting_button[0]
-            #     conflicting_text = conflicting_button.text()
-            #     new_length = len(shortcut) + 1
-            #
-            #     if len(conflicting_text) >= new_length:
-            #         new_shortcut = conflicting_button.text()[:new_length]
-            #         sdic[new_shortcut] = conflicting_button
-            #         if len(text) == new_length - 1:
-            #             # conflicting_text is a proper starting word of
-            #             # self.text()
-            #             sdic[shortcut] = (self, conflicting_button)
-            #     elif len(text) >= new_length:
-            #         # self.text() is a proper starting word of
-            #         # conflicting_text
-            #         sdic[shortcut] = (conflicting_button, self)
-            #     # NB: if both conflicting_text and self.text() have length <
-            #     # new_length, then they coincide, and self will have no
-            #     # shortcut.
-            #
-            # else:
-            #     sdic[shortcut] = self
-
-        # if ((len(conflicting_buttons) == 1
-        #         or (shortcut == text and conflicting_buttons[0] is self))
-        #         and not self.shortcut):
-        #     self.shortcut = shortcut
 
         if shortcut in sdic and sdic[shortcut][0] == self:
             self.shortcut = shortcut
@@ -276,24 +244,6 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 button = cls.find_shortcut(text_buffer=macro, timeout=timeout,
                                            text_is_macro=True)
                 return button
-
-        # # FIXME: not optimal
-        # match = [key for key in cls.shortcuts_dic if key.startswith(text_buffer)]
-        # more_match = [calc_shortcuts_macro[key] for key in calc_shortcuts_macro
-        #               if key.startswith(text_buffer)
-        #               and calc_shortcuts_macro[key] in cls.shortcuts_dic]
-        # match += more_match
-        # if len(match) == 1:
-        #     return cls.shortcuts_dic[match[0]]
-        # elif len(match) > 1:
-        #     # OK if all shortcuts refer to the same text
-        #     first_match = match[0]
-        #     test = all(cls.shortcuts_dic[other_match].text() ==
-        #                cls.shortcuts_dic[first_match].text()
-        #                for other_match in match[1:])
-        #     if test:
-        #         # Several match of 'the same' button
-        #         return cls.shortcuts_dic[match[0]]
 
     @Slot()
     def process_click(self):

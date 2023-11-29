@@ -51,6 +51,7 @@ from deaduction.pylib.math_display.app_pattern_data import \
     latex_from_app_pattern, app_pattern_from_constants, generic_app_dict, \
     PatternMathDisplay
 
+# The following would cause circular import:
 # from deaduction.pylib.pattern_math_obj.pattern_parser import tree_from_str
 # from deaduction.pylib.pattern_math_obj import PatternMathObject
 
@@ -59,11 +60,14 @@ log = logging.getLogger(__name__)
 
 class PatternInit:
     """
-    This instanceless class is responsible for initialising the PatternMathObjects that will be used to diaply math
+    This instanceless class is responsible for initialising the
+    PatternMathObjects that will be used to display math
     object. It makes use of the class method PatternMathObject.from_string.
-    Note that the PatternMathObject class inherits from MathObject, which makes crucial use of this class to display
-    its instances. To avoid circular import, the present module DO NOT import PatternMathObject.
-    Instead, the module containing the PatternMathObject class import the present class, and call the pattern_init()
+    Note that the PatternMathObject class inherits from MathObject,
+    which makes crucial use of this class to display
+    its instances. To avoid circular import, the present module DO NOT import
+    PatternMathObject. Instead, the module containing the PatternMathObject
+    class import the present class, and call the pattern_init()
     method, providing the from_string() method as an argument.
     """
 
@@ -108,16 +112,14 @@ class PatternInit:
         for dict_, list_ in cls.dic_list_pairs:
             for key, latex_shape in dict_.items():
                 metavars = []
-                # tree = tree_from_str(key)
-                # pattern = PatternMathObject.from_tree(tree, metavars)
-                # pattern = pattern_from_tree(tree, metavars)
                 pattern = cls.pattern_from_string(key, metavars)
                 list_.append((pattern, latex_shape, metavars))
-                # print(key)
-                # print(tree.display())
 
     @classmethod
     def pattern_init(cls, additional_constants=None):
+        """
+        This method is called from PatternMathObject.
+        """
         set_quant_pattern()
         app_pattern_from_constants(additional_data=additional_constants)
         cls.string_to_pattern()
@@ -129,12 +131,4 @@ class PatternInit:
             if pattern.node == 'APPLICATION':
                 paren_pat.append(pattern)
         return paren_pat
-
-
-# ########################################
-# ########################################
-# # We need some code to create the data #
-# ########################################
-# ########################################
-# pattern_init()
 

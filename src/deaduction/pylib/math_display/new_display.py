@@ -183,9 +183,9 @@ def process_shape_item(item, root_math_object=None, line_of_descent=tuple(),
     # elif str(type(item)).endswith("MathObject>'"):
     elif not (isinstance(item, int) or isinstance(item, tuple) or callable(
             item)):
-        # print(1/0)
         # FIXME: improve info?
         #  Root Math Object will NOT be the good one.
+        #  This is why we avoid metavars as much as possible in patterns values
         log.warning(f"Found MathObject {item} in shape, proceed and cross "
                     f"fingers...")
         new_item = item.latex_shape(text=text, lean_format=lean_format)
@@ -427,8 +427,7 @@ class MathString(str, MathDescendant):
         display anything on screen by themselves (e.g. a parenthesis is NOT
         a formatter).
         """
-        # if format_name == '':
-        #     print('')
+
         cls._format_strings.add(format_name)
         return cls(string=format_name, root_math_object=root_math_object)
 
@@ -465,22 +464,6 @@ class MathString(str, MathDescendant):
         else:
             return None
 
-    # def cut_spaces(self):
-    #     new_string = self.cut_spaces()
-    #     if new_string:
-    #         return self.replace_string(self, new_string)
-
-    # @property
-    # def address_of_first_leaf_descendant(self):
-    #     """
-    #     This is just for compatibility with MathList.
-    #     """
-    #     return tuple()
-
-    # @classmethod
-    # def cursor(cls):
-    #     return cls(string = cls.marked_cursor, root_math_object=None)
-
 
 MathString.error_string = MathString.formatter("***")
 MathString.cursor = MathString.formatter(r'\DeadCursor')
@@ -500,6 +483,9 @@ class MathList(list, MathDescendant):
     - tuple of int (coding for a descendant address)
     - MathObject, e.g. coming from metavars in a pattern shape (they will be
     replaced by its own shape). FIXME: this should not happen?
+
+    The MathList is complete if every item is either a complete list or a
+    MathString.
     """
 
     string = MathString  # For reference from instances of this class
@@ -529,10 +515,6 @@ class MathList(list, MathDescendant):
         # For debugging:
         self.pattern = pattern
         self.pattern_dic = pattern_dic
-
-    # def __str__(self):
-    #     flat_list = [str(item) for item in self]
-    #     return ''.join(flat_list)
 
     def set_root_math_object(self, math_object):
         self.root_math_object = math_object
@@ -733,8 +715,6 @@ class MathList(list, MathDescendant):
         Return a new tuple shape.
         """
 
-        # lean_shape = list(lean_shape)
-
         if (math_object.node == 'NUMBER' and
                 (math_object.math_type.is_number() or 
                  math_object.math_type.node == '*NUMBER_TYPES')):
@@ -754,8 +734,6 @@ class MathList(list, MathDescendant):
         """
         shape = None
         for pattern, pre_shape, metavars in PatternInit.pattern_lean:
-            # if pattern.node == 'LOCAL_CONSTANT' and len(pattern.children) == 3:
-            #     print("debug")
             if pattern.match(math_object):
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
@@ -811,11 +789,10 @@ class MathList(list, MathDescendant):
             if shape:  # Really, no more processing??
                 return shape
 
+        # Init an empty MathList
         shape_math = MathList((), root_math_object=math_object,
                               format_="lean" if lean_format else "utf8",
                               text=text)
-
-        # descendant = math_object.descendant(line_of_descent)
 
         # (0) Dictionaries to be used (order matters!):
         dicts = []
@@ -851,6 +828,7 @@ class MathList(list, MathDescendant):
         if shape[0] == "global":
             shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
 
+        # (4) Populate MathList by changing items into MathString
         for item in shape:
             if isinstance(item, str):
                 new_item = process_shape_macro(math_object, item)
@@ -898,13 +876,6 @@ class MathList(list, MathDescendant):
                                 f"but is {type(item)}")
             idx += 1
 
-        # FIXME
-        # if not root_appears_in_self:
-        #     log.warning(f"Root does not appear in {self}")
-        #     marker = MathString('', root_math_object=self.root_math_object)
-        #     self.insert(0, marker)
-        #     self.append(marker)
-
     def expand_latex_shape(self):
         """
         Expand latex shape. The resulting self is a MathList whose items are
@@ -913,10 +884,7 @@ class MathList(list, MathDescendant):
         self.recursive_expand_latex_shape()
         self.check_completeness()
 
-    def recursive_expand_latex_shape(self,
-                                     # root_math_object=None,
-                                     # line_of_descent=None,
-                                     text=None, lean_format=None):
+    def recursive_expand_latex_shape(self, text=None, lean_format=None):
         """
         Recursively replace each MathObject by its shape.
         tuples corresponds to children (or descendants) and are also replaced.
@@ -960,13 +928,11 @@ class MathList(list, MathDescendant):
 
         if not previous_item:
             self.recursive_map(cut_spaces)
-            # previous_item = self.formatter("")
             previous_item = ""
 
         idx = 0
         for item in self:
             if isinstance(item, MathString):  # Immediately cut space
-                # pass
                 new_string = cut_successive_spaces(previous_item, item)
                 if new_string:
                     self.replace_string(idx, new_string)
@@ -999,40 +965,40 @@ class MathList(list, MathDescendant):
 
         return linear_list
 
-    def descendants_with_nodes(self, until=None, from_=None):
-        """
-        Return the linear MathList of descendants of self.
-        If until is not None, then stop
-        at first item equal to until (including until, but NOT including ).
-        If from_ is not None, then start at last item equal to from_ (
-        excluding from_).
-
-        Contrarily to the preceding method, this one includes nodes, if and
-        only if they do not appear in their own sub-list.
-        """
-
-        linear_list = MathList([], self.root_math_object,
-                               format_=self.format_,
-                               text=self.text)
-        include_self = True
-        for item in self:
-            if item.descendant == self.descendant:
-                include_self = False
-            if isinstance(item, MathList):
-                linear_list.extend(item.linear_list())
-            else:
-                linear_list.append(item)
-            if until and linear_list[-1] == until:
-                include_self = False
-                break
-            if from_ and linear_list[-1] == from_:
-                linear_list = []
-                include_self = False
-
-        if include_self:
-            linear_list.append(self)
-
-        return linear_list
+    # def descendants_with_nodes(self, until=None, from_=None):
+    #     """
+    #     Return the linear MathList of descendants of self.
+    #     If until is not None, then stop
+    #     at first item equal to until (including until, but NOT including ).
+    #     If from_ is not None, then start at last item equal to from_ (
+    #     excluding from_).
+    #
+    #     Contrarily to the preceding method, this one includes nodes, if and
+    #     only if they do not appear in their own sub-list.
+    #     """
+    #
+    #     linear_list = MathList([], self.root_math_object,
+    #                            format_=self.format_,
+    #                            text=self.text)
+    #     include_self = True
+    #     for item in self:
+    #         if item.descendant == self.descendant:
+    #             include_self = False
+    #         if isinstance(item, MathList):
+    #             linear_list.extend(item.linear_list())
+    #         else:
+    #             linear_list.append(item)
+    #         if until and linear_list[-1] == until:
+    #             include_self = False
+    #             break
+    #         if from_ and linear_list[-1] == from_:
+    #             linear_list = []
+    #             include_self = False
+    #
+    #     if include_self:
+    #         linear_list.append(self)
+    #
+    #     return linear_list
 
     def to_string(self) -> str:
         """
@@ -1042,8 +1008,6 @@ class MathList(list, MathDescendant):
             if not isinstance(item, MathList) and not isinstance(item,
                                                                  MathString):
                 print("Bug")  # Fixme
-
-        # flat_list = [item.to_string() for item in self]
 
         linear_list = self.linear_list()
         string = ''.join(linear_list)
@@ -1126,25 +1090,6 @@ class MathList(list, MathDescendant):
         (namely: we need PatternMathObject to get the right shape to display).
         """
 
-        # lean_format = (format_ == "lean")
-        #
-        # # (1) Find basic shape
-        # shape = cls.latex_shape(math_object, is_type=is_type, text=text,
-        #                         lean_format=lean_format)
-        #
-        # if used_in_proof and not lean_format:
-        #     # shape = [r'\used_property'] + shape
-        #     shape.insert(0, MathString.formatter(r'\used_property'))
-        #
-        # # (2) Expand shape into a complete MathList
-        # shape.expand_latex_shape()
-        #
-        # # (3) Replace some symbols by plain text, or shorten some text:
-        # shape.process_text()
-        #
-        # # (4) Format into a displayable string
-        # shape.adapt_to_format_(format_, use_color=use_color, bf=bf,
-        #                        no_text=not text)
         shape = cls.complete_latex_shape(math_object, format_, text, use_color,
                                          bf, is_type, used_in_proof)
 

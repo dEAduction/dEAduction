@@ -87,16 +87,13 @@ if __name__ == '__main__':
     language_check()
 
 from typing import Optional
-from copy import deepcopy
 
 from deaduction.pylib.math_display import MathCursor, MathList, MathString
 
 from deaduction.pylib.mathobj import MathObject, BoundVar
 from deaduction.pylib.pattern_math_obj import PatternMathObject, MetaVar
 from deaduction.pylib.math_display import MathDisplay
-# from deaduction.pylib.math_display.pattern_init import all_app_patterns
 from deaduction.pylib.math_display import PatternMathDisplay
-# from .calculator_pattern_strings import automatic_matching_patterns
 
 
 log = logging.getLogger(__name__)
@@ -119,6 +116,9 @@ class MarkedTree:
     since it takes into account the descendants appearing in self.latex_shape.
     """
 
+    # FIXME: this class is almost entirely obsolete, due to the use of the
+    #  MathCursor class. This essentially just handles the marked descendant.
+
     assigned_math_object = None
     # cursor_pos is the rank of current selected item in self.latex_shape,
     # solely for the marked node. -1 denotes first position.
@@ -138,13 +138,13 @@ class MarkedTree:
     def set_marked(self, yes=True):
         self._is_marked = yes
 
-    @property
-    def min_cursor_pos(self):
-        return 0
-
-    @property
-    def max_cursor_pos(self):
-        return 0
+    # @property
+    # def min_cursor_pos(self):
+    #     return 0
+    #
+    # @property
+    # def max_cursor_pos(self):
+    #     return 0
 
     @property
     def children(self):
@@ -180,7 +180,8 @@ class MarkedTree:
 
     def marked_descendant(self):
         """
-        Return the marked descendant of self, if any.
+        Return the marked descendant of self, if any. Rais an exception if
+        self has several marked descendants.
         """
         if self.is_marked:
             return self
@@ -229,61 +230,61 @@ class MarkedTree:
     # Total list of nodes #
     #######################
 
-    def total_and_cursor_list(self) -> (list, list):
-        """
-        Return a non-injective list of MathObjects in the tree starting at self,
-        where each item
-        corresponds to an unbreakable block of string in the display of self.
-        Also return the list of cursor numbers, i.e. index of item's
-        appearance in the latex_shape where it belongs.
-        e.g. if self is generic_parentheses, with one child mv0,
-        then total list is (self, mv0, self)
-        and cursor_list is (0, 0, 2).
-
-        This makes use of self.ordered_children: essentially, ordered_children
-        is expanded by replacing recursively each child by its
-        ordered_children list.
-        """
-
-        return self.ordered_descendants()
-
-        total_list = []
-        cursor_list = []
-        cursor_counter = 0
-        for item in self.ordered_children():
-            if item is self:
-                total_list.append(self)
-                cursor_list.append(cursor_counter)
-            else:
-                i_t_list, i_c_list = item.total_and_cursor_list()
-                total_list.extend(i_t_list)
-                cursor_list.extend(i_c_list)
-
-            cursor_counter += 1
-
-        return total_list, cursor_list
-
-    def current_index_in_total_list(self) -> int:
-        """
-        Return the index of the item corresponding to the current cursor pos
-        ( as recorder in self.marked_descendant() and
-        self.marked_descendant( ).cursor_pos )
-        in self.total_and_cursor_list.
-        """
-
-        if self._current_index_in_total_list:
-            return self._current_index_in_total_list
-
-        total_list, cursor_list = self.total_and_cursor_list()
-        pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
-        l = list(zip(total_list, cursor_list))
-        if pair in l:
-            idx = l.index(pair)
-        else:
-            idx = -1
-
-        self._current_index_in_total_list = idx
-        return idx
+    # def total_and_cursor_list(self) -> (list, list):
+    #     """
+    #     Return a non-injective list of MathObjects in the tree starting at self,
+    #     where each item
+    #     corresponds to an unbreakable block of string in the display of self.
+    #     Also return the list of cursor numbers, i.e. index of item's
+    #     appearance in the latex_shape where it belongs.
+    #     e.g. if self is generic_parentheses, with one child mv0,
+    #     then total list is (self, mv0, self)
+    #     and cursor_list is (0, 0, 2).
+    #
+    #     This makes use of self.ordered_children: essentially, ordered_children
+    #     is expanded by replacing recursively each child by its
+    #     ordered_children list.
+    #     """
+    #
+    #     return self.ordered_descendants()
+    #
+    #     total_list = []
+    #     cursor_list = []
+    #     cursor_counter = 0
+    #     for item in self.ordered_children():
+    #         if item is self:
+    #             total_list.append(self)
+    #             cursor_list.append(cursor_counter)
+    #         else:
+    #             i_t_list, i_c_list = item.total_and_cursor_list()
+    #             total_list.extend(i_t_list)
+    #             cursor_list.extend(i_c_list)
+    #
+    #         cursor_counter += 1
+    #
+    #     return total_list, cursor_list
+    #
+    # def current_index_in_total_list(self) -> int:
+    #     """
+    #     Return the index of the item corresponding to the current cursor pos
+    #     ( as recorder in self.marked_descendant() and
+    #     self.marked_descendant( ).cursor_pos )
+    #     in self.total_and_cursor_list.
+    #     """
+    #
+    #     if self._current_index_in_total_list:
+    #         return self._current_index_in_total_list
+    #
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     pair = (self.marked_descendant(), self.marked_descendant().cursor_pos)
+    #     l = list(zip(total_list, cursor_list))
+    #     if pair in l:
+    #         idx = l.index(pair)
+    #     else:
+    #         idx = -1
+    #
+    #     self._current_index_in_total_list = idx
+    #     return idx
 
     ######################
     # Moving in the tree #
@@ -382,90 +383,90 @@ class MarkedTree:
         if mvar and mvar is not self:
             return self.parent_of(mvar)
 
-    def move_up(self):
-        parent = self.parent_of_marked()
-        if parent:
-            self.set_cursor_at(parent)
-            return parent
+    # def move_up(self):
+    #     parent = self.parent_of_marked()
+    #     if parent:
+    #         self.set_cursor_at(parent)
+    #         return parent
 
-    def next_unassigned(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        mvars = [mvar for mvar in total_list[idx+1:] if not mvar.is_assigned]
-        if mvars:
-            return mvars[0]
+    # def next_unassigned(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     mvars = [mvar for mvar in total_list[idx+1:] if not mvar.is_assigned]
+    #     if mvars:
+    #         return mvars[0]
 
-    def previous_unassigned(self):
-        total_list, cursor_list = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        mvars = [mvar for mvar in total_list[:idx] if not mvar.is_assigned]
-        if mvars:
-            return mvars[-1]
+    # def previous_unassigned(self):
+    #     total_list, cursor_list = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     mvars = [mvar for mvar in total_list[:idx] if not mvar.is_assigned]
+    #     if mvars:
+    #         return mvars[-1]
 
-    def move_right_to_next_unassigned(self):
-        """
-        Move the marked node to the next unassigned mvar, if any.
-        """
+    # def move_right_to_next_unassigned(self):
+    #     """
+    #     Move the marked node to the next unassigned mvar, if any.
+    #     """
+    #
+    #     mvar = self.next_unassigned()
+    #     if mvar:
+    #         self.set_cursor_at(mvar)
+    #         return mvar
 
-        mvar = self.next_unassigned()
-        if mvar:
-            self.set_cursor_at(mvar)
-            return mvar
+    # def move_left_to_previous_unassigned(self):
+    #     """
+    #     Move the marked node to the previous unassigned mvar, if any.
+    #     """
+    #
+    #     mvar = self.previous_unassigned()
+    #     if mvar:
+    #         self.set_cursor_at(mvar)
+    #         return mvar
 
-    def move_left_to_previous_unassigned(self):
-        """
-        Move the marked node to the previous unassigned mvar, if any.
-        """
+    # def move_after_insert(self, assigned_mvar):
+    #     """
+    #     This method is supposed to be called just after an insertion involving
+    #     the marked node. It tries to move the marked node down to the first
+    #     unassigned mvar, or else to the next sister unassigned mvar. It
+    #     returns the new marked mvar.
+    #     """
+    #
+    #     # (1) Unassigned children mvar?
+    #     for child in assigned_mvar.ordered_children():
+    #         if child.is_metavar() and not child.is_assigned:
+    #             # self.set_cursor_at(child, 0)
+    #             return child
+    #
+    #     # (2) Unassigned sisters?
+    #     parent = self.parent_of(assigned_mvar)
+    #     if parent:
+    #         for child in parent.ordered_children():
+    #             if child.is_metavar() and not child.is_assigned:
+    #                 self.set_cursor_at(child, 0)
+    #                 return child
+    #
+    #     # (3) Stay just after assigned_mvar!
+    #     # FIXME: end of mvar, not main_symbol ??
+    #     self.set_cursor_at(assigned_mvar)
+    #     return assigned_mvar
 
-        mvar = self.previous_unassigned()
-        if mvar:
-            self.set_cursor_at(mvar)
-            return mvar
-
-    def move_after_insert(self, assigned_mvar):
-        """
-        This method is supposed to be called just after an insertion involving
-        the marked node. It tries to move the marked node down to the first
-        unassigned mvar, or else to the next sister unassigned mvar. It
-        returns the new marked mvar.
-        """
-
-        # (1) Unassigned children mvar?
-        for child in assigned_mvar.ordered_children():
-            if child.is_metavar() and not child.is_assigned:
-                # self.set_cursor_at(child, 0)
-                return child
-
-        # (2) Unassigned sisters?
-        parent = self.parent_of(assigned_mvar)
-        if parent:
-            for child in parent.ordered_children():
-                if child.is_metavar() and not child.is_assigned:
-                    self.set_cursor_at(child, 0)
-                    return child
-
-        # (3) Stay just after assigned_mvar!
-        # FIXME: end of mvar, not main_symbol ??
-        self.set_cursor_at(assigned_mvar)
-        return assigned_mvar
-
-    def appears_right_of_cursor(self, other) -> bool:
-        """
-        True iff other appears right of cursor. Note that other may appear
-        both left and right of cursor, but only if it is an ancestor of
-        self.marked_element.
-        """
-        l, _ = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        return other in l[idx+1:]
-
-    def appears_left_of_cursor(self, other) -> bool:
-        """
-        True iff other appears left of cursor of self.
-        """
-        l, _ = self.total_and_cursor_list()
-        idx = self.current_index_in_total_list()
-        return other in l[:idx+1]
+    # def appears_right_of_cursor(self, other) -> bool:
+    #     """
+    #     True iff other appears right of cursor. Note that other may appear
+    #     both left and right of cursor, but only if it is an ancestor of
+    #     self.marked_element.
+    #     """
+    #     l, _ = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     return other in l[idx+1:]
+    #
+    # def appears_left_of_cursor(self, other) -> bool:
+    #     """
+    #     True iff other appears left of cursor of self.
+    #     """
+    #     l, _ = self.total_and_cursor_list()
+    #     idx = self.current_index_in_total_list()
+    #     return other in l[:idx+1]
 
     def parent_of(self, descendant):
         """
@@ -826,72 +827,6 @@ class MarkedTree:
     #     child.check_cursor_pos()
 
 
-# class RootedMarkedTree(MarkedTree):
-#     """
-#     A class for the root of a MarkedTree, with methods that keep track of
-#     global coherence.
-#     """
-#
-#     def decrease_cursor_pos(self):
-#
-#         m_descendant = self.marked_descendant()
-#
-#         if m_descendant.cursor_pos > m_descendant.min_cursor_pos:
-#             m_descendant.cursor_pos -= 1
-#             return m_descendant
-#
-#         m_descendant.cursor_pos = None
-#         father = self.parent_of(m_descendant)
-
-    # def mark_descendant(self, descendant):
-    #     """
-    #     Mark descendant and check all cursor_pos.
-    #     """
-    #
-    #     if self.marked_descendant() \
-    #             and self.marked_descendant()is not descendant:
-    #         self.marked_descendant().unmark()
-    #
-    #     if not descendant.is_marked():
-    #         descendant.mark()
-    #
-    #     self.check_all_cursor_pos()
-
-
-# decreasing precedence
-# priorities = [{'COMPOSITE_NUMBER'},
-#               {'POINT'},  # FIXME: DECIMAL?
-#               {'MULT', 'DIV'},
-#               {'SUM', 'DIFFERENCE'},
-#               {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
-#               # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
-#               ]
-#
-#
-# def priority(self: str, other: str) -> str:
-#     """
-#     Return '=' if self and other have the same priority level,
-#     '>' or '<' if they have distinct comparable priority levels,
-#     None otherwise.
-#     """
-#
-#     if not self or not other:
-#         return None
-#     self_found = False
-#     other_found = False
-#     for nodes in MathDisplay.priorities:
-#         if self in nodes:
-#             if other_found:
-#                 return '<'
-#             if other in nodes:
-#                 return '='
-#             else:
-#                 self_found = True
-#         elif other in nodes:
-#             if self_found:
-#                 return '>'
-#             else:
-#                 other_found = True
 priority = MathDisplay.priority
 
 
@@ -929,17 +864,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     applications_from_ctxt = []
 
     _math_cursor: MathCursor = None
-
-    # def __init__(self, node, info, children, math_type, imperative_matching):
-    #     super().__init__(node, info, children, math_type, imperative_matching)
-    #
-    #     _math_cursor: MathCursor
-    #
-    # @classmethod
-    # def populate_automatic_patterns(cls):
-    #     for pattern_string in automatic_matching_patterns:
-    #         mpmo = cls.from_string(pattern_string)
-    #         cls.automatic_patterns.append(mpmo)
 
     @classmethod
     def from_pattern_math_object(cls, pmo: PatternMathObject):
@@ -1003,7 +927,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if marked_descendant:
             marked_descendant.mark()
 
-
     @property
     def math_cursor(self):
         if not self._math_cursor:
@@ -1031,7 +954,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         until = self.math_cursor.deaduction_cursor if only_before else None
         from_ = self.math_cursor.deaduction_cursor if only_after else None
 
-        # Fixme: use linear_list
         linear_list = self.math_list().linear_list(until=until, from_=from_)
 
         log.debug(f"Linear list with nodes: {linear_list}")
@@ -1181,26 +1103,14 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mvar.assigned_math_object = child
         return generic_node
 
-    # @classmethod
-    # def composite_number(cls, left_child, right_child):
-    #     return cls.generic_node(left_child, right_child,
-    #                             node="COMPOSITE_NUMBER")
-
-    # @property
-    # def display_name(self):
-    #     name = super().display_name
-    #     if self.is_marked:
-    #         name = [r'\marked', name]
-    #     return name
-
     @property
     def local_constant_shape(self) -> []:
+        # FIXME: this is handled somewhere else.
         shape = super().local_constant_shape
-        if self.is_marked:
-            # marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
-            # FIXME:
-            # shape.insert(0, MathString.marked_object)
-            pass
+        # if self.is_marked:
+        #     # marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
+        #     # shape.insert(0, MathString.marked_object)
+        #     pass
         return shape
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
@@ -1212,9 +1122,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         shape = super().latex_shape(is_type=is_type,
                                     text=text,
                                     lean_format=lean_format)
-
         if self.is_marked:
-            # marked_shape = MathDisplay.marked_latex_shape(shape, self.cursor_pos)
             shape.mark()
 
         return shape
@@ -1231,6 +1139,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         shape = self.latex_shape()
         return MathDisplay.main_symbol_from_shape(shape)
 
+    # The following has been replaced by ordered_descendants():
+    # ... almost everywhere
     def ordered_children(self):
         """
         List of ordered children or descendant appearing in latex_shape,
@@ -1265,7 +1175,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         not self) into three lists:
         left, central, right.
         Left children are the ones are before the first 'self' in
-        self.ordered_children.
+        self.ordered_descendants.
         """
         left = []
         central = []
@@ -1302,10 +1212,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         descendant_lists = ([], [], [])
         for l, new_l in zip(lists, descendant_lists):
             for child in l:
-                # try:
-                #     new_l.extend(child.all_mvars(unassigned=unassigned))
-                # except:
-                #     print("toto")
                 if child.is_metavar:
                     new_l.append(child)
 
@@ -1314,10 +1220,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     def set_cursor_at(self, mvar, pos=None):
         self.math_cursor.go_to(mvar)
 
-    def set_cursor_at_main_symbol(self):
-        idx, ms = self.main_shape_symbol()
-        self.cursor_pos = idx
-        print(f"Setting cursor_pos at {idx} for {self}")
+    # def set_cursor_at_main_symbol(self):
+    #     idx, ms = self.main_shape_symbol()
+    #     self.cursor_pos = idx
+    #     print(f"Setting cursor_pos at {idx} for {self}")
 
     # def clear_all_matchings(self):
     #     for mvar in self.left_descendants() + self.right_descendants():
@@ -1362,6 +1268,11 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     #     # TODO
     #     pass
 
+    #####################
+    #####################
+    # Insertion methods #
+    #####################
+    #####################
     @staticmethod
     def assign(mvars, math_object, assignments, check_types=True) -> bool:
         """
@@ -1398,6 +1309,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         (left/right according to position of mvar relative to the current
         cursor)
         """
+
+        # FIXME: this is not used anymore.
         # Priority test I (no priority test for common ancestor):
         #  Can new_pmo be a child of parent_mvar?
         if parent_mvar:
@@ -1705,42 +1618,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if mvar and not mvar.is_metavar():
                     continue
 
-    # def new_insert(self, new_pmo: PatternMathObject):
-    #     """
-    #     Try to insert pmo in self's tree, so that pmo is just after the
-    #     marked node in the infix order. In case of success, return the mvar
-    #     at which insertion has been done.
-    #
-    #     We first try insertion at the marked mvar, which is supposed to be
-    #     just before cursor pos, and all the way up from
-    #     there. If none works, then we try again starting from the mvar just
-    #     after cursor pos.
-    #     """
-    #
-    #     new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
-    #
-    #     adjacent_items = (self.marked_descendant(), self.on_the_other_side())
-    #     for mvar in adjacent_items:
-    #         if not isinstance(mvar, MarkedMetavar):
-    #             continue
-    #         # if mvar.node == "GENERIC_NODE":
-    #         #     success = self.substitute_generic_node(mvar, new_pmo_copy)
-    #         #     if success:
-    #         #         return mvar
-    #
-    #         parent_mvar = self.parent_of(mvar)
-    #
-    #         # while mvar:
-    #         success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
-    #         if success:
-    #             return mvar
-    #
-    #             # continue  # FIXME: we do not try to climb in the tree
-    #             # mvar = parent_mvar
-    #             # parent_mvar = self.parent_of(parent_mvar)
-    #             # if mvar and not mvar.is_metavar():
-    #             #     continue
-
     def insert_application(self, pattern=None):
         """
         Try to insert an APPLICATION, with marked_descendant as its first
@@ -1870,6 +1747,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         substitute this generic node by new_pmo.
         """
 
+        # FIXME: this is not used for now.
         # nb_children = len([child for child in mvar.children
         #                    if child.assigned_math_object])
         #
@@ -1917,25 +1795,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         new_pmo_value = new_pmo.value if new_pmo.node == 'NUMBER' else '.'
 
-        # FIXME: wrong sides??
-        # mvar = self.marked_descendant()
-        # left_child = mvar.assigned_math_object
-        # if left_child and left_child.node == 'NUMBER':
-        #     left = left_child.value
-        #     new_value = merge_nbs(left, new_pmo_value)
-        #     if new_value:
-        #         left_child.value = new_value
-        #         return mvar
-        # else:
-        #     mvar = self.on_the_other_side()
-        #     if mvar:
-        #         right_child = mvar.assigned_math_object
-        #         if right_child and right_child.node == 'NUMBER':
-        #             right = right_child.value
-        #             new_value = merge_nbs(new_pmo_value, right)
-        #             if new_value:
-        #                 right_child.value = new_value
-        #                 return mvar
         for mvar in (self.marked_descendant(), self.on_the_other_side()):
             if not mvar:
                 continue
@@ -1987,32 +1846,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         #
         # return self.marked_descendant()
 
-    # def automatic_patterns(self):
-    #     """
-    #     Try to replace generic nodes in self sub-tree by patterns in the
-    #     automatic_patterns list.
-    #     """
-
-    # def post_process(self):
-        # new_children = [child.post_process() for child in self.children]
-        #
-        # if self.node == "COMPOSITE_NUMBER":
-        #     child0 = new_children[0]
-        #     child1 = new_children[1]
-        #     if child0.node == 'NUMBER' and child1.node == 'NUMBER':
-        #         # Concatenate
-        #         new_child = child0.value() + child1.value()
-        #         return new_child
-        # elif self.node == "POINT":
-        #     child0 = new_children[0]
-        #     child1 = new_children[1]
-        #     if child0.node == 'NUMBER' and child1.node == 'NUMBER':
-        #         # Concatenate
-        #         new_child = child0.value() + '.' + child1.value()
-        #         return new_child
-        #
-        # return self
-
     def move_after_insert(self, assigned_mvar, was_at_end=False):
         """
         This method is supposed to be called just after an insertion involving
@@ -2029,6 +1862,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # (1) Unassigned children mvar?
         for child in assigned_mvar.ordered_children():
+            # FIXME: MarkedMetavar has no "ordered_descendants"??
+        # for child in assigned_mvar.ordered_descendant():
             if child.is_metavar() and not child.is_assigned:
                 math_cursor.go_to(child)
                 return
@@ -2038,6 +1873,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # (2) Unassigned sisters?
         parent = self.parent_of(assigned_mvar)
         if parent:
+            # for child in parent.ordered_descendants():
             for child in parent.ordered_children():
                 if child.is_metavar() and not child.is_assigned:
                     # self.set_cursor_at(child, 0)
@@ -2050,48 +1886,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             math_cursor.go_to_end()
         else:
             math_cursor.go_to(assigned_mvar)
-
-    # @classmethod
-    # def tree_from_list(cls, i_list: []):
-    #     """
-    #     Construct a MarkedPatternMathObject from a list of such, whose infix
-    #     list is the given list.
-    #     """
-    #     if len(i_list) == 1:
-    #         return MarkedPatternMathObject.deep_copy(i_list[0])
-    #     else:
-    #         new_pmo = i_list.pop(-1)
-    #         new_tree = cls.tree_from_list(i_list)
-    #         if new_tree:
-    #             success = new_tree.insert_at_end(new_pmo)
-    #             if success:
-    #                 return new_tree
-
-    # def insert_after_marked(self, new_pmo: PatternMathObject):
-    #     """
-    #     Alternative to the insert() method: reconstruct all the tree.
-    #     """
-    #
-    #     # Non recursive version:
-    #     # i_list = self.infix_list()
-    #     # new_tree = MarkedPatternMathObject.deep_copy(i_list[0])
-    #     # for node in i_list[1:]:
-    #     #     success = new_tree.insert_at_end(node)
-    #     #     if not success:
-    #     #         return False
-    #     #     if node is self.marked_descendant():
-    #     #         success = new_tree.insert_at_end(new_pmo)
-    #     #         if not success:
-    #     #             return False
-    #     #
-    #     # return True
-    #
-    #     # Recursive version
-    #     if self.marked_is_at_end():
-    #         return self.insert_at_end(new_pmo)
-    #
-    #     i_list = self.infix_list()
-    #     return self.tree_from_list(i_list)
 
     def clear_marked_mvar(self):
         """
@@ -2123,23 +1917,9 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         #     rep += '[: ' + mt + ']'
         return rep
 
-    # @property
-    # def assigned_math_object(self):
-    #     return self._assigned_math_object
-    #
-    # @assigned_math_object.setter
-    # def assigned_math_object(self, math_object):
-    #     self._assigned_math_object = math_object
-
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         new_mvar: MarkedMetavar = super().deep_copy(self)
-        # deepcopy(self._math_cursor)
-        # if self._math_cursor:
-        #     new_mvar.math_cursor.set_cursor_at_the_same_position_as(
-        #         self._math_cursor)
-
-        # new_mvar.cursor_pos = self.cursor_pos
         if self.is_marked:
             new_mvar.mark()
         return new_mvar
