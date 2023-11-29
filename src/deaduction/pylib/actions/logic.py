@@ -252,18 +252,17 @@ def use_forall_with_ineq(proof_step, selected_objects, inequality,
     return code
 
 
-def use_forall(proof_step, selected_objects: [MathObject]) -> CodeForLean:
+def use_forall(proof_step) -> CodeForLean:
     """
     Try to apply last selected property on the other ones.
     The last property should be a universal property
     (or equivalent to such after unfolding definitions).
-
-    selected_objects: list of MathObjects of length ≥ 2.
     """
     # FIXME: return error msg if user try to apply "forall x:X, P(x)"
     #  to some object of wrong type (e.g. implication)
     #  For the moment "forall x, P->Q" works with "P->Q" and button forall
 
+    selected_objects = proof_step.user_input + proof_step.selection
     proof_step.prove_or_use = "use"
 
     universal_property = selected_objects[-1]  # The property to be applied
@@ -344,7 +343,7 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             quant = selected_objects[0].math_type
             input_target = quant.type_of_explicit_quant()
             raise MissingParametersError(InputType.Calculator,
-                                         title=_("For All"),
+                                         title=_("Use a universal property"),
                                          target=input_target)
         # raise MissingParametersError(InputType.Text,
         #                                  title=_("Use a universal property"),
@@ -352,23 +351,18 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
         #                                      "Enter element on which you "
         #                                      "want to use this property:"))
         else:
-            # item = pre_process_lean_code(user_input[0])
-            # item = add_type_indication(item)  # e.g. (0:ℝ)
-            # if item[0] != '(':
-            #     item = '(' + item + ')'
             math_object = user_input[0]
+            # This will be a str either from Calculator in "Lean mode",
+            #   or from history file.
+            #  In this case we artificially change this to a "MathObject".
             if isinstance(math_object, str):
                 math_object = MathObject(node="RAW_LEAN_CODE",
                                          info={'name': '(' + math_object + ')'},
                                          children=[],
                                          math_type=None)
-            # elif not math_object.info.get('name'):
-            #     # This is a bit weird...
-            #     math_object.info['name'] = ('(' + math_object.to_display(
-            #                                             format_='lean') + ')')
+                user_input[0] = math_object
 
-            selected_objects.insert(0, math_object)
-            code = use_forall(proof_step, selected_objects)
+            code = use_forall(proof_step)
             return code
 
     # From now on len(l) ≥ 2
@@ -381,7 +375,7 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            code = use_forall(proof_step, selected_objects)
+            code = use_forall(proof_step)
             # if selection_object_added:  # Remove it (for auto-test)
             #     selected_objects.pop(0)
             return code
@@ -409,14 +403,16 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
         #     # implicit exists
         input_target = target.type_of_explicit_quant()
         raise MissingParametersError(InputType.Calculator,
-                                     title=_("Exist"),
+                                     title=_("Prove an existential property"),
                                      target=input_target)
     x = user_input[0]
     if isinstance(x, MathObject):
-        x = x.to_display(format_='lean')
-    # x = pre_process_lean_code(str(user_input[0]))
-    code = CodeForLean.from_string(f'use ({x})')  # (f'use {x}, dsimp')
-    # code = code.or_else(f'use {x}')
+        x_lean = x.to_display(format_='lean').strip('()')
+        x = x.to_display(format_='utf8')
+    elif isinstance(x, str):
+        x_lean = x.strip('()')
+        x = x_lean
+    code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
 
@@ -1696,7 +1692,7 @@ def action_equal(proof_step) -> CodeForLean:
         d_n_d = proof_step.drag_n_drop
         selected_objects = [d_n_d.premise, d_n_d.operator]
         equality = d_n_d.operator.math_type
-    elif not selected_objects:
+    if not selected_objects:
         if not target_selected:
             msg = _("Select an equality to perform a substitution")
         else:
