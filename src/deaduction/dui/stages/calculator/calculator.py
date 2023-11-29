@@ -72,6 +72,7 @@ from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, NumberNode,
                                                  InequalityNode)
 
+from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
                                                MetaVar)
 
@@ -982,11 +983,18 @@ class CalculatorController:
         # After exec
         choice = calculator_controller.target
         choice.unmark()
-        choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
 
         if calculator_controller.lean_mode:
             choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
-        return choice, OK
+            math_object = MathObject(node="RAW_LEAN_CODE",
+                                     info={'name': '(' + choice + ')'},
+                                     children=[],
+                                     math_type=None)
+        else:
+            # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
+            math_object = choice.assigned_math_object
+
+        return math_object, OK
 
     @Slot()
     def set_lean_mode(self):
