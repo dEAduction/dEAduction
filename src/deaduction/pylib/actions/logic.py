@@ -355,13 +355,20 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             # This will be a str either from Calculator in "Lean mode",
             #   or from history file.
             #  In this case we artificially change this to a "MathObject".
+            # In any case we add parentheses, e.g. in
+            #  have H2 := H (ε/2)
+            #  the parentheses are mandatory
             if isinstance(math_object, str):
                 math_object = MathObject(node="RAW_LEAN_CODE",
                                          info={'name': '(' + math_object + ')'},
                                          children=[],
                                          math_type=None)
-                user_input[0] = math_object
-
+            else:
+                math_object = MathObject(node='GENERIC_PARENTHESES',
+                                         info={},
+                                         children=[math_object],
+                                         math_type=math_object.math_type)
+            user_input[0] = math_object
             code = use_forall(proof_step)
             return code
 
