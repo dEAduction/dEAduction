@@ -36,6 +36,9 @@ SYNTAX FOR VALUES. e.g.
 
     (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
 Integers refers to metavariables, tuples to children and descendants.
+We avoid metavars as much as possible, since it is more difficult to track
+them from root_math_object if MathList.
+
 We use '_' or '^' to indicate subscripts or superscrits.
 We can use attributes like name, value, math_type, local_constant_display,
 body, bound_var, and so on.
@@ -92,11 +95,6 @@ global _
 # "global" in first position in shape means that variables will be  inserted at
 # "{}". This is used for text conversion and translation.
 
-###############
-###############
-# QUANTIFIERS #
-###############
-###############
 def is_number_type(math_object):
     return math_object.is_number()
 
@@ -114,6 +112,11 @@ metanodes = {'*INEQUALITY': is_inequality,
              '*INT_OR_NAT': is_int_or_nat}
 
 
+###############
+###############
+# QUANTIFIERS #
+###############
+###############
 quant_pattern = dict()
 
 
@@ -154,11 +157,8 @@ def set_quant_pattern():
         # for good parenthesing.
         # NB: special case must appear BEFORE general cases, e.g.
         # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
+
         "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
-        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
-        # (2,),),
-        # "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
-        # "?2)": ((2,),),
         "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
             ((2,),),
         "QUANT_∀(SET(...), ?0, ?1)":
@@ -174,8 +174,6 @@ def set_quant_pattern():
             (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2,)),
         "QUANT_∀(SET_FAMILY(...), ?0, ?1)":
             (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2,)),
-        # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
-        #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
     })
 
     # (3) Bounded quantification:
@@ -238,45 +236,45 @@ latex_from_pattern_string = {
 # TODO: change metavars refs to children refs
 text_from_pattern_string = {
     "QUANT_∀(SET(...), ?0, ?1)":
-        (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", 1),
+        (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", (2, )),
     "QUANT_∀(FUNCTION(...), ?0, ?1)":
-        (_("for every function") + " ", 0,
-         _(" from "), (0, 0), _(" to "), (0, 1), ", ", 1),
-    "QUANT_∀(PROP, ?0, ?1)": (_("for every proposition") + " ", 0, ", ", 1),
-    "QUANT_∀(TYPE(...), ?0, ?1)": (_("for every set") + " ", 0, ", ", 1),
+        (_("for every function") + " ", (1, ),
+         _(" from "), (0, 0), _(" to "), (0, 1), ", ", (2, )),
+    "QUANT_∀(PROP, ?0, ?1)": (_("for every proposition") + " ", (1, ), ", ", (2, )),
+    "QUANT_∀(TYPE(...), ?0, ?1)": (_("for every set") + " ", (1, ), ", ", (2, )),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
         ("global", _("for every sequence {} of elements of {}, {}"),
-         0, (0, 1), 1),
+         (1, ), (0, 1), (2, )),
     "QUANT_∃(SET(...), ?0, ?1)":
         ("global", _("there exists a subset {} of {} such that {}"),
-         0, (0, 0), 1),
+         (1, ), (0, 0), (2, )),
     "QUANT_∃(FUNCTION(...), ?0, ?1)":
         ("global", _("there exists a function {} from {} to {} such that {}"),
-         0, (0, 0), (0, 1), 1),
+         (1, ), (0, 0), (0, 1), (2, )),
     "QUANT_∃(PROP, ?0, ?1)":
-        ("global", _("there exists a proposition {} such that {}"), 0, 1),
+        ("global", _("there exists a proposition {} such that {}"), (1, ), (2, )),
     "QUANT_∃(TYPE(...), ?0, ?1)":
-        (_("there exists a set") + " ", 0, _(" such that "), 1),
+        (_("there exists a set") + " ", (1, ), _(" such that "), (2, )),
     "QUANT_∃(SEQUENCE(...), ?0, ?1)":
         ("global", _("there exists a sequence {} of elements of {} such that {}"),
-         0, (0, 1), 1),
+         (1, ), (0, 1), (2, )),
     "QUANT_∃!(SET(...), ?0, ?1)":
         ("global",
          _("there exists a unique subset {} of {} such that {}"),
-         0, (0, 0), 1),
+         (1, ), (0, 0), (2, )),
     "QUANT_∃!(FUNCTION(...), ?0, ?1)":
         ("global",
          _("there exists a unique function {} from {} to {} such that {}"),
-         0, (0, 0), (0, 1), 1),
+         (1, ), (0, 0), (0, 1), (2, )),
     "QUANT_∃!(PROP, ?0, ?1)":
         ("global", _("there exists a unique  proposition {} such that {}"),
-         0, 1),
+         (1, ), (2, )),
     "QUANT_∃!(TYPE(...), ?0, ?1)":
-        (_("there exists a unique set") + " ", 0, _(" such that "), 1),
+        (_("there exists a unique set") + " ", (1, ), _(" such that "), (2, )),
     "QUANT_∃!(SEQUENCE(...), ?0, ?1)":
         ("global",
          _("there exists a unique sequence {} of elements of {} such that {}"),
-         0, (0, 1), 1)
+         (1, ), (0, 1), (2, ))
 }
 # TODO: add bounded quantification patterns for text
 
