@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-11-29 08:47+0100\n"
-"PO-Revision-Date: 2023-11-29 08:48+0100\n"
+"POT-Creation-Date: 2023-11-29 12:08+0100\n"
+"PO-Revision-Date: 2023-11-29 12:08+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -54,7 +54,7 @@ msgstr "Bouton"
 #: dui/elements/actions_widgets_classes.py:183
 #: dui/elements/config_window.py:539
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
-#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:852
+#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:877
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:338
 #: pylib/math_display/display_data.py:402 pylib/proof_tree/proof_tree.py:526
@@ -250,7 +250,7 @@ msgstr "Fonctionnalités"
 msgid "Display"
 msgstr "Affichage"
 
-#: dui/elements/config_window_text.py:42 pylib/math_display/nodes.py:249
+#: dui/elements/config_window_text.py:42 pylib/math_display/nodes.py:250
 msgid "Logic"
 msgstr "Logique"
 
@@ -558,49 +558,53 @@ msgstr "Oui"
 msgid "No"
 msgstr "Non"
 
-#: dui/stages/calculator/calculator.py:270
+#: dui/stages/calculator/calculator.py:272
 msgid "Undo all"
 msgstr "Tout annuler"
 
-#: dui/stages/calculator/calculator.py:273
+#: dui/stages/calculator/calculator.py:275
 msgid "Undo"
 msgstr "Annuler"
 
-#: dui/stages/calculator/calculator.py:276
+#: dui/stages/calculator/calculator.py:278
 msgid "Redo"
 msgstr "Rétablir"
 
-#: dui/stages/calculator/calculator.py:279
+#: dui/stages/calculator/calculator.py:281
 msgid "Redo all"
 msgstr "Tout rétablir"
 
-#: dui/stages/calculator/calculator.py:306
+#: dui/stages/calculator/calculator.py:320
 msgid "Go to beginning"
 msgstr "Aller au début"
 
-#: dui/stages/calculator/calculator.py:312
+#: dui/stages/calculator/calculator.py:326
 msgid "Move left"
 msgstr "Aller à gauche"
 
-#: dui/stages/calculator/calculator.py:316
+#: dui/stages/calculator/calculator.py:330
 msgid "Move up"
 msgstr "Aller en haut"
 
-#: dui/stages/calculator/calculator.py:320
+#: dui/stages/calculator/calculator.py:334
 msgid "Move right"
 msgstr "Aller à droite"
 
-#: dui/stages/calculator/calculator.py:326
+#: dui/stages/calculator/calculator.py:340
 msgid "Go to end"
 msgstr "Aller à la fin"
 
-#: dui/stages/calculator/calculator.py:330
+#: dui/stages/calculator/calculator.py:344
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
-#: dui/stages/calculator/calculator.py:852
+#: dui/stages/calculator/calculator.py:877
 msgid "Enter"
 msgstr "Entrer"
+
+#: dui/stages/calculator/calculator_button.py:150
+msgid "(type  {})"
+msgstr "(taper {})"
 
 #: dui/stages/exercise/Coordinator.py:566
 msgid "Server restarted"
@@ -2181,37 +2185,57 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/math_display/nodes.py:297
+#: pylib/math_display/nodes.py:298
 msgid "Set Theory"
 msgstr "Théorie Des Ensembles"
 
-#: pylib/math_display/nodes.py:363
+#: pylib/math_display/nodes.py:326
+msgid "A singleton (set with one element)"
+msgstr "Un singleton (ensemble à un élément)"
+
+#: pylib/math_display/nodes.py:333
+msgid "A pair (set with two elements"
+msgstr "Une paire (ensemble à deux éléments)"
+
+#: pylib/math_display/nodes.py:348
+msgid "The image of a subset under a function"
+msgstr "Image d'un sous-ensemble par une application"
+
+#: pylib/math_display/nodes.py:354
+msgid "The inverse image of a subset under a function"
+msgstr "Image réciproque d'un sous-ensemble par une application"
+
+#: pylib/math_display/nodes.py:370
 msgid "Application of a function to an element\\nor term of a sequence."
 msgstr ""
 "Application d'une fonction à un élément\n"
 "ou terme d'une suite"
 
-#: pylib/math_display/nodes.py:399
+#: pylib/math_display/nodes.py:379
+msgid "Composition of two functions"
+msgstr "Composition de deux applications"
+
+#: pylib/math_display/nodes.py:406
 msgid "Numbers"
 msgstr "Nombres"
 
-#: pylib/math_display/nodes.py:433
+#: pylib/math_display/nodes.py:440
 msgid "-? or ?-?"
 msgstr "-? ou ?-?"
 
-#: pylib/math_display/nodes.py:500
+#: pylib/math_display/nodes.py:507
 msgid "Inequalities"
 msgstr "Inégalités"
 
-#: pylib/math_display/nodes.py:548
+#: pylib/math_display/nodes.py:555
 msgid "Absolute value"
 msgstr "Valeur absolue"
 
-#: pylib/math_display/nodes.py:614 pylib/math_display/pattern_data.py:241
+#: pylib/math_display/nodes.py:621 pylib/math_display/pattern_data.py:241
 msgid "for every subset"
 msgstr "pour toute partie"
 
-#: pylib/math_display/nodes.py:614 pylib/math_display/pattern_data.py:241
+#: pylib/math_display/nodes.py:621 pylib/math_display/pattern_data.py:241
 msgid " of "
 msgstr " de "
 
@@ -3398,9 +3422,6 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #~ msgid "of"
 #~ msgstr "de"
-
-#~ msgid "the inverse image under"
-#~ msgstr "l’image réciproque par"
 
 #~ msgid "equals"
 #~ msgstr "égale"

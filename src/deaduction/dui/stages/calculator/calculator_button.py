@@ -147,7 +147,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
     def set_tooltip(self):
         tooltip = ""
         if self.shortcut:
-            tooltip = "(type " + self.shortcut + ")"
+            tooltip = _("(type  {})").format(self.shortcut)
         if self.tooltip:
             tooltip = self.tooltip + "\n" + "\n" + tooltip if tooltip \
                 else self.tooltip
@@ -204,11 +204,11 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 text = text.replace(value, key)
 
         # Replace spaces (space is used to end shortcut)
-        text = text.replace(' ', '_')
+        shortcut_text = text.replace(' ', '_')
         shortcut = ''
         sdic = self.shortcuts_dic
 
-        for car in text:
+        for car in shortcut_text:
             shortcut += car
             # if shortcut == 'l':
             #     print('hlleo')

@@ -240,8 +240,7 @@ class Node:
             return self._button_tooltip
         else:  # Take display and replace spaces
             pattern = self.pattern_math_objects()[-1]
-            tooltip: str = pattern.to_display(format_='utf8')
-            self._button_tooltip = tooltip.replace(' ', '_')
+            self._button_tooltip = pattern.to_display(format_='utf8')
             return self._button_tooltip
 
 
