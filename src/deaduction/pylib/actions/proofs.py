@@ -213,19 +213,27 @@ def method_case_based(proof_step,
     if len(selected_objects) == 0:
         # NB: user_input[1] contains the needed property
         if len(user_input) == 1:
-            raise MissingParametersError(
-                 InputType.Text,
-                 title=_("cases"),
-                 output=_("Enter the property you want to discriminate on:")
-                                        )
+            # raise MissingParametersError(
+            #      InputType.Text,
+            #      title=_("cases"),
+            #      output=_("Enter the property you want to discriminate on:")
+            #                             )
+            raise MissingParametersError(InputType.Calculator,
+                                         title=_("Enter the property you want to discriminate on:"),
+                                         target=MathObject.PROP)
+
         else:
-            h0 = pre_process_lean_code(user_input[1])
+            # h0 = pre_process_lean_code(user_input[1])
+            prop = user_input[1]
+            h0 = (prop.to_display(format_='lean')
+                  if isinstance(prop, MathObject) else prop)
+
             h1 = get_new_hyp(proof_step)
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
             code.add_success_msg(_("Proof by cases"))
-            code.add_disjunction(h0, h1, h2)  # Strings, not MathObject
+            code.add_disjunction(prop, h1, h2)  # Strings, not MathObject
     else:
         prop = selected_objects[0]
         if not prop.is_or():
