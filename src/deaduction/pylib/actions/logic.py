@@ -1003,7 +1003,8 @@ If two hypothesis P, then Q, have been previously selected:
     if len(selected_objects) == 0:
         if not prove:
             raise WrongUseModeInput(prop=prop_type)
-        return prove_and(proof_step, user_input)
+        else:
+            return prove_and(proof_step, user_input)
     if len(selected_objects) == 1:
         if not use:
             raise WrongProveModeInput(prop=prop_type)

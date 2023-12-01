@@ -100,7 +100,7 @@ def action():
             proof_step.action.
             """
             proof_step.action = action
-            return func(proof_step, kwargs)
+            return func(proof_step, **kwargs)
 
         return new_func
 

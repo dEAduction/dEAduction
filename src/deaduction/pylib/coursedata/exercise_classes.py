@@ -723,6 +723,7 @@ class Exercise(Theorem):
         raw_exercise_settings: str = self.raw_metadata.get('settings')
         exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
         more_vars.update(exercise_settings)
+
         if more_vars:
             old_vars = {key: cvars.get(key)
                         for key in more_vars
