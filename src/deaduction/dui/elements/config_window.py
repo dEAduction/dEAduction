@@ -116,8 +116,8 @@ CONFIGS["Display"] = {
 
 CONFIGS["Logic"] = {
     "display.display_success_messages": (None, True, ""),
-    "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
-                                        'display_unified'], True, ""),
+    # "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
+    #                                     'display_unified'], True, ""),
     "logic.use_color_for_variables": (None, True,
         _("The variables of the context are displayed in color")),
     "logic.use_color_for_dummy_variables": (None, True,
