@@ -71,6 +71,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidgetItem,
                                                 TargetWidget)
 from deaduction.dui.primitives          import deaduction_fonts
+from deaduction.dui.stages.calculator import CalculatorController
 
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.proof_state       import   Goal
@@ -536,6 +537,10 @@ class ExerciseCentralWidget(QWidget):
         just display the nb of pending goals.
         """
 
+        # # FIXME!!!!!
+        # self.calculator = CalculatorController(context=new_goal.context_objects)
+        # self.calculator.show()
+        #
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         new_target     = new_goal.target
@@ -780,6 +785,7 @@ class ExerciseToolBar(QToolBar):
         self.go_to_end.setText(_('Jump to end of proof'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
+        self.toggle_proof_tree.setText(_("Toggle proof tree"))
         self.toggle_help_action.setText(_('Toggle help window'))
 
 

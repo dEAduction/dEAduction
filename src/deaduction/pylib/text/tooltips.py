@@ -37,7 +37,7 @@ This file is part of d∃∀duction.
 """
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.utils import replace_dubious_characters
+# from deaduction.pylib.math_display.more_display_utils import replace_dubious_characters
 
 
 ########################################################################
@@ -49,6 +49,32 @@ from deaduction.pylib.math_display.utils import replace_dubious_characters
 # But we want poedit to mark those str for translation
 def _(msg):
     return msg
+
+
+def replace_dubious_characters(s: str) -> str:
+    if not s:
+        return ""
+    dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
+    replacement_characters: str = cvars.get("display.dubious_characters")
+    if replacement_characters == dubious_characters:
+        return s
+    else:
+        character_translation_dic = {}
+        default_list = dubious_characters.split(', ')
+        new_list = replacement_characters.split(',')
+        if len(default_list) != len(new_list):
+            return s
+
+        for default, new in zip(default_list, new_list):
+            character_translation_dic[default] = new.strip()
+
+        new_string = ""
+        for char in s:
+            new_char = (character_translation_dic[char]
+                        if char in character_translation_dic
+                        else char)
+            new_string += new_char
+        return new_string
 
 
 #######################
@@ -105,9 +131,9 @@ __tooltips = {
     #     _("Terminate the proof when the target is obvious from the context"),
     'assumption':
         [_("Terminate the proof when the target is obvious from the context")],
-    'compute':
-        [_("Terminate the proof when target results from manipulating "
-           "numbers")],
+    # 'compute':
+    #     [_("Terminate the proof when target results from manipulating "
+    #        "numbers")],
     'sum':
         [_('Add equalities or inequalities')]
 }
@@ -153,7 +179,7 @@ __logic_translation =\
      _('USE FORALL'), _('USE EXISTS'), _('USE IMPLIES'), _('USE AND'),
      _('USE OR'),
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
-     _('NEW OBJECT'), _('PROOF METHODS'),
+     _('NEW OBJECT'), _('PROOF METHODS'), _('ASSUMPTION'),
      _('SUM')]
 
 

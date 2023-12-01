@@ -160,11 +160,13 @@ class StatementsTree(QTreeWidget):
                         'rings_and_ideals') and values are their pretty names
                         (e.g. 'Rings and ideals').
         """
+
         self.tree = dict()
 
         for statement in statements:
             branch = statement.pretty_hierarchy(outline)
             self._init_branch_statement(self.tree, statement, branch, self)
+
 
 def test_pretty_hierarchy():
 

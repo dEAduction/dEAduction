@@ -274,12 +274,23 @@ class LeanServer:
         # NB: Lean cwd can probably be anywhere, but the paths in the
         # leanpkg.path MUST be relative to that path dir
         # (At least under Windows, leanpath does not accept absolute paths))
-        self.process = await trio.open_process(
-            [str(self.env.lean_bin), "--json", "--server"],
-            stdin=PIPE,
-            stdout=PIPE,
-            cwd=str(lean_cwd)
-        )
+
+        # FIXME: use trio.lowlevel.open_process on python3.11
+        version = [int(s) for s in  trio.__version__.split('.')]
+        if version < [0, 20]:
+            self.process = await trio.open_process(
+                [str(self.env.lean_bin), "--json", "--server"],
+                stdin=PIPE,
+                stdout=PIPE,
+                cwd=str(lean_cwd)
+            )
+        else:
+            self.process = await trio.lowlevel.open_process(
+                [str(self.env.lean_bin), "--json", "--server"],
+                stdin=PIPE,
+                stdout=PIPE,
+                cwd=str(lean_cwd)
+            )
         self.log.info("Started Lean server")
 
         self.nursery.start_soon(self.receiver)

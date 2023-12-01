@@ -68,6 +68,8 @@ import deaduction.pylib.config.vars      as      cvars
 from deaduction.pylib                            import logger
 from deaduction.dui.primitives.font_config import deaduction_fonts
 
+from deaduction.pylib.math_display import MathDisplay
+
 from .config_window_text import PRETTY_NAMES
 
 log = logging.getLogger(__name__)
@@ -114,8 +116,8 @@ CONFIGS["Display"] = {
 
 CONFIGS["Logic"] = {
     "display.display_success_messages": (None, True, ""),
-    "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
-                                        'display_unified'], True, ""),
+    # "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
+    #                                     'display_unified'], True, ""),
     "logic.use_color_for_variables": (None, True,
         _("The variables of the context are displayed in color")),
     "logic.use_color_for_dummy_variables": (None, True,
@@ -340,8 +342,9 @@ class ConfigMainWindow(QDialog):
         ##########################
         if "i18n.select_language" in self.modified_settings:
             init_i18n()  # UI needs to be updated
-            import deaduction.pylib.math_display.display_data
-            reload(deaduction.pylib.math_display.display_data)
+            # import deaduction.pylib.math_display.display_data
+            # reload(deaduction.pylib.math_display.display_data)
+            MathDisplay.update_dict()
 
         if 'logs.display_level' in self.modified_settings:
             display_level = self.modified_settings['logs.display_level']

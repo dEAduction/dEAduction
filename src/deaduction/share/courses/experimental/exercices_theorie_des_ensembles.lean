@@ -69,7 +69,7 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
-lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, (x ∈ A) → x ∈ B :=
 /- dEAduction
 ImplicitUse
     True
@@ -605,7 +605,7 @@ begin
     todo
 end
 
-lemma exercices.image_reciproque.composition
+lemma exercise.image_reciproque.composition
 (C: set Z)
 :
 ((composition g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)

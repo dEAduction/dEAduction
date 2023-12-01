@@ -94,6 +94,7 @@ lean_dic = {'epsilon': "ε",
 
 
 def pre_process_lean_code(lean_code: str) -> str:
+    # TODO: process '_' --> indices (or remove)
     # (During test it happens that lean_code is a number)
     if not isinstance(lean_code, str):
         return lean_code

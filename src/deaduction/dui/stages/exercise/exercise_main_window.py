@@ -45,7 +45,8 @@ import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
 from deaduction.pylib.mathobj           import MathObject
 from deaduction.pylib.proof_step        import ProofStep
-from deaduction.pylib.math_display.pattern_init import pattern_init
+# from deaduction.pylib.math_display      import MathDisplay
+from deaduction.pylib.math_display.pattern_init import PatternInit
 
 from deaduction.dui.primitives          import deaduction_fonts
 
@@ -53,10 +54,10 @@ from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
                                                 StatementsTreeWidgetItem,
                                                 StatementsTreeWidgetNode,
-                                                MathObjectWidget,
+                                                # MathObjectWidget,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
-                                                MenuBarAction,
+                                                # MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow,
                                                 ProofTreeController,
@@ -65,6 +66,8 @@ from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
                                                 GlobalToolbar)
+
+# from deaduction.dui.stages.calculator import CalculatorController
 
 log = logging.getLogger(__name__)
 global _
@@ -196,8 +199,9 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.toggle_lean_editor_action
         self.help_window.action = \
             self.exercise_toolbar.toggle_help_action
-        if self.proof_tree_window.isVisible():
-            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+        # Fixme?
+        # if self.proof_tree_window.isVisible():
+        #     self.exercise_toolbar.toggle_proof_tree.setChecked(True)
 
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beg
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
@@ -217,6 +221,17 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
+
+        # Proof tree visible: (this is a string!)
+        proof_tree_is_visible = (settings.value("emw/ShowProofTree") == "true")
+        ptv = settings.value("emw/ShowProofTree")
+        print(f"Proof tree was shown: {ptv}")
+        if not proof_tree_is_visible:
+            # print("hide")
+            self.proof_tree_window.hide()
+        else:
+            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+
         # proof_tree_is_visible = settings.value("emw/ShowProofTree")
         # if proof_tree_is_visible:
         #     print("Proof tree was shown")
@@ -264,7 +279,7 @@ class ExerciseMainWindow(QMainWindow):
 
     def __connect_signals(self):
         """
-        Connect all signals. Called at init. SOme signals are connected in
+        Connect all signals. Called at init. Some signals are connected in
         update_goal.
         """
         log.debug("EMW: connect signals")
@@ -362,25 +377,23 @@ class ExerciseMainWindow(QMainWindow):
         """
 
         log.info("Closing ExerciseMainWindow")
-        settings = QSettings("deaduction")
-
-        # Close children
-        self.lean_editor.close()
-        self.proof_outline_window.close()
-        self.help_window.close()
-        settings.setValue("proof_tree/isVisible",
-                          self.proof_tree_window.isVisible())
-        self.proof_tree_window.close()
 
         # Save window geometry
         # FIXME: does not work
+        settings = QSettings("deaduction")
         is_maximised = self.isMaximized()
         log.debug(f"Maximised: {is_maximised}")
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
-        # settings.setValue("emw/ShowProofTree",
-        #                   self.proof_tree_window.isVisible())
+        proof_tree_is_visible = self.proof_tree_window.isVisible()
+        # print(f"PTV: {proof_tree_is_visible}")
+        settings.setValue("emw/ShowProofTree", proof_tree_is_visible)
+        # Close children
+        self.lean_editor.close()
+        self.proof_outline_window.close()
+        self.proof_tree_window.close()
+        self.help_window.close()
 
         if self.close_coordinator:
             # Set up by Coordinator
@@ -448,8 +461,11 @@ class ExerciseMainWindow(QMainWindow):
             #     self.ecw.init_action_btns_layout()
             #     self.ecw.set_action_gb()
             elif setting == "logic.use_bounded_quantification_notation":
-                pattern_init()
+                PatternInit.pattern_init()
                 update_ecw_display = True
+            # elif setting == "i18n.select_language":
+            #     MathDisplay.update_dict()
+            #     update_ecw_display = True
             else:  # Setting has not been handled, force update display
                 update_ecw_display = True
                 # break

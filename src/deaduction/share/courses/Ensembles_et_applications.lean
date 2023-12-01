@@ -42,6 +42,8 @@ AvailableDefinitions
   UNTIL_NOW -singleton -paire -identite -egalite_fonctions
 AvailableTheorems
   UNTIL_NOW -image_singleton -image_paire
+Settings
+    functionality.allow_induction --> false
 -/
 
 local attribute [instance] classical.prop_decidable

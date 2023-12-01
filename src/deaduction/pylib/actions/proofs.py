@@ -61,7 +61,7 @@ global _
 
 class ProofMethods:
     """
-    A class for recording user input for the proof_methods action.
+    An instanceless class for recording user input for the proof_methods action.
     The nb stored in user_input must refer to the complete list, not to the
     local list of available proof methods, so that it is not dependent on
     current settings.
@@ -213,19 +213,27 @@ def method_case_based(proof_step,
     if len(selected_objects) == 0:
         # NB: user_input[1] contains the needed property
         if len(user_input) == 1:
-            raise MissingParametersError(
-                 InputType.Text,
-                 title=_("cases"),
-                 output=_("Enter the property you want to discriminate on:")
-                                        )
+            # raise MissingParametersError(
+            #      InputType.Text,
+            #      title=_("cases"),
+            #      output=_("Enter the property you want to discriminate on:")
+            #                             )
+            raise MissingParametersError(InputType.Calculator,
+                                         title=_("Enter the property you want to discriminate on:"),
+                                         target=MathObject.PROP)
+
         else:
-            h0 = pre_process_lean_code(user_input[1])
+            # h0 = pre_process_lean_code(user_input[1])
+            prop = user_input[1]
+            h0 = (prop.to_display(format_='lean')
+                  if isinstance(prop, MathObject) else prop)
+
             h1 = get_new_hyp(proof_step)
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
             code.add_success_msg(_("Proof by cases"))
-            code.add_disjunction(h0, h1, h2)  # Strings, not MathObject
+            code.add_disjunction(prop, h1, h2)  # Strings, not MathObject
     else:
         prop = selected_objects[0]
         if not prop.is_or():
@@ -299,6 +307,7 @@ def method_induction(proof_step,
     Try to do a proof by induction.
     """
 
+    implicit = False
     target = proof_step.goal.target
     if not target.is_for_all(implicit=True):
         error = _("Proof by induction only applies to prove "
@@ -307,14 +316,16 @@ def method_induction(proof_step,
 
     if not target.is_for_all(is_math_type=False):
         # Implicit "for all"
+        implicit = True
         math_object = MathObject.last_rw_object
     else:
         math_object = target.math_type
 
     math_type, var, body = math_object.children
     if not var.is_nat():
-        error = _(f"{var} is not a natural number") + ", " + \
-                _("proof by induction does not apply")
+        if not implicit:
+            error = _(f"{var} is not a natural number") + ", " + \
+                    _("proof by induction does not apply")
         raise WrongUserInput(error)
 
     var_name = proof_step.goal.provide_good_name(math_type,
@@ -454,7 +465,8 @@ def action_new_object(proof_step) -> CodeForLean:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
                                          title="+",
-                                         output=_("Name your object:"))
+                                         output=_("Give a name for your "
+                                                  "new object:"))
         elif len(user_input) == 2:
             # Check name does not already exists
             name = pre_process_lean_code(user_input[1])
@@ -466,14 +478,26 @@ def action_new_object(proof_step) -> CodeForLean:
                                              title="+",
                                              output=output)
             else:  # Ask for new object
-                output = new_objects
-                raise MissingParametersError(InputType.Text,
+                # output = new_objects
+                raise MissingParametersError(InputType.Calculator,
                                              title=_("Introduce a new object"),
-                                             output=output)
+                                             target=None)
+                # raise MissingParametersError(InputType.Text,
+                #                                  title=_("Introduce a new object"),
+                #                                  output=output)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
             new_hypo_name = get_new_hyp(proof_step, name='Def')
-            new_object = pre_process_lean_code(user_input[2])
+
+            # Process object from auto_step or from Calculator:
+            math_object = user_input[2]
+            if isinstance(math_object, str):
+                math_object = MathObject(node="RAW_LEAN_CODE",
+                                         info={'name': '(' + math_object + ')'},
+                                         children=[],
+                                         math_type=None)
+
+            new_object = math_object.to_display(format_='lean')
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
@@ -488,32 +512,7 @@ def action_new_object(proof_step) -> CodeForLean:
     # (2) Choice = new sub-goal
     elif user_input[0] == 1:
         codes = introduce_new_subgoal(proof_step)
-        # sub_goal = None
-        # # (A) Sub-goal from selection
-        # if selected_objects:
-        #     premise = selected_objects[0].premise()
-        #     if premise:
-        #         # FIXME: make format_='lean' functional
-        #         sub_goal = premise.to_display(format_='lean')
-        #
-        # # (B) User enter sub-goal
-        # elif len(user_input) == 1:
-        #     output = new_properties
-        #     raise MissingParametersError(InputType.Text,
-        #                                  title=_("Introduce a new subgoal"),
-        #                                  output=output)
-        # elif len(user_input) == 2:
-        #     sub_goal = pre_process_lean_code(user_input[1])
-        #
-        # # (C) Code:
-        # if sub_goal:
-        #     new_hypo_name = get_new_hyp(proof_step)
-        #     codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-        #                                     f" ({sub_goal})")
-        #     codes.add_success_msg(_("New target will be added to the context "
-        #                             "after being proved"))
-        #     codes.add_subgoal(sub_goal)
-        #
+
     # (3) Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)

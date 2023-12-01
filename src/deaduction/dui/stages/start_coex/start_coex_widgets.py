@@ -57,7 +57,7 @@ import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
 
 import deaduction.pylib.utils.filesystem as fs
-from deaduction.dui.primitives      import (DisclosureTriangle,
+from deaduction.dui.primitives      import (DisclosureDict,
                                             ButtonsDialog,
                                             MathTextWidget,
                                             YesNoDialog)
@@ -75,7 +75,7 @@ from deaduction.dui.utils           import (replace_widget_layout,
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
-from deaduction.pylib.math_display.pattern_init import pattern_init
+from deaduction.pylib.math_display.pattern_init import PatternInit
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -202,7 +202,7 @@ class AbstractCoExChooser(QWidget):
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
         if details:
-            details_wgt = DisclosureTriangle(_('Details:'), details)
+            details_wgt = DisclosureDict(_('Details:'), details)
             details_wgt.expand(expand_details)
 
             layout.addWidget(details_wgt)
@@ -406,7 +406,7 @@ class CourseChooser(AbstractCoExChooser):
         display_constant = course.metadata.get('display')
         # print(display_constant)
         if display_constant:
-            pattern_init(display_constant)
+            PatternInit.pattern_init(display_constant)
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
@@ -1146,7 +1146,8 @@ class AbstractStartCoEx(QDialog):
         """
         Go to the exercise tab.
         """
-        self.__tabwidget.setCurrentIndex(1)
+        if self.__tabwidget.isTabEnabled(1):
+            self.__tabwidget.setCurrentIndex(1)
 
     def __goto_courses(self):
         """

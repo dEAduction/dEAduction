@@ -290,7 +290,8 @@ class Statement:
         """
         Return the ordered (chapter > section > …) list of sections pretty
         names corresponding to where self is in the lean file. If the
-        self.lean_name is 'rings_and_ideals.first_definitions.the_statement',
+        self.lean_name is
+        'rings_and_ideals.first_definitions.definition.the_statement',
         return ['Rings and ideals', 'First definitions']. Most of the time
         outline will be present_course.outline, where present_course is the
         instance of Course which initiated self.
@@ -725,15 +726,19 @@ class Exercise(Theorem):
         Update cvars with entries in metadata['settings'], and return a
         dictionary with the values that have been replaced.
         """
-        metadata_settings = self.raw_metadata.get('settings')
-        if metadata_settings:
-            more_vars = vars_from_metadata(metadata_settings)
-            if more_vars:
-                old_vars = {key: cvars.get(key)
-                            for key in more_vars
-                            if cvars.get(key) != more_vars.get(key)}
-                cvars.update(more_vars)
-                return old_vars
+
+        raw_course_settings: str = self.course.metadata.get('settings')
+        more_vars: dict = vars_from_metadata(raw_course_settings)
+        raw_exercise_settings: str = self.raw_metadata.get('settings')
+        exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
+        more_vars.update(exercise_settings)
+
+        if more_vars:
+            old_vars = {key: cvars.get(key)
+                        for key in more_vars
+                        if cvars.get(key) != more_vars.get(key)}
+            cvars.update(more_vars)
+            return old_vars
 
     @property
     def is_open_question(self):
@@ -1041,7 +1046,7 @@ class Exercise(Theorem):
                                               version_nb)
 
         # (4) Save!
-        with open(path, mode='wt') as output:
+        with open(path, mode='wt', encoding='utf-8') as output:
             output.write(content)
 
         # (5) Reload history_course to get new entry
@@ -1064,7 +1069,7 @@ class Exercise(Theorem):
         new_content = '\n'.join(new_content_lines)
 
         # Save new content!
-        with open(path, mode='wt') as output:
+        with open(path, mode='wt', encoding='utf-8') as output:
             output.write(new_content)
 
         # Reload history_course to remove deleted entry

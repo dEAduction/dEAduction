@@ -433,7 +433,7 @@ class Course:
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
-        # Meaningless here
+        # Meaningless here (and --> crash since dict is not hashable!)
         if '_raw_metadata' in course_metadata:
             course_metadata.pop('_raw_metadata')
         # log.debug(f"course history: {course_history}")

@@ -26,39 +26,38 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import Optional
+
 import deaduction.pylib.config.vars as cvars
 
 
-# def structured_display_to_string(structured_display) -> str:
-#     """
-#     Turn a (structured) latex or utf-8 display into a latex string.
-#
-#     :param structured_display:  type is recursively defined as str or list of
-#                                 structured_display
-#     """
-#     if isinstance(structured_display, str):
-#         return structured_display
-#     elif isinstance(structured_display, list):
-#         string = ""
-#         for lr in structured_display:
-#             lr = structured_display_to_string(lr)
-#             string += lr
-#         return cut_spaces(string)
-#     else:
-#         print("error in list_string_join: argument should be list or "
-#                     f"str, not {type(structured_display)}")
-#         return "**"
-
-
-def cut_spaces(string: str) -> str:
+def cut_spaces(string: str) -> Optional[str]:
     """
     Remove unnecessary spaces inside string.
     """
-    while string.find("  ") != -1:
-        string = string.replace("  ", " ")
-    string = string.replace("( ", "(")
-    string = string.replace(" )", ")")
-    return string
+
+    new_string = string
+    while new_string.find("  ") != -1:
+        new_string = new_string.replace("  ", " ")
+    new_string = new_string.replace("( ", "(")
+    new_string = new_string.replace(" )", ")")
+
+    if new_string != string:
+        return new_string
+
+
+def cut_successive_spaces(string1, string2: str) -> Optional[str]:
+    """
+    Remove unnecessary spaces between sucessive strings.
+    """
+
+    if not (string1 and string2):
+        return
+
+    # if string1[-1] in (' ', '(', ')'):
+    if string1[-1] in (' ', '('):
+        if string2[0] == ' ':
+            return string2[:-1]
 
 
 def text_to_subscript_or_sup(structured_string,
@@ -76,9 +75,15 @@ def text_to_subscript_or_sup(structured_string,
     # log.debug(f"converting into sub/superscript {structured_string}")
     if format_ == 'latex':
         if sup:
-            return [r'^{', structured_string, r'}']
+            structured_string.insert(0, r'^{')
+            structured_string.append(r'}')
+            # return [r'^{', structured_string, r'}']
+            return structured_string
         else:
-            return [r'_{', structured_string, r'}']
+            structured_string.insert(0, r'_{')
+            structured_string.append(r'}')
+            # return [r'_{', structured_string, r'}']
+            return structured_string
     else:
         sub_or_sup, is_subscriptable = recursive_subscript(structured_string,
                                                            sup)
@@ -89,7 +94,7 @@ def text_to_subscript_or_sup(structured_string,
                 sub_or_sup = ['_', structured_string]
             # [sub] necessary in case sub is an (unstructured) string
         # log.debug(f"--> {sub_or_sup}")
-        return sub_or_sup
+        return sub_or_sup, is_subscriptable
 
 
 SOURCE = {'sub': " 0123456789" + "aeioruv",
@@ -142,27 +147,3 @@ def first_descendant(l):
         return l
 
 
-def replace_dubious_characters(s: str) -> str:
-    if not s:
-        return ""
-    dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
-    replacement_characters: str = cvars.get("display.dubious_characters")
-    if replacement_characters == dubious_characters:
-        return s
-    else:
-        character_translation_dic = {}
-        default_list = dubious_characters.split(', ')
-        new_list = replacement_characters.split(',')
-        if len(default_list) != len(new_list):
-            return s
-
-        for default, new in zip(default_list, new_list):
-            character_translation_dic[default] = new.strip()
-
-        new_string = ""
-        for char in s:
-            new_char = (character_translation_dic[char]
-                        if char in character_translation_dic
-                        else char)
-            new_string += new_char
-        return new_string

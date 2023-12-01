@@ -1,6 +1,6 @@
 """
 #######################################################
-# help_msgs.py : set msgs for help on context objects #
+# text.py : Some text msgs #
 #######################################################
 
 Note that msgs are not translated here, to handle the case when usr changes

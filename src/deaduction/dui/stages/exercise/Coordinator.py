@@ -54,6 +54,7 @@ import deaduction.pylib.text.text as text
 from deaduction.dui.primitives import           ButtonsDialog
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
+from deaduction.dui.stages.calculator import    CalculatorController
 
 # Server
 from deaduction.pylib.server import             ServerInterface, Task
@@ -86,8 +87,8 @@ from deaduction.pylib.actions           import (generic,
 from deaduction.pylib.pattern_math_obj import  (PatternMathObject,
                                                 DefinitionMathObject)
 
-# Just for import
-from deaduction.pylib.math_display.new_display import to_display
+# Just for import??
+# from deaduction.pylib.math_display.new_display import to_display
 
 from deaduction.pylib.memory            import Journal
 
@@ -316,6 +317,7 @@ class Coordinator(QObject):
 
     def __set_math_object_definitions(self):
         definitions = self.exercise.definitions
+        DefinitionMathObject.clear_instances()
         DefinitionMathObject.set_definitions(definitions)
 
     @Slot()
@@ -402,7 +404,7 @@ class Coordinator(QObject):
         # except RuntimeError:
         #     # It seems that sometimes signals are already deleted
         #     log.debug("(Impossible to disconnect signals)")
-
+        MathObject.clear()
         self.__disconnect_signals()
 
         if not self.test_mode and not self.history_mode:
@@ -539,6 +541,7 @@ class Coordinator(QObject):
 
     async def __restart_lean_server(self):
         log.debug("Stopping Lean server...")
+        MathObject.clear()
         # with trio.move_on_after(10):
         #     await self.servint.file_invalidated.wait()
         await self.servint.secured_stop()
@@ -619,7 +622,7 @@ class Coordinator(QObject):
                 if emission.is_from(self.close_server_task):
                     log.info("    -> Close server_Task...")
                     self.server_task_closed.set()
-                    await emissions.aclose() # FIXME!!!! (for testing)
+                    await emissions.aclose()  # FIXME!!!! (for testing)
                     log.info("            ...closed!")
                     break
 
@@ -861,6 +864,14 @@ class Coordinator(QObject):
                     choice, ok = ButtonsDialog.get_item(e.choices,
                                                         e.title,
                                                         e.output)
+
+                elif e.input_type == InputType.Calculator:
+                    target = e.input_target
+                    goal = self.proof_step.goal
+                    choice, ok = CalculatorController.get_item(goal,
+                                                               target,
+                                                               e.title)
+
                 if ok:
                     # Convert to global choice value
                     choice = e.local_to_complete_nb(choice)
@@ -881,6 +892,7 @@ class Coordinator(QObject):
 
                 # Update lean_file and call Lean server
                 self.lean_code_sent = lean_code
+                log.debug(f'--(raw)--> {lean_code.to_code()}')
                 # previous_proof_state = self.proof_step.proof_state
                 task = Task(fct=self.servint.code_insert,
                             kwargs={'proof_step': self.proof_step,
@@ -1343,7 +1355,6 @@ class Coordinator(QObject):
         # Fixme: Remove negate statement??
         cvars.set(default_key, default_level)
 
-
     @Slot()
     def process_lean_response(self, lean_response):
         """
@@ -1404,8 +1415,9 @@ class Coordinator(QObject):
             else:
                 # No proof state!? Maybe empty analysis?
                 self.__process_error(error_type=5, errors=[])
-                log.debug(f"Analysis: {lean_response.analysis[0]} ///"
-                          f" {lean_response.analysis[1]}")
+                if lean_response.analysis:
+                    log.debug(f"Analysis: {lean_response.analysis[0]} ///"
+                              f" {lean_response.analysis[1]}")
                 self.abort_process()
                 return
 

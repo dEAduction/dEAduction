@@ -123,15 +123,18 @@ class SettingsVisitor(NodeVisitor):
 settings_grammar = Grammar(settings_rules)
 
 
-def vars_from_metadata(metadata_settings: str):
+def vars_from_metadata(metadata_settings: str) -> dict:
     """
     Convert the string metadata_settings, from the Lean file metadata of
     individual exercise, into a dict that can be used to update cvars.
     """
+
     if metadata_settings:
         tree = settings_grammar.parse(metadata_settings)
         vars_from_metadata = SettingsVisitor().visit(tree)
         return vars_from_metadata
+    else:
+        return dict()
 
 
 def metadata_str_from_cvar_keys(keys: [str]):

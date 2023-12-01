@@ -805,7 +805,9 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  todo,
+  -- have H2: sqrt 3 > ((0) : @real), rotate, 
+  -- have H3 := H0 (((3) : real)^((-2))) H2,
+  todo
 end
 
 

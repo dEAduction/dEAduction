@@ -26,19 +26,24 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+# from .utils import Descendant
 from .pattern_data import metanodes
 # from .pattern_init import pattern_init  !! Circular import !!
-
-from .display_data import (latex_from_node,
-                           latex_to_utf8,
-                           latex_to_lean,
-                           plurals,
-                           update_plurals,
-                           plural_types,
-                           numbers,
+from .app_pattern_data import PatternMathDisplay
+from .display_data import (MathDisplay,
+                           # latex_from_node,
+                           # latex_to_utf8,
+                           # latex_to_lean,
+                           # plurals,
+                           # update_plurals,
+                           # plural_types,
+                           # numbers,
                            new_objects,
                            new_properties
                            )
+from .pattern_init import PatternInit
 
 from .html_display import html_display
 from .utf8_display import utf8_display
+from .new_display import MathDescendant, MathString, MathList
+from .math_cursor import MathCursor
