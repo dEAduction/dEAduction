@@ -121,7 +121,7 @@ class Journal:
         txt = self.display()
         print(txt)
         try:
-            with open(file_path, mode='xt') as output:
+            with open(file_path, mode='xt', encoding='utf-8') as output:
                 output.write(txt)
         except FileExistsError:
             log.debug("(File already exists, abort saving)")

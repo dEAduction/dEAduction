@@ -61,7 +61,7 @@ global _
 
 class ProofMethods:
     """
-    A class for recording user input for the proof_methods action.
+    An instanceless class for recording user input for the proof_methods action.
     The nb stored in user_input must refer to the complete list, not to the
     local list of available proof methods, so that it is not dependent on
     current settings.

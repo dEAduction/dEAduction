@@ -1059,7 +1059,7 @@ class Exercise(Theorem):
         new_content = '\n'.join(new_content_lines)
 
         # Save new content!
-        with open(path, mode='wt') as output:
+        with open(path, mode='wt', encoding='utf-8') as output:
             output.write(new_content)
 
         # Reload history_course to remove deleted entry
