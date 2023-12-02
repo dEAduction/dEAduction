@@ -195,6 +195,10 @@ class Coordinator(QObject):
             return
         self.history_mode = True
         self.__auto_steps = self.exercise.refined_auto_steps.copy()
+        # for step_str, step in zip (self.exercise.auto_test, self.__auto_steps):
+        #     print(step_str)
+        #     print(step)
+        #     print('--------------')
 
         # Save cvars and set special cvars values for history
         self.__history_cvars = {key: cvars.get(key)

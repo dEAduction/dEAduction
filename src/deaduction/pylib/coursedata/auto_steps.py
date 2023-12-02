@@ -86,7 +86,13 @@ button_dict = {
                '↦': "map",
                'proof': 'proof_methods',
                'new': 'new_object',
-               'object': 'new_object'
+               'object': 'new_object',
+               '+': 'sum',
+                'simp': 'simplify',
+                '>>': 'transitivity',
+                'comm': 'commute',
+                'assoc': 'associativity',
+                'triangle': 'triangular_inequality',
                }
 
 
