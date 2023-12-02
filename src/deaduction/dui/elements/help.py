@@ -151,7 +151,7 @@ class HelpWindow(QDialog):
         nb = version_info[1]
         if nb <= 9:
             flags = self.windowFlags() | Qt.Dialog
-            self.setWindowFlags(Qt.flags)
+            self.setWindowFlags(flags)
         # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
         # FIXME: this is for python 3.11
         # self.setWindowFlags |= Qt.Dialog

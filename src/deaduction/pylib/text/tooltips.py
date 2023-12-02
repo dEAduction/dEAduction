@@ -88,7 +88,7 @@ __tooltips = {
     'prove_forall':
         [_("""Prove '∀ x, P(x)' by introducing 'x'""")],
     'use_forall':
-        [_("""From some 'x' and '∀ x, P(x)' get 'P(x)'""")],
+        [_("""From some 'x' and '∀ y, P(y)' get 'P(x)'""")],
     'prove_exists':
         [_("""Prove '∃ x, P(x)' by specifying some 'x'""")],
     'use_exists':

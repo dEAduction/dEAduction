@@ -110,7 +110,7 @@ def add_parentheses(math_list: list, depth=1):
                 math_list.append(paren.replace_string(paren, ")"))
 
 
-def recursive_utf8_display(math_list, depth):
+def recursive_utf8_display(math_list, depth, lean_format=False):
     """
     Use the following tags as first child:
     - \sub, \super for subscript/superscript
@@ -123,10 +123,11 @@ def recursive_utf8_display(math_list, depth):
     if not math_list:
         return ""
 
-    if isinstance(math_list, str):  # Real type = MathString
-        new_string, is_subscriptable = sub_sup_to_utf8(math_list)
-        # Replace even if not subscriptable ('\sub' --> '_')
-        math_list = math_list.replace_string(math_list, new_string)
+    if isinstance(math_list, str):
+        if not lean_format:  # Real type = MathString
+            new_string, is_subscriptable = sub_sup_to_utf8(math_list)
+            # Replace even if not subscriptable ('\sub' --> '_')
+            math_list = math_list.replace_string(math_list, new_string)
         return math_list
 
     prefix = None
@@ -153,13 +154,13 @@ def recursive_utf8_display(math_list, depth):
         idx += 1
 
     # Process sup/sub prefix
-    if prefix == '_':
+    if prefix == '_' and not lean_format:
         tentative_string, is_subscriptable = subscript(math_list.to_string())
         if is_subscriptable:
             return tentative_string
         else:
             math_list.insert(0, prefix)
-    elif prefix == '^':
+    elif prefix == '^' and not lean_format:
         tentative_string, is_subscriptable = superscript(math_list.to_string())
         if is_subscriptable:
             return tentative_string
@@ -187,16 +188,8 @@ def lean_display(math_list: list):
     """
     Just remove formatters.
     """
-    if not math_list:
-        return ""
 
-    if not isinstance(math_list, list):
-        return math_list
-
-
-
-    return math_list
-
+    recursive_utf8_display(math_list, depth=0, lean_format=True)
 
 # def lean_display(math_list, depth=0):
 #     """

@@ -30,7 +30,7 @@ from deaduction.pylib.text import replace_dubious_characters
 from deaduction.pylib.math_display.display_data import MathDisplay
 from deaduction.pylib.math_display.pattern_init import PatternInit
 from deaduction.pylib.math_display.display import (html_display, 
-                                                   # lean_display,
+                                                   lean_display,
                                                    utf8_display)
 from deaduction.pylib.math_display.display_utils import (shallow_latex_to_text,
                                                          latex_to_text_func)
@@ -1039,6 +1039,8 @@ class MathList(list, MathDescendant):
 
         elif format_ == 'utf8':  # or format_ == 'lean':
             utf8_display(self)
+        elif format_ == 'lean':
+            lean_display(self)
 
         # Put here general hygiene, and remove to_string
         if format_ in ('utf8', 'html'):
@@ -1049,6 +1051,7 @@ class MathList(list, MathDescendant):
         self.cut_spaces()
 
         if format_ == 'lean':
+
             self.remove_formatters(warning=(format_ != 'lean'))
 
     @classmethod

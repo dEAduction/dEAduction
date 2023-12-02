@@ -699,16 +699,18 @@ class CalculatorController:
             target_type = MetaVar()
             p_target_type = MarkedPatternMathObject.from_pattern_math_object(
                 target_type)
+            self.target_title = _("Build your object")
         else:
             p_target_type = MarkedPatternMathObject.from_math_object(target_type)
+            display_type = target_type.math_type_to_display(format_="utf8",
+                                                            is_math_type=True,
+                                                            text=True)
+            self.target_title = _("Enter") + " " + display_type + _(":")
 
         target_mvar = MetaVar(math_type=p_target_type)
         self.target = MarkedMetavar.from_mvar(target_mvar)
         self.target.mark()
-        display_type = target_type.math_type_to_display(format_="utf8",
-                                                        is_math_type=True,
-                                                        text=True)
-        self.target_title = _("Enter") + " " + display_type + _(":")
+
 
         ###########
         # Buttons #
