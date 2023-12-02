@@ -1258,10 +1258,11 @@ class Coordinator(QObject):
         # Store journal and auto_step
         if not self.test_mode and not self.history_mode:
             self.journal.store(self.proof_step, self)
-            # Compute right now since we need current proof_state
-            self.proof_step.auto_step = AutoStep.from_proof_step(
-                                                            self.proof_step,
-                                                            emw=self.emw)
+
+        # Compute right now since we need current proof_state
+        self.proof_step.auto_step = AutoStep.from_proof_step(
+                                                        self.proof_step,
+                                                        emw=self.emw)
 
         # Create next proof_step, and connect to ProofTree
         self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
@@ -1322,7 +1323,7 @@ class Coordinator(QObject):
         # (2) Retrieve AutoSteps string
         proof_steps = self.proof_tree.proof_steps()
         auto_steps = [step.auto_step for step in proof_steps
-                      if step is not None]
+                      if step is not None and step.auto_step is not None]
         auto_steps_str = ''
         for step in auto_steps:
             auto_steps_str += '    ' + step.raw_string + ',\n'
