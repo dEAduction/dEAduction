@@ -1285,23 +1285,28 @@ class MathObject:
 
     def ring_expr(self) -> Optional[int]:
         """
-        Test if self is a ring expr, i.e. consists of numbers
-        and operations + - * /.
+        Test if self is a pure ring expr, i.e. consists only of numbers,
+        local constants, and operations + - * /.
         If this is so, then return the nb of arithmetic operations in self.
-        If not, return 0.
+        If not, return False.
         """
 
-        allowed_nodes = ['PARENTHESES']
+        allowed_nodes = ['PARENTHESES', 'GENERIC_PARENTHESES', 'NUMBER',
+                         'LOCAL_CONSTANT']
         ring_nodes = ['SUM', 'DIFFERENCE', 'MULT', 'DIV', 'POWER']
 
         if self.node in ring_nodes + allowed_nodes:
-            total_nb_op = sum(child.ring_expr() for child in self.children)
-            if self.node in ring_nodes:
-                total_nb_op += 1
-            return total_nb_op
+            tests = [child.ring_expr() for child in self.children]
+            if None in tests:
+                return False
+            else:
+                total_nb_op = sum(tests)
+                if self.node in ring_nodes:
+                    total_nb_op += 1
+                return total_nb_op
 
         else:
-            return 0
+            return False
 
         # if not (self.math_type.is_number()
         #         or self.node in allowed_nodes):

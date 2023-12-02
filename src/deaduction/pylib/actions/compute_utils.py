@@ -50,13 +50,14 @@ def pre_unify(H1: MathObject, H2: MathObject):
     if H1 == H2:
         return True
 
-    if H1.ring_expr() > 0 and H2.ring_expr() > 0:
+    if H1.ring_expr() is not False and H2.ring_expr() is not False:
         return [(H1, H2)]
 
     if ((not H1.node == H2.node) or
             (not len(H1.children) == len(H2.children))):
         return False
 
+    # Now same node
     if len(H1.children) == 0:
         return True
 
