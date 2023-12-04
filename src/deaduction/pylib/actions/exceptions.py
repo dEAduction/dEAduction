@@ -93,19 +93,32 @@ class WrongUseModeInput(WrongUserInput):
         self.message = error
 
 
+class SelectDefaultTarget(Exception):
+    def __init__(self):
+        super().__init__("Selecting target")
+
+
 def test_selection(items_selected: [],
                    selected_target: bool,
-                   exclusive=False):
+                   exclusive=False,
+                   select_default_target=True,
+                   force_default_target=False):
     """
     Test that at least one of items_selected or selected_target is not empty.
     If exclusive is True, then also test that both are not simultaneously
-    nonempty.
+    nonempty. In case nothing is selected and both the "target selected by
+    default" setting and the arg select_default_target are True, then
+    raise the SelectDefaultTarget exception.
     """
-    implicit_target = cvars.get("functionality.target_selected_by_default")
+    # implicit_target = cvars.get("functionality.target_selected_by_default")
 
-    if not (items_selected or selected_target or implicit_target):
-        error = _("Select at least one object, one property or the target")
-        raise WrongUserInput(error)
+    if not (items_selected or selected_target):
+        settings = cvars.get('functionality.target_selected_by_default')
+        if force_default_target or (select_default_target and settings):
+            raise SelectDefaultTarget
+        else:
+            error = _("Select at least one object, one property or the target")
+            raise WrongUserInput(error)
 
     if exclusive and items_selected and selected_target:
         error = _("I do not know what to do with this selection")

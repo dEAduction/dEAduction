@@ -81,6 +81,7 @@ from deaduction.pylib.actions           import (generic,
                                                 CodeForLean,
                                                 MissingParametersError,
                                                 WrongUserInput,
+                                                SelectDefaultTarget,
                                                 drag_n_drop)
 
 # Import AFTER coursedata and mathobj, beware circular imports!
@@ -688,8 +689,8 @@ class Coordinator(QObject):
                     item = emission.args[0]
                     self.proof_step.statement = item.statement
                     # FIXME Obsolete: Set target selected if no selection
-                    if not self.current_selection and not self.target_selected:
-                        self.emw.process_target_click()
+                    # if not self.current_selection and not self.target_selected:
+                    #     self.emw.process_target_click()
                     self.__server_call_statement(item)
 
                 elif emission.is_from(self.statement_dropped):
@@ -851,9 +852,9 @@ class Coordinator(QObject):
         #   - and so on.
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
-        self.proof_step.target_selected = self.emw.target_selected
 
         while True:
+            self.proof_step.target_selected = self.emw.target_selected
             try:
                 self.proof_step.user_input = self.emw.user_input
                 lean_code = action.run(self.proof_step)
@@ -890,6 +891,10 @@ class Coordinator(QObject):
                 self.process_wrong_user_input(error)
                 break
 
+            except SelectDefaultTarget:
+                # self.unfreeze()
+                self.emw.process_target_click()
+
             else:
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = self.emw.user_input
@@ -914,31 +919,67 @@ class Coordinator(QObject):
 
         selection = self.current_selection_as_mathobjects
         self.proof_step.selection = selection
-        self.proof_step.target_selected = self.emw.target_selected
 
-        try:
-            item.setSelected(False)
-            statement = item.statement
+        while True:
+            self.proof_step.target_selected = self.emw.target_selected
+            try:
+                item.setSelected(False)
+                statement = item.statement
 
-            if isinstance(statement, Definition):
-                lean_code = generic.action_definition(self.proof_step)
+                if isinstance(statement, Definition):
+                    lean_code = generic.action_definition(self.proof_step)
 
-            elif isinstance(statement, Theorem):
-                lean_code = generic.action_theorem(self.proof_step)
-        except WrongUserInput as error:
-            self.process_wrong_user_input(error)
+                elif isinstance(statement, Theorem):
+                    lean_code = generic.action_theorem(self.proof_step)
 
-        else:
-            log.debug(f'Calling statement {item.statement.pretty_name}')
-            self.proof_step.lean_code = lean_code
+            except WrongUserInput as error:
+                self.process_wrong_user_input(error)
 
-            # Update lean_file and call Lean server
-            self.lean_code_sent = lean_code
-            task = Task(fct=self.servint.code_insert,
-                        kwargs={'proof_step': self.proof_step,
-                                'label': statement.pretty_name,
-                                'cancel_fct': self.lean_file.undo})
-            self.__send_task_to_server(task)
+            except SelectDefaultTarget:
+                # self.unfreeze()
+                self.emw.process_target_click()
+                print("CLIC")
+
+            except MissingParametersError as e:
+                # if e.input_type == InputType.Text:
+                #     # TODO: move this into EMW methods
+                #     choice, ok = QInputDialog.getText(action_btn,
+                #                                       e.title,
+                #                                       e.output)
+                # elif e.input_type in (InputType.Choice, InputType.YesNo):
+                #     choice, ok = ButtonsDialog.get_item(e.choices,
+                #                                         e.title,
+                #                                         e.output)
+                #
+                if e.input_type == InputType.Calculator:
+                    target = e.input_target
+                    goal = self.proof_step.goal
+                    choice, ok = CalculatorController.get_item(goal,
+                                                               target,
+                                                               e.title)
+
+                    if ok:
+                        # Convert to global choice value
+                        choice = e.local_to_complete_nb(choice)
+                        self.emw.user_input.append(choice)
+                    else:
+                        self.emw.user_input = []
+                        self.unfreeze()
+                        break
+
+            # No exception raised
+            else:
+                log.debug(f'Calling statement {item.statement.pretty_name}')
+                self.proof_step.lean_code = lean_code
+
+                # Update lean_file and call Lean server
+                self.lean_code_sent = lean_code
+                task = Task(fct=self.servint.code_insert,
+                            kwargs={'proof_step': self.proof_step,
+                                    'label': statement.pretty_name,
+                                    'cancel_fct': self.lean_file.undo})
+                self.__send_task_to_server(task)
+                break
 
     def __server_send_editor_lean(self):
         """
