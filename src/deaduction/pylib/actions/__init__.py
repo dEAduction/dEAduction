@@ -34,6 +34,7 @@ from .exceptions import (InputType,
                          WrongUserInput,
                          WrongProveModeInput,
                          WrongUseModeInput,
+                         SelectDefaultTarget,
                          test_selection,
                          test_prove_use)
 

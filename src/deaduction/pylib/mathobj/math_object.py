@@ -692,6 +692,10 @@ class MathObject:
         return self.info.get('name')
 
     @property
+    def lean_name(self):
+        return self.info.get('lean_name')
+
+    @property
     def value(self):
         return self.info.get('value')
 
@@ -1921,7 +1925,10 @@ class BoundVar(MathObject):
 
     @property
     def lean_name(self):
-        return self.info.get('lean_name')
+        name = self.info.get('lean_name')
+        if not name:
+            name = self.info.get('name')
+        return name
 
     def keep_lean_name(self):
         if (self.lean_name in self.untouched_bound_var_names

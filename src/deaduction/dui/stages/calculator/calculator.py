@@ -52,8 +52,8 @@ This file is part of d∃∀duction.
 
 if __name__ == '__main__':
     from deaduction.dui.__main__ import language_check
-
     language_check()
+
 
 import logging
 from typing import Union
@@ -81,10 +81,12 @@ from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject
                                                          MarkedMetavar,
                                                          CalculatorPatternLines)
 
-from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
+# from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
 from deaduction.dui.primitives import DisclosureTriangle
 
+from deaduction.dui.stages.calculator.calculator_targets import CalculatorTarget
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
+
 
 global _
 log = logging.getLogger(__name__)
@@ -98,160 +100,6 @@ if __name__ == "__main__":
 
 Node.PatternMathObject = PatternMathObject
 Node.MarkedPatternMathObject = MarkedPatternMathObject
-
-
-class CalculatorTarget(MathTextWidget):
-    """
-    This is the class for the Calculator "target", whose purpose is to
-    display the MathObject (or more precisely, MarkedPatternMathObject) that
-    usr is building. Note that the text from kbd is not processed by the
-    super class QTextEdit, unless Calculator is in Lean mode. Instead,
-    kbd events are intercepted and serve as shorcuts from buttons. All input
-    come from the buttons.
-    """
-    def __init__(self):
-        super().__init__()
-        self.set_highlight(True)
-
-        self.setFixedHeight(50)  # fixme
-        # self.setReadOnly(True)
-        self.setLineWrapMode(QTextEdit.NoWrap)
-        # self.setLineWrapColumnOrWidth(10000)
-
-        self.key_event_buffer = ""
-        self.navigation_bar = None
-        self.toolbar = None
-        self.button_box = None
-
-        self.key_buffer_timer = QTimer()
-        self.key_buffer_timer.setSingleShot(True)
-        self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
-
-        self.lean_mode = False  # TODO: change behavior in Lean mode
-        self.check_types = False  # TODO: add button?
-
-    def mousePressEvent(self, event):
-        if self.lean_mode:
-            super().mousePressEvent(event)
-        else:
-            self.setFocus()
-            event.ignore()
-
-    def mouseDoubleClickEvent(self, event):
-        if self.lean_mode:
-            super().mouseDoubleClickEvent(event)
-        else:
-            self.setFocus()
-            event.ignore()
-
-    def keyPressEvent(self, event):
-        """
-        Take focus (from calculator_target) so that shortcuts to buttons
-        work.
-        """
-
-        if self.lean_mode:
-            super().keyPressEvent(event)
-            return
-
-        self.key_buffer_timer.setInterval(1000)
-        self.key_buffer_timer.start()
-
-        key = event.key()
-        # print(f"Key: {key}")
-        # print(f"Event: {event}")
-        if event.modifiers() & Qt.ControlModifier:
-            key += Qt.CTRL
-            # print(key_sqc)
-            # print(key_sqc == QKeySequence.Undo)
-        if event.modifiers() & Qt.ShiftModifier:
-            key += Qt.SHIFT
-        if event.modifiers() & Qt.AltModifier:
-            key += Qt.ALT
-        if event.modifiers() & Qt.MetaModifier:
-            key += Qt.META
-
-        key_sequence = QKeySequence(key)
-        # print(key_sequence == QKeySequence.Undo)
-        if key_sequence == QKeySequence("Return"):
-            self.button_box.button(QDialogButtonBox.Ok).animateClick()
-        elif key_sequence == QKeySequence("Space"):
-            self.key_buffer_timer.stop()
-            self.key_buffer_timeout()
-
-        # QAction key sequences
-        action = None
-        bar = None
-        # Navigation
-        if key_sequence == QKeySequence.MoveToPreviousWord:
-            bar = self.navigation_bar
-            action = bar.beginning_action
-        elif key_sequence == QKeySequence.MoveToPreviousChar:
-            bar = self.navigation_bar
-            action = bar.left_action
-        elif key_sequence == QKeySequence.MoveToNextChar:
-            bar = self.navigation_bar
-            action = bar.right_action
-        elif key_sequence == QKeySequence.MoveToNextWord:
-            bar = self.navigation_bar
-            action = bar.end_action
-        elif key_sequence == QKeySequence.MoveToPreviousLine:
-            bar = self.navigation_bar
-            action = bar.up_action
-        elif key_sequence == QKeySequence.Delete:
-            bar = self.navigation_bar
-            action = bar.delete
-        elif key_sequence == QKeySequence.NextChild:
-            bar = self.navigation_bar
-            action = bar.right_unassigned_action
-
-        # Main toolbar
-        elif key_sequence == QKeySequence.Undo:
-            bar = self.toolbar
-            action = bar.undo_action
-        elif key_sequence == QKeySequence.Redo:
-            bar = self.toolbar
-            action = bar.redo_action
-
-        if bar and action:
-            bar.animate_click(action)
-            self.clear_key_buffer()
-            event.ignore()
-            return
-
-        # Text shortcuts
-        text = event.text()
-        if text:
-            self.key_event_buffer += text
-            # print(self.key_event_buffer, self.key_buffer_timer)
-            yes = CalculatorButton.process_key_events(self.key_event_buffer,
-                                                      timeout=False)
-            if yes:
-                self.clear_key_buffer()
-
-        event.ignore()
-
-    @Slot()
-    def key_buffer_timeout(self):
-        CalculatorButton.process_key_events(self.key_event_buffer,
-                                            timeout=True)
-        self.key_event_buffer = ""
-
-    def clear_key_buffer(self):
-        self.key_event_buffer = ""
-        self.key_buffer_timer.stop()
-
-    def go_to_position(self, new_position):
-        cursor = self.textCursor()
-
-        if new_position == -1:
-            self.moveCursor(cursor.End, cursor.MoveAnchor)
-        else:
-            old_position = cursor.position()
-            cursor.movePosition(cursor.NextCharacter,
-                                cursor.MoveAnchor,
-                                new_position - old_position)
-            self.setTextCursor(cursor)
 
 
 class AbstractToolBar(QToolBar):
@@ -323,9 +171,9 @@ class NavigationBar(AbstractToolBar):
         self.left_action = QAction(QIcon(left_path),
                                    _('Move left'), self)
 
-        up_path = str((icons_dir /
-                      'icons8-thick-arrow-pointing-up-48.png').resolve())
-        self.up_action = QAction(QIcon(up_path), _('Move up'), self)
+        # up_path = str((icons_dir /
+        #               'icons8-thick-arrow-pointing-up-48.png').resolve())
+        # self.up_action = QAction(QIcon(up_path), _('Move up'), self)
 
         right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
         self.right_action = QAction(QIcon(right_path),
@@ -341,7 +189,8 @@ class NavigationBar(AbstractToolBar):
 
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
-        self.addAction(self.up_action)
+        # self.addAction(self.up_action)
+        self.addSeparator()
         self.addAction(self.right_action)
         self.addAction(self.end_action)
         self.addAction(self.delete)
@@ -765,7 +614,7 @@ class CalculatorController:
         n_bar = calc_ui.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
         n_bar.left_action.triggered.connect(self.move_left)
-        n_bar.up_action.triggered.connect(self.move_up)
+        # n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
         n_bar.end_action.triggered.connect(self.go_to_end)
         calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
@@ -855,9 +704,9 @@ class CalculatorController:
     def left_action(self):
         return self.calculator_ui.navigation_bar.left_action
 
-    @property
-    def up_action(self):
-        return self.calculator_ui.navigation_bar.up_action
+    # @property
+    # def up_action(self):
+    #     return self.calculator_ui.navigation_bar.up_action
 
     @property
     def right_action(self):
@@ -898,7 +747,7 @@ class CalculatorController:
         self.beginning_action.setEnabled(not cursor.is_at_beginning())
         # self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
         self.left_action.setEnabled(not cursor.is_at_beginning())
-        self.up_action.setEnabled(bool(target.parent_of_marked()))
+        # self.up_action.setEnabled(bool(target.parent_of_marked()))
         self.right_action.setEnabled(not cursor.is_at_end())
         # self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
         self.end_action.setEnabled(not cursor.is_at_end())
@@ -1192,11 +1041,11 @@ class CalculatorController:
         if success:
             self.set_target_and_update()
 
-    @Slot()
-    def move_up(self):
-        success = self.target.move_up()
-        if success:
-            self.set_target_and_update()
+    # @Slot()
+    # def move_up(self):
+    #     success = self.target.move_up()
+    #     if success:
+    #         self.set_target_and_update()
 
 
 def main():

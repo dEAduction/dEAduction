@@ -161,6 +161,8 @@ class UserAction:
         name = self.button_name
         # if name not in ("forall", "exists", "implies", "and", "or"):
         #     return
+        if not name:
+            return None
         if self.prove_or_use and not (name.startswith("use_")
                                       or name.startswith("prove_")):
             name = self.prove_or_use + '_' + name

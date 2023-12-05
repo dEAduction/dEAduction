@@ -135,7 +135,11 @@ __tooltips = {
     #     [_("Terminate the proof when target results from manipulating "
     #        "numbers")],
     'sum':
-        [_('Add equalities or inequalities')]
+        [_('Add equalities or inequalities')],
+    'triangular_inequality':
+        [_('Obtain a triangular inequality adapted to a selected equality or '
+           'inequality'),
+         _('(under dev) Apply the triangular inequality to some numbers')]
 }
 
 for key in ('forall', 'exists', 'implies', 'and', 'or'):

@@ -66,6 +66,8 @@ from deaduction.pylib.actions.utils import (add_type_indication,
 from deaduction.pylib.actions.commun_actions import (introduce_new_subgoal,
                                                      rw_with_defi,
                                                      inequality_from_pattern_matching,
+                                                     use_forall,
+                                                     get_arguments_to_use_forall,
                                                      have_new_property)
 
 from deaduction.pylib.actions.utils import extract_var
@@ -150,149 +152,6 @@ def prove_forall(proof_step) -> CodeForLean:
     return possible_codes
 
 
-def use_forall_with_ineq(proof_step, selected_objects, inequality,
-                         new_hypo_name=None) -> CodeForLean:
-    """
-    Try to use last selected property, assumed to be a universal prop matching
-    forall x, (some inex on x) ==> ...
-
-    The inequality on x is the MathObject inequality.
-    - If inequality belongs to the context, we use the universal property
-    to x and inequality
-    - if not, we claim inequality, apply the universal property to it,
-    and ask Lean to try to solve the inequality.
-    """
-
-    proof_step.prove_or_use = "use"
-
-    if not new_hypo_name:
-        new_hypo_name = get_new_hyp(proof_step)
-
-    goal = proof_step.goal
-    universal_property = selected_objects[-1]
-    unsolved_inequality_counter = 0
-    # Variable_names will contain the list of variables and proofs of
-    # inequalities that will be passed to universal_property
-    variables = []
-    used_inequalities = []
-    # Check for "∀x>0" (and variations)
-    variable = inequality.children[0]
-    variables.append(variable)
-    math_types = [p.math_type for p in goal.context]
-    code = CodeForLean.empty_code()
-
-    # (1) Try to prove inequality
-    if inequality in math_types:  # Check if inequality is in context
-        ineq_in_ctxt = True
-        index = math_types.index(inequality)
-        context_inequality = goal.context[index]
-        used_inequalities.append(context_inequality)
-        variables.append(context_inequality)
-    else:
-        ineq_in_ctxt = False
-        # If not, assert inequality as a new goal:
-        inequality_name = new_hypo_name
-        variables.append(inequality_name)
-        unsolved_inequality_counter += 1
-        # Add type indication to the variable in inequality
-        math_type = inequality.children[1].math_type
-        # Variable is not used explicitly, but this affects inequality:
-        # FIXME: now useless, this is included in Lean display?
-        variable = add_type_indication(variable, math_type)
-        ineq_with_type = MathObject(node=inequality.node,
-                                    info=inequality.info,
-                                    children=[variable,
-                                              inequality.children[1]],
-                                    math_type=inequality.math_type)
-        display_inequality = ineq_with_type.to_display(format_='lean')
-        # Code I: state corresponding inequality #
-        code = CodeForLean.from_string(f"have {inequality_name}: "
-                                       f"{display_inequality}")
-        code = code.and_then("rotate")  # Back to main goal
-        used_inequalities.append(inequality_name)
-
-    # (2) Apply universal_property, with no success_msg #
-    # Add remaining variables:
-    variables.extend(selected_objects[1:-1])
-    if not ineq_in_ctxt:  # Hypo_name has been used
-        new_hypo_name = get_new_hyp(proof_step)
-    code = code.and_then(have_new_property(universal_property,
-                                           variables,
-                                           new_hypo_name,
-                                           success_msg=""))
-    if used_inequalities:
-        code.add_used_properties(used_inequalities)
-
-    # (3) try to solve inequalities # e.g.:
-    #   iterate 2 { solve1 {try {norm_num at *}, try {compute_n 10}} <|>
-    #               rotate},   rotate,
-    if unsolved_inequality_counter:
-        assert unsolved_inequality_counter == 1
-        # Back to first inequality:
-        if from_previous_state_method():
-            # In this case no memory of previous goals
-            more_code0 = CodeForLean.from_string("rotate")
-        else:
-            nbg = proof_step.nb_of_goals
-            more_code0 = CodeForLean.from_string(f"rotate {nbg}")
-        # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code1 = compute(proof_step)
-        more_code = more_code0.and_then(more_code1).try_()
-        more_code.add_success_msg(_("Property {} added to the context").
-                                  format(new_hypo_name))
-        code = code.and_then(more_code)
-
-    if not unsolved_inequality_counter:
-        # Success msg when there is no inequality to solve:
-        code.add_success_msg(_("Property {} added to the context").
-                             format(new_hypo_name))
-    # In any case:
-    code.add_used_properties(selected_objects)
-
-    return code
-
-
-def use_forall(proof_step) -> CodeForLean:
-    """
-    Try to apply last selected property on the other ones.
-    The last property should be a universal property
-    (or equivalent to such after unfolding definitions).
-    """
-    # FIXME: return error msg if user try to apply "forall x:X, P(x)"
-    #  to some object of wrong type (e.g. implication)
-    #  For the moment "forall x, P->Q" works with "P->Q" and button forall
-
-    selected_objects = proof_step.user_input + proof_step.selection
-    proof_step.prove_or_use = "use"
-
-    universal_property = selected_objects[-1]  # The property to be applied
-    new_hypo_name = get_new_hyp(proof_step)
-    variables = selected_objects[:-1]
-    # Replace first var if pertinent:
-    potential_var = extract_var(selected_objects[0])
-    variables[0] = potential_var
-    simple_code = have_new_property(universal_property, variables,
-                                    new_hypo_name)
-    simple_code.add_success_msg(_("Property {} added to the context").
-                                format(new_hypo_name))
-    simple_code.add_used_properties(selected_objects)
-
-    inequality = inequality_from_pattern_matching(universal_property,
-                                                  potential_var)
-
-    # (Case 1) No inequality to solve
-    if not inequality or not cvars.get(
-        "functionality.auto_solve_inequalities_in_bounded_quantification",
-            False):
-        return simple_code
-
-    # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
-    else:
-        complex_code = use_forall_with_ineq(proof_step, selected_objects,
-                                            inequality, new_hypo_name)
-        code = complex_code.or_else(simple_code)
-        return code
-
 
 @action()
 def action_prove_forall(proof_step) -> CodeForLean:
@@ -339,50 +198,60 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
             error = _("Selected property is not a universal property '∀x, "
                       "P(x)'")
             raise WrongUserInput(error)
-        elif not user_input:
-            quant = selected_objects[0].math_type
-            input_target = quant.type_of_explicit_quant()
-            raise MissingParametersError(InputType.Calculator,
-                                         title=_("Use a universal property"),
-                                         target=input_target)
-        # raise MissingParametersError(InputType.Text,
-        #                                  title=_("Use a universal property"),
-        #                                  output=_(
-        #                                      "Enter element on which you "
-        #                                      "want to use this property:"))
+
         else:
-            math_object = user_input[0]
-            # This will be a str either from Calculator in "Lean mode",
-            #   or from history file.
-            #  In this case we artificially change this to a "MathObject".
-            # In any case we add parentheses, e.g. in
-            #  have H2 := H (ε/2)
-            #  the parentheses are mandatory
-            if isinstance(math_object, str):
-                math_object = MathObject(node="RAW_LEAN_CODE",
-                                         info={'name': '(' + math_object + ')'},
-                                         children=[],
-                                         math_type=None)
-            else:
-                math_object = MathObject(node='GENERIC_PARENTHESES',
-                                         info={},
-                                         children=[math_object],
-                                         math_type=math_object.math_type)
-            user_input[0] = math_object
-            code = use_forall(proof_step)
+            universal_property = selected_objects[0]
+            # The following will be called twice, the first time an exception
+            # will be raised to call for Calculator which will fill-in
+            # user_input
+            arguments = get_arguments_to_use_forall(proof_step,
+                                                    universal_property)
+        # elif not user_input:
+        #     quant = selected_objects[0].math_type
+        #     input_target = quant.type_of_explicit_quant()
+        #     raise MissingParametersError(InputType.Calculator,
+        #                                  title=_("Use a universal property"),
+        #                                  target=input_target)
+        # # raise MissingParametersError(InputType.Text,
+        # #                                  title=_("Use a universal property"),
+        # #                                  output=_(
+        # #                                      "Enter element on which you "
+        # #                                      "want to use this property:"))
+        # else:
+        #     math_object = user_input[0]
+        #     # This will be a str either from Calculator in "Lean mode",
+        #     #   or from history file.
+        #     #  In this case we artificially change this to a "MathObject".
+        #     # In any case we add parentheses, e.g. in
+        #     #  have H2 := H (ε/2)
+        #     #  the parentheses are mandatory
+        #     if isinstance(math_object, str):
+        #         math_object = MathObject(node="RAW_LEAN_CODE",
+        #                                  info={'name': '(' + math_object + ')'},
+        #                                  children=[],
+        #                                  math_type=None)
+        #     else:
+        #         math_object = MathObject(node='GENERIC_PARENTHESES',
+        #                                  info={},
+        #                                  children=[math_object],
+        #                                  math_type=math_object.math_type)
+        #     user_input[0] = math_object
+            code = use_forall(proof_step, arguments, universal_property)
             return code
 
     # From now on len(l) ≥ 2
     # Search for a universal property among l, beginning with last item
+    # The other selected_objects will be used as arguments
     assert use
     selected_objects.reverse()
     for item in selected_objects:
         if item.is_for_all(implicit=True):
-            # Put universal property in last position
+            # Put universal property in last position (useless now?)
             selected_objects.remove(item)
             selected_objects.reverse()
             selected_objects.append(item)
-            code = use_forall(proof_step)
+            code = use_forall(proof_step, arguments=selected_objects[:-1],
+                              universal_property_or_statement=item)
             # if selection_object_added:  # Remove it (for auto-test)
             #     selected_objects.pop(0)
             return code

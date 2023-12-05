@@ -996,11 +996,13 @@ class Goal:
     ###################
     # Display methods #
     ###################
-    def negate(self) -> MathObject:
+    def contextless(self) -> MathObject:
         """
-        Return a math_object obtained by negating self. e.g. if self.context
-        contains objects x, y and properties P, Q, the new goal will be
-        ∀x, ∀y, (P and Q ) ==> target.
+        Return a math_object obtained by integrating all the context in the
+        target, using universal quantifiers and implications. e.g. if
+        self.context contains objects x, y and properties P, Q, the new goal
+        will be
+                        ∀x, ∀y, (P and Q ) ==> target.
         This is not a recursive method since we do not want to create new goals
         (to avoid creating new ContextMathObjects).
         """
@@ -1020,8 +1022,32 @@ class Goal:
             obj = objs.pop()
             body = MathObject.forall(obj, body)
 
+        return body
+
+    def negate(self) -> MathObject:
+        """
+        Return a math_object obtained by negating self. e.g. if self.context
+        contains objects x, y and properties P, Q, the new goal will be
+             NOT  ( ∀x, ∀y, (P and Q ) ==> target ).
+        """
+
+        # # (1) Compute body of universal prop:
+        # props = [prop.math_type for prop in self.context_props]
+        # target = self.target.math_type
+        # if props:
+        #     conjunction = MathObject.conjunction(props)
+        #     body = MathObject.implication(conjunction, target)
+        # else:
+        #     body = target
+        #
+        # # (2) Compute the "∀x, ∀y, ..." part:
+        # objs = [obj for obj in self.context_objects]  # List shadow copy
+        # while objs:
+        #     obj = objs.pop()
+        #     body = MathObject.forall(obj, body)
+
         # (3) Negate!
-        new_prop = MathObject.negate(body)
+        new_prop = MathObject.negate(self.contextless())
 
         return new_prop
 
@@ -1061,8 +1087,8 @@ class Goal:
 
     def to_lean_statement(self, title="deaduction"):
         """
-        Return self's content as a Lean example, e.g.
-        'example
+        Return self's content as a Lean exercise, e.g.
+        'lemma exercise.blabla
         (x: X) (A: set X) (H1: x ∈ A) :
         x ∈ B :='
         """

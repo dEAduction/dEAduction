@@ -252,6 +252,16 @@ class Statement:
     def initial_proof_state(self, ips):
         self._initial_proof_state = ips
 
+    def goal(self):
+        ips = self.initial_proof_state
+        goal = ips.goals[0] if ips else None
+        return goal
+
+    def contextless_goal(self):
+        goal = self.goal()
+        math_object = goal.contextless() if goal else None
+        return math_object
+
     @property
     def lean_short_name(self):
         """

@@ -27,8 +27,10 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from deaduction.pylib.actions import CodeForLean
+from deaduction.pylib.actions import CodeForLean, test_selection
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
+from deaduction.pylib.actions.commun_actions import (get_arguments_to_use_forall,
+                                                     use_forall)
 
 # from deaduction.pylib.proof_state import Goal
 
@@ -111,7 +113,9 @@ def action_definition(proof_step) -> CodeForLean:
     target_selected = proof_step.target_selected
     definition = proof_step.statement
     selected_objects = proof_step.selection
-    # test_selection(selected_objects, target_selected)
+    test_selection(selected_objects, target_selected,
+                   exclusive=True,
+                   force_default_target=True)
     if not target_selected and not selected_objects:
         codes = add_statement_to_context(proof_step, definition)
         return codes
@@ -123,16 +127,11 @@ def action_definition(proof_step) -> CodeForLean:
     return codes
 
 
-def action_theorem(proof_step) -> CodeForLean:
+def apply_theorem(proof_step) -> CodeForLean:
     """
-    Apply theorem on selected objects.
-    - If nothing is selected, add theorem to the context.
-    - If target is selected, try to apply theorem, with selected objects if
-    any, to modify the target.
-    - Else try to apply theorem to selected objects to get a new property.
+    Apply theorem on selected objects (assumed to be non empty).
     """
 
-    # test_selection(selected_objects, target_selected)
     target_selected = proof_step.target_selected
     theorem = proof_step.statement
     selected_objects = proof_step.selection
@@ -198,3 +197,48 @@ def action_theorem(proof_step) -> CodeForLean:
         codes.operator = theorem
 
     return codes
+
+
+def action_theorem(proof_step) -> CodeForLean:
+    """
+    If an object or the target is (explicitly) selected, then call the
+    theorem on it. If the theorem can be used for substitution,
+    and all selected objects are properties,
+    then a rewriting will be called.
+
+    If nothing is selected, and the theorem is a universal
+    property (which happens almost everytime), call Calculator so that usr
+    enter the object on which the theorem will be applied (no rewriting in
+    this case). This is done via the get_arguments_to_use_forall() and
+    use_forall() methods in common_actions.py
+    """
+
+    target_selected = proof_step.target_selected
+    theorem = proof_step.statement
+    selected_objects = proof_step.selection
+
+    if selected_objects or target_selected:
+        # TODO: use common actions (use_forall, etc.)
+        return apply_theorem(proof_step)
+
+    ips = theorem.initial_proof_state
+    theorem_goal = ips.goals[0] if ips else None  # Goal
+    theorem_as_math_object = theorem_goal.contextless()
+
+    if not theorem_as_math_object.is_for_all(is_math_type=True):
+        # TODO: consider other operators
+        return apply_theorem(proof_step)
+
+    # From now on theorem_as_math_object is a universal statement
+    # FIXME: only explicit arguments should be considered! Implicit args may be
+    #  transmitted also?
+    arguments = get_arguments_to_use_forall(proof_step,
+                                            universal_property=theorem_as_math_object)
+
+    code = use_forall(proof_step, arguments, theorem)
+    return code
+
+
+
+
+

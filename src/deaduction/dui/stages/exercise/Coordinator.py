@@ -855,8 +855,8 @@ class Coordinator(QObject):
 
         while True:
             self.proof_step.target_selected = self.emw.target_selected
+            self.proof_step.user_input = self.emw.user_input
             try:
-                self.proof_step.user_input = self.emw.user_input
                 lean_code = action.run(self.proof_step)
 
             except MissingParametersError as e:
@@ -892,7 +892,6 @@ class Coordinator(QObject):
                 break
 
             except SelectDefaultTarget:
-                # self.unfreeze()
                 self.emw.process_target_click()
 
             else:
@@ -922,6 +921,7 @@ class Coordinator(QObject):
 
         while True:
             self.proof_step.target_selected = self.emw.target_selected
+            self.proof_step.user_input = self.emw.user_input
             try:
                 item.setSelected(False)
                 statement = item.statement
@@ -936,21 +936,10 @@ class Coordinator(QObject):
                 self.process_wrong_user_input(error)
 
             except SelectDefaultTarget:
-                # self.unfreeze()
                 self.emw.process_target_click()
-                print("CLIC")
+                # print("CLIC")
 
             except MissingParametersError as e:
-                # if e.input_type == InputType.Text:
-                #     # TODO: move this into EMW methods
-                #     choice, ok = QInputDialog.getText(action_btn,
-                #                                       e.title,
-                #                                       e.output)
-                # elif e.input_type in (InputType.Choice, InputType.YesNo):
-                #     choice, ok = ButtonsDialog.get_item(e.choices,
-                #                                         e.title,
-                #                                         e.output)
-                #
                 if e.input_type == InputType.Calculator:
                     target = e.input_target
                     goal = self.proof_step.goal
@@ -966,6 +955,8 @@ class Coordinator(QObject):
                         self.emw.user_input = []
                         self.unfreeze()
                         break
+                else:  # Should not happen!
+                    break
 
             # No exception raised
             else:

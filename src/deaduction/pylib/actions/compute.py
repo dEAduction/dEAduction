@@ -56,7 +56,8 @@ def action_sum(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected)
+    test_selection(selected_objects, target_selected, exclusive=True,
+                   select_default_target=False)
 
     # TODO: if len(selected_objects) == 1:
     #  MissingParam --> user rentre un nb à ajouter.
@@ -131,7 +132,8 @@ def action_simplify(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected, exclusive=True)
+    test_selection(selected_objects, target_selected, exclusive=True,
+                   select_default_target=True)
 
     selected_name = ""
     if len(selected_objects) == 1:  # no selection : simplify everything??
@@ -174,7 +176,7 @@ def action_transitivity(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected)
+    # test_selection(selected_objects, target_selected)
 
     if len(selected_objects) != 2:
         raise WrongUseModeInput("Transitivity needs exactly two properties")
@@ -198,7 +200,8 @@ def action_commute(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected, exclusive=True)
+    test_selection(selected_objects, target_selected, exclusive=True,
+                   select_default_target=True)
 
     if target_selected and not selected_objects:
         code = CodeForLean(f"smart_comm_on_target")
@@ -227,7 +230,8 @@ def action_associativity(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected, exclusive=True)
+    test_selection(selected_objects, target_selected, exclusive=True,
+                   select_default_target=True)
 
     if target_selected and not selected_objects:
         code = CodeForLean(f"smart_assoc_on_target")
@@ -254,6 +258,10 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     Try to apply a triangular inequality which is pertinent with respect
     to a given expression.
     """
+
+    # TODO:
+    #  - apply to two selected context numbers
+    #  - if nothing is selected, open Calculator to specify x and y
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
@@ -263,6 +271,8 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
         selected_name = selected_objects[0].name
     elif len(selected_objects) > 1:
         raise WrongUseModeInput("Select only one object")
+    elif not selected_objects:
+        target_selected = True
 
     new_hyp = get_new_hyp(proof_step)
     code1 = CodeForLean("norm_num").try_()  # To normalise inequalities
