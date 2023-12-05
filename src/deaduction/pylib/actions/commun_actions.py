@@ -172,19 +172,6 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     #  May even try to guess parameters from the context
     #  (e.g. if we need a function and there is only one in the context)
 
-    # try with up to 4 implicit parameters
-    # implicit_codes = [command + ' ' + arguments,
-    #                   command + ' _ ' + arguments,
-    #                   command + ' _ _ ' + arguments,
-    #                   command + ' _ _ _ ' + arguments,
-    #                   command + ' _ _ _ _ ' + arguments]
-    #
-    # explicit_codes = [command_explicit + ' ' + arguments,
-    #                   command_explicit + ' _ ' + arguments,
-    #                   command_explicit + ' _ _ ' + arguments,
-    #                   command_explicit + ' _ _ _ ' + arguments,
-    #                   command_explicit + ' _ _ _ _ ' + arguments]
-
     # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
     # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
     # = "mp")
@@ -363,8 +350,8 @@ def use_forall(proof_step, arguments:[MathObject],
     arguments[0] = extract_var(arguments[0])
     simple_code = have_new_property(universal_property_or_statement, arguments,
                                     new_hypo_name)
-    simple_code.add_success_msg(_("Property {} added to the context").
-                                format(new_hypo_name))
+    # simple_code.add_success_msg(_("Property {} added to the context").
+    #                             format(new_hypo_name))
     simple_code.add_used_properties(selected_objects)
 
     if isinstance(universal_property_or_statement, MathObject):

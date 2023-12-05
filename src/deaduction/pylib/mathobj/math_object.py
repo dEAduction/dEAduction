@@ -693,7 +693,10 @@ class MathObject:
 
     @property
     def lean_name(self):
-        return self.info.get('lean_name')
+        """
+        For compatibility with Statement.
+        """
+        return self.to_display(format_='lean')
 
     @property
     def value(self):
