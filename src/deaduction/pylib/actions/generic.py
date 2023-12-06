@@ -221,12 +221,12 @@ def action_theorem(proof_step) -> CodeForLean:
         # TODO: use common actions (use_forall, etc.)
         return apply_theorem(proof_step)
 
-    ips = theorem.initial_proof_state
-    theorem_goal = ips.goals[0] if ips else None  # Goal
-    theorem_as_math_object = theorem_goal.contextless()
+    theorem_goal = theorem.goal()
+    theorem_as_math_object = theorem_goal.to_math_object()
 
     if not theorem_as_math_object.is_for_all(is_math_type=True):
         # TODO: consider other operators
+        # TODO: implicit defs
         return apply_theorem(proof_step)
 
     # From now on theorem_as_math_object is a universal statement

@@ -996,7 +996,7 @@ class Goal:
     ###################
     # Display methods #
     ###################
-    def contextless(self) -> MathObject:
+    def to_math_object(self) -> MathObject:
         """
         Return a math_object obtained by integrating all the context in the
         target, using universal quantifiers and implications. e.g. if
@@ -1047,7 +1047,7 @@ class Goal:
         #     body = MathObject.forall(obj, body)
 
         # (3) Negate!
-        new_prop = MathObject.negate(self.contextless())
+        new_prop = MathObject.negate(self.to_math_object())
 
         return new_prop
 

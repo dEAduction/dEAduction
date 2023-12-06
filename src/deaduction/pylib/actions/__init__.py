@@ -31,6 +31,8 @@ from .actiondef import (    Action,
 
 from .exceptions import (InputType,
                          MissingParametersError,
+                         CalculatorRequest,
+                         MissingCalculatorOutput,
                          WrongUserInput,
                          WrongProveModeInput,
                          WrongUseModeInput,

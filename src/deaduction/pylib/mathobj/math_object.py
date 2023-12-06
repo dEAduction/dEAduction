@@ -1784,6 +1784,12 @@ class MathObject:
         """
         return self == other
 
+    def to_math_object(self):
+        """
+        For compatibility.
+        """
+        return self
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},

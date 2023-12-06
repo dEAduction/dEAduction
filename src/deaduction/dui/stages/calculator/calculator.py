@@ -757,6 +757,18 @@ class CalculatorController:
 
         return math_object, OK
 
+    @classmethod
+    def get_items(cls, goal, title):
+        """
+        - To apply a property or a theorem, provide the args
+        theorem_to_be_applied or statement_to_be_applied.
+        Targets will be generated, one for each dummy non implicit dummy var
+        on which the property universally quantifies.
+
+
+        """
+        pass
+
     @Slot()
     def set_lean_mode(self):
         self.calculator_ui.calculator_target.lean_mode = self.lean_mode

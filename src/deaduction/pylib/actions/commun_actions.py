@@ -32,6 +32,8 @@ from typing import Optional, Union
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
+                                      CalculatorRequest,
+                                      MissingCalculatorOutput,
                                       CodeForLean)
 
 from deaduction.pylib.config.request_method import from_previous_state_method
@@ -350,14 +352,12 @@ def use_forall(proof_step, arguments:[MathObject],
     arguments[0] = extract_var(arguments[0])
     simple_code = have_new_property(universal_property_or_statement, arguments,
                                     new_hypo_name)
-    # simple_code.add_success_msg(_("Property {} added to the context").
-    #                             format(new_hypo_name))
     simple_code.add_used_properties(selected_objects)
 
     if isinstance(universal_property_or_statement, MathObject):
         universal_property = universal_property_or_statement
     else:
-        universal_property = universal_property_or_statement.contextless_goal()
+        universal_property = universal_property_or_statement.to_math_object()
 
     inequality = inequality_from_pattern_matching(universal_property,
                                                   arguments[0])
@@ -399,12 +399,7 @@ def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:
         raise MissingParametersError(InputType.Calculator,
                                      title=_("Use a universal property"),
                                      target=input_target)
-
-    # raise MissingParametersError(InputType.Text,
-    #                                  title=_("Use a universal property"),
-    #                                  output=_(
-    #                                      "Enter element on which you "
-    #                                      "want to use this property:"))
+        # raise MissingCalculatorOutput(request_type=CalculatorRequest.)
     else:
         math_object = user_input[0]
         # This will be a str either from Calculator in "Lean mode",

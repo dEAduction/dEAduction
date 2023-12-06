@@ -40,7 +40,7 @@ global _
 
 class InputType(IntEnum):
     """
-    Class clarifying second argument of output of functions action_*
+    Class clarifying the type of missing parameter.
     """
     Text = 0
     Choice = 1
@@ -49,14 +49,40 @@ class InputType(IntEnum):
 
 
 class MissingParametersError(Exception):
-    def __init__(self, input_type, choices=None, title="", output="",
+    def __init__(self, input_type: InputType, choices=None, title="", output="",
                  converter=lambda n: n, target=None):
+        # FIXME: remove target, specific to next class
         self.input_type         = input_type
         self.choices            = choices
         self.title              = title
         self.output             = output
         self.local_to_complete_nb = converter
         self.input_target = target
+
+
+class CalculatorRequest(IntEnum):
+    """
+    Class clarifying th type of request to the Calculator.
+    """
+    ApplyProperty = 0
+    ApplyStatement = 1
+    ProveExists = 2
+    StateSubGoal = 3
+    DefineObject = 4
+
+
+class MissingCalculatorOutput(MissingParametersError):
+    """
+    Any instance should provide enough info so that, together with the goal,
+    Calculator is able to construct the CalculatorTargets.
+    """
+    def __init__(self, request_type: CalculatorRequest,
+                 prop=None,
+                 statement=None):
+        self.input_type = InputType.Calculator
+        self.request_type = request_type
+        self.prop = prop
+        self.statement = statement
 
 
 class WrongUserInput(Exception):

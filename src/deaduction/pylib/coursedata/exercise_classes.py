@@ -257,9 +257,9 @@ class Statement:
         goal = ips.goals[0] if ips else None
         return goal
 
-    def contextless_goal(self):
+    def to_math_object(self):
         goal = self.goal()
-        math_object = goal.contextless() if goal else None
+        math_object = goal.to_math_object() if goal else None
         return math_object
 
     @property
