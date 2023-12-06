@@ -357,6 +357,88 @@ class CalculatorButtonsGroup(QWidget):
         self.toggle_buttons()
 
 
+class CalculatorAllButtons(QWidget):
+    """
+    A class to display groups of CalculatorButtons, with a vertical scroll bar.
+    """
+
+    send_pattern = Signal(MarkedPatternMathObject)
+
+    def __init__(self, calc_patterns: [CalculatorPatternLines]):
+        super().__init__()
+        self.buttons_groups = []
+        # Clear ancient shortcuts!!
+        CalculatorButton.shortcuts_dic = {}
+        main_lyt = QVBoxLayout()
+
+        ###############
+        # Add buttons #
+        ###############
+        self.btns_wgt = QWidget()
+        btns_lyt = QVBoxLayout()
+
+        # Lines from pattern_lines
+        for calc_pattern in calc_patterns:
+            buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
+                calc_pattern)
+            btns_lyt.addWidget(buttons)
+            self.buttons_groups.append(buttons)
+
+        # Lines from nodes
+        for NodeClass, col_size in ((LogicalNode, 5),
+                                    (SetTheoryNode, 5),
+                                    (NumberNode, 4),
+                                    (InequalityNode, 5)):
+            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
+                                                                col_size)
+            btns_lyt.addWidget(buttons)
+            self.buttons_groups.append(buttons)
+
+        btns_lyt.addStretch()
+        self.btns_wgt.setLayout(btns_lyt)
+        self.btns_scroll_area = QScrollArea()
+        self.btns_scroll_area.setWidgetResizable(True)
+        # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
+        self.btns_scroll_area.setWidget(self.btns_wgt)
+
+        main_lyt.addWidget(self.btns_scroll_area)
+
+        # Connect button signals
+        for btn in self.buttons():
+            btn.send_pattern.connect(self.process_clic)
+
+        self.set_geometry()
+
+    def set_geometry(self, geometry=None):
+        settings = QSettings("deaduction")
+        value = settings.value("calculator/geometry")
+        if value:
+            self.restoreGeometry(value)
+        elif geometry:
+            self.setGeometry(geometry)
+
+        for buttons in self.buttons_groups:
+            hidden = settings.value(f"calculator/{buttons.title}",
+                                     buttons.hidden)
+            hidden = (hidden in (True, "true"))
+            dt = buttons.disclosure_triangle
+            if dt.hidden != hidden:
+                buttons.hidden = not hidden
+                dt.toggle()
+            else:
+                buttons.toggle_disclosure_triangle(hidden=hidden)
+
+    def close(self):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("calculator/geometry", self.saveGeometry())
+
+        # Save states of disclosure triangles
+        for buttons in self.buttons_groups:
+            settings.setValue(f"calculator/{buttons.title}",
+                              buttons.hidden)
+
+
 class CalculatorMainWindow(QDialog):
     """
     A class to display a "calculator", i.e. a QWidget that enables usr to
@@ -368,7 +450,7 @@ class CalculatorMainWindow(QDialog):
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
 
-        self.key_event_buffer = ""
+        # self.key_event_buffer = ""
 
         self.toolbar = CalculatorToolbar()
         self.navigation_bar = NavigationBar()
@@ -537,7 +619,7 @@ class CalculatorController:
     def __init__(self, target_type=None,
                  goal=None,
                  calculator_groups=None,
-                 title="Calculator"):
+                 title="Math Calculator"):
 
         ##############
         # Set target #

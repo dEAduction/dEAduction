@@ -24,7 +24,6 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QTextEdit, QWidget,
@@ -34,9 +33,106 @@ from PySide2.QtWidgets import (QTextEdit, QWidget,
                                QCheckBox,
                                QGroupBox)
 
-
-from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
+import deaduction.pylib.config.dirs as cdirs
+from deaduction.dui.primitives.base_math_widgets_styling import (
+    MathTextWidget, MathLabel)
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
+
+global _
+
+
+class AbstractToolBar(QToolBar):
+
+    def animate_click(self, action: QAction):
+        """
+        Simulate a click on the tool button corresponding to the QAction.
+        """
+        button = self.widgetForAction(action)
+        button.animateClick(100)
+
+
+class CalculatorToolbar(AbstractToolBar):
+    def __init__(self):
+        super().__init__()
+        icons_dir = cdirs.icons
+
+        # TODO: implement tooltips for shortcuts
+        undo_shortcut = QKeySequence.keyBindings(QKeySequence.Undo)[0].toString()
+        redo_shortcut = QKeySequence.keyBindings(QKeySequence.Redo)[0].toString()
+        self.rewind = QAction(QIcon(str((icons_dir /
+                                     'goback-begining.png').resolve())),
+                _('Undo all'), self)
+        self.undo_action = QAction(QIcon(str((icons_dir /
+                                          'undo_action.png').resolve())),
+                _('Undo'), self)
+        self.redo_action = QAction(QIcon(str((icons_dir /
+                                          'redo_action.png').resolve())),
+                _('Redo'), self)
+        self.go_to_end = QAction(QIcon(str((icons_dir /
+                                            'go-end-96.png').resolve())),
+                _('Redo all'), self)
+
+        self.addAction(self.rewind)
+        self.addAction(self.undo_action)
+        self.addAction(self.redo_action)
+        self.addAction(self.go_to_end)
+
+
+class NavigationBar(AbstractToolBar):
+    """
+    A toolbar with navigation buttons: left, right, delete arrows.
+    """
+    def __init__(self):
+        super().__init__()
+        # self.setLayoutDirection(Qt.RightToLeft)
+
+        icons_dir = cdirs.icons
+        beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
+
+        # TODO: implement tooltips for shortcuts
+        beginning_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToPreviousWord)[0].toString()
+        beginning_shortcut = f"({_('type')} {beginning_shortcut})"
+
+        left_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToPreviousChar)[0].toString()
+        right_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToNextChar)[0].toString()
+        end_shortcut = QKeySequence.keyBindings(
+            QKeySequence.MoveToNextWord)[0].toString()
+        delete_shortcut = QKeySequence.keyBindings(
+            QKeySequence.Delete)[0].toString()
+        self.beginning_action = QAction(QIcon(beg_path),
+                                        _('Go to beginning'),
+                                        self)
+
+        left_path = str((icons_dir / 'icons8-back-48.png').resolve())
+        self.left_action = QAction(QIcon(left_path),
+                                   _('Move left'), self)
+
+        # up_path = str((icons_dir /
+        #               'icons8-thick-arrow-pointing-up-48.png').resolve())
+        # self.up_action = QAction(QIcon(up_path), _('Move up'), self)
+
+        right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
+        self.right_action = QAction(QIcon(right_path),
+                                   _('Move right'), self)
+
+        end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
+        self.end_action = QAction(QIcon(end_path),
+                                   _('Go to end'), self)
+
+        self.delete = QAction(QIcon(str((icons_dir /
+                                         'icons8-clear-48.png').resolve())),
+                              _('Delete selected block'), self)
+
+        self.addAction(self.beginning_action)
+        self.addAction(self.left_action)
+        # self.addAction(self.up_action)
+        self.addSeparator()
+        self.addAction(self.right_action)
+        self.addAction(self.end_action)
+        self.addAction(self.delete)
 
 
 class CalculatorTarget(MathTextWidget):
@@ -193,11 +289,159 @@ class CalculatorTarget(MathTextWidget):
             self.setTextCursor(cursor)
 
 
-class CalculatorTargets(QWidget):
+class CalculatorTargets(QDialog):
     """
     This class displays one or several CalculatorTarget,
-    with a common detailed context and individual titles.
+    with a title, a common (optional) task_description and individual titles.
+    e.g.:
+    (1) A single target:
+        title = Define a new sub-goal
+        No task_description
+        --> Target with type = Prop
+
+    (2) Several targets:
+        title = Apply the following theorem/property:
+        task_description = forall X, Y, Z, forall f:X -> Y, forall g: Y -> Z,
+        f continuous and g continuous ==> g circ f continuous.
+
+        --> Targets corresponding to f and g, with titles
+                "Which object plays the role of f?"
+                "Which object plays the role of g?"
+
     It also displays a toolbar with history moves, and a navigation bar.
+    When self has the focus, focus is transferred to the focused_target.
     """
 
+    def __init__(self, title,
+                 target_types: [],  # MathObject
+                 titles: [str],
+                 task_description=None):
+        """        
+        @param task_description: either a goal, a MathObject or a string.
+        @param target_types: a list of MathObjects.
+        @param titles: a list of strings.
+        """
 
+        assert target_types
+        if len(titles) < len(target_types):
+            titles += [None]*(len(target_types) - len(titles))
+
+        super().__init__()
+        self.setWindowTitle(title)
+
+        # Toolbar
+        self.toolbar = CalculatorToolbar()
+
+        ####################
+        # Detailed context #
+        ####################
+        if task_description:
+            if not isinstance(task_description, str):
+                task_description = task_description.to_display(format_='html')
+
+            self.task_widget = MathLabel()
+            self.task_widget.setText(task_description)
+        else:
+            self.task_widget = None
+
+        ###########
+        # Targets #
+        ###########
+        title_wdgs = []
+        self.target_wdgs = []
+        for title, target_type in zip(titles, target_types):
+            if title:
+                title_wdg = QLabel(title)
+                title_wdg.setStyleSheet("font-weight: bold; ")
+                title_wdgs.append(title_wdg)
+            else:
+                title_wdgs.append(None)
+            target_wdg = CalculatorTarget()
+            text = target_type.to_display(format_='html')
+            target_wdg.setHtml(text)
+            self.target_wdgs.append(target_wdg)
+        # self.calculator_target = CalculatorTarget()
+        # self.calculator_target_title = QLabel()
+        # self.calculator_target_title.setStyleSheet("font-weight: bold; ")
+        # main_lyt.addWidget(self.calculator_target_title)
+        # main_lyt.addWidget(self.calculator_target)
+
+        ######################
+        # Navigation buttons #
+        ######################
+        self.navigation_bar = NavigationBar()
+        self.lean_mode_wdg = QCheckBox("Lean mode")
+        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.button_box.accepted.connect(self.close_n_accept)
+        nav_lyt = QHBoxLayout()
+        nav_lyt.addWidget(self.navigation_bar)
+        nav_lyt.addStretch()
+        nav_lyt.addWidget(self.lean_mode_wdg)
+        nav_lyt.addWidget(self.button_box)
+
+        ##############
+        # Set layout #
+        ##############
+        main_lyt = QVBoxLayout()
+        main_lyt.addWidget(self.toolbar)
+        main_lyt.addWidget(QLabel(title))  # Remove?
+
+        if self.task_widget:
+            main_lyt.addWidget(self.task_widget)
+
+        for title, target in zip(title_wdgs, self.target_wdgs):
+            if title:
+                main_lyt.addWidget(title)
+            main_lyt.addWidget(target)
+
+        main_lyt.addLayout(nav_lyt)
+        self.setLayout(main_lyt)
+
+        self.target_wdgs[0].setFocus()
+        self._focused_target_idx = 0
+
+        self.set_geometry()
+
+    def set_geometry(self, geometry=None):
+        settings = QSettings("deaduction")
+        value = settings.value("calculator_targets/geometry")
+        if value:
+            self.restoreGeometry(value)
+        elif geometry:
+            self.setGeometry(geometry)
+
+    def close(self):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        settings.setValue("calculator_targets/geometry", self.saveGeometry())
+
+    def close_n_accept(self):
+        self.close()
+        self.accept()
+
+    def reject(self):
+        self.close()
+        super().reject()
+
+    def set_html(self, text):
+        self.focused_target.setHtml(text)
+
+    @property
+    def focused_target(self):
+        idx = 0
+        for target_wdg in self.target_wdgs:
+            if target_wdg.hasFocus():
+                self._focused_target_idx = idx
+                break
+            idx += 1
+
+        return self.target_wdgs[self._focused_target_idx]
+
+    def set_focused_target_idx(self, idx):
+        self._focused_target_idx = idx
+        self.target_wdgs[idx].setFocus()
+
+
+
+        
