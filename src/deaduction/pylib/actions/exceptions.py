@@ -77,12 +77,67 @@ class MissingCalculatorOutput(MissingParametersError):
     Calculator is able to construct the CalculatorTargets.
     """
     def __init__(self, request_type: CalculatorRequest,
+                 proof_step,
                  prop=None,
-                 statement=None):
-        self.input_type = InputType.Calculator
+                 statement=None,
+                 name=None):
+        super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
-        self.prop = prop
-        self.statement = statement
+        self.proof_step = proof_step
+        if self.request_type in (CalculatorRequest.ApplyProperty,
+                                 CalculatorRequest.ProveExists):
+            self.prop = prop
+        elif self.request_type is CalculatorRequest.ApplyStatement:
+            self.statement = statement
+        elif self.request_type is CalculatorRequest.DefineObject:
+            self.name = name  # Object name
+
+    def task_title(self):
+        if self.request_type is CalculatorRequest.ApplyProperty:
+            title = _("Apply a universal property:")
+        elif self.request_type is CalculatorRequest.ApplyStatement:
+            title = _("Apply a theorem:")
+        elif self.request_type is CalculatorRequest.ProveExists:
+            title = _("Provide a witness for the existential property:")
+        elif self.request_type is CalculatorRequest.StateSubGoal:
+            title = _("State a new sub-goal:")
+        elif self.request_type is CalculatorRequest.DefineObject:
+            title = _("Define a new object: {} = ?").format(self.name)
+        else:
+            title = None
+        return title
+
+    def extract_types_n_vars(self):
+        if self.request_type is CalculatorRequest.ApplyProperty:
+            math_object = self.prop
+        elif self.request_type is CalculatorRequest.ApplyStatement:
+            math_object = self.statement
+        else:
+            return []
+        return math_object.types_n_vars_of_univ_prop()
+
+    def targets_types_n_titles(self):
+        types = []
+        titles = []
+        types_n_vars = self.extract_types_n_vars()
+        for math_type, var in types_n_vars:
+            types.append(math_type)
+            if var:
+                name = var.to_display(format_='utf8')
+                title = _("Which object plays the role of {}?").format(name)
+            else:   
+                title = _("To which object shall we apply this property?")
+            titles.append(title)
+        return types, titles
+
+    def task_description(self):
+        if self.request_type in (CalculatorRequest.ApplyProperty,
+                                 CalculatorRequest.ProveExists):
+            task = self.prop.to_display(format_='html')
+        elif self.request_type is CalculatorRequest.ApplyStatement:
+            math_obj = self.statement.to_math_object()
+            task = math_obj.to_display(format_='html')
+        return task
 
 
 class WrongUserInput(Exception):

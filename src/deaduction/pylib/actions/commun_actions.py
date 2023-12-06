@@ -327,7 +327,7 @@ def use_forall_with_ineq(proof_step, arguments,
     return code
 
 
-def use_forall(proof_step, arguments:[MathObject],
+def use_forall(proof_step, arguments: [MathObject],
                universal_property_or_statement) -> CodeForLean:
     """
     Try to apply universal_property on arguments.

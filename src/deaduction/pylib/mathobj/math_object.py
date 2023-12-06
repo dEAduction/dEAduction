@@ -1207,6 +1207,32 @@ class MathObject:
         if quant:
             return quant.children[2]
 
+    def types_n_vars_of_univ_prop(self, only_explicit=False) -> [tuple]:
+        """
+        If self is a universal property, either explicit or implicit,
+        extract the type of the variable, and the name in the explicit case.
+        In the explicit case, recursively extend the list in the case when
+        the body is again an explicit universal statement.
+        """
+
+        if not self.is_for_all(implicit=not only_explicit):
+            return
+
+        types_n_vars = []
+        math_type = self.type_of_explicit_quant()
+        if self.is_for_all(implicit=False):
+            dummy_var = self.children[1]
+        else:
+            dummy_var = None
+        types_n_vars.append((math_type, dummy_var))
+        if dummy_var:
+            body: MathObject = self.children[2]
+            more = body.types_n_vars_of_univ_prop(only_explicit=True)
+            if more:
+                types_n_vars.extend(more)
+
+        return types_n_vars
+
     def is_equality(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is an equality.

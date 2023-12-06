@@ -84,7 +84,8 @@ from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject
 # from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
 from deaduction.dui.primitives import DisclosureTriangle
 
-from deaduction.dui.stages.calculator.calculator_targets import CalculatorTarget
+from deaduction.dui.stages.calculator.calculator_targets import (
+    CalculatorTarget, CalculatorTargets)
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
 
@@ -758,14 +759,11 @@ class CalculatorController:
         return math_object, OK
 
     @classmethod
-    def get_items(cls, goal, title):
+    def get_items(cls, goal, title,
+                  target_types, titles,
+                  task_description=None):
         """
-        - To apply a property or a theorem, provide the args
-        theorem_to_be_applied or statement_to_be_applied.
-        Targets will be generated, one for each dummy non implicit dummy var
-        on which the property universally quantifies.
-
-
+        Get one or several targets.
         """
         pass
 
