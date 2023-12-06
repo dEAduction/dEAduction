@@ -1129,6 +1129,9 @@ class Goal:
         context = self.context
         target = self.target
         text = ""
+        #######################
+        # (1) Display context #
+        #######################
         previous_object_is_prop = None
         counter = 0
         while counter < len(context):
@@ -1179,7 +1182,12 @@ class Goal:
         if text:
             text += text_cr
 
-        target_text = target.math_type_to_display(text=text_mode)
+        ######################
+        # (2) Display target #
+        ######################
+        target_text = target.math_type_to_display(text=text_mode,
+                                                  format_=format_)
+        # Helper for syntactic rules:
         target_utf8 = target.math_type_to_display(text=text_mode,
                                                   format_='utf8')
         if to_prove and not open_problem:

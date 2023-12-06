@@ -245,7 +245,7 @@ class PatternMathDisplay:
                        'decreasing_seq', 'bounded_above', 'bounded_below',
                        'bounded_sequence', 'cauchy',
                        'continuous', 'uniformly_continuous',
-                       'injective', 'surjective',
+                       'injective', 'surjective', 'bijective',
                        'relation_equivalence', 'partition',
                        'application', 'application_bijective', 'even', 'odd']
 
@@ -310,6 +310,12 @@ class PatternMathDisplay:
     def app_pattern_from_cst_name(cls, name):
         cst_pattern = cls.pattern_from_cst_name(name)
         pattern = f'APP({cst_pattern}, ...)'
+        return pattern
+
+    @classmethod
+    def app_negation_pattern_from_cst_name(cls, name):
+        cst_pattern = cls.pattern_from_cst_name(name)
+        pattern = f'NOT(APP({cst_pattern}, ...))'
         return pattern
 
     @classmethod
@@ -419,6 +425,16 @@ class PatternMathDisplay:
         return shape
 
     @classmethod
+    def latex_negation_shape_for_predicate(cls, name):
+        """
+        e.g.         "converging_seq": ((-1, ), r'\text_is', _(" converging")).
+        """
+
+        pretty_name = cls.constants_pretty_names.get(name, name)
+        shape = ((0, -1), r'\text_is_not', pretty_name)
+        return shape
+
+    @classmethod
     def latex_shape_for_app_of_cst(cls, name):
         if name in cls.fcts_one_var + cls.fcts_two_var:
             # NB: one var could ba handled in latex_from_node
@@ -455,11 +471,15 @@ class PatternMathDisplay:
         # TODO: negation patterns/shapes
         for name in cls.all_constants_names():
             key = cls.app_pattern_from_cst_name(name)
+            key_not = cls.not_pattern_from_cst_name(name)
             value = cls.latex_shape_for_app_of_cst(name)
+            value_not = cls.latex_negation_shape_for_predicate(name)
             # print(value)
             lean_value = cls.lean_shape_for_app_of_cst(name)
             if value:
                 cls.latex_from_app_constant_patterns[key] = value
+            if value_not:
+                cls.latex_from_app_constant_patterns[key_not] = value_not
             if lean_value:
                 cls.lean_from_app_constant_patterns[key] = lean_value
             # TODO: move elsewhere?
