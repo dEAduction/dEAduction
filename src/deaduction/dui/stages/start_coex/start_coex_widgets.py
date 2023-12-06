@@ -60,6 +60,7 @@ import deaduction.pylib.utils.filesystem as fs
 from deaduction.dui.primitives      import (DisclosureDict,
                                             ButtonsDialog,
                                             MathTextWidget,
+                                            GoalTextWidget,
                                             YesNoDialog)
 from deaduction.dui.elements        import (MathObjectWidget,
                                             TargetLabel,
@@ -80,6 +81,60 @@ from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
 global _
+
+
+class GoalMathWidget(QWidget):
+    """
+    A QWidget to display a goal in math mode. Objects, properties and target
+    are displayed in distinct QMathWidgets.
+    """
+
+    def __init__(self, goal, to_prove=False, open_problem=False):
+        super().__init__()
+        target = goal.target
+        objects = goal.context_objects
+        properties = goal.context_props
+
+        # ───────────── Objects and properties ───────────── #
+        propobj_lyt = QHBoxLayout()
+        objects_wgt = MathObjectWidget(objects)
+        properties_wgt = MathObjectWidget(properties)
+        objects_lyt = QVBoxLayout()
+        properties_lyt = QVBoxLayout()
+
+        # Math font
+        objects_wgt.adjustSize()
+        # objects_wgt.setFont(self.math_fonts)
+        properties_wgt.adjustSize()
+        # properties_wgt.setFont(self.math_fonts)
+
+        objects_lyt.addWidget(QLabel(_('Objects:')))
+        properties_lyt.addWidget(QLabel(_('Properties:')))
+        objects_lyt.addWidget(objects_wgt)
+        properties_lyt.addWidget(properties_wgt)
+        propobj_lyt.addLayout(objects_lyt)
+        propobj_lyt.addLayout(properties_lyt)
+
+        # ───────────────────── Target ───────────────────── #
+        # target_wgt = MathObjectWidget(target=target)
+        target_wgt = TargetLabel(target)
+        # target_wgt.setFont(self.math_fonts)
+        # Set target_wgt height to 1 line: USELESS with QLabel
+        # font_metrics = QFontMetrics(math_font)
+        # text_size = font_metrics.size(0, target.math_type_to_display())
+        # text_height = text_size.height() * 2  # Need to tweak
+        # target_wgt.setMaximumHeight(text_height)
+
+        friendly_wgt_lyt = QVBoxLayout()
+        friendly_wgt_lyt.addLayout(propobj_lyt)
+        target_title = (_("True or False:") if open_problem
+                        else _("Target:") if to_prove
+                        else _("Conclusion"))
+        friendly_wgt_lyt.addWidget(QLabel(target_title))
+
+        friendly_wgt_lyt.addWidget(target_wgt)
+        self.setLayout(friendly_wgt_lyt)
+        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
 
 class AbstractCoExChooser(QWidget):
@@ -691,64 +746,27 @@ class ExerciseChooser(AbstractCoExChooser):
             # Text widget #
             ###############
             # The goal is presented in a single widget.
-            self.__text_wgt = MathTextWidget()
-
-            self.__text_wgt.setReadOnly(True)
-            # self.__text_wgt.setFont(self.math_fonts)
-            text = goal.goal_to_text(format_="html",
-                                     text_mode=True,
-                                     open_problem=exercise.is_open_question)
-            self.__text_wgt.setHtml(text)
+            open_problem = exercise.is_open_question
+            self.__text_wgt = GoalTextWidget(goal,
+                                             open_problem=open_problem,
+                                             to_prove=True)
             widget = self.__text_wgt
+            # self.__text_wgt.setReadOnly(True)
+            # # self.__text_wgt.setFont(self.math_fonts)
+            # text = goal.goal_to_text(format_="html",
+            #                          text_mode=True,
+            #                          open_problem=exercise.is_open_question)
+            # self.__text_wgt.setHtml(text)
+            # widget = self.__text_wgt
         else:
             #############
             # UI widget #
             #############
             # The widget with lists for math. objects and properties
             # and a QLAbel for the target.
-            target = goal.target
-            objects = goal.context_objects
-            properties = goal.context_props
-
-            # ───────────── Objects and properties ───────────── #
-            propobj_lyt = QHBoxLayout()
-            objects_wgt = MathObjectWidget(objects)
-            properties_wgt = MathObjectWidget(properties)
-            objects_lyt = QVBoxLayout()
-            properties_lyt = QVBoxLayout()
-
-            # Math font
-            objects_wgt.adjustSize()
-            # objects_wgt.setFont(self.math_fonts)
-            properties_wgt.adjustSize()
-            # properties_wgt.setFont(self.math_fonts)
-
-            objects_lyt.addWidget(QLabel(_('Objects:')))
-            properties_lyt.addWidget(QLabel(_('Properties:')))
-            objects_lyt.addWidget(objects_wgt)
-            properties_lyt.addWidget(properties_wgt)
-            propobj_lyt.addLayout(objects_lyt)
-            propobj_lyt.addLayout(properties_lyt)
-
-            # ───────────────────── Target ───────────────────── #
-            # target_wgt = MathObjectWidget(target=target)
-            target_wgt = TargetLabel(target)
-            # target_wgt.setFont(self.math_fonts)
-            # Set target_wgt height to 1 line: USELESS with QLabel
-            # font_metrics = QFontMetrics(math_font)
-            # text_size = font_metrics.size(0, target.math_type_to_display())
-            # text_height = text_size.height() * 2  # Need to tweak
-            # target_wgt.setMaximumHeight(text_height)
-
-            self.__ui_wgt = QWidget()
-
-            friendly_wgt_lyt = QVBoxLayout()
-            friendly_wgt_lyt.addLayout(propobj_lyt)
-            friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
-            friendly_wgt_lyt.addWidget(target_wgt)
-            self.__ui_wgt.setLayout(friendly_wgt_lyt)
-            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
-
+            open_problem = exercise.is_open_question
+            self.__ui_wgt = GoalMathWidget(goal, to_prove=True,
+                                           open_problem=open_problem)
             widget = self.__ui_wgt
 
         return widget

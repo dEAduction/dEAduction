@@ -25,7 +25,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import QLabel, QTextEdit
+from PySide2.QtWidgets import QLabel, QTextEdit, QWidget, QHBoxLayout
 from PySide2.QtGui import QStandardItem
 
 import deaduction.pylib.config.vars as cvars
@@ -194,19 +194,27 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight(False)
+        self.setReadOnly(True)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)
         super().setHtml(self.html_style + '<div>' + text + '</div>')
 
 
+class GoalTextWidget(MathTextWidget):
+    """
+    A MathTextWidget to display a goal in text mode. This can be a statement,
+    an exercise (to_prove=True), or an open question.
+    This used in StartCoEx, and in CalculatorTargets.
+    """
+    def __init__(self, goal, to_prove=False, open_problem=False):
+        super().__init__()
 
-
-
-
-
-
-
-
+        # self.__text_wgt.setFont(self.math_fonts)
+        text = goal.goal_to_text(format_="html",
+                                 text_mode=True,
+                                 to_prove=to_prove,
+                                 open_problem=open_problem)
+        self.setHtml(text)
 
 
