@@ -365,6 +365,7 @@ class CalculatorAllButtons(QWidget):
     """
 
     send_pattern = Signal(MarkedPatternMathObject)
+    targets_window: CalculatorTargets = None
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
@@ -630,6 +631,10 @@ class CalculatorController:
     _target: MarkedPatternMathObject
     target_windows: CalculatorTargets
 
+    ################
+    # init methods #
+    ################
+
     def __init__(self, target_type=None,
                  goal=None,
                  calculator_groups=None,
@@ -641,6 +646,10 @@ class CalculatorController:
 
         self.goal = goal
         self.targets = []
+        self.target_types = target_types if target_types else None
+        nb = self.nb_of_targets
+        self.histories: [[MarkedPatternMathObject]] = [[]] * nb
+        self.history_indices = [-1] * nb
 
         if target_types:
             # self.window_title = window_title
@@ -656,14 +665,13 @@ class CalculatorController:
                                                     task_description=task_description)
 
         else:
-            self.target_types = None
             self.task_description = None
             self.targets_window = None
 
             ##############
             # Set target #
             ##############
-            self.targets_window = None
+            self.targets_window: CalculatorTargets = None
             if not target_type:
                 target_type = MetaVar()
                 p_target_type = MarkedPatternMathObject.from_pattern_math_object(
@@ -677,16 +685,15 @@ class CalculatorController:
                 self.target_title = _("Enter") + " " + display_type + _(":")
 
             target_mvar = MetaVar(math_type=p_target_type)
-            self.target = MarkedMetavar.from_mvar(target_mvar)
-            self.target.mark()
+            self.targets[0] = MarkedMetavar.from_mvar(target_mvar)
+            self.targets[0].mark()
 
         ###########
         # Buttons #
         ###########
         self.calculator_groups = []
-        ###################
+
         # Context buttons #
-        ###################
         if goal:
             context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
@@ -700,20 +707,16 @@ class CalculatorController:
             self.calculator_groups.extend(calculator_groups)
         # Add 'constant' from definitions,
         # e.g. is_bounded, is_even, and so on
-        ######################
+
         # Definition buttons #
-        ######################
         cpls = CalculatorPatternLines.constants_from_definitions()
         self.calculator_groups.extend(cpls)
 
-        self.history: [MarkedPatternMathObject] = []
-        self.history_idx = -1
-
-        ##################
         # User interface #
-        ##################
         if self.target_types:
             self.buttons_window = CalculatorAllButtons(self.calculator_groups)
+            self.__set_targets()
+            self.__init_multiple_signals()
         else:
             self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
             self.calculator_ui.setWindowTitle(window_title)
@@ -723,73 +726,6 @@ class CalculatorController:
 
             self.__init_signals()
             self.update()  # Display target and create first history entry
-
-    def __set_targets(self):
-        """
-        Fill-in self.targets with MarkedMetavar whose target types are taken
-        in self.target_types.
-        """
-        self.targets = []
-        for target_type in self.target_types:
-            target_mvar = MetaVar(math_type=target_type)
-            target = MarkedMetavar.from_mvar(target_mvar)
-            target.mark()
-            self.targets.append(target)
-
-    def __init_signals(self):
-        calc_ui = self.calculator_ui
-
-        t_bar = calc_ui.toolbar
-        t_bar.rewind.triggered.connect(self.history_to_beginning)
-        t_bar.undo_action.triggered.connect(self.history_undo)
-        t_bar.redo_action.triggered.connect(self.history_redo)
-        t_bar.go_to_end.triggered.connect(self.history_to_end)
-
-        n_bar = calc_ui.navigation_bar
-        n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-        n_bar.left_action.triggered.connect(self.move_left)
-        # n_bar.up_action.triggered.connect(self.move_up)
-        n_bar.right_action.triggered.connect(self.move_right)
-        n_bar.end_action.triggered.connect(self.go_to_end)
-        calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
-        n_bar.delete.triggered.connect(self.delete)
-
-    def show(self):
-        if self.target_types:
-            self.targets_window.show()
-        else:
-            self.calculator_ui.show()
-
-    @property
-    def current_target_idx(self):
-        idx = self.targets_window.focused_target_idx
-        return idx
-
-    @property
-    def current_calc_target(self):
-        calc_target = self.targets_window.focused_target
-        return calc_target
-
-    @property
-    def current_target(self):
-        return self.targets[self.current_target_idx]
-
-    @property
-    def target(self):
-        return self._target
-
-    @target.setter
-    def target(self, target):
-        """
-        Set target and ensure that self.math_cursor always corresponds to
-        target.
-        """
-        self._target = target
-
-    @property
-    def math_cursor(self):
-        if self.target:
-            return self.target.math_cursor
 
     @classmethod
     def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
@@ -865,6 +801,129 @@ class CalculatorController:
 
         return math_object, OK
 
+    def __set_targets(self):
+        """
+        Fill-in self.targets with MarkedMetavar whose target types are taken
+        in self.target_types.
+        """
+        self.targets = []
+        idx = 0
+        for target_type in self.target_types:
+            target_mvar = MetaVar(math_type=target_type)
+            target = MarkedMetavar.from_mvar(target_mvar)
+            target.mark()
+            text = target.to_display(format_='html')
+            self.targets_window.target_wdgs[idx].setHtml(text)
+            self.targets.append(target)
+            idx += 1
+
+    def __init_multiple_signals(self):
+        # self.buttons_window.targets_window = self.targets_window
+        buttons_window = self.buttons_window
+        targets_window = self.targets_window
+
+        t_bar = targets_window.toolbar
+        t_bar.rewind.triggered.connect(self.history_to_beginning)
+        t_bar.undo_action.triggered.connect(self.history_undo)
+        t_bar.redo_action.triggered.connect(self.history_redo)
+        t_bar.go_to_end.triggered.connect(self.history_to_end)
+
+        n_bar = targets_window.navigation_bar
+        n_bar.beginning_action.triggered.connect(self.go_to_beginning)
+        n_bar.left_action.triggered.connect(self.move_left)
+        # n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.right_action.triggered.connect(self.move_right)
+        n_bar.end_action.triggered.connect(self.go_to_end)
+        targets_window.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
+        n_bar.delete.triggered.connect(self.delete)
+
+    def __init_signals(self):
+        calc_ui = self.calculator_ui
+
+        t_bar = calc_ui.toolbar
+        t_bar.rewind.triggered.connect(self.history_to_beginning)
+        t_bar.undo_action.triggered.connect(self.history_undo)
+        t_bar.redo_action.triggered.connect(self.history_redo)
+        t_bar.go_to_end.triggered.connect(self.history_to_end)
+
+        n_bar = calc_ui.navigation_bar
+        n_bar.beginning_action.triggered.connect(self.go_to_beginning)
+        n_bar.left_action.triggered.connect(self.move_left)
+        # n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.right_action.triggered.connect(self.move_right)
+        n_bar.end_action.triggered.connect(self.go_to_end)
+        calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
+        n_bar.delete.triggered.connect(self.delete)
+
+    def show(self):
+        if self.target_types:
+            self.targets_window.show()
+        else:
+            self.calculator_ui.show()
+
+    @property
+    def nb_of_targets(self):
+        if self.target_types:
+            return len(self.target_types)
+        else:
+            return 1
+
+    @property
+    def current_target_idx(self):
+
+        idx = (self.targets_window.focused_target_idx if self.targets_window
+               else 0)
+        return idx
+
+    @property
+    def history(self) -> []:
+        return self.histories[self.current_target_idx]
+
+    @history.setter
+    def history(self, old_target) -> []:
+        self.histories[self.current_target_idx] = old_target
+
+    @property
+    def history_idx(self):
+        return self.history_indices[self.current_target_idx]
+
+    @history_idx.setter
+    def history_idx(self, idx):
+        self.history_indices[self.current_target_idx] = idx
+
+    @property
+    def current_calc_target(self):
+        if self.targets_window:
+            calc_target = self.targets_window.focused_target
+        else:
+            calc_target = self.calculator_ui.calculator_target
+        return calc_target
+
+    @property
+    def current_target(self):
+        return self.targets[self.current_target_idx]
+
+    @property
+    def target(self):
+        return self.current_target
+
+    # @property
+    # def target(self):
+    #     return self._target
+    #
+
+    @target.setter
+    def target(self, target):
+        """
+        Set current target.
+        """
+        self.targets[self.current_target_idx] = target
+
+    @property
+    def math_cursor(self):
+        if self.target:
+            return self.target.math_cursor
+
     @Slot()
     def set_lean_mode(self):
         self.calculator_ui.calculator_target.lean_mode = self.lean_mode
@@ -875,7 +934,7 @@ class CalculatorController:
 
     @property
     def lean_mode(self) -> bool:
-        mode = self.calculator_ui.lean_mode_wdg.isChecked()
+        mode = self.lean_mode_wdg.isChecked()
         return mode
 
     @property
@@ -887,36 +946,62 @@ class CalculatorController:
         return text
 
     @property
+    def current_html_target(self):
+        if self.lean_mode:
+            text = self.current_target.to_display(format_='lean')
+        else:
+            text = self.current_target.to_display(format_='html')
+        return text
+
+    @property
+    def navigation_bar(self):
+        if self.targets_window:
+            bar = self.targets_window.navigation_bar
+        else:
+            bar = self.calculator_ui.navigation_bar
+        return bar
+
+    @property
+    def tool_bar(self):
+        if self.targets_window:
+            bar = self.targets_window.toolbar
+        else:
+            bar = self.calculator_ui.toolbar
+        return bar
+
+    @property
+    def lean_mode_wdg(self):
+        return (self.targets_window.lean_mode_wdg if self.targets_window else
+                self.calculator_ui.lean_mode_wdg)
+
+    @property
     def beginning_action(self):
-        return self.calculator_ui.navigation_bar.beginning_action
+        return self.navigation_bar.beginning_action
 
     @property
     def left_action(self):
-        return self.calculator_ui.navigation_bar.left_action
-
-    # @property
-    # def up_action(self):
-    #     return self.calculator_ui.navigation_bar.up_action
+        return self.navigation_bar.left_action
 
     @property
     def right_action(self):
-        return self.calculator_ui.navigation_bar.right_action
+        return self.navigation_bar.right_action
 
     @property
     def end_action(self):
-        return self.calculator_ui.navigation_bar.end_action
+        return self.navigation_bar.end_action
 
     @property
     def undo_action(self):
-        return self.calculator_ui.toolbar.undo_action
+        return self.toolbar.undo_action
 
     @property
     def redo_action(self):
-        return self.calculator_ui.toolbar.redo_action
+        return self.toolbar.redo_action
 
     @Slot()
     def set_target(self):
-        self.calculator_ui.set_html(self.html_target)
+        self.current_calc_target.setHtml(self.html_target)
+        # self.calculator_ui.set_html(self.html_target)
 
     def virtual_cursor_position(self):
         """
@@ -929,10 +1014,10 @@ class CalculatorController:
         # self.target.adjust_cursor_pos()
         # self.calculator_ui.calculator_target.setFocus()
         position = self.virtual_cursor_position()
-        self.calculator_ui.calculator_target.go_to_position(position)
+        self.current_calc_target.go_to_position(position)
 
     def enable_actions(self):
-        target = self.target
+        # target = self.target
         cursor = self.math_cursor
         self.beginning_action.setEnabled(not cursor.is_at_beginning())
         # self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
@@ -947,7 +1032,7 @@ class CalculatorController:
     def update_cursor_and_enable_actions(self):
         self.update_cursor()
         self.enable_actions()
-        self.calculator_ui.calculator_target.setFocus()
+        self.current_calc_target.setFocus()
         # print(self.target)
 
     def set_target_and_update(self):

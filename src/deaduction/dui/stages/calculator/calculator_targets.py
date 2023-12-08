@@ -355,7 +355,7 @@ class CalculatorTargets(QDialog):
         # Targets #
         ###########
         title_wdgs = []
-        self.target_wdgs = []
+        self.target_wdgs: [CalculatorTarget] = []
         for title, target_type in zip(titles, target_types):
             if title:
                 title_wdg = QLabel(title)

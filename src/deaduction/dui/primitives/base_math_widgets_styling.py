@@ -194,7 +194,7 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight(False)
-        self.setReadOnly(True)
+        # self.setReadOnly(True)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)
