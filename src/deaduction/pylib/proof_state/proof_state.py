@@ -672,7 +672,7 @@ class Goal:
     def __recursive_name_all_bound_vars(self, p: MathObject,
                                         include_sequences=True):
         """
-        Recursively name all bound vars in self. Each bound var should be 
+        Recursively name all bound vars in p. Each bound var should be
         named only once (!).
         """
 
@@ -1022,6 +1022,7 @@ class Goal:
             obj = objs.pop()
             body = MathObject.forall(obj, body)
 
+        self.__recursive_name_all_bound_vars(body)
         return body
 
     def negate(self) -> MathObject:
