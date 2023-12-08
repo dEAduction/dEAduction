@@ -1215,12 +1215,12 @@ class MathObject:
         the body is again an explicit universal statement.
         """
 
-        if not self.is_for_all(implicit=not only_explicit):
+        if not self.is_for_all(is_math_type=True, implicit=not only_explicit):
             return
 
         types_n_vars = []
         math_type = self.type_of_explicit_quant()
-        if self.is_for_all(implicit=False):
+        if self.is_for_all(is_math_type=True, implicit=False):
             dummy_var = self.children[1]
         else:
             dummy_var = None

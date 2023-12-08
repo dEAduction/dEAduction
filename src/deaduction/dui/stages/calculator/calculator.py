@@ -68,6 +68,7 @@ from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
                                QGroupBox)
 
 import deaduction.pylib.config.dirs as cdirs
+from deaduction.pylib.actions import MissingCalculatorOutput
 
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, NumberNode,
@@ -403,6 +404,7 @@ class CalculatorAllButtons(QWidget):
         self.btns_scroll_area.setWidget(self.btns_wgt)
 
         main_lyt.addWidget(self.btns_scroll_area)
+        self.setLayout(main_lyt)
 
         # Connect button signals
         for btn in self.buttons():
@@ -438,6 +440,16 @@ class CalculatorAllButtons(QWidget):
         for buttons in self.buttons_groups:
             settings.setValue(f"calculator/{buttons.title}",
                               buttons.hidden)
+
+    def buttons(self) -> [CalculatorButton]:
+        btns = []
+        for buttons_group in self.buttons_groups:
+            btns.extend(buttons_group.buttons)
+        return btns
+
+    @Slot()
+    def process_clic(self, pattern):
+        self.send_pattern.emit(pattern)
 
 
 class CalculatorMainWindow(QDialog):
@@ -616,33 +628,57 @@ class CalculatorController:
     """
 
     _target: MarkedPatternMathObject
+    target_windows: CalculatorTargets
 
     def __init__(self, target_type=None,
                  goal=None,
                  calculator_groups=None,
-                 title="Math Calculator"):
+                 window_title="Math Calculator",
+                 task_title=None,
+                 target_types=None,
+                 titles=None,
+                 task_description=None):
 
-        ##############
-        # Set target #
-        ##############
         self.goal = goal
+        self.targets = []
 
-        if not target_type:
-            target_type = MetaVar()
-            p_target_type = MarkedPatternMathObject.from_pattern_math_object(
-                target_type)
-            self.target_title = _("Build your object")
+        if target_types:
+            # self.window_title = window_title
+            # self.task_title = task_title
+            self.target_types = target_types
+            # self.titles = titles
+            # self.task_description = task_description
+
+            self.targets_window = CalculatorTargets(window_title=window_title,
+                                                    target_types=target_types,
+                                                    titles=titles,
+                                                    task_title=task_title,
+                                                    task_description=task_description)
+
         else:
-            p_target_type = MarkedPatternMathObject.from_math_object(target_type)
-            display_type = target_type.math_type_to_display(format_="utf8",
-                                                            is_math_type=True,
-                                                            text=True)
-            self.target_title = _("Enter") + " " + display_type + _(":")
+            self.target_types = None
+            self.task_description = None
+            self.targets_window = None
 
-        target_mvar = MetaVar(math_type=p_target_type)
-        self.target = MarkedMetavar.from_mvar(target_mvar)
-        self.target.mark()
+            ##############
+            # Set target #
+            ##############
+            self.targets_window = None
+            if not target_type:
+                target_type = MetaVar()
+                p_target_type = MarkedPatternMathObject.from_pattern_math_object(
+                    target_type)
+                self.target_title = _("Build your object")
+            else:
+                p_target_type = MarkedPatternMathObject.from_math_object(target_type)
+                display_type = target_type.math_type_to_display(format_="utf8",
+                                                                is_math_type=True,
+                                                                text=True)
+                self.target_title = _("Enter") + " " + display_type + _(":")
 
+            target_mvar = MetaVar(math_type=p_target_type)
+            self.target = MarkedMetavar.from_mvar(target_mvar)
+            self.target.mark()
 
         ###########
         # Buttons #
@@ -676,14 +712,29 @@ class CalculatorController:
         ##################
         # User interface #
         ##################
-        self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
-        self.calculator_ui.setWindowTitle(title)
-        self.calculator_ui.set_target_title(self.target_title)
-        # self.calculator_ui.set_target(target)
-        self.calculator_ui.send_pattern.connect(self.insert_pattern)
+        if self.target_types:
+            self.buttons_window = CalculatorAllButtons(self.calculator_groups)
+        else:
+            self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
+            self.calculator_ui.setWindowTitle(window_title)
+            self.calculator_ui.set_target_title(self.target_title)
+            # self.calculator_ui.set_target(target)
+            self.calculator_ui.send_pattern.connect(self.insert_pattern)
 
-        self.__init_signals()
-        self.update()  # Display target and create first history entry
+            self.__init_signals()
+            self.update()  # Display target and create first history entry
+
+    def __set_targets(self):
+        """
+        Fill-in self.targets with MarkedMetavar whose target types are taken
+        in self.target_types.
+        """
+        self.targets = []
+        for target_type in self.target_types:
+            target_mvar = MetaVar(math_type=target_type)
+            target = MarkedMetavar.from_mvar(target_mvar)
+            target.mark()
+            self.targets.append(target)
 
     def __init_signals(self):
         calc_ui = self.calculator_ui
@@ -704,7 +755,24 @@ class CalculatorController:
         n_bar.delete.triggered.connect(self.delete)
 
     def show(self):
-        self.calculator_ui.show()
+        if self.target_types:
+            self.targets_window.show()
+        else:
+            self.calculator_ui.show()
+
+    @property
+    def current_target_idx(self):
+        idx = self.targets_window.focused_target_idx
+        return idx
+
+    @property
+    def current_calc_target(self):
+        calc_target = self.targets_window.focused_target
+        return calc_target
+
+    @property
+    def current_target(self):
+        return self.targets[self.current_target_idx]
 
     @property
     def target(self):
@@ -738,7 +806,7 @@ class CalculatorController:
                       f"{target_type.to_display(format_='utf8')}")
         calculator_controller = cls(goal=goal,
                                     target_type=target_type,
-                                    title=title)
+                                    window_title=title)
         # Execute the ButtonsDialog and wait for results
         OK = calculator_controller.calculator_ui.exec()
 
@@ -759,13 +827,43 @@ class CalculatorController:
         return math_object, OK
 
     @classmethod
-    def get_items(cls, goal, title,
-                  target_types, titles,
-                  task_description=None):
+    def get_items(cls, goal=None,
+                  missing_output: MissingCalculatorOutput=None):
         """
         Get one or several targets.
         """
-        pass
+        window_title = missing_output.title
+        task_title = missing_output.task_title()
+        target_types, titles = missing_output.targets_types_n_titles()
+        task_description = missing_output.task_description()
+
+        log.debug(f"Calculator with target types")
+        calculator_controller = cls(goal=goal,
+                                    window_title=window_title,
+                                    task_title=task_title,
+                                    target_types=target_types,
+                                    titles=titles,
+                                    task_description=task_description)
+        # Execute the ButtonsDialog and wait for results
+        calculator_controller.buttons_window.show()
+        OK = calculator_controller.targets_window.exec()
+
+        # After exec
+        # FIXME: multiple targets!
+        choice = calculator_controller.target
+        choice.unmark()
+
+        if calculator_controller.lean_mode:
+            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
+            math_object = MathObject(node="RAW_LEAN_CODE",
+                                     info={'name': '(' + choice + ')'},
+                                     children=[],
+                                     math_type=None)
+        else:
+            # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
+            math_object = choice.assigned_math_object
+
+        return math_object, OK
 
     @Slot()
     def set_lean_mode(self):

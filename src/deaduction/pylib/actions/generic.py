@@ -27,6 +27,7 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from deaduction.pylib.actions import MissingCalculatorOutput, CalculatorRequest
 from deaduction.pylib.actions import CodeForLean, test_selection
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
 from deaduction.pylib.actions.commun_actions import (get_arguments_to_use_forall,
@@ -232,6 +233,10 @@ def action_theorem(proof_step) -> CodeForLean:
     # From now on theorem_as_math_object is a universal statement
     # FIXME: only explicit arguments should be considered! Implicit args may be
     #  transmitted also?
+    raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
+                                  proof_step=proof_step,
+                                  statement=theorem)
+
     arguments = get_arguments_to_use_forall(proof_step,
                                             universal_property=theorem_as_math_object)
 

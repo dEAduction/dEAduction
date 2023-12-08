@@ -51,7 +51,6 @@ class InputType(IntEnum):
 class MissingParametersError(Exception):
     def __init__(self, input_type: InputType, choices=None, title="", output="",
                  converter=lambda n: n, target=None):
-        # FIXME: remove target, specific to next class
         self.input_type         = input_type
         self.choices            = choices
         self.title              = title
@@ -86,24 +85,28 @@ class MissingCalculatorOutput(MissingParametersError):
         self.proof_step = proof_step
         if self.request_type is CalculatorRequest.ApplyProperty:
             self.prop = prop
+            self.title = _("Apply a universal context property")
         elif self.request_type is CalculatorRequest.ApplyStatement:
             self.statement = statement
+            self.title = _("Apply a universal statement")
         elif self.request_type is CalculatorRequest.ProveExists:
             self.prop = prop if prop else proof_step.goal.target.math_type
+            self.title = _("Provide a witness for an existential property")
         elif self.request_type is CalculatorRequest.DefineObject:
             self.name = name  # Object name
+            self.title = _("Introduce a new object")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:
-            title = _("Apply a universal property:")
+            title = _("Apply the universal context property:")
         elif self.request_type is CalculatorRequest.ApplyStatement:
-            title = _("Apply a theorem:")
+            title = _("Apply the universal statement:")
         elif self.request_type is CalculatorRequest.ProveExists:
             title = _("Provide a witness for the existential property:")
         elif self.request_type is CalculatorRequest.StateSubGoal:
             title = _("State a new sub-goal:")
         elif self.request_type is CalculatorRequest.DefineObject:
-            title = _("Define a new object: {} = ?").format(self.name)
+            title = _("Introduce a new object: {} = ?").format(self.name)
         else:
             title = None
         return title
@@ -112,7 +115,7 @@ class MissingCalculatorOutput(MissingParametersError):
         if self.request_type is CalculatorRequest.ApplyProperty:
             math_object = self.prop
         elif self.request_type is CalculatorRequest.ApplyStatement:
-            math_object = self.statement
+            math_object = self.statement.to_math_object()
         else:
             return []
         return math_object.types_n_vars_of_univ_prop()
@@ -126,7 +129,7 @@ class MissingCalculatorOutput(MissingParametersError):
             if var:
                 name = var.to_display(format_='utf8')
                 title = _("Which object plays the role of {}?").format(name)
-            else:   
+            else:
                 title = _("To which object shall we apply this property?")
             titles.append(title)
         return types, titles

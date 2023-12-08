@@ -312,9 +312,10 @@ class CalculatorTargets(QDialog):
     When self has the focus, focus is transferred to the focused_target.
     """
 
-    def __init__(self, title,
+    def __init__(self, window_title,
                  target_types: [],  # MathObject
                  titles: [str],
+                 task_title=None,
                  task_description=None):
         """        
         @param task_description: either a goal, a MathObject or a string.
@@ -327,7 +328,8 @@ class CalculatorTargets(QDialog):
             titles += [None]*(len(target_types) - len(titles))
 
         super().__init__()
-        self.setWindowTitle(title)
+        self.setWindowTitle(window_title)
+        self.setWindowModality(Qt.WindowModal)
 
         # Toolbar
         self.toolbar = CalculatorToolbar()
@@ -339,8 +341,13 @@ class CalculatorTargets(QDialog):
             if not isinstance(task_description, str):
                 task_description = task_description.to_display(format_='html')
 
-            self.task_widget = MathLabel()
-            self.task_widget.setText(task_description)
+            self.task_widget = QGroupBox()
+            self.task_widget.setTitle(task_title)
+            math_lbl = MathLabel()
+            math_lbl.setText(task_description)
+            lyt = QHBoxLayout()
+            lyt.addWidget(math_lbl)
+            self.task_widget.setLayout(lyt)
         else:
             self.task_widget = None
 
@@ -357,6 +364,7 @@ class CalculatorTargets(QDialog):
             else:
                 title_wdgs.append(None)
             target_wdg = CalculatorTarget()
+            # FIXME: we do not want the math_type here...
             text = target_type.to_display(format_='html')
             target_wdg.setHtml(text)
             self.target_wdgs.append(target_wdg)
@@ -385,7 +393,7 @@ class CalculatorTargets(QDialog):
         ##############
         main_lyt = QVBoxLayout()
         main_lyt.addWidget(self.toolbar)
-        main_lyt.addWidget(QLabel(title))  # Remove?
+        # main_lyt.addWidget(QLabel(title))  # Remove?
 
         if self.task_widget:
             main_lyt.addWidget(self.task_widget)
@@ -399,9 +407,14 @@ class CalculatorTargets(QDialog):
         self.setLayout(main_lyt)
 
         self.target_wdgs[0].setFocus()
-        self._focused_target_idx = 0
+        self.focused_target_idx = 0
 
         self.set_geometry()
+
+    # def exec(self, buttons_window: QWidget):
+    #     buttons_window.show()
+    #     # buttons_window.setParent(self)
+    #     super().exec_()
 
     def set_geometry(self, geometry=None):
         settings = QSettings("deaduction")
@@ -432,14 +445,14 @@ class CalculatorTargets(QDialog):
         idx = 0
         for target_wdg in self.target_wdgs:
             if target_wdg.hasFocus():
-                self._focused_target_idx = idx
+                self.focused_target_idx = idx
                 break
             idx += 1
 
-        return self.target_wdgs[self._focused_target_idx]
+        return self.target_wdgs[self.focused_target_idx]
 
     def set_focused_target_idx(self, idx):
-        self._focused_target_idx = idx
+        self.focused_target_idx = idx
         self.target_wdgs[idx].setFocus()
 
 

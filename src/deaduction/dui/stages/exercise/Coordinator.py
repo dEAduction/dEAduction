@@ -80,6 +80,7 @@ from deaduction.pylib.actions           import (generic,
                                                 InputType,
                                                 CodeForLean,
                                                 MissingParametersError,
+                                                MissingCalculatorOutput,
                                                 WrongUserInput,
                                                 SelectDefaultTarget,
                                                 drag_n_drop)
@@ -938,6 +939,19 @@ class Coordinator(QObject):
             except SelectDefaultTarget:
                 self.emw.process_target_click()
                 # print("CLIC")
+
+            except MissingCalculatorOutput as missing_output:
+                goal = self.proof_step.goal
+                choice, ok = CalculatorController.get_items(goal=goal,
+                                                            missing_output=missing_output)
+                if ok:
+                    # Convert to global choice value
+                    choice = e.local_to_complete_nb(choice)
+                    self.emw.user_input.append(choice)
+                else:
+                    self.emw.user_input = []
+                    self.unfreeze()
+                    break
 
             except MissingParametersError as e:
                 if e.input_type == InputType.Calculator:
