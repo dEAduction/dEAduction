@@ -566,9 +566,9 @@ class MathDisplay:
                   {'POINT'},  # FIXME: DECIMAL?
                   {'COMPOSITION'},
                   {'APPLICATION'},
-                  {'MINUS'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
+                  {'MINUS'},
                   {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
                   # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
                   ]
@@ -578,7 +578,8 @@ class MathDisplay:
         """
         Return '=' if self and other have the same priority level,
         '>' or '<' if they have distinct comparable priority levels,
-        None otherwise.
+        None otherwise. e.g.
+                        SUM < MULT, MULT < MINUS.
         """
 
         if not self or not other:
@@ -603,12 +604,14 @@ class MathDisplay:
     def priority_test(cls, child_node, parent_node, child_number):
         """
         return True is self can be a left/right child of parent
-        (left iff left_children=True), with no parentheses.
+        (left iff left_children=True), with no parentheses, False if
+        parentheses are needed, None if both  nodes are not in the priority
+        list.
         """
         if not cls.priority(parent_node, child_node):
             return None
         if child_number == 0:
-            # self can be a left child of parent?
+            # self can be a left (first) child of parent with no parentheses?
             test = (cls.priority(parent_node, child_node) != '>')
         else:
             # self can be a right child of parent?
@@ -639,6 +642,7 @@ class MathDisplay:
         # Priority operator rules
         test = cls.priority_test(c_node, p_node, child_number)
         if test is not None:
+            # print(f"Test for {p_node}, {c_node} and child nb {child_number}: {test}")
             return not test
 
         if p_node in ('PARENTHESES', 'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS',

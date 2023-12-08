@@ -84,11 +84,12 @@ class MissingCalculatorOutput(MissingParametersError):
         super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
         self.proof_step = proof_step
-        if self.request_type in (CalculatorRequest.ApplyProperty,
-                                 CalculatorRequest.ProveExists):
+        if self.request_type is CalculatorRequest.ApplyProperty:
             self.prop = prop
         elif self.request_type is CalculatorRequest.ApplyStatement:
             self.statement = statement
+        elif self.request_type is CalculatorRequest.ProveExists:
+            self.prop = prop if prop else proof_step.goal.target.math_type
         elif self.request_type is CalculatorRequest.DefineObject:
             self.name = name  # Object name
 
