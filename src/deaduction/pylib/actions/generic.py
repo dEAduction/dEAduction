@@ -140,7 +140,12 @@ def apply_theorem(proof_step) -> CodeForLean:
     goal = proof_step.goal
     codes = CodeForLean()
 
-    if not target_selected and not selected_objects:
+    # if not target_selected and not selected_objects:
+    #     codes = add_statement_to_context(proof_step, theorem)
+    #     return codes
+
+    # Add to context in case of drag n drop FIXME?
+    if proof_step.drag_n_drop and proof_step.drag_n_drop.statement:
         codes = add_statement_to_context(proof_step, theorem)
         return codes
 
@@ -222,10 +227,12 @@ def action_theorem(proof_step) -> CodeForLean:
         # TODO: use common actions (use_forall, etc.)
         return apply_theorem(proof_step)
 
-    theorem_goal = theorem.goal()
-    theorem_as_math_object = theorem_goal.to_math_object()
+    theorem_as_math_object = theorem.goal().to_math_object()
 
+    # If all vars are implicit, do not call Calculator!
     if not theorem_as_math_object.is_for_all(is_math_type=True):
+        # or not theorem_as_math_object.types_n_vars_of_univ_prop()):
+        # proof_step.target_selected = True  # Cheating a little bit
         # TODO: consider other operators
         # TODO: implicit defs
         return apply_theorem(proof_step)
@@ -233,13 +240,18 @@ def action_theorem(proof_step) -> CodeForLean:
     # From now on theorem_as_math_object is a universal statement
     # FIXME: only explicit arguments should be considered! Implicit args may be
     #  transmitted also?
-    raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
-                                  proof_step=proof_step,
-                                  statement=theorem)
+    if not proof_step.user_input:
+        raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
+                                      proof_step=proof_step,
+                                      statement=theorem)
 
-    arguments = get_arguments_to_use_forall(proof_step,
-                                            universal_property=theorem_as_math_object)
-
+    # arguments = get_arguments_to_use_forall(proof_step,
+    #                                         universal_property=theorem_as_math_object)
+    # FIXME: replace by MathObject.place_holder()
+    ph = theorem_as_math_object.place_holder()
+    arguments = [ph] * theorem_as_math_object.nb_initial_implicit_vars()
+    arguments.extend([arg.between_parentheses(arg) for arg in
+                      proof_step.user_input[0]])
     code = use_forall(proof_step, arguments, theorem)
     return code
 

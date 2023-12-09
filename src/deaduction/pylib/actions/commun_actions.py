@@ -146,11 +146,14 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
                       variables: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
-                      iff_direction='',
-                      no_guessing=False) -> CodeForLean:
+                      iff_direction='') -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
+    Try implicit and explicit version of the statement 'arrow'.
+    Try to place up to 6 place_holders ('_') at the beginning,
+    except if variables already contains some, in which case only the
+    explicit statement is sent to Lean.
 
     :param arrow:           a MathObject or a Statement which is either an
                             implication or a universal property
@@ -185,11 +188,12 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     # selected_hypo = arrow.info["name"]
     selected_hypo = arrow.lean_name  # Property of both MathObject and Statement
 
+    no_more_place_holder = (variable_names[0] == '_')
     have = f'have {new_hypo_name} := '
     arguments = ' '.join(variable_names)
     implicit_codes = []
     explicit_codes = []
-    nbs = [0] if no_guessing else range(6)  # Implicit args ('_')
+    nbs = [0] if no_more_place_holder else range(6)  # Implicit args ('_')
     for nb in nbs:
         imp_code = f'{selected_hypo} ' + '_ '*nb
         exp_code = f'@{selected_hypo} ' + '_ '*nb
@@ -202,8 +206,8 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
         implicit_codes.append(have + imp_code + arguments)
         explicit_codes.append(have + exp_code + arguments)
 
-    # FIXME: or explicit ???
-    codes = implicit_codes if no_guessing else implicit_codes + explicit_codes
+    codes = (explicit_codes if no_more_place_holder
+             else implicit_codes + explicit_codes)
     code = CodeForLean.or_else_from_list(codes)
     if success_msg is None:
         success_msg = _("Property {} added to the context").format(new_hypo_name)
@@ -215,7 +219,7 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
 
 
 def use_forall_with_ineq(proof_step, arguments,
-                         universal_property_or_statement,                         inequality,
+                         universal_property_or_statement, inequality,
                          new_hypo_name=None) -> CodeForLean:
     """
     Try to use last selected property, assumed to be a universal prop matching

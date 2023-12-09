@@ -30,7 +30,7 @@ class DragNDrop:
     A class to record drag and drop operation.
     """
 
-    def __init__(self, premise, operator):
+    def __init__(self, premise, operator, statement=None):
         self.premise = premise
         self.operator = operator
-
+        self.statement = statement

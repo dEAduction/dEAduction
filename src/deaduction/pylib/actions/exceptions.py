@@ -118,7 +118,12 @@ class MissingCalculatorOutput(MissingParametersError):
             math_object = self.statement.to_math_object()
         else:
             return []
-        return math_object.types_n_vars_of_univ_prop()
+        types_n_vars = math_object.types_n_vars_of_univ_prop()
+
+        if not types_n_vars:  # Include implicit vars if no explicit var
+            types_n_vars = math_object.types_n_vars_of_univ_prop(
+                include_implicit_vars=True)
+        return types_n_vars
 
     def targets_types_n_titles(self):
         types = []

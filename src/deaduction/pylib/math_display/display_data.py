@@ -219,6 +219,7 @@ class MathDisplay:
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
+         "PLACE_HOLDER": ('_', )
          # "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)

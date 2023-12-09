@@ -699,7 +699,8 @@ class Coordinator(QObject):
                     item = emission.args[0]
                     # print(f"Statement dropped: {item.statement.lean_name}")
                     self.proof_step.statement = item.statement
-
+                    self.proof_step.drag_n_drop = DragNDrop(
+                        statement=item.statement)
                     # Empty selection and call statement
                     self.emw.empty_current_selection()
                     self.emw.target_selected = False
@@ -942,12 +943,12 @@ class Coordinator(QObject):
 
             except MissingCalculatorOutput as missing_output:
                 goal = self.proof_step.goal
-                choice, ok = CalculatorController.get_items(goal=goal,
-                                                            missing_output=missing_output)
+                CC = CalculatorController
+                choices, ok = CC.get_items(goal=goal,
+                                           missing_output=missing_output)
                 if ok:
                     # Convert to global choice value
-                    choice = e.local_to_complete_nb(choice)
-                    self.emw.user_input.append(choice)
+                    self.emw.user_input.append(choices)
                 else:
                     self.emw.user_input = []
                     self.unfreeze()
