@@ -366,9 +366,11 @@ class CalculatorAllButtons(QWidget):
 
     send_pattern = Signal(MarkedPatternMathObject)
     targets_window: CalculatorTargets = None
+    controller = None  # Set by CalculatorController
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
+        # self.setFocusPolicy(Qt.NoFocus)
         self.buttons_groups = []
         # Clear ancient shortcuts!!
         CalculatorButton.shortcuts_dic = {}
@@ -451,6 +453,8 @@ class CalculatorAllButtons(QWidget):
     @Slot()
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
+        # FIXME:
+        # self.controller.targets_window.target_wdgs[0].setFocus()
 
 
 class CalculatorMainWindow(QDialog):
@@ -629,7 +633,7 @@ class CalculatorController:
     """
 
     _target: MarkedPatternMathObject
-    target_windows: CalculatorTargets
+    targets_window: CalculatorTargets
 
     ################
     # init methods #
@@ -658,11 +662,16 @@ class CalculatorController:
             # self.titles = titles
             # self.task_description = task_description
 
-            self.targets_window = CalculatorTargets(window_title=window_title,
-                                                    target_types=target_types,
-                                                    titles=titles,
-                                                    task_title=task_title,
-                                                    task_description=task_description)
+            targets_window = CalculatorTargets(window_title=window_title,
+                                               target_types=target_types,
+                                               titles=titles,
+                                               task_title=task_title,
+                                               task_description=task_description)
+            self.targets_window = targets_window
+            focus_changed = QApplication.instance().focusChanged
+            focus_changed.connect(targets_window.on_focus_changed)
+            focus_has_changed = targets_window.focus_has_changed
+            focus_has_changed.connect(self.target_focus_has_changed)
 
         else:
             self.task_description = None
@@ -715,8 +724,14 @@ class CalculatorController:
         # User interface #
         if self.target_types:
             self.buttons_window = CalculatorAllButtons(self.calculator_groups)
+            # self.buttons_window.setParent(self.targets_window)
+            # --> buttons_window does not show!
+            # self.buttons_window.setFocusProxy(self.targets_window)
+            #  --> click on buttons has no effect
+            self.buttons_window.controller = self  # Useless?
             self.__set_targets()
             self.__init_multiple_signals()
+            self.buttons_window.send_pattern.connect(self.insert_pattern)
         else:
             self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
             self.calculator_ui.setWindowTitle(window_title)
@@ -725,7 +740,8 @@ class CalculatorController:
             self.calculator_ui.send_pattern.connect(self.insert_pattern)
 
             self.__init_signals()
-            self.update()  # Display target and create first history entry
+
+        self.history_update()  # Display target and create first history entry
 
     @classmethod
     def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
@@ -751,7 +767,7 @@ class CalculatorController:
         choice.unmark()
 
         if calculator_controller.lean_mode:
-            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
+            choice = calculator_controller.current_target.toPlainText()
             math_object = MathObject(node="RAW_LEAN_CODE",
                                      info={'name': '(' + choice + ')'},
                                      children=[],
@@ -786,20 +802,23 @@ class CalculatorController:
 
         # After exec
         # FIXME: multiple targets!
-        choice = calculator_controller.target
-        choice.unmark()
+        targets = calculator_controller.targets
+        math_objects = []
+        for target in targets:
+            target.unmark()
 
-        if calculator_controller.lean_mode:
-            choice = calculator_controller.calculator_ui.calculator_target.toPlainText()
-            math_object = MathObject(node="RAW_LEAN_CODE",
-                                     info={'name': '(' + choice + ')'},
-                                     children=[],
-                                     math_type=None)
-        else:
-            # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
-            math_object = choice.assigned_math_object
+            if calculator_controller.lean_mode:
+                target = target.toPlainText()
+                math_object = MathObject(node="RAW_LEAN_CODE",
+                                         info={'name': '(' + target + ')'},
+                                         children=[],
+                                         math_type=None)
+            else:
+                # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
+                math_object = target.assigned_math_object
+            math_objects.append(math_object)
 
-        return math_object, OK
+        return math_objects, OK
 
     def __set_targets(self):
         """
@@ -892,7 +911,7 @@ class CalculatorController:
         self.history_indices[self.current_target_idx] = idx
 
     @property
-    def current_calc_target(self):
+    def current_target_wdg(self):
         if self.targets_window:
             calc_target = self.targets_window.focused_target
         else:
@@ -926,11 +945,11 @@ class CalculatorController:
 
     @Slot()
     def set_lean_mode(self):
-        self.calculator_ui.calculator_target.lean_mode = self.lean_mode
+        self.current_target_wdg.lean_mode = self.lean_mode
         if self.lean_mode:
             self.set_target()
         else:
-            self.set_target_and_update()
+            self.set_target_and_update_ui()
 
     @property
     def lean_mode(self) -> bool:
@@ -962,7 +981,7 @@ class CalculatorController:
         return bar
 
     @property
-    def tool_bar(self):
+    def toolbar(self):
         if self.targets_window:
             bar = self.targets_window.toolbar
         else:
@@ -1000,7 +1019,7 @@ class CalculatorController:
 
     @Slot()
     def set_target(self):
-        self.current_calc_target.setHtml(self.html_target)
+        self.current_target_wdg.setHtml(self.html_target)
         # self.calculator_ui.set_html(self.html_target)
 
     def virtual_cursor_position(self):
@@ -1014,7 +1033,7 @@ class CalculatorController:
         # self.target.adjust_cursor_pos()
         # self.calculator_ui.calculator_target.setFocus()
         position = self.virtual_cursor_position()
-        self.current_calc_target.go_to_position(position)
+        self.current_target_wdg.go_to_position(position)
 
     def enable_actions(self):
         # target = self.target
@@ -1029,22 +1048,36 @@ class CalculatorController:
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
 
-    def update_cursor_and_enable_actions(self):
-        self.update_cursor()
+    @Slot()
+    def target_focus_has_changed(self):
         self.enable_actions()
-        self.current_calc_target.setFocus()
-        # print(self.target)
 
-    def set_target_and_update(self):
+    # def update_cursor_and_enable_actions(self):
+    #     self.update_cursor()
+    #     self.enable_actions()
+    #     self.current_target_wdg.setFocus()
+    #     # print(self.target)
+
+    def give_focus_back_to_target_wdg(self):
+        """
+        Give focus back to targets_window (and thus to the active
+        target_wdg). This prevents the Buttons window to keep focus.
+        """
+        self.targets_window.activateWindow()
+        self.targets_window.setFocus()
+
+    def set_target_and_update_ui(self):
         self.set_target()
         # self.update_bound_vars()
-        self.update_cursor_and_enable_actions()
+        self.update_cursor()
+        self.enable_actions()
+        self.give_focus_back_to_target_wdg()
 
     ##################
     # Target editing #
     ##################
 
-    def update(self):
+    def history_update(self):
         """
         Update target display, and store it in history.
         Delete the end of history if any.
@@ -1054,95 +1087,95 @@ class CalculatorController:
         self.history_idx += 1
         self.history = self.history[:self.history_idx]
         self.history.append(self.target)
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
 
-    def bound_var_buttons_group(self):
-        bv_group = self.calculator_ui.bound_var_group()
-        return bv_group
-
-    def bound_vars_from_buttons(self):
-        bound_vars = self.bound_var_buttons_group().patterns()
-        return bound_vars
-
-    def check_new_bound_var(self, assigned_mvar):
-        """
-        If assigned_mvar affected the type of some bound var, then
-        rename this bound var. FIXME: no bound vars in Calculator.
-        """
-
-        bv_group = self.calculator_ui.bound_var_group()
-
-        # (0) Record new bound vars
-        if assigned_mvar.has_bound_var():
-            new_bound_var = assigned_mvar.bound_var
-            self.bound_vars.append(new_bound_var)
-            button = CalculatorButton.from_math_object(new_bound_var)
-            bv_group.add_button(button)
-            button.send_pattern.connect(self.calculator_ui.process_clic)
-
-        # (1) Name bound vars that have just been given a type
-        target = self.target
-        bound_var = target.bound_var_affected_by(assigned_mvar)
-        if bound_var:
-            # (1a) Name bound_var
-            bound_var.is_unnamed = True
-            self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
-            # Propagate name in target.bound_vars()
-            # FIXME: should be useless(
-
-            for bv in target.bound_vars():
-                if bound_var.refer_to_the_same_bound_var(bv):
-                    if bv.name != bound_var.name:
-                        # FIXME: does not work
-                        bv.set_unnamed_bound_var()
-                        bv.name_bound_var(bound_var.name)
-
-            # (1b) Propagate name in self.bound_vars fixme: useless??
-            for bv in self.bound_vars:
-                if bound_var.refer_to_the_same_bound_var(bv):
-                    bv.set_unnamed_bound_var()
-                    bv.name_bound_var(bound_var.name)
-            # (1c) And change buttons accordingly
-            for button in bv_group.buttons:
-                button_bv = button.patterns[0]
-                button.reset_text(button_bv.name)
-
-    def update_bound_vars(self, previous_bound_vars, new_bound_vars):
-        """
-        Compare self.bound_vars() and self.target.bound_vars(),
-        create or delete or modify buttons accordingly.
-        """
-        # FIXME
-
-        target = self.target
-        bv_group = self.calculator_ui.bound_var_group()
-
-        set_of_bv1 = set([bv.info.get('identifier_nb')
-                          for bv in self.bound_vars
-                          if bv.info.get('identifier_nb')])
-        set_of_bv2 = set([bv.info.get('identifier_nb')
-                          for bv in target.bound_vars()
-                          if bv.info.get('identifier_nb')])
-        target_ident = [bv.info.get('identifier_nb')
-                          for bv in target.bound_vars()]
-        to_be_removed = []
-        for bv in self.bound_vars:
-            ident = bv.info.get('identifier_nb')
-            if ident not in target_ident:
-                to_be_removed.append(bv)
-
-        if to_be_removed:
-            for bv in to_be_removed:
-                self.bound_vars.remove(bv)
-            new_group = CalculatorButtonsGroup.from_bound_vars(self.bound_vars)
-            ui_lyt = self.calculator_ui.btns_wgt.layout()
-            # ui_lyt.replaceWidget(bv_group, new_group)
-            # bv_group.deleteLater()
-            idx = ui_lyt.indexOf(bv_group)
-            print(f"Idx of bv group: {idx}")
-            ui_lyt.removeWidget(bv_group)
-            bv_group.hide()
-            ui_lyt.insertWidget(idx, new_group)
+    # def bound_var_buttons_group(self):
+    #     bv_group = self.calculator_ui.bound_var_group()
+    #     return bv_group
+    #
+    # def bound_vars_from_buttons(self):
+    #     bound_vars = self.bound_var_buttons_group().patterns()
+    #     return bound_vars
+    #
+    # def check_new_bound_var(self, assigned_mvar):
+    #     """
+    #     If assigned_mvar affected the type of some bound var, then
+    #     rename this bound var. FIXME: no bound vars in Calculator.
+    #     """
+    #
+    #     bv_group = self.calculator_ui.bound_var_group()
+    #
+    #     # (0) Record new bound vars
+    #     if assigned_mvar.has_bound_var():
+    #         new_bound_var = assigned_mvar.bound_var
+    #         self.bound_vars.append(new_bound_var)
+    #         button = CalculatorButton.from_math_object(new_bound_var)
+    #         bv_group.add_button(button)
+    #         button.send_pattern.connect(self.calculator_ui.process_clic)
+    #
+    #     # (1) Name bound vars that have just been given a type
+    #     target = self.target
+    #     bound_var = target.bound_var_affected_by(assigned_mvar)
+    #     if bound_var:
+    #         # (1a) Name bound_var
+    #         bound_var.is_unnamed = True
+    #         self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
+    #         # Propagate name in target.bound_vars()
+    #         # FIXME: should be useless(
+    #
+    #         for bv in target.bound_vars():
+    #             if bound_var.refer_to_the_same_bound_var(bv):
+    #                 if bv.name != bound_var.name:
+    #                     # FIXME: does not work
+    #                     bv.set_unnamed_bound_var()
+    #                     bv.name_bound_var(bound_var.name)
+    #
+    #         # (1b) Propagate name in self.bound_vars fixme: useless??
+    #         for bv in self.bound_vars:
+    #             if bound_var.refer_to_the_same_bound_var(bv):
+    #                 bv.set_unnamed_bound_var()
+    #                 bv.name_bound_var(bound_var.name)
+    #         # (1c) And change buttons accordingly
+    #         for button in bv_group.buttons:
+    #             button_bv = button.patterns[0]
+    #             button.reset_text(button_bv.name)
+    #
+    # def update_bound_vars(self, previous_bound_vars, new_bound_vars):
+    #     """
+    #     Compare self.bound_vars() and self.target.bound_vars(),
+    #     create or delete or modify buttons accordingly.
+    #     """
+    #     # FIXME
+    #
+    #     target = self.target
+    #     bv_group = self.calculator_ui.bound_var_group()
+    #
+    #     set_of_bv1 = set([bv.info.get('identifier_nb')
+    #                       for bv in self.bound_vars
+    #                       if bv.info.get('identifier_nb')])
+    #     set_of_bv2 = set([bv.info.get('identifier_nb')
+    #                       for bv in target.bound_vars()
+    #                       if bv.info.get('identifier_nb')])
+    #     target_ident = [bv.info.get('identifier_nb')
+    #                       for bv in target.bound_vars()]
+    #     to_be_removed = []
+    #     for bv in self.bound_vars:
+    #         ident = bv.info.get('identifier_nb')
+    #         if ident not in target_ident:
+    #             to_be_removed.append(bv)
+    #
+    #     if to_be_removed:
+    #         for bv in to_be_removed:
+    #             self.bound_vars.remove(bv)
+    #         new_group = CalculatorButtonsGroup.from_bound_vars(self.bound_vars)
+    #         ui_lyt = self.calculator_ui.btns_wgt.layout()
+    #         # ui_lyt.replaceWidget(bv_group, new_group)
+    #         # bv_group.deleteLater()
+    #         idx = ui_lyt.indexOf(bv_group)
+    #         print(f"Idx of bv group: {idx}")
+    #         ui_lyt.removeWidget(bv_group)
+    #         bv_group.hide()
+    #         ui_lyt.insertWidget(idx, new_group)
 
     @Slot()
     def insert_pattern(self, pattern_s: [MarkedPatternMathObject]):
@@ -1212,9 +1245,10 @@ class CalculatorController:
                           self.target.ordered_descendants()[-1])
             self.target.move_after_insert(assigned_mvar,
                                           was_at_end=was_at_end)
-            self.update()
+            self.history_update()
         else:
-            self.calculator_ui.calculator_target.setFocus()
+            # Fixme
+            self.current_target_wdg.setFocus()
         # print(f"Shape: {self.target.latex_shape()}")
         # print(f"New target after move: {new_target}")
         # print("Math list:")
@@ -1243,41 +1277,41 @@ class CalculatorController:
         # print(new_target)
         if success:
             self.target = new_target
-            self.update()
+            self.history_update()
 
     #################
     # History moves #
     #################
 
-    def history_update(self):
+    def after_history_move(self):
         """
         Update after a history move.
         """
         self.target = self.history[self.history_idx]
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
         # TODO: enable/disable buttons
 
     @Slot()
     def history_undo(self):
         if self.history_idx > 0:
             self.history_idx -= 1
-            self.history_update()
+            self.after_history_move()
 
     @Slot()
     def history_redo(self):
         if self.history_idx < len(self.history) - 1:
             self.history_idx += 1
-            self.history_update()
+            self.after_history_move()
 
     @Slot()
     def history_to_beginning(self):
         self.history_idx = 0
-        self.history_update()
+        self.after_history_move()
 
     @Slot()
     def history_to_end(self):
         self.history_idx = len(self.history) - 1
-        self.history_update()
+        self.after_history_move()
 
     ################
     # Cursor moves #
@@ -1286,35 +1320,35 @@ class CalculatorController:
     @Slot()
     def move_right(self):
         self.math_cursor.increase_pos()
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
 
     @Slot()
     def move_left(self):
         self.math_cursor.decrease_pos()
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
 
     @Slot()
     def go_to_beginning(self):
         self.math_cursor.go_to_beginning()
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
 
     @Slot()
     def go_to_end(self):
         self.math_cursor.go_to_end()
-        self.set_target_and_update()
+        self.set_target_and_update_ui()
 
     @Slot()
     def move_to_next_unassigned(self):
         success = self.target.move_right_to_next_unassigned()
         if success:
             self.calculator_ui.set_html(self.html_target)
-            self.set_target_and_update()
+            self.set_target_and_update_ui()
 
     @Slot()
     def move_to_previous_unassigned(self):
         success = self.target.move_left_to_previous_unassigned()
         if success:
-            self.set_target_and_update()
+            self.set_target_and_update_ui()
 
     # @Slot()
     # def move_up(self):

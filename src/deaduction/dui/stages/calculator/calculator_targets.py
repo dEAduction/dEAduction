@@ -312,6 +312,8 @@ class CalculatorTargets(QDialog):
     When self has the focus, focus is transferred to the focused_target.
     """
 
+    focus_has_changed = Signal()
+
     def __init__(self, window_title,
                  target_types: [],  # MathObject
                  titles: [str],
@@ -330,6 +332,7 @@ class CalculatorTargets(QDialog):
         super().__init__()
         self.setWindowTitle(window_title)
         self.setWindowModality(Qt.WindowModal)
+        # self.setWindowModality(Qt.NonModal)
 
         # Toolbar
         self.toolbar = CalculatorToolbar()
@@ -351,6 +354,20 @@ class CalculatorTargets(QDialog):
         else:
             self.task_widget = None
 
+        ######################
+        # Navigation buttons #
+        ######################
+        self.navigation_bar = NavigationBar()
+        self.lean_mode_wdg = QCheckBox("Lean mode")
+        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        self.button_box.accepted.connect(self.close_n_accept)
+        nav_lyt = QHBoxLayout()
+        nav_lyt.addWidget(self.navigation_bar)
+        nav_lyt.addStretch()
+        nav_lyt.addWidget(self.lean_mode_wdg)
+        nav_lyt.addWidget(self.button_box)
+
         ###########
         # Targets #
         ###########
@@ -367,26 +384,11 @@ class CalculatorTargets(QDialog):
             # FIXME: we do not want the math_type here...
             text = target_type.to_display(format_='html')
             target_wdg.setHtml(text)
-            self.target_wdgs.append(target_wdg)
-        # self.calculator_target = CalculatorTarget()
-        # self.calculator_target_title = QLabel()
-        # self.calculator_target_title.setStyleSheet("font-weight: bold; ")
-        # main_lyt.addWidget(self.calculator_target_title)
-        # main_lyt.addWidget(self.calculator_target)
+            target_wdg.toolbar = self.toolbar
+            target_wdg.navigation_bar = self.navigation_bar
+            target_wdg.button_box = self.button_box
 
-        ######################
-        # Navigation buttons #
-        ######################
-        self.navigation_bar = NavigationBar()
-        self.lean_mode_wdg = QCheckBox("Lean mode")
-        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.button_box.accepted.connect(self.close_n_accept)
-        nav_lyt = QHBoxLayout()
-        nav_lyt.addWidget(self.navigation_bar)
-        nav_lyt.addStretch()
-        nav_lyt.addWidget(self.lean_mode_wdg)
-        nav_lyt.addWidget(self.button_box)
+            self.target_wdgs.append(target_wdg)
 
         ##############
         # Set layout #
@@ -411,11 +413,6 @@ class CalculatorTargets(QDialog):
 
         self.set_geometry()
 
-    # def exec(self, buttons_window: QWidget):
-    #     buttons_window.show()
-    #     # buttons_window.setParent(self)
-    #     super().exec_()
-
     def set_geometry(self, geometry=None):
         settings = QSettings("deaduction")
         value = settings.value("calculator_targets/geometry")
@@ -437,9 +434,6 @@ class CalculatorTargets(QDialog):
         self.close()
         super().reject()
 
-    def set_html(self, text):
-        self.focused_target.setHtml(text)
-
     @property
     def focused_target(self):
         idx = 0
@@ -451,10 +445,32 @@ class CalculatorTargets(QDialog):
 
         return self.target_wdgs[self.focused_target_idx]
 
+    def set_html(self, text):
+        self.focused_target.setHtml(text)
+
     def set_focused_target_idx(self, idx):
         self.focused_target_idx = idx
         self.target_wdgs[idx].setFocus()
+        # self.target_wdgs[idx].setEnabled(True)
+        # for other_idx in range(len(self.target_wdgs)):
+        #     if other_idx != idx:
+        #         self.target_wdgs[other_idx].setEnabled(False)
 
+    def on_focus_changed(self, old, new):
+        """
+        When focus changes, enable new focused target and disable old.
+        """
 
+        idx = 0
+        for wdg in self.target_wdgs:
+            if wdg is new:
+                self.set_focused_target_idx(idx)
+                self.focus_has_changed.emit()
+                print(f"Target wdg n°{idx} has focus")
+                return
+            idx += 1
 
-        
+        # Focus has been stolen by some other guy!
+        # (Isn't this a bit selfish?)
+        self.target_wdgs[self.focused_target_idx].setFocus()
+        print(f"Target wdg n°{self.focused_target_idx} steal focus")
