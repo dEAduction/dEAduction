@@ -247,11 +247,9 @@ def action_theorem(proof_step) -> CodeForLean:
 
     # arguments = get_arguments_to_use_forall(proof_step,
     #                                         universal_property=theorem_as_math_object)
-    # FIXME: replace by MathObject.place_holder()
-    ph = theorem_as_math_object.place_holder()
-    arguments = [ph] * theorem_as_math_object.nb_initial_implicit_vars()
-    arguments.extend([arg.between_parentheses(arg) for arg in
-                      proof_step.user_input[0]])
+    arguments = [arg if arg.is_place_holder()
+                 else arg.between_parentheses(arg)
+                 for arg in proof_step.user_input[0]]
     code = use_forall(proof_step, arguments, theorem)
     return code
 

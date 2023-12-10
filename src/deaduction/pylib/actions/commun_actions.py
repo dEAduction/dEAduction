@@ -188,7 +188,8 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     # selected_hypo = arrow.info["name"]
     selected_hypo = arrow.lean_name  # Property of both MathObject and Statement
 
-    no_more_place_holder = (variable_names[0] == '_')
+    no_more_place_holder = (hasattr(variables[0], 'is_place_holder')
+                            and variables[0].is_place_holder())
     have = f'have {new_hypo_name} := '
     arguments = ' '.join(variable_names)
     implicit_codes = []

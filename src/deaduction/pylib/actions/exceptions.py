@@ -75,6 +75,8 @@ class MissingCalculatorOutput(MissingParametersError):
     Any instance should provide enough info so that, together with the goal,
     Calculator is able to construct the CalculatorTargets.
     """
+    MathObject = None  # filled in by Coordinator
+
     def __init__(self, request_type: CalculatorRequest,
                  proof_step,
                  prop=None,
@@ -83,6 +85,7 @@ class MissingCalculatorOutput(MissingParametersError):
         super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
         self.proof_step = proof_step
+        self.initial_place_holders = []
         if self.request_type is CalculatorRequest.ApplyProperty:
             self.prop = prop
             self.title = _("Apply a universal context property")
@@ -112,6 +115,8 @@ class MissingCalculatorOutput(MissingParametersError):
         return title
 
     def extract_types_n_vars(self):
+
+        # (1) Get all initial universal dummy vars
         if self.request_type is CalculatorRequest.ApplyProperty:
             math_object = self.prop
         elif self.request_type is CalculatorRequest.ApplyStatement:
@@ -120,9 +125,31 @@ class MissingCalculatorOutput(MissingParametersError):
             return []
         types_n_vars = math_object.types_n_vars_of_univ_prop()
 
-        if not types_n_vars:  # Include implicit vars if no explicit var
-            types_n_vars = math_object.types_n_vars_of_univ_prop(
-                include_implicit_vars=True)
+        # if not types_n_vars:  # Include implicit vars if no explicit var
+        #     types_n_vars = math_object.types_n_vars_of_univ_prop(
+        #         include_initial_implicit_vars=True)
+
+        # (2) replace initial vars by place_holders if they can be inferred
+        #  from the following ones
+        # TODO: option from settings to keep implicit vars
+        #  (in this case, skip the following)
+        idx = 0
+        self.initial_place_holders = []
+        for math_type, var in types_n_vars:
+            go_on = False
+            for other_type, v in types_n_vars[idx:]:
+                # Search for var
+                if other_type.contains_including_types(var):
+                    # Replace var by a place_holder
+                    types_n_vars[idx] = math_type, math_object.place_holder()
+                    self.initial_place_holders.append(
+                        self.MathObject.place_holder())
+                    go_on = True
+                    break
+            if not go_on:
+                break
+            idx += 1
+
         return types_n_vars
 
     def targets_types_n_titles(self):
@@ -130,21 +157,31 @@ class MissingCalculatorOutput(MissingParametersError):
         titles = []
         types_n_vars = self.extract_types_n_vars()
         for math_type, var in types_n_vars:
-            types.append(math_type)
-            if var:
+            if var and var.is_place_holder():  # Remove place_holders
+                # title = 'PLACE_HOLDER'
+                continue
+
+            elif var:
                 name = var.to_display(format_='utf8')
                 title = _("Which object plays the role of {}?").format(name)
             else:
                 title = _("To which object shall we apply this property?")
+            types.append(math_type)
             titles.append(title)
+
         return types, titles
 
     def task_description(self):
+        """
+        Provide a display of self.prop or self.statement after
+        unfolding definition to reveal quantifiers if necessary.
+        """
         if self.request_type in (CalculatorRequest.ApplyProperty,
                                  CalculatorRequest.ProveExists):
-            task = self.prop.to_display(format_='html')
+            math_obj = self.prop.explicit_quant()
+            task = math_obj.to_display(format_='html')
         elif self.request_type is CalculatorRequest.ApplyStatement:
-            math_obj = self.statement.to_math_object()
+            math_obj = self.statement.to_math_object().explicit_quant()
             task = math_obj.to_display(format_='html')
         return task
 

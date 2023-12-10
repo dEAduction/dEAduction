@@ -694,7 +694,7 @@ class CalculatorController:
                 self.target_title = _("Enter") + " " + display_type + _(":")
 
             target_mvar = MetaVar(math_type=p_target_type)
-            self.targets[0] = MarkedMetavar.from_mvar(target_mvar)
+            self.targets = [MarkedMetavar.from_mvar(target_mvar)]
             self.targets[0].mark()
 
         ###########
@@ -800,14 +800,19 @@ class CalculatorController:
         calculator_controller.buttons_window.show()
         OK = calculator_controller.targets_window.exec()
 
-        # After exec
-        # FIXME: multiple targets!
+        ############################
+        # After exec: post-process #
+        ############################
         targets = calculator_controller.targets
         math_objects = []
+
         for target in targets:
             target.unmark()
-
-            if calculator_controller.lean_mode:
+            if not target.assigned_math_object:
+                # No more data from this point
+                # math_object = MathObject.place_holder()
+                break
+            elif calculator_controller.lean_mode:
                 target = target.toPlainText()
                 math_object = MathObject(node="RAW_LEAN_CODE",
                                          info={'name': '(' + target + ')'},
@@ -817,6 +822,11 @@ class CalculatorController:
                 # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
                 math_object = target.assigned_math_object
             math_objects.append(math_object)
+
+        # while len(targets) > 0 and targets[-1].is_place_holder():
+        #     targets.pop()
+
+        math_objects = missing_output.initial_place_holders + math_objects
 
         return math_objects, OK
 
@@ -1048,6 +1058,28 @@ class CalculatorController:
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
 
+        # Has usr filled-in enough targets?
+        #  All place_holders must be at the end,
+        #  i.e. no assigned_math_object after unassigned
+        assigned_math_objects = [var.assigned_math_object
+                                 for var in self.targets]
+        place_holders_found = False
+        OK = False
+        for mo in assigned_math_objects:
+            if mo is None:
+                if not OK:  # No initial assigned_math_object
+                    break
+                else:
+                    place_holders_found = True
+            elif mo is not None and place_holders_found:
+                OK = False
+                break
+            else:  # At least one assigned_math_object
+                OK = True
+        button_box = (self.targets_window.button_box if self.targets_window
+                      else self.calculator_ui.button_box)
+        button_box.setEnabled(OK)
+
     @Slot()
     def target_focus_has_changed(self):
         self.enable_actions()
@@ -1063,8 +1095,9 @@ class CalculatorController:
         Give focus back to targets_window (and thus to the active
         target_wdg). This prevents the Buttons window to keep focus.
         """
-        self.targets_window.activateWindow()
-        self.targets_window.setFocus()
+        if self.targets_window:
+            self.targets_window.activateWindow()
+            self.targets_window.setFocus()
 
     def set_target_and_update_ui(self):
         self.set_target()

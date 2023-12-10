@@ -553,6 +553,7 @@ class MathObject:
                      math_type=cls.PROP)
         new_var.parent = forall
         new_var.name_bound_var(old_var.name)
+        new_var.set_binder_info(old_var.binder_info)
         # new_var.name_bound_var("Z")
         return forall
 
@@ -605,7 +606,7 @@ class MathObject:
                                 math_type=None)
         return new_object
 
-    ######################
+######################
 # Bound vars methods #
 ######################
     def has_bound_var(self):
@@ -735,6 +736,9 @@ class MathObject:
         the statement is applied).
         """
         return self.info.get('binder_info')
+
+    def set_binder_info(self, binder_info):
+        self.info['binder_info'] = binder_info
 
     @property
     def display_name(self) -> str:
@@ -906,7 +910,8 @@ class MathObject:
 
     def contains(self, other) -> int:
         """
-        Compute the number of copies of other contained in self.
+        Compute the number of copies of other contained in self,
+        recursively investigating self's children.
         """
 
         if self is self.NO_MATH_TYPE:  # NO_MATH_TYPE is equal to anything...
@@ -921,6 +926,24 @@ class MathObject:
                 #     print("debug")
 
             return sum([child.contains(other) for child in self.children])
+
+    def contains_including_types(self, other):
+        """
+        True if other recursively appears in self, including math_types.
+        """
+
+        if self is self.NO_MATH_TYPE:  # NO_MATH_TYPE is equal to anything...
+            return 0
+
+        if MathObject.__eq__(self, other):
+            return True
+        else:
+            if self.math_type.contains_including_types(other):
+                return True
+            for child in self.children:
+                if child.contains_including_types(other):
+                    return True
+            return False
 
     @classmethod
     def substitute(cls, old_var, new_var, math_object):
@@ -1183,6 +1206,9 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
 
+    def is_place_holder(self):
+        return self.node == 'PLACE_HOLDER'
+
     def implicit(self, test: callable):
         """
         Call the implicit version of test.
@@ -1233,8 +1259,7 @@ class MathObject:
         if quant:
             return quant.children[2]
 
-    def types_n_vars_of_univ_prop(self, implicit_def=True,
-                                  include_initial_implicit_vars=False):
+    def types_n_vars_of_univ_prop(self, implicit_def=True):
         """
         If self is a universal property, either explicit or implicit,
         extract the type of the variable, and the name in the explicit case.
@@ -1245,53 +1270,66 @@ class MathObject:
         if not self.is_for_all(is_math_type=True, implicit=implicit_def):
             return
 
-        iiiv = include_initial_implicit_vars
         types_n_vars = []
-        math_type = self.type_of_explicit_quant()
+        explicit_self = self.explicit_quant()
+        math_type = explicit_self.children[0]
+        dummy_var = self.children[1]
+        types_n_vars.append((math_type, dummy_var))
+        body: MathObject = explicit_self.children[2]
+        more = body.types_n_vars_of_univ_prop(implicit_def=False)
 
-        # Get dummy_var name in case of explicit forall
-        if self.is_for_all(is_math_type=True, implicit=False):
-            dummy_var = self.children[1]
-        else:
-            dummy_var = None
+        if more:
+            types_n_vars.extend(more)
+        return types_n_vars
 
-        # Include var except dummy_var is implicit and if not iiiv
-        if (not dummy_var
-                or dummy_var.binder_info != 'implicit'
-                or iiiv):
-            types_n_vars.append((math_type, dummy_var))
+        # # TODO: get iiiv from settings
+        # iiiv = include_initial_implicit_vars
+        # types_n_vars = []
+        # math_type = self.type_of_explicit_quant()
+        #
+        # # Get dummy_var name in case of explicit forall
+        # if self.is_for_all(is_math_type=True, implicit=False):
+        #     dummy_var = self.children[1]
+        # else:
+        #     dummy_var = None
+        #
+        # # Include var except dummy_var is implicit and if not iiiv
+        # if (not dummy_var
+        #         or dummy_var.binder_info != 'implicit'
+        #         or iiiv):
+        #     types_n_vars.append((math_type, dummy_var))
+        #
+        # # Always include implicit vars after an explicit one
+        # if dummy_var and dummy_var.binder_info != 'implicit':
+        #     iiiv = True
+        #
+        # if dummy_var:
+        #     body: MathObject = self.children[2]
+        #     more = body.types_n_vars_of_univ_prop(implicit_def=False,
+        #                                           include_initial_implicit_vars=iiiv)
+        #     if more:
+        #         types_n_vars.extend(more)
+        # if types_n_vars:
+        #     return types_n_vars
 
-        # Always include implicit vars after an explicit one
-        if dummy_var and dummy_var.binder_info != 'implicit':
-            iiiv = True
-
-        if dummy_var:
-            body: MathObject = self.children[2]
-            more = body.types_n_vars_of_univ_prop(implicit_def=False,
-                                                  include_initial_implicit_vars=iiiv)
-            if more:
-                types_n_vars.extend(more)
-        if types_n_vars:
-            return types_n_vars
-
-    def nb_initial_implicit_vars(self):
-        """
-        Return the number of implicit vars:
-         before first explicit
-        (or total nb if no explicit var).
-        """
-
-        types_n_vars = self.types_n_vars_of_univ_prop(
-            include_initial_implicit_vars=True)
-        nb = 0
-        for t, var in types_n_vars:
-            if not var:
-                break
-            elif var.binder_info != 'implicit':
-                break
-            else:
-                nb += 1
-        return nb
+    # def nb_initial_implicit_vars(self):
+    #     """
+    #     Return the number of implicit vars:
+    #      before first explicit
+    #     (or total nb if no explicit var).
+    #     """
+    #
+    #     types_n_vars = self.types_n_vars_of_univ_prop(
+    #         include_initial_implicit_vars=True)
+    #     nb = 0
+    #     for t, var in types_n_vars:
+    #         if not var:
+    #             break
+    #         elif var.binder_info != 'implicit':
+    #             break
+    #         else:
+    #             nb += 1
+    #     return nb
 
     def is_equality(self, is_math_type=False) -> bool:
         """

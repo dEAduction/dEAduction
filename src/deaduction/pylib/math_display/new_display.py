@@ -1030,9 +1030,8 @@ class MathList(list, MathDescendant):
         if format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by utf8:
             self.recursive_map(MathDisplay.latex_to_utf8)
         else:
-            raise ValueError(
-                "Wrong format_ type, must be one of 'lean', 'utf8', "
-                "'html'")
+            raise ValueError("Wrong format_ type, must be one of 'lean', "
+                             "'utf8', 'html'")
         # (2) Format
         if format_ == 'html':
             html_display(self, use_color=use_color, bf=bf, no_text=no_text)

@@ -134,6 +134,8 @@ class Coordinator(QObject):
         'functionality.allow_implicit_use_of_definitions': True,
         'functionality.target_selected_by_default': True}
 
+    MissingCalculatorOutput.MathObject = MathObject
+
     def __init__(self, exercise, servint, test_mode=False):
         super().__init__()
         self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
@@ -946,7 +948,7 @@ class Coordinator(QObject):
                 CC = CalculatorController
                 choices, ok = CC.get_items(goal=goal,
                                            missing_output=missing_output)
-                if ok:
+                if choices and ok:
                     # Convert to global choice value
                     self.emw.user_input.append(choices)
                 else:

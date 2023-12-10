@@ -128,6 +128,8 @@ def recursive_utf8_display(math_list, depth, lean_format=False):
             new_string, is_subscriptable = sub_sup_to_utf8(math_list)
             # Replace even if not subscriptable ('\sub' --> '_')
             math_list = math_list.replace_string(math_list, new_string)
+        elif math_list == r'\_':  # Lean place_holders
+            math_list = math_list.replace_string(math_list, '_')
         return math_list
 
     prefix = None
@@ -149,7 +151,8 @@ def recursive_utf8_display(math_list, depth, lean_format=False):
     idx = 0
     for child in math_list:
         if child:
-            formatted_child = recursive_utf8_display(child, depth + 1)
+            formatted_child = recursive_utf8_display(child, depth + 1,
+                                                     lean_format=lean_format)
             math_list[idx] = formatted_child
         idx += 1
 

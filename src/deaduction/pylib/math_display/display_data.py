@@ -219,7 +219,7 @@ class MathDisplay:
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
-         "PLACE_HOLDER": ('_', )
+         "PLACE_HOLDER": (r'\place_holder',),
          # "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)
@@ -232,6 +232,7 @@ class MathDisplay:
     #####################
     # Only those shape that are distinct from the latex_from_node dict
     lean_from_node = {
+        # "PLACE_HOLDER": (r'__',),
         "LOCAL_CONSTANT": (display_name,),
         "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
@@ -261,6 +262,7 @@ class MathDisplay:
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
     latex_to_lean_dic = {
+        r'\place_holder': r'\_',
         r'\and': " " + "and" + " ",
         r'\or': " " + "or" + " ",
         r'\Leftrightarrow': '↔',
