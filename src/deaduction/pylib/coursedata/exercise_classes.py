@@ -252,11 +252,6 @@ class Statement:
     def initial_proof_state(self, ips):
         self._initial_proof_state = ips
 
-    def goal(self):
-        ips = self.initial_proof_state
-        goal = ips.goals[0] if ips else None
-        return goal
-
     def to_math_object(self):
         goal = self.goal()
         math_object = goal.to_math_object() if goal else None

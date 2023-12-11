@@ -218,6 +218,7 @@ class CalculatorButtonsGroup(QWidget):
             slot=self.toggle_disclosure_triangle, hidden=hidden)
         self.disclosure_triangle.setSizePolicy(QSizePolicy.Fixed,
                                                QSizePolicy.Fixed)
+        self.disclosure_triangle.setFocusPolicy(Qt.NoFocus)
 
         self.group_box = QGroupBox()
         # super().__init__(title)
@@ -367,9 +368,12 @@ class CalculatorAllButtons(QWidget):
     send_pattern = Signal(MarkedPatternMathObject)
     targets_window: CalculatorTargets = None
     controller = None  # Set by CalculatorController
+    # window_closed = Signal()
+    targets_window_is_closed = False
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
+        self.setWindowTitle(_("Math Calculator"))
         # self.setFocusPolicy(Qt.NoFocus)
         self.buttons_groups = []
         # Clear ancient shortcuts!!
@@ -434,6 +438,12 @@ class CalculatorAllButtons(QWidget):
             else:
                 buttons.toggle_disclosure_triangle(hidden=hidden)
 
+    def closeEvent(self, event):
+        if not self.targets_window_is_closed:
+            event.ignore()
+        else:
+            super().closeEvent(event)
+
     def close(self):
         # Save window geometry
         settings = QSettings("deaduction")
@@ -443,6 +453,9 @@ class CalculatorAllButtons(QWidget):
         for buttons in self.buttons_groups:
             settings.setValue(f"calculator/{buttons.title}",
                               buttons.hidden)
+        super().close()
+        print("Buttons wd closed!")
+        # self.window_closed.emit()
 
     def buttons(self) -> [CalculatorButton]:
         btns = []
@@ -453,8 +466,6 @@ class CalculatorAllButtons(QWidget):
     @Slot()
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
-        # FIXME:
-        # self.controller.targets_window.target_wdgs[0].setFocus()
 
 
 class CalculatorMainWindow(QDialog):
@@ -646,14 +657,17 @@ class CalculatorController:
                  task_title=None,
                  target_types=None,
                  titles=None,
-                 task_description=None):
+                 task_description=None,
+                 task_goal=None):
 
         self.goal = goal
         self.targets = []
         self.target_types = target_types if target_types else None
         nb = self.nb_of_targets
+        # One history list per target:
         self.histories: [[MarkedPatternMathObject]] = [[]] * nb
-        self.history_indices = [-1] * nb
+        # First target history will be updated immediately (so set at -1)
+        self.history_indices = [0] * nb
 
         if target_types:
             # self.window_title = window_title
@@ -666,12 +680,21 @@ class CalculatorController:
                                                target_types=target_types,
                                                titles=titles,
                                                task_title=task_title,
-                                               task_description=task_description)
+                                               task_description=task_description,
+                                               task_goal=task_goal)
             self.targets_window = targets_window
+            # wdg_classes = [CalculatorAllButtons,
+            #                CalculatorButtonsGroup,
+            #                CalculatorButton,
+            #                DisclosureTriangle,
+            #                CalculatorTargets]
+            # self.targets_window.steal_focus_from_list.extend(wdg_classes)
             focus_changed = QApplication.instance().focusChanged
             focus_changed.connect(targets_window.on_focus_changed)
             focus_has_changed = targets_window.focus_has_changed
             focus_has_changed.connect(self.target_focus_has_changed)
+            self.targets_window.window_closed.connect(
+                self.targets_window_closed)
 
         else:
             self.task_description = None
@@ -741,7 +764,8 @@ class CalculatorController:
 
             self.__init_signals()
 
-        self.history_update()  # Display target and create first history entry
+        self.__init_histories()
+        self.set_target_and_update_ui()
 
     @classmethod
     def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
@@ -788,6 +812,8 @@ class CalculatorController:
         task_title = missing_output.task_title()
         target_types, titles = missing_output.targets_types_n_titles()
         task_description = missing_output.task_description()
+        statement = missing_output.statement
+        task_goal = statement.goal() if statement else None
 
         log.debug(f"Calculator with target types")
         calculator_controller = cls(goal=goal,
@@ -795,11 +821,15 @@ class CalculatorController:
                                     task_title=task_title,
                                     target_types=target_types,
                                     titles=titles,
-                                    task_description=task_description)
+                                    task_description=task_description,
+                                    task_goal=task_goal)
         # Execute the ButtonsDialog and wait for results
         calculator_controller.buttons_window.show()
         OK = calculator_controller.targets_window.exec()
 
+        if not OK:
+            calculator_controller.targets_window_closed()
+            return [], OK
         ############################
         # After exec: post-process #
         ############################
@@ -827,7 +857,6 @@ class CalculatorController:
         #     targets.pop()
 
         math_objects = missing_output.initial_place_holders + math_objects
-
         return math_objects, OK
 
     def __set_targets(self):
@@ -889,6 +918,11 @@ class CalculatorController:
             self.targets_window.show()
         else:
             self.calculator_ui.show()
+
+    def targets_window_closed(self):
+        print("Targets wd closed")
+        self.buttons_window.targets_window_is_closed = True
+        self.buttons_window.close()
 
     @property
     def nb_of_targets(self):
@@ -1109,6 +1143,10 @@ class CalculatorController:
     ##################
     # Target editing #
     ##################
+
+    def __init_histories(self):
+        for target, history in zip(self.targets, self.histories):
+            history.append(target)
 
     def history_update(self):
         """

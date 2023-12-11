@@ -36,6 +36,7 @@ from PySide2.QtWidgets import (QTextEdit, QWidget,
 import deaduction.pylib.config.dirs as cdirs
 from deaduction.dui.primitives.base_math_widgets_styling import (
     MathTextWidget, MathLabel)
+from deaduction.dui.elements import GoalWidget
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
 global _
@@ -60,13 +61,13 @@ class CalculatorToolbar(AbstractToolBar):
         undo_shortcut = QKeySequence.keyBindings(QKeySequence.Undo)[0].toString()
         redo_shortcut = QKeySequence.keyBindings(QKeySequence.Redo)[0].toString()
         self.rewind = QAction(QIcon(str((icons_dir /
-                                     'goback-begining.png').resolve())),
+                                    'goback-begining.png').resolve())),
                 _('Undo all'), self)
         self.undo_action = QAction(QIcon(str((icons_dir /
-                                          'undo_action.png').resolve())),
+                                         'undo_action.png').resolve())),
                 _('Undo'), self)
         self.redo_action = QAction(QIcon(str((icons_dir /
-                                          'redo_action.png').resolve())),
+                                         'redo_action.png').resolve())),
                 _('Redo'), self)
         self.go_to_end = QAction(QIcon(str((icons_dir /
                                             'go-end-96.png').resolve())),
@@ -292,7 +293,9 @@ class CalculatorTarget(MathTextWidget):
 class CalculatorTargets(QDialog):
     """
     This class displays one or several CalculatorTarget,
-    with a title, a common (optional) task_description and individual titles.
+    with a title, a math property and individual titles.
+    The math property is given either as a Goal instance (.e.g. applying a
+    Statement) or as a MathObject instance (e.g. applying a context property).
     e.g.:
     (1) A single target:
         title = Define a new sub-goal
@@ -313,12 +316,19 @@ class CalculatorTargets(QDialog):
     """
 
     focus_has_changed = Signal()
+    window_closed = Signal()
+
+    titles_font_size = 15
+
+    steal_focus_from_list = []
 
     def __init__(self, window_title,
                  target_types: [],  # MathObject
                  titles: [str],
                  task_title=None,
-                 task_description=None):
+                 task_description=None,
+                 task_goal=None,
+                 prop=None):
         """        
         @param task_description: either a goal, a MathObject or a string.
         @param target_types: a list of MathObjects.
@@ -340,7 +350,19 @@ class CalculatorTargets(QDialog):
         ####################
         # Detailed context #
         ####################
-        if task_description:
+        self.task_title_widget = None
+        fs = self.titles_font_size
+        if task_goal:
+            self.task_title_widget = QLabel(task_title)
+            self.task_title_widget.setStyleSheet("font-weight: bold; "
+                                                 f"font-size: {fs}pt")
+
+            self.task_widget = GoalWidget(task_goal, open_problem=False,
+                                          to_prove=False)
+        elif prop:
+            # TODO!!! Insert a TargetWidget with a switch between math & text.
+            pass
+        elif task_description:
             if not isinstance(task_description, str):
                 task_description = task_description.to_display(format_='html')
 
@@ -376,7 +398,9 @@ class CalculatorTargets(QDialog):
         for title, target_type in zip(titles, target_types):
             if title:
                 title_wdg = QLabel(title)
-                title_wdg.setStyleSheet("font-weight: bold; ")
+                title_wdg.setTextFormat(Qt.TextFormat.RichText)
+                title_wdg.setStyleSheet("font-weight: bold;"
+                                        "" f"font-size: {fs}pt")
                 title_wdgs.append(title_wdg)
             else:
                 title_wdgs.append(None)
@@ -397,6 +421,8 @@ class CalculatorTargets(QDialog):
         main_lyt.addWidget(self.toolbar)
         # main_lyt.addWidget(QLabel(title))  # Remove?
 
+        if self.task_title_widget:
+            main_lyt.addWidget(self.task_title_widget)
         if self.task_widget:
             main_lyt.addWidget(self.task_widget)
 
@@ -425,6 +451,7 @@ class CalculatorTargets(QDialog):
         # Save window geometry
         settings = QSettings("deaduction")
         settings.setValue("calculator_targets/geometry", self.saveGeometry())
+        self.window_closed.emit()
 
     def close_n_accept(self):
         self.close()
@@ -458,19 +485,35 @@ class CalculatorTargets(QDialog):
 
     def on_focus_changed(self, old, new):
         """
-        When focus changes, enable new focused target and disable old.
+        Systematically called when focus changes.
+        If new focus is a target widget, then adjust focused_target_idx.
+        If not, and focus is at some app widget,
+        then steal focus for current target.
         """
 
+        # print(f"Focus from {old} to {new}")
         idx = 0
         for wdg in self.target_wdgs:
             if wdg is new:
                 self.set_focused_target_idx(idx)
+                # Controller adjusts nav and history btns to new target:
                 self.focus_has_changed.emit()
-                print(f"Target wdg n°{idx} has focus")
+                # print(f"Target wdg n°{idx} has focus")
                 return
             idx += 1
 
         # Focus has been stolen by some other guy!
         # (Isn't this a bit selfish?)
-        self.target_wdgs[self.focused_target_idx].setFocus()
-        print(f"Target wdg n°{self.focused_target_idx} steal focus")
+        #  --> Only if focus is on some specific widgets
+        if new is not None:
+            self.activateWindow()
+            self.target_wdgs[self.focused_target_idx].setFocus()
+
+            # print(f"Target wdg n°{self.focused_target_idx} steal focus")
+
+        # for wdg_class in self.steal_focus_from_list:
+        #     if isinstance(new, wdg_class):
+        #         self.activateWindow()
+        #         self.target_wdgs[self.focused_target_idx].setFocus()
+        #
+        #         print(f"Target wdg n°{self.focused_target_idx} steal focus")

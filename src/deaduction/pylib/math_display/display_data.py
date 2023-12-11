@@ -215,7 +215,7 @@ class MathDisplay:
          "METAVAR": ('?',),
          "POINT": (0, '.', 1),
          "COMMA": (0, ', ', 1),
-         "GENERIC_PARENTHESES": ('(', 0, ')'),
+         "GENERIC_PARENTHESES": (r'\parentheses', 0),  #('(', 0, ')'),
          "OPEN_PARENTHESIS": ('(', 0),
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
@@ -250,7 +250,7 @@ class MathDisplay:
         "PROP_NOT": (r'\not', 0),
         "SET_EMPTY": ('(', r'\emptyset', math_type_for_lean, ')'),  # including ':'
         "SET_EXTENSION1": ('(', 'singleton ', 0, ')'),
-        "SET_EXTENSION2": ('(', 'pair ', 0, 1, ')'),
+        "SET_EXTENSION2": ('(', 'pair ', 0, ' ', 1, ')'),
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
@@ -622,7 +622,8 @@ class MathDisplay:
         return test
 
     @classmethod
-    def needs_paren(cls, parent, child, child_number) -> bool:
+    def needs_paren(cls, parent, child, child_number,
+                    lean_format=False) -> bool:
         """
         Decides if parentheses are needed around the child
         e.g. if math_obj.node = PROP.IFF then
@@ -641,6 +642,10 @@ class MathDisplay:
 
         p_node = parent.node
         c_node = child.node if child is not None else "NONE"
+
+        if lean_format:
+            if c_node not in cls.NATURE_LEAVES_LIST:
+                return True
 
         # Priority operator rules
         test = cls.priority_test(c_node, p_node, child_number)

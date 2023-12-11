@@ -248,7 +248,8 @@ def process_shape_item(item, root_math_object=None, line_of_descent=tuple(),
     if new_line != line_of_descent:
         parent = root_math_object.descendant(line_of_descent)
         child = root_math_object.descendant(new_line)
-        if MathDisplay.needs_paren(parent, child, item):
+        if MathDisplay.needs_paren(parent, child, item,
+                                   lean_format=lean_format):
             # MathList
             new_item = MathList([MathList.parentheses, new_item],
                                 new_item.root_math_object,

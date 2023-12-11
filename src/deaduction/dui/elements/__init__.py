@@ -25,6 +25,8 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from .goal_widgets import GoalMathWidget, GoalTextWidget, GoalWidget
+
 from .actions_widgets_classes import (
     ActionButton,
     ActionButtonsGroup,

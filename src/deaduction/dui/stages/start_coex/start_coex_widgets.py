@@ -67,7 +67,9 @@ from deaduction.dui.elements        import (MathObjectWidget,
                                             CoursesLW,
                                             CoursesLWI,
                                             StatementsTreeWidget,
-                                            StatementsTreeWidgetItem)
+                                            StatementsTreeWidgetItem,
+                                            GoalTextWidget,
+                                            GoalMathWidget)
 
 from deaduction.dui.elements.start_coex_widget_classes import ChooseExerciseWidgetItem
 
@@ -81,60 +83,6 @@ from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
 global _
-
-
-class GoalMathWidget(QWidget):
-    """
-    A QWidget to display a goal in math mode. Objects, properties and target
-    are displayed in distinct QMathWidgets.
-    """
-
-    def __init__(self, goal, to_prove=False, open_problem=False):
-        super().__init__()
-        target = goal.target
-        objects = goal.context_objects
-        properties = goal.context_props
-
-        # ───────────── Objects and properties ───────────── #
-        propobj_lyt = QHBoxLayout()
-        objects_wgt = MathObjectWidget(objects)
-        properties_wgt = MathObjectWidget(properties)
-        objects_lyt = QVBoxLayout()
-        properties_lyt = QVBoxLayout()
-
-        # Math font
-        objects_wgt.adjustSize()
-        # objects_wgt.setFont(self.math_fonts)
-        properties_wgt.adjustSize()
-        # properties_wgt.setFont(self.math_fonts)
-
-        objects_lyt.addWidget(QLabel(_('Objects:')))
-        properties_lyt.addWidget(QLabel(_('Properties:')))
-        objects_lyt.addWidget(objects_wgt)
-        properties_lyt.addWidget(properties_wgt)
-        propobj_lyt.addLayout(objects_lyt)
-        propobj_lyt.addLayout(properties_lyt)
-
-        # ───────────────────── Target ───────────────────── #
-        # target_wgt = MathObjectWidget(target=target)
-        target_wgt = TargetLabel(target)
-        # target_wgt.setFont(self.math_fonts)
-        # Set target_wgt height to 1 line: USELESS with QLabel
-        # font_metrics = QFontMetrics(math_font)
-        # text_size = font_metrics.size(0, target.math_type_to_display())
-        # text_height = text_size.height() * 2  # Need to tweak
-        # target_wgt.setMaximumHeight(text_height)
-
-        friendly_wgt_lyt = QVBoxLayout()
-        friendly_wgt_lyt.addLayout(propobj_lyt)
-        target_title = (_("True or False:") if open_problem
-                        else _("Target:") if to_prove
-                        else _("Conclusion"))
-        friendly_wgt_lyt.addWidget(QLabel(target_title))
-
-        friendly_wgt_lyt.addWidget(target_wgt)
-        self.setLayout(friendly_wgt_lyt)
-        friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
 
 class AbstractCoExChooser(QWidget):

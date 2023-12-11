@@ -1105,7 +1105,8 @@ class Goal:
                      format_="utf8",
                      to_prove=True,
                      text_mode=True,
-                     open_problem=False) -> str:
+                     open_problem=False,
+                     apply_statement=False) -> str:
         """
         Compute a displayable version of the goal as the statement of an
         exercise.
@@ -1117,6 +1118,8 @@ class Goal:
             the goal comes from a Theorem or Definition)
         :param text_mode:  boolean.
         :param open_problem: if True, then display as "True or False?"
+        @param apply_statement: if True, the (non-implicit) hypotheses are
+        separated by a CR.
 
         :return: a text version of the goal
         """
@@ -1171,6 +1174,8 @@ class Goal:
                 if object_is_prop != previous_object_is_prop:
                     # New line only to separate objects and propositions.
                     text += text_cr
+                elif apply_statement and (not object_is_prop):
+                    text += text_cr
                 else:
                     # New sentence
                     text += " "
@@ -1203,8 +1208,9 @@ class Goal:
             target_text = prove_that + target_text
         elif text:
             target_text = _("Then") + " " + target_text
-        else:
-            target_text = target_text.capitalize()
+        else:  # Capitalise but inside html formatters...
+            first_word = target_utf8.split()[0]
+            target_text = target_text.replace(first_word, first_word.capitalize())
             # Little issue: if sentence starts with a lower case
             # variable. This should never happen though...
         if open_problem:

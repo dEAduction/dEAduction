@@ -162,7 +162,7 @@ class MissingCalculatorOutput(MissingParametersError):
                 continue
 
             elif var:
-                name = var.to_display(format_='utf8')
+                name = var.to_display(format_='html')
                 title = _("Which object plays the role of {}?").format(name)
             else:
                 title = _("To which object shall we apply this property?")

@@ -69,7 +69,7 @@ from   deaduction.pylib.utils.filesystem import path_helper
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.dui.primitives import MathLabel, MathItem
-from deaduction.dui.elements import ( StatementsTreeWidget,
+from .actions_widgets_classes import (StatementsTreeWidget,
                                       StatementsTreeWidgetItem)
 
 log = logging.getLogger(__name__)
