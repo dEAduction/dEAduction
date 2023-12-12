@@ -578,6 +578,8 @@ class ExerciseStatusBar(QStatusBar):
     erased but a blank msg stays in the list.
     """
 
+    pending_msg_time_interval = 5000
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -713,14 +715,17 @@ class ExerciseStatusBar(QStatusBar):
 
         # Show proof msg if any:
         if tmp_msg:
-            self.timer.singleShot(3000, self.show_pending_msgs)
+            duration = self.pending_msg_time_interval
+            self.timer.singleShot(duration, self.show_pending_msgs)
         else:  # Show immediately
             self.show_pending_msgs()
 
-    def show_tmp_msg(self, msg: str, duration=3000):
+    def show_tmp_msg(self, msg: str, duration=None):
+        if not duration:
+            duration = self.pending_msg_time_interval
         self.set_message(msg)
-        self.timer.singleShot(3000, self.erase)
-        self.timer.singleShot(3000, self.show_pending_msgs)
+        self.timer.singleShot(duration, self.erase)
+        self.timer.singleShot(duration, self.show_pending_msgs)
 
 
 class ExerciseToolBar(QToolBar):

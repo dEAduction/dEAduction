@@ -140,6 +140,7 @@ def inequality_from_pattern_matching(math_object: MathObject,
     #                                 info={},
     #                                 children=children,
     #                                 math_type=premise.math_type)
+    math_object = math_object.math_type
     inequality, body = math_object.bound_prop_n_actual_body_of_bounded_quant()
     if inequality.is_inequality(is_math_type=True):
         children = [variable, inequality.children[1]]
@@ -327,13 +328,23 @@ def use_forall_with_ineq(proof_step, arguments,
             nbg = proof_step.nb_of_goals
             more_code0 = CodeForLean.from_string(f"rotate {nbg}")
         code = code.and_then(more_code0)
+        # var = inequality.children[0].to_display(format='utf8')
+        ineq_display = inequality.to_display(format_='utf8')
+        msg = (_("Property {} will be added to the context").
+               format(new_hypo_name))
+        msg += _(" after we check {}").format(ineq_display)
 
         if inequality.is_inequality(is_math_type=True):
             # Try to solve1 inequality by norm_num, maybe followed by compute:
-            more_code1 = compute(proof_step).try_()
-            more_code1.add_success_msg(_("Property {} added to the context").
-                                       format(new_hypo_name))
+            try_succeed_msg = (_("Property {} added to the context").
+                               format(new_hypo_name))
+            more_code1 = compute(proof_step).try_(
+                try_succeed_msg=try_succeed_msg,
+                try_fail_msg=msg)
+            # more_code1.add_success_msg()
             code = code.and_then(more_code1)
+        else:
+            code.add_success_msg(msg)
 
     if not unsolved_inequality_counter:
         # Success msg when there is no inequality to solve:

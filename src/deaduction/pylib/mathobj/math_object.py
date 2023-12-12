@@ -1267,7 +1267,9 @@ class MathObject:
         """
 
         explicit_self = self.explicit_quant()
-        # math_type = explicit_self.children[0]
+        if not explicit_self:
+            return
+
         dummy_var = explicit_self.children[1]
         body: MathObject = explicit_self.children[2]
         if body.is_implication(is_math_type=True):
@@ -1299,7 +1301,7 @@ class MathObject:
         types_n_vars.append((math_type, dummy_var))
 
         if jump_first_ineq:
-            test = body.bound_prop_n_actual_body_of_bounded_quant()
+            test = self.bound_prop_n_actual_body_of_bounded_quant()
             if test:
                 premise, new_body = test
                 if premise.is_inequality(is_math_type=True):

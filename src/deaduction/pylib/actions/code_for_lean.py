@@ -466,7 +466,7 @@ class CodeForLean:
                            instructions=[self],
                            success_msg=success_msg)
 
-    def try_(self, success_msg=""):
+    def try_(self, try_succeed_msg="", try_fail_msg=""):
         """
         Turn self into
                             "self <|> skip",
@@ -477,11 +477,14 @@ class CodeForLean:
 
         :return: CodeForLean
         """
-        # if isinstance(self, str):
-        #     self_ = CodeForLean.from_string(self)
-        return CodeForLean(instructions=[self, SKIP],
-                           combinator=LeanCombinator.or_else,
-                           success_msg=success_msg)
+
+        if try_succeed_msg:
+            self.add_success_msg(try_succeed_msg)
+        skip = CodeForLean.skip()
+        if try_fail_msg:
+            skip.add_success_msg(try_fail_msg)
+        return CodeForLean(instructions=[self, skip],
+                           combinator=LeanCombinator.or_else)
 
     def solve1(self, success_msg=""):
         code = CodeForLean(instructions=[self],
@@ -808,6 +811,10 @@ class CodeForLean:
                                     for ins in self.instructions])
 
         return up
+
+    @classmethod
+    def skip(cls):
+        return cls("skip")
 
     @classmethod
     def no_meta_vars(cls):
