@@ -178,19 +178,29 @@ class MissingCalculatorOutput(MissingParametersError):
     def targets_types_n_titles(self):
         types = []
         titles = []
-        types_n_vars = self.extract_types_n_vars()
-        for math_type, var in types_n_vars:
-            if var and var.is_place_holder():  # Remove place_holders
-                # title = 'PLACE_HOLDER'
-                continue
-
-            elif var:
+        if self.request_type in (CalculatorRequest.ApplyProperty,
+                                 CalculatorRequest.ApplyStatement):
+            types_n_vars = self.extract_types_n_vars()
+            for math_type, var in types_n_vars:
+                if var and var.is_place_holder():  # Remove place_holders
+                    # title = 'PLACE_HOLDER'
+                    continue
+                elif var:
+                    name = var.to_display(format_='html')
+                    title = _("Which object plays the role of {}?").format(name)
+                else:
+                    title = _("To which object shall we apply this property?")
+                types.append(math_type)
+                titles.append(title)
+        if self.request_type is CalculatorRequest.ProveExists:
+            target = self.prop.math_type
+            explicit_type = target.explicit_quant()
+            if explicit_type:
+                math_type, var, body = explicit_type.children
+                types = [math_type]
                 name = var.to_display(format_='html')
                 title = _("Which object plays the role of {}?").format(name)
-            else:
-                title = _("To which object shall we apply this property?")
-            types.append(math_type)
-            titles.append(title)
+                titles = [title]
 
         return types, titles
 

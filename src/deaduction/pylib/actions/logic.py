@@ -243,17 +243,23 @@ def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
         #                              output=output)
         # if not goal.target.is_exists(implicit=False):
         #     # implicit exists
-        input_target = target.type_of_explicit_quant()
-        raise MissingParametersError(InputType.Calculator,
-                                     title=_("Prove an existential property"),
-                                     target=input_target)
-    x = user_input[0]
-    if isinstance(x, MathObject):
-        x_lean = x.to_display(format_='lean')
-        x = x.to_display(format_='utf8')
-    elif isinstance(x, str):
-        x_lean = x.strip('()')
-        x = x_lean
+        # input_target = target.type_of_explicit_quant()
+        # raise MissingParametersError(InputType.Calculator,
+        #                              title=_("Prove an existential property"),
+        #                              target=input_target)
+        raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
+                                      proof_step=proof_step,
+                                      prop=proof_step.goal.target)
+
+    [x] = user_input[0]
+    x_lean = x.to_display(format_='lean')
+    x = x.to_display(format_='utf8')
+    # if isinstance(x, MathObject):
+    #     x_lean = x.to_display(format_='lean')
+    #     x = x.to_display(format_='utf8')
+    # elif isinstance(x, str):
+    #     x_lean = x.strip('()')
+    #     x = x_lean
     code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
