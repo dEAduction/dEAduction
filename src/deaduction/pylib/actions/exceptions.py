@@ -133,8 +133,8 @@ class MissingCalculatorOutput(MissingParametersError):
         Return prop.math_type, or its explicit version if it ias an implicit
         universal prop.
         """
-
-        return self.prop.math_type.explicit_quant()
+        if self.prop and self.prop.math_type:
+            return self.prop.math_type.explicit_quant()
 
     def extract_types_n_vars(self):
 

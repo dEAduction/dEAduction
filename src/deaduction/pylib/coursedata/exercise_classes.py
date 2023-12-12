@@ -1038,6 +1038,8 @@ class Exercise(Theorem):
         # (1) Take history file into account, if any
         if self.course.history_course():
             exercise = self.course.original_version_in_history_file(self)
+            if not exercise:
+                exercise = self
         else:
             exercise = self
 

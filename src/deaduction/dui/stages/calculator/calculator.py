@@ -716,6 +716,8 @@ class CalculatorController:
                 display_type = target_type.math_type_to_display(format_="utf8",
                                                                 is_math_type=True,
                                                                 text=True)
+                if target_type.is_prop(is_math_type=True):  # Fixme?
+                    display_type = _('a property')
                 self.target_title = _("Enter") + " " + display_type + _(":")
 
             target_mvar = MetaVar(math_type=p_target_type)
