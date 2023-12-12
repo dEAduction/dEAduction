@@ -121,6 +121,8 @@ class MissingCalculatorOutput(MissingParametersError):
             self.title = _("Introduce the new object {}").format(new_name)
         elif self.request_type is CalculatorRequest.StateSubGoal:
             self.title = _("Introduce a new sub-goal")
+        elif self.request_type is CalculatorRequest.EnterObject:
+            self.title = _("Define an object")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:

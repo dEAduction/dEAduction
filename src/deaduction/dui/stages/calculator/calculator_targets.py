@@ -449,13 +449,22 @@ class CalculatorTargets(QDialog):
 
         self.set_geometry()
 
+    def update_size(self):
+        self.resize(self.minimumSizeHint())
+        self.setMinimumWidth(0)
+        print("Size updated!")
+
     def set_geometry(self, geometry=None):
+        # return
         settings = QSettings("deaduction")
         value = settings.value("calculator_targets/geometry")
         if value:
             self.restoreGeometry(value)
         elif geometry:
             self.setGeometry(geometry)
+        # Resize height window, but not width
+        self.setMinimumWidth(self.width())
+        QTimer.singleShot(1, self.update_size)
 
     def close(self):
         # Save window geometry
