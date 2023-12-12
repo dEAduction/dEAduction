@@ -641,6 +641,9 @@ class CalculatorController:
     automatically generated:
         - context and definition buttons, in __init__()
         - standard buttons, in CalculatorMainWindow.
+
+    Note that the targets are entirely managed from the CalculatorController,
+    and not at the CalculatorTargets level.
     """
 
     _target: MarkedPatternMathObject
@@ -657,7 +660,7 @@ class CalculatorController:
                  task_title=None,
                  target_types=None,
                  titles=None,
-                 task_description=None,
+                 # task_description=None,
                  task_goal=None,
                  prop=None):
 
@@ -681,7 +684,7 @@ class CalculatorController:
                                                target_types=target_types,
                                                titles=titles,
                                                task_title=task_title,
-                                               task_description=task_description,
+                                               # task_description=task_description,
                                                task_goal=task_goal,
                                                prop=prop)
             self.targets_window = targets_window
@@ -699,7 +702,7 @@ class CalculatorController:
                 self.targets_window_closed)
 
         else:
-            self.task_description = None
+            # self.task_description = None
             self.targets_window = None
 
             ##############
@@ -816,7 +819,7 @@ class CalculatorController:
         window_title = missing_output.title
         task_title = missing_output.task_title()
         target_types, titles = missing_output.targets_types_n_titles()
-        task_description = missing_output.task_description()
+        # task_description = missing_output.task_description()
         statement = missing_output.statement
         task_goal = statement.goal() if statement else None
         prop = missing_output.explicit_math_type_of_prop()
@@ -827,7 +830,7 @@ class CalculatorController:
                                     task_title=task_title,
                                     target_types=target_types,
                                     titles=titles,
-                                    task_description=task_description,
+                                    # task_description=task_description,
                                     task_goal=task_goal,
                                     prop=prop)
         # Execute the ButtonsDialog and wait for results
@@ -874,7 +877,10 @@ class CalculatorController:
         self.targets = []
         idx = 0
         for target_type in self.target_types:
-            target_mvar = MetaVar(math_type=target_type)
+            if target_type:
+                target_mvar = MetaVar(math_type=target_type)
+            else:
+                target_mvar = MetaVar(math_type=None)
             target = MarkedMetavar.from_mvar(target_mvar)
             target.mark()
             text = target.to_display(format_='html')

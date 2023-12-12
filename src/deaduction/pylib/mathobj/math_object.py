@@ -585,6 +585,18 @@ class MathObject:
                    math_type=cls.PROP)
 
     @classmethod
+    def raw_lean_code(cls, code: str):
+        """
+        Return a fake MathObject to encapsulate a piece of pure string Lean
+        code.
+        """
+        new_object = MathObject(node='RAW_LEAN_CODE',
+                                info={'name': '(' + code + ')'},
+                                children=[],
+                                math_type=None)
+        return new_object
+
+    @classmethod
     def between_parentheses(cls, math_object):
         """
         Put math_object between parentheses.
@@ -594,6 +606,31 @@ class MathObject:
                                 children=[math_object],
                                 math_type=math_object.math_type)
         return new_object
+
+    @classmethod
+    def add_leading_parentheses(cls, math_object):
+        """
+        Put math_object between parentheses if needed, i.e. if math_object
+        has children and is not already GENERIC_PARENTHESES or
+        RAW_LEAN_CODE. This is used to secure Lean object, e.g. before
+        passing them as arg to a univ prop.
+        """
+
+        node = math_object.node
+        tests = (bool(math_object.children),
+                 node != "GENERIC_PARENTHESES",
+                 node != "RAW_LEAN_CODE")
+
+        if all(tests):
+            new_object = MathObject(node='GENERIC_PARENTHESES',
+                                    info={},
+                                    children=[math_object],
+                                    math_type=math_object.math_type)
+            return new_object
+
+        else:
+            return math_object
+
 
     @classmethod
     def place_holder(cls):

@@ -28,12 +28,13 @@ This file is part of dEAduction.
 
 import logging
 
+from .utils import get_fresh_name
 from deaduction.pylib.actions     import (action,
                                           InputType,
-                                          MissingParametersError,
                                           WrongUserInput,
-                                          WrongProveModeInput,
                                           WrongUseModeInput,
+                                          MissingCalculatorOutput,
+                                          CalculatorRequest,
                                           test_selection,
                                           test_prove_use,
                                           CodeForLean)
@@ -53,18 +54,53 @@ def action_sum(proof_step) -> CodeForLean:
     - add some number to an equality/inequality,
     - add two numbers to create a third one.
     """
+
     selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-
-    test_selection(selected_objects, target_selected, exclusive=True,
-                   select_default_target=False)
-
+    user_input = proof_step.user_input
     # TODO: if len(selected_objects) == 1:
     #  MissingParam --> user rentre un nb à ajouter.
     #   e.g.
     #     let a := 2,
     #     have Haux0: a = 2, refl,
     #     smart_add H1_lt a with H, rw Haux0 at H, clear Haux0, clear a,
+
+    if not selected_objects:
+        raise WrongUserInput(_("Select inequalities, equalities or numbers "
+                               "from the context to add them"))
+
+    if len(selected_objects) == 1:
+        if not user_input:
+            eq_or_ineq = selected_objects[0].math_type
+            if eq_or_ineq.children:
+                math_object = eq_or_ineq.children[0]
+            else:
+                math_object = None
+            mc = MissingCalculatorOutput
+            raise mc(CalculatorRequest.EnterObject, proof_step,
+                     object_of_requested_math_type=math_object)
+        else:
+            ineq_name = selected_objects[0].display_name
+            x0 = get_fresh_name(context=proof_step.goal.context)
+            H0 = get_fresh_name('H', proof_step.goal.context)
+            calc_input = user_input[0][0]
+            nb = calc_input.to_display(format_='lean')
+            nb_utf8 = calc_input.to_display(format_='utf8')
+            new_hypo_name = get_new_hyp(proof_step)
+
+            add_code = [f"let {x0} := {nb}",
+                        f"have {H0}: {x0} = {nb}",
+                        "refl",
+                        f"smart_add {ineq_name} {x0} with {new_hypo_name}",
+                        f" rw {H0} at {new_hypo_name}",
+                        f"clear {H0}",
+                        f"clear {x0}"]
+            code = CodeForLean.and_then_from_list(add_code)
+            code.add_success_msg(_("Adding {} to {} to get {}").
+                                 format(nb_utf8, ineq_name, new_hypo_name))
+            code.add_error_msg(_("I cannot add {} to {}").format(nb_utf8,
+                                                                 ineq_name))
+            code.add_used_properties(selected_objects)
+            return code
 
     if len(selected_objects) == 2:
 
@@ -79,6 +115,7 @@ def action_sum(proof_step) -> CodeForLean:
             f"smart_add {H0} {H1} with {new_hypo_name}")
         code.add_success_msg(_(f"Adding {H0} and {H1} to get {new_hypo_name}"))
         code.add_error_msg(f"I cannot add {H0} and {H1}")
+        code.add_used_properties(selected_objects)
         # code.add_error_msg(f"Use the + button for inequalities")
         return code
 

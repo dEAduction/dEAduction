@@ -84,14 +84,14 @@ def remove_leading_parentheses(math_list: list):
             remove_leading_parentheses(math_list)
 
 
-def add_parentheses(math_list: list, depth=1):
+def add_parentheses(math_list: list, depth=1, lean_format=False):
     """
     Search for the \\parentheses macro and replace it by a pair of
     parentheses. Remove redundant parentheses, i.e.
     ((...)) or parentheses at depth 0.
     """
     # Remove unnecessary leading parentheses #
-    if depth == 0:
+    if depth == 0 and not lean_format:
         remove_leading_parentheses(math_list)
 
     for index in range(len(math_list) - 1):
@@ -145,7 +145,7 @@ def recursive_utf8_display(math_list, depth, lean_format=False):
                   r'\text', r'\no_text', r'\marked'):
         math_list.pop(0)
 
-    add_parentheses(math_list, depth)
+    add_parentheses(math_list, depth, lean_format=lean_format)
 
     # Recursively format children
     idx = 0

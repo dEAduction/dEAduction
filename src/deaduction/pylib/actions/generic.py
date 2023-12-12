@@ -249,7 +249,7 @@ def action_theorem(proof_step) -> CodeForLean:
     arguments = [arg if arg.is_place_holder()
                  else arg.between_parentheses(arg)
                  for arg in proof_step.user_input[0]]
-    code = use_forall(proof_step, arguments, theorem)
+    code = use_forall(proof_step, arguments, theorem, no_more_place_holder=True)
     return code
 
 

@@ -326,7 +326,7 @@ class CalculatorTargets(QDialog):
                  target_types: [],  # MathObject
                  titles: [str],
                  task_title=None,
-                 task_description=None,
+                 # task_description=None,
                  task_goal=None,
                  prop=None):
         """        
@@ -351,6 +351,7 @@ class CalculatorTargets(QDialog):
         # Detailed context #
         ####################
         self.task_title_widget = None
+        self.task_widget = None
         fs = self.titles_font_size
         if task_goal:
             self.task_title_widget = QLabel(task_title)
@@ -368,19 +369,23 @@ class CalculatorTargets(QDialog):
             self.task_widget = GoalWidget(math_object=prop,
                                           open_problem=False,
                                           to_prove=False)
-        elif task_description:
-            if not isinstance(task_description, str):
-                task_description = task_description.to_display(format_='html')
-
-            self.task_widget = QGroupBox()
-            self.task_widget.setTitle(task_title)
-            math_lbl = MathLabel()
-            math_lbl.setText(task_description)
-            lyt = QHBoxLayout()
-            lyt.addWidget(math_lbl)
-            self.task_widget.setLayout(lyt)
-        else:
-            self.task_widget = None
+        elif task_title:
+            self.task_title_widget = QLabel(task_title)
+            self.task_title_widget.setStyleSheet("font-weight: bold; "
+                                                 f"font-size: {fs}pt")
+        # elif task_description:
+        #     if not isinstance(task_description, str):
+        #         task_description = task_description.to_display(format_='html')
+        #
+        #     self.task_widget = QGroupBox()
+        #     self.task_widget.setTitle(task_title)
+        #     math_lbl = MathLabel()
+        #     math_lbl.setText(task_description)
+        #     lyt = QHBoxLayout()
+        #     lyt.addWidget(math_lbl)
+        #     self.task_widget.setLayout(lyt)
+        # else:
+        #     self.task_widget = None
 
         ######################
         # Navigation buttons #
@@ -411,9 +416,8 @@ class CalculatorTargets(QDialog):
             else:
                 title_wdgs.append(None)
             target_wdg = CalculatorTarget()
-            # FIXME: we do not want the math_type here...
-            text = target_type.to_display(format_='html')
-            target_wdg.setHtml(text)
+            # text = target_type.to_display(format_='html')
+            # target_wdg.setHtml(text)
             target_wdg.toolbar = self.toolbar
             target_wdg.navigation_bar = self.navigation_bar
             target_wdg.button_box = self.button_box

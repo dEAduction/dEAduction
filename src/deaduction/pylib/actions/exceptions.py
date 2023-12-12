@@ -68,12 +68,18 @@ class CalculatorRequest(IntEnum):
     ProveExists = 2
     StateSubGoal = 3
     DefineObject = 4
+    EnterObject = 5
 
 
 class MissingCalculatorOutput(MissingParametersError):
     """
     Any instance should provide enough info so that, together with the goal,
     Calculator is able to construct the CalculatorTargets.
+
+    Individual target titles are provided when there is a detailed context,
+    i.e. request_type is one of
+    ApplyProperty, ApplyStatement, ProveExists.
+    These are provided by the targets_types_n_titles() method.
     """
     MathObject = None  # filled in by Coordinator
 
@@ -81,7 +87,8 @@ class MissingCalculatorOutput(MissingParametersError):
                  proof_step,
                  prop=None,
                  statement=None,
-                 new_name=None):
+                 new_name=None,
+                 object_of_requested_math_type=None):
         """
 
         @param request_type:
@@ -89,6 +96,7 @@ class MissingCalculatorOutput(MissingParametersError):
         @param prop: a ContextMathObject (use prop.math_type).
         @param statement:
         @param new_name:
+        @param requested_type: type of object to enter
         """
         super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
@@ -97,6 +105,7 @@ class MissingCalculatorOutput(MissingParametersError):
         self.prop = prop
         self.statement = statement
         self.name = new_name
+        self.object_of_requested_math_type = object_of_requested_math_type
 
         if self.request_type is CalculatorRequest.ApplyProperty:
             # self.prop = prop
@@ -124,9 +133,28 @@ class MissingCalculatorOutput(MissingParametersError):
             title = _("State a new sub-goal:")
         elif self.request_type is CalculatorRequest.DefineObject:
             title = _("Introduce a new object: {} = ?").format(self.name)
+        elif self.request_type is CalculatorRequest.EnterObject:
+            if self.request_type and self.object_of_requested_math_type:
+                mo = self.object_of_requested_math_type
+                object_type = (mo.math_type_to_display(format_='html',
+                                                       text=True))
+                title = _("Enter {}:").format(object_type)
+            else:
+                title = _("Enter an object:")
         else:
             title = None
         return title
+
+    def target_type(self):
+        """
+        Determine type of target when there is only one target,
+        with no detailed context to show (e.g. enter an object).
+        """
+        if self.object_of_requested_math_type:
+            # e.g. CalculatorRequest.EnterObject
+            return self.object_of_requested_math_type.math_type
+        elif self.request_type is CalculatorRequest.StateSubGoal:
+            return self.MathObject.PROP
 
     def explicit_math_type_of_prop(self):
         """
@@ -178,6 +206,12 @@ class MissingCalculatorOutput(MissingParametersError):
     def targets_types_n_titles(self):
         types = []
         titles = []
+        if self.request_type in (CalculatorRequest.EnterObject,
+                                 CalculatorRequest.StateSubGoal,
+                                 CalculatorRequest.DefineObject):
+            types = [self.target_type()]
+            titles = []  # No individual title
+
         if self.request_type in (CalculatorRequest.ApplyProperty,
                                  CalculatorRequest.ApplyStatement):
             types_n_vars = self.extract_types_n_vars()
@@ -204,21 +238,22 @@ class MissingCalculatorOutput(MissingParametersError):
 
         return types, titles
 
-    def task_description(self):
-        """
-        Provide a display of self.prop or self.statement after
-        unfolding definition to reveal quantifiers if necessary.
-        """
-
-        # FIXME: not really used?
-        if self.request_type in (CalculatorRequest.ApplyProperty,
-                                 CalculatorRequest.ProveExists):
-            math_obj = self.prop.math_type.explicit_quant()
-            task = math_obj.to_display(format_='html')
-        elif self.request_type is CalculatorRequest.ApplyStatement:
-            math_obj = self.statement.to_math_object().explicit_quant()
-            task = math_obj.to_display(format_='html')
-        return task
+    # def task_description(self):
+    #     """
+    #     Provide a display of self.prop or self.statement after
+    #     unfolding definition to reveal quantifiers if necessary.
+    #     """
+    #
+    #     # FIXME: not really used?
+    #     task = None
+    #     if self.request_type in (CalculatorRequest.ApplyProperty,
+    #                              CalculatorRequest.ProveExists):
+    #         math_obj = self.prop.math_type.explicit_quant()
+    #         task = math_obj.to_display(format_='html')
+    #     elif self.request_type is CalculatorRequest.ApplyStatement:
+    #         math_obj = self.statement.to_math_object().explicit_quant()
+    #         task = math_obj.to_display(format_='html')
+    #     return task
 
 
 class WrongUserInput(Exception):

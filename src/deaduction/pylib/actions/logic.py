@@ -202,7 +202,8 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
                          else arg.between_parentheses(arg)
                          for arg in proof_step.user_input[0]]
 
-            code = use_forall(proof_step, arguments, universal_property)
+            code = use_forall(proof_step, arguments, universal_property,
+                              no_more_place_holder=True)
             return code
 
     # From now on len(l) ≥ 2

@@ -156,7 +156,8 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
                       arguments: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
-                      iff_direction='') -> CodeForLean:
+                      iff_direction='',
+                      no_more_place_holder=False) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
@@ -165,18 +166,21 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
     except if variables already contains some, in which case only the
     explicit statement is sent to Lean.
 
-    :param operator:           a MathObject or a Statement which is either an
+    @param operator:           a MathObject or a Statement which is either an
                             implication or a universal property
-    :param arguments:       a list of MathObjects to which "arrow" will be
+    @param arguments:       a list of MathObjects to which "arrow" will be
                             applied
-    :param new_hypo_name:   a fresh name for the new property
+    @param new_hypo_name:   a fresh name for the new property
 
-    :param success_msg:     A success msg, if None then the standard one will be
+    @param success_msg:     A success msg, if None then the standard one will be
                             used.
 
-    :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
+    @param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
                             implication, 'mpr' for reverse direction,
                             '' if arrow is an implication.
+    @param no_more_place_holder:
+                            if False, try to add 0 to 6  Lean place-holders
+                            ( '_').
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -197,8 +201,9 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
     # # selected_hypo = arrow.info["name"]
     # selected_hypo = operator.lean_name  # Property of both MathObject and Statement
 
-    no_more_place_holder = (hasattr(arguments[0], 'is_place_holder')
-                            and arguments[0].is_place_holder())
+    if not no_more_place_holder:
+        no_more_place_holder = (hasattr(arguments[0], 'is_place_holder')
+                                and arguments[0].is_place_holder())
     # have = f'have {new_hypo_name} := '
     # args = ' '.join(variable_names)
     implicit_codes = []
@@ -235,7 +240,8 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
 
 def use_forall_with_ineq(proof_step, arguments,
                          universal_property_or_statement, inequality,
-                         new_hypo_name=None) -> CodeForLean:
+                         new_hypo_name=None,
+                         no_place_holder=False) -> CodeForLean:
     """
     Try to use last selected property, assumed to be a universal prop matching
     forall x, (some inex on x) ==> ...
@@ -309,9 +315,11 @@ def use_forall_with_ineq(proof_step, arguments,
     variables.extend(arguments[1:])
     if not ineq_in_ctxt:  # Hypo_name has been used
         new_hypo_name = get_new_hyp(proof_step)
-    code = code.and_then(
-        have_new_property(universal_property_or_statement, variables,
-                          new_hypo_name, success_msg=""))
+    have = have_new_property(universal_property_or_statement, variables,
+                             new_hypo_name, success_msg="",
+                             no_more_place_holder=no_place_holder)
+    code = code.and_then(have)
+
     if used_inequalities:
         code.add_used_properties(used_inequalities)
 
@@ -357,7 +365,8 @@ def use_forall_with_ineq(proof_step, arguments,
 
 
 def use_forall(proof_step, arguments: [MathObject],
-               universal_property_or_statement) -> CodeForLean:
+               universal_property_or_statement,
+               no_more_place_holder=False) -> CodeForLean:
     """
     Try to apply universal_property on arguments.
     universal_property should be a universal property,
@@ -380,7 +389,8 @@ def use_forall(proof_step, arguments: [MathObject],
     # If first arg is an equality, replace by left term:
     arguments[0] = extract_var(arguments[0])
     simple_code = have_new_property(universal_property_or_statement, arguments,
-                                    new_hypo_name)
+                                    new_hypo_name,
+                                    no_more_place_holder=no_more_place_holder)
     simple_code.add_used_properties(selected_objects)
 
     universal_property = universal_property_or_statement.to_math_object()
@@ -398,7 +408,8 @@ def use_forall(proof_step, arguments: [MathObject],
     else:
         complex_code = use_forall_with_ineq(proof_step, arguments,
                                             universal_property_or_statement,
-                                            inequality, new_hypo_name)
+                                            inequality, new_hypo_name,
+                                            no_place_holder=no_more_place_holder)
         code = complex_code.or_else(simple_code)
         return code
 

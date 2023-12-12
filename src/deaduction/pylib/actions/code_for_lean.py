@@ -888,12 +888,17 @@ class CodeForLean:
         @return: CodeForLean
         """
 
+        var = arguments[0]
+        var = var.add_leading_parentheses(var)
+        test = var.to_display(format_='lean')
+
         op_name = '@' + operator.lean_name if explicit else operator.lean_name
 
-        arg_names = ['_'] * nb_place_holders
-        arg_names.extend([arg if isinstance(arg, str)
-                          else arg.to_display(format_='lean')
-                          for arg in arguments])
+        arg_names = ['(' + arg + ')' if isinstance(arg, str)
+                     else
+                     arg.add_leading_parentheses(arg).to_display(format_='lean')
+                     for arg in arguments]
+        arg_names = (['_'] * nb_place_holders) + arg_names
 
         if not iff_direction:
             args = ' '.join(arg_names)

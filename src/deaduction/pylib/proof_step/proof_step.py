@@ -457,7 +457,10 @@ class ProofStep:
 
     @property
     def txt(self):
-        return str(self.history_nb+1) + _(": ") + self.success_msg
+        if self.success_msg:
+            return str(self.history_nb+1) + _(": ") + self.success_msg
+        else:
+            return str(self.history_nb+1) + _(": ") + _("no message")
 
     @property
     def txt_debug(self):

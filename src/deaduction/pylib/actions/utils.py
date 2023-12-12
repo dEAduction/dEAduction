@@ -120,4 +120,19 @@ def extract_var(potential_var: MathObject) -> MathObject:
         return potential_var
 
 
+def get_fresh_name(letter='x', context=None):
+    """
+    Just provide the first name of the form x + <nb>
+    which is not a name in the context.
+    """
+
+    if not context:
+        return letter
+
+    names = [obj.display_name for obj in context]
+    idx = 0
+    while letter + str(idx) in names:
+        idx += 1
+
+    return letter + str(idx)
 

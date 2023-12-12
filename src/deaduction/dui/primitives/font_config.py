@@ -181,7 +181,7 @@ class DeaductionFonts:
              f"CalculatorTargets MathTextWidget"
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
              # Target
-             f"CalculatorTarget"
+             f"CalculatorTargets CalculatorTarget MathTextWidget"
              f"{{ font-size : {self.target_font_size}pt; }}"
              ####################
              # Proof Tree #
