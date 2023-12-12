@@ -30,8 +30,7 @@ This file is part of dEAduction.
 from deaduction.pylib.actions import MissingCalculatorOutput, CalculatorRequest
 from deaduction.pylib.actions import CodeForLean, test_selection
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
-from deaduction.pylib.actions.commun_actions import (get_arguments_to_use_forall,
-                                                     use_forall)
+from deaduction.pylib.actions.commun_actions import use_forall
 
 # from deaduction.pylib.proof_state import Goal
 
@@ -118,6 +117,7 @@ def action_definition(proof_step) -> CodeForLean:
                    exclusive=True,
                    force_default_target=True)
     if not target_selected and not selected_objects:
+        # FIXME: open Calculator instead?
         codes = add_statement_to_context(proof_step, definition)
         return codes
 
@@ -215,8 +215,7 @@ def action_theorem(proof_step) -> CodeForLean:
     If nothing is selected, and the theorem is a universal
     property (which happens almost everytime), call Calculator so that usr
     enter the object on which the theorem will be applied (no rewriting in
-    this case). This is done via the get_arguments_to_use_forall() and
-    use_forall() methods in common_actions.py
+    this case).
     """
 
     target_selected = proof_step.target_selected
@@ -226,6 +225,10 @@ def action_theorem(proof_step) -> CodeForLean:
     if selected_objects or target_selected:
         # TODO: use common actions (use_forall, etc.)
         return apply_theorem(proof_step)
+
+    if proof_step.drag_n_drop and proof_step.drag_n_drop.statement:
+        codes = add_statement_to_context(proof_step, theorem)
+        return codes
 
     theorem_as_math_object = theorem.goal().to_math_object()
 
@@ -237,16 +240,12 @@ def action_theorem(proof_step) -> CodeForLean:
         # TODO: implicit defs
         return apply_theorem(proof_step)
 
-    # From now on theorem_as_math_object is a universal statement
-    # FIXME: only explicit arguments should be considered! Implicit args may be
-    #  transmitted also?
+    # Apply universal statement
     if not proof_step.user_input:
         raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
                                       proof_step=proof_step,
                                       statement=theorem)
 
-    # arguments = get_arguments_to_use_forall(proof_step,
-    #                                         universal_property=theorem_as_math_object)
     arguments = [arg if arg.is_place_holder()
                  else arg.between_parentheses(arg)
                  for arg in proof_step.user_input[0]]

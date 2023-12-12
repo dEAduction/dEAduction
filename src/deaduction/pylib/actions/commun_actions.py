@@ -142,8 +142,8 @@ def inequality_from_pattern_matching(math_object: MathObject,
     return inequality
 
 
-def have_new_property(arrow,  #: Union[MathObject, Statement]
-                      variables: [Union[MathObject, str]],
+def have_new_property(operator,  #: Union[MathObject, Statement]
+                      arguments: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
                       iff_direction='') -> CodeForLean:
@@ -155,9 +155,9 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     except if variables already contains some, in which case only the
     explicit statement is sent to Lean.
 
-    :param arrow:           a MathObject or a Statement which is either an
+    :param operator:           a MathObject or a Statement which is either an
                             implication or a universal property
-    :param variables:       a list of MathObjects to which "arrow" will be
+    :param arguments:       a list of MathObjects to which "arrow" will be
                             applied
     :param new_hypo_name:   a fresh name for the new property
 
@@ -167,7 +167,6 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
                             implication, 'mpr' for reverse direction,
                             '' if arrow is an implication.
-    :param no_guessing:     If True then no implicit args are tried (the '_').
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -181,41 +180,46 @@ def have_new_property(arrow,  #: Union[MathObject, Statement]
     # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
     # = "mp")
 
-    variable_names = [variable.to_display(format_='lean')
-                      if isinstance(variable, MathObject)
-                      else variable for variable in variables]
+    # variable_names = [variable.to_display(format_='lean')
+    #                   if isinstance(variable, MathObject)
+    #                   else variable for variable in arguments]
+    #
+    # # selected_hypo = arrow.info["name"]
+    # selected_hypo = operator.lean_name  # Property of both MathObject and Statement
 
-    # selected_hypo = arrow.info["name"]
-    selected_hypo = arrow.lean_name  # Property of both MathObject and Statement
-
-    no_more_place_holder = (hasattr(variables[0], 'is_place_holder')
-                            and variables[0].is_place_holder())
-    have = f'have {new_hypo_name} := '
-    arguments = ' '.join(variable_names)
+    no_more_place_holder = (hasattr(arguments[0], 'is_place_holder')
+                            and arguments[0].is_place_holder())
+    # have = f'have {new_hypo_name} := '
+    # args = ' '.join(variable_names)
     implicit_codes = []
     explicit_codes = []
     nbs = [0] if no_more_place_holder else range(6)  # Implicit args ('_')
     for nb in nbs:
-        imp_code = f'{selected_hypo} ' + '_ '*nb
-        exp_code = f'@{selected_hypo} ' + '_ '*nb
-        if iff_direction:
-            if nb > 0:
-                imp_code = '(' + imp_code + ')'
-                exp_code = '(' + exp_code + ')'
-            imp_code = imp_code + '.' + iff_direction + ' '
-            exp_code = exp_code + '.' + iff_direction + ' '
-        implicit_codes.append(have + imp_code + arguments)
-        explicit_codes.append(have + exp_code + arguments)
+        have = CodeForLean.have(new_hypo_name, operator, arguments,
+                                iff_direction=iff_direction, explicit=False,
+                                nb_place_holders=nb)
+        # imp_code = f'{selected_hypo} ' + '_ '*nb
+        # exp_code = f'@{selected_hypo} ' + '_ '*nb
+        # if iff_direction:
+        #     if nb > 0:
+        #         imp_code = '(' + imp_code + ')'
+        #         exp_code = '(' + exp_code + ')'
+        #     imp_code = imp_code + '.' + iff_direction + ' '
+        #     exp_code = exp_code + '.' + iff_direction + ' '
+        implicit_codes.append(have)
+        have = CodeForLean.have(new_hypo_name, operator, arguments,
+                                iff_direction=iff_direction, explicit=True,
+                                nb_place_holders=nb)
+        explicit_codes.append(have)
 
     codes = (explicit_codes if no_more_place_holder
              else implicit_codes + explicit_codes)
     code = CodeForLean.or_else_from_list(codes)
     if success_msg is None:
         success_msg = _("Property {} added to the context").format(new_hypo_name)
-    if success_msg:
-        code.add_success_msg(success_msg)
+    code.add_success_msg(success_msg)
 
-    code.operator = arrow
+    code.operator = operator
     return code
 
 
@@ -294,10 +298,9 @@ def use_forall_with_ineq(proof_step, arguments,
     variables.extend(arguments[1:])
     if not ineq_in_ctxt:  # Hypo_name has been used
         new_hypo_name = get_new_hyp(proof_step)
-    code = code.and_then(have_new_property(universal_property_or_statement,
-                                           variables,
-                                           new_hypo_name,
-                                           success_msg=""))
+    code = code.and_then(
+        have_new_property(universal_property_or_statement, variables,
+                          new_hypo_name, success_msg=""))
     if used_inequalities:
         code.add_used_properties(used_inequalities)
 
@@ -359,10 +362,7 @@ def use_forall(proof_step, arguments: [MathObject],
                                     new_hypo_name)
     simple_code.add_used_properties(selected_objects)
 
-    if isinstance(universal_property_or_statement, MathObject):
-        universal_property = universal_property_or_statement
-    else:
-        universal_property = universal_property_or_statement.to_math_object()
+    universal_property = universal_property_or_statement.to_math_object()
 
     inequality = inequality_from_pattern_matching(universal_property,
                                                   arguments[0])
@@ -375,7 +375,6 @@ def use_forall(proof_step, arguments: [MathObject],
 
     # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
     else:
-        # FIXME: univ_prop may be a Statement
         complex_code = use_forall_with_ineq(proof_step, arguments,
                                             universal_property_or_statement,
                                             inequality, new_hypo_name)
@@ -383,49 +382,50 @@ def use_forall(proof_step, arguments: [MathObject],
         return code
 
 
-def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:
-    """
-    This method assume that universal_property is a universal property
-    (up to unfolding implicit definitions?)
-    and that no other object has been selected. It calls the Calculator
-    to get the argument(s) to which the universal property should be applied.
-    Universal property and arguments should be sent to the use_forall() method.
-    """
-
-    # TODO: adapt to get several arguments from Calculator
-    #  --> several user_inputs
-
-    user_input = proof_step.user_input
-    # selected_objects = proof_step.selection
-
-    if not user_input:
-        # quant = selected_objects[-1].math_type
-        input_target = universal_property.type_of_explicit_quant()
-        raise MissingParametersError(InputType.Calculator,
-                                     title=_("Use a universal property"),
-                                     target=input_target)
-        # raise MissingCalculatorOutput(request_type=CalculatorRequest.)
-    else:
-        math_object = user_input[0]
-        # This will be a str either from Calculator in "Lean mode",
-        #   or from history file.
-        #  In this case we artificially change this to a "MathObject".
-        # In any case we add parentheses, e.g. in
-        #  have H2 := H (ε/2)
-        #  the parentheses are mandatory
-        if isinstance(math_object, str):
-            math_object = MathObject(node="RAW_LEAN_CODE",
-                                     info={'name': '(' + math_object + ')'},
-                                     children=[],
-                                     math_type=None)
-        else:
-            math_object = MathObject(node='GENERIC_PARENTHESES',
-                                     info={},
-                                     children=[math_object],
-                                     math_type=math_object.math_type)
-        user_input[0] = math_object
-        arguments = [user_input[0]]
-        # code = use_forall(proof_step, arguments, universal_property)
-        # return code
-        return arguments
+# def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:
+#     """
+#     This method assume that universal_property is a universal property
+#     (up to unfolding implicit definitions?)
+#     and that no other object has been selected. It calls the Calculator
+#     to get the argument(s) to which the universal property should be applied.
+#     Universal property and arguments should be sent to the use_forall() method.
+#     """
+#
+#     # TODO: adapt to get several arguments from Calculator
+#     #  --> several user_inputs
+#
+#     user_input = proof_step.user_input
+#     # selected_objects = proof_step.selection
+#
+#     if not user_input:
+#         # quant = selected_objects[-1].math_type
+#         # input_target = universal_property.type_of_explicit_quant()
+#         raise MissingCalculatorOutput(CalculatorRequest.ApplyProperty,
+#                                       proof_step, prop=universal_property)
+#     else:
+#         arguments = [arg if arg.is_place_holder()
+#                      else arg.between_parentheses(arg)
+#                      for arg in user_input[0]]
+#
+#         # This will be a str either from Calculator in "Lean mode",
+#         #   or from history file.
+#         #  In this case we artificially change this to a "MathObject".
+#         # In any case we add parentheses, e.g. in
+#         #  have H2 := H (ε/2)
+#         #  the parentheses are mandatory
+#         # if isinstance(math_object, str):
+#         #     math_object = MathObject(node="RAW_LEAN_CODE",
+#         #                              info={'name': '(' + math_object + ')'},
+#         #                              children=[],
+#         #                              math_type=None)
+#         # else:
+#         #     math_object = MathObject(node='GENERIC_PARENTHESES',
+#         #                              info={},
+#         #                              children=[math_object],
+#         #                              math_type=math_object.math_type)
+#         # user_input[0] = math_object
+#         # arguments = [user_input[0]]
+#         # code = use_forall(proof_step, arguments, universal_property)
+#         # return code
+#         return arguments
 

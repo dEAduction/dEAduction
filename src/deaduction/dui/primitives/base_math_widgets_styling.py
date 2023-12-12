@@ -188,13 +188,15 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
     """
     A QTextEdit subclass to display math in html, incorporating styling.
     """
-    def __init__(self):
+    def __init__(self, text=None):
         super().__init__()
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight(False)
         # self.setReadOnly(True)
+        if text:
+            self.setHtml(text)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)

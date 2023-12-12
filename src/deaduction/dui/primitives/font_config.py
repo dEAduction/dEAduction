@@ -178,6 +178,8 @@ class DeaductionFonts:
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
              f"CalculatorTargets GoalTextWidget"
              f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             f"CalculatorTargets MathTextWidget"
+             f"{{ font-size : {self.chooser_math_font_size}pt; }}"
              # Target
              f"CalculatorTarget"
              f"{{ font-size : {self.target_font_size}pt; }}"

@@ -1273,13 +1273,15 @@ class MathObject:
         types_n_vars = []
         explicit_self = self.explicit_quant()
         math_type = explicit_self.children[0]
-        dummy_var = self.children[1]
-        types_n_vars.append((math_type, dummy_var))
+        dummy_var = explicit_self.children[1]
         body: MathObject = explicit_self.children[2]
-        more = body.types_n_vars_of_univ_prop(implicit_def=False)
 
+        types_n_vars.append((math_type, dummy_var))
+
+        more = body.types_n_vars_of_univ_prop(implicit_def=False)
         if more:
             types_n_vars.extend(more)
+
         return types_n_vars
 
         # # TODO: get iiiv from settings

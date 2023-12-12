@@ -57,24 +57,16 @@ This file is part of dEAduction.
 import logging
 from typing import Union, Optional
 
-import deaduction.pylib.config.vars as cvars
-# from deaduction.pylib.math_display.display_data import new_objects
-
-from deaduction.pylib.actions.utils import (add_type_indication,
-                                            pre_process_lean_code)
-
 from deaduction.pylib.actions.commun_actions import (introduce_new_subgoal,
                                                      rw_with_defi,
-                                                     inequality_from_pattern_matching,
                                                      use_forall,
-                                                     get_arguments_to_use_forall,
                                                      have_new_property)
 
-from deaduction.pylib.actions.utils import extract_var
-from deaduction.pylib.actions.magic import compute
 from deaduction.pylib.actions     import (action,
                                           InputType,
                                           MissingParametersError,
+                                          MissingCalculatorOutput,
+                                          CalculatorRequest,
                                           WrongUserInput,
                                           WrongProveModeInput,
                                           WrongUseModeInput,
@@ -201,41 +193,15 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
 
         else:
             universal_property = selected_objects[0]
-            # The following will be called twice, the first time an exception
-            # will be raised to call for Calculator which will fill-in
-            # user_input
-            arguments = get_arguments_to_use_forall(proof_step,
-                                                    universal_property)
-        # elif not user_input:
-        #     quant = selected_objects[0].math_type
-        #     input_target = quant.type_of_explicit_quant()
-        #     raise MissingParametersError(InputType.Calculator,
-        #                                  title=_("Use a universal property"),
-        #                                  target=input_target)
-        # # raise MissingParametersError(InputType.Text,
-        # #                                  title=_("Use a universal property"),
-        # #                                  output=_(
-        # #                                      "Enter element on which you "
-        # #                                      "want to use this property:"))
-        # else:
-        #     math_object = user_input[0]
-        #     # This will be a str either from Calculator in "Lean mode",
-        #     #   or from history file.
-        #     #  In this case we artificially change this to a "MathObject".
-        #     # In any case we add parentheses, e.g. in
-        #     #  have H2 := H (ε/2)
-        #     #  the parentheses are mandatory
-        #     if isinstance(math_object, str):
-        #         math_object = MathObject(node="RAW_LEAN_CODE",
-        #                                  info={'name': '(' + math_object + ')'},
-        #                                  children=[],
-        #                                  math_type=None)
-        #     else:
-        #         math_object = MathObject(node='GENERIC_PARENTHESES',
-        #                                  info={},
-        #                                  children=[math_object],
-        #                                  math_type=math_object.math_type)
-        #     user_input[0] = math_object
+            if not user_input:
+                raise MissingCalculatorOutput(CalculatorRequest.ApplyProperty,
+                                              proof_step=proof_step,
+                                              prop=universal_property)
+
+            arguments = [arg if arg.is_place_holder()
+                         else arg.between_parentheses(arg)
+                         for arg in proof_step.user_input[0]]
+
             code = use_forall(proof_step, arguments, universal_property)
             return code
 

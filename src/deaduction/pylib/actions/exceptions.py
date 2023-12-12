@@ -81,23 +81,37 @@ class MissingCalculatorOutput(MissingParametersError):
                  proof_step,
                  prop=None,
                  statement=None,
-                 name=None):
+                 new_name=None):
+        """
+
+        @param request_type:
+        @param proof_step:
+        @param prop: a ContextMathObject (use prop.math_type).
+        @param statement:
+        @param new_name:
+        """
         super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
         self.proof_step = proof_step
         self.initial_place_holders = []
+        self.prop = prop
+        self.statement = statement
+        self.name = new_name
+
         if self.request_type is CalculatorRequest.ApplyProperty:
-            self.prop = prop
+            # self.prop = prop
             self.title = _("Apply a universal context property")
         elif self.request_type is CalculatorRequest.ApplyStatement:
-            self.statement = statement
+            # self.statement = statement
             self.title = _("Apply a universal statement")
         elif self.request_type is CalculatorRequest.ProveExists:
             self.prop = prop if prop else proof_step.goal.target.math_type
             self.title = _("Provide a witness for an existential property")
         elif self.request_type is CalculatorRequest.DefineObject:
-            self.name = name  # Object name
-            self.title = _("Introduce a new object")
+            # self.name = new_name  # Object name
+            self.title = _("Introduce the new object {}").format(new_name)
+        elif self.request_type is CalculatorRequest.StateSubGoal:
+            self.title = _("Introduce a new sub-goal")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:
@@ -114,17 +128,26 @@ class MissingCalculatorOutput(MissingParametersError):
             title = None
         return title
 
+    def explicit_math_type_of_prop(self):
+        """
+        Return prop.math_type, or its explicit version if it ias an implicit
+        universal prop.
+        """
+
+        return self.prop.math_type.explicit_quant()
+
     def extract_types_n_vars(self):
 
         # (1) Get all initial universal dummy vars
         if self.request_type is CalculatorRequest.ApplyProperty:
-            math_object = self.prop
+            math_object = self.prop.math_type
         elif self.request_type is CalculatorRequest.ApplyStatement:
             math_object = self.statement.to_math_object()
         else:
             return []
         types_n_vars = math_object.types_n_vars_of_univ_prop()
-
+        if not types_n_vars:
+            return None
         # if not types_n_vars:  # Include implicit vars if no explicit var
         #     types_n_vars = math_object.types_n_vars_of_univ_prop(
         #         include_initial_implicit_vars=True)
@@ -176,9 +199,11 @@ class MissingCalculatorOutput(MissingParametersError):
         Provide a display of self.prop or self.statement after
         unfolding definition to reveal quantifiers if necessary.
         """
+
+        # FIXME: not really used?
         if self.request_type in (CalculatorRequest.ApplyProperty,
                                  CalculatorRequest.ProveExists):
-            math_obj = self.prop.explicit_quant()
+            math_obj = self.prop.math_type.explicit_quant()
             task = math_obj.to_display(format_='html')
         elif self.request_type is CalculatorRequest.ApplyStatement:
             math_obj = self.statement.to_math_object().explicit_quant()

@@ -274,14 +274,15 @@ class CodeForLean:
 
     @classmethod
     def or_else_from_list(cls,
-                          instructions: [],  # type : [ Union[CodeForLean,
-                          #                str, tuple] ]
+                          instructions: [],
                           error_msg: str = '',
                           global_success_msg: str = ""):
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
 
-        :param instructions: list of CodeForLean, str, or tuple.
+        @param instructions:  list of CodeForLean, str, or tuple.
+        @param global_success_msg
+        @param error_msg
         """
         return cls.from_list(instructions=instructions,
                              combinator=LeanCombinator.or_else,
@@ -323,7 +324,7 @@ class CodeForLean:
     def operator(self, operator):
         """
         Set the operator attribute of the first SingleCode in self.
-        @param operator: MathObject.
+        @param operator: Union[MathObject, Statement].
         """
         if self.is_or_else():
             for instruction in self.instructions:
@@ -859,6 +860,56 @@ class CodeForLean:
         code.outcome_operator = _("Principle of induction")
         return code
 
+    @classmethod
+    def have(cls, fresh_name, operator, arguments,
+             iff_direction='', explicit=True, nb_place_holders=0,
+             success_msg=None, error_msg=None):
+        """
+
+        @param fresh_name: str
+        @param operator: Union[MathObject, Statement]
+        @param arguments: [Union[MathObject, str]]
+
+        @param iff_direction: if operator is an iff then
+        specify the direction ('mp', 'mpr') of implication to be used.
+        @param explicit: use all implicit args for operator ('@')
+        @param nb_place_holders: number of preliminary place_holders ('_')
+
+        @param success_msg:
+        @param error_msg:
+
+        @return: CodeForLean
+        """
+
+        op_name = '@' + operator.lean_name if explicit else operator.lean_name
+
+        arg_names = ['_'] * nb_place_holders
+        arg_names.extend([arg if isinstance(arg, str)
+                          else arg.to_display(format_='lean')
+                          for arg in arguments])
+
+        if not iff_direction:
+            args = ' '.join(arg_names)
+            have = f'have {fresh_name} := {op_name} {args}'
+        else:
+            first_args = ' '.join(arg_names[:-1])
+            last_arg = arg_names[-1]
+            have = (f'have {fresh_name} := '
+                    f'({op_name} ' f'{first_args}).{iff_direction} {last_arg}')
+
+        code = CodeForLean(have)
+
+        if not success_msg:
+            success_msg = _("Property {} added to the context").format(fresh_name)
+        code.add_success_msg(success_msg)
+
+        if not error_msg:
+            error_msg = _("Unable to apply the selected property")
+        code.add_error_msg(error_msg)
+
+        code.operator = operator
+
+        return code
 
 
 # class Induction(CodeForLean):

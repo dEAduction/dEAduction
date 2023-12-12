@@ -863,6 +863,17 @@ class Coordinator(QObject):
             try:
                 lean_code = action.run(self.proof_step)
 
+            except MissingCalculatorOutput as missing_output:
+                cc = CalculatorController
+                choices, ok = cc.get_items(goal=self.proof_step.goal,
+                                           missing_output=missing_output)
+                if choices and ok:
+                    # Convert to global choice value
+                    self.emw.user_input.append(choices)
+                else:
+                    self.emw.user_input = []
+                    self.unfreeze()
+                    break
             except MissingParametersError as e:
                 if e.input_type == InputType.Text:
                     # TODO: move this into EMW methods
@@ -944,9 +955,8 @@ class Coordinator(QObject):
                 # print("CLIC")
 
             except MissingCalculatorOutput as missing_output:
-                goal = self.proof_step.goal
-                CC = CalculatorController
-                choices, ok = CC.get_items(goal=goal,
+                cc = CalculatorController
+                choices, ok = cc.get_items(goal=self.proof_step.goal,
                                            missing_output=missing_output)
                 if choices and ok:
                     # Convert to global choice value

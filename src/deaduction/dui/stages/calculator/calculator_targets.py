@@ -357,11 +357,17 @@ class CalculatorTargets(QDialog):
             self.task_title_widget.setStyleSheet("font-weight: bold; "
                                                  f"font-size: {fs}pt")
 
-            self.task_widget = GoalWidget(task_goal, open_problem=False,
+            self.task_widget = GoalWidget(goal=task_goal,
+                                          open_problem=False,
                                           to_prove=False)
         elif prop:
-            # TODO!!! Insert a TargetWidget with a switch between math & text.
-            pass
+            self.task_title_widget = QLabel(task_title)
+            self.task_title_widget.setStyleSheet("font-weight: bold; "
+                                                 f"font-size: {fs}pt")
+
+            self.task_widget = GoalWidget(math_object=prop,
+                                          open_problem=False,
+                                          to_prove=False)
         elif task_description:
             if not isinstance(task_description, str):
                 task_description = task_description.to_display(format_='html')

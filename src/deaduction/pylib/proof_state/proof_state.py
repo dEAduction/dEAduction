@@ -1209,10 +1209,12 @@ class Goal:
         elif text:
             target_text = _("Then") + " " + target_text
         else:  # Capitalise but inside html formatters...
-            first_word = target_utf8.split()[0]
-            target_text = target_text.replace(first_word, first_word.capitalize())
             # Little issue: if sentence starts with a lower case
             # variable. This should never happen though...
+            first_word = target_utf8.split()[0]
+            target_text = target_text.replace(first_word,
+                                              first_word.capitalize(),
+                                              1)
         if open_problem:
             text = _("True or False:") + text_cr + text
         text += target_text + "."

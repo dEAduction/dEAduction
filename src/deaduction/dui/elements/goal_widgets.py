@@ -44,16 +44,28 @@ class GoalTextWidget(MathTextWidget):
     an exercise (to_prove=True), or an open question.
     This used in StartCoEx, and in CalculatorTargets.
     """
-    def __init__(self, goal, to_prove=False, open_problem=False,
+    def __init__(self, goal=None, math_object=None,
+                 to_prove=False, open_problem=False,
                  apply_statement=False):
         super().__init__()
 
-        # self.__text_wgt.setFont(self.math_fonts)
-        text = goal.goal_to_text(format_="html",
-                                 text_mode=True,
-                                 to_prove=to_prove,
-                                 open_problem=open_problem,
-                                 apply_statement=apply_statement)
+        if goal:
+            text = goal.goal_to_text(format_="html",
+                                     text_mode=True,
+                                     to_prove=to_prove,
+                                     open_problem=open_problem,
+                                     apply_statement=apply_statement)
+        elif math_object:
+            text = math_object.to_display(format_="html", text=True)
+
+            # Capitalize:
+            utf8 = math_object.to_display(format_='utf8', text=True)
+            first_word = utf8.split()[0]
+            text = text.replace(first_word, first_word.capitalize(), 1)
+        else:
+            raise ValueError("GoalTextWidget needs either a goal or a "
+                             "math_object")
+
         self.setHtml(text)
 
 
@@ -113,12 +125,13 @@ class GoalMathWidget(QWidget):
 
 class GoalWidget(QWidget):
     """
-    A class to display a goal, with a 'text mode' checkbox that allows usr to
+    A class to display a goal or a math_object,
+    with a 'text mode' checkbox that allows usr to
     choose text or math view.
     """
-    # TODO: add options
 
-    def __init__(self, goal, to_prove=False, open_problem=False):
+    def __init__(self, goal=None, math_object=None,
+                 to_prove=False, open_problem=False):
         super().__init__()
 
         # (1) Buttons layout with text mode checkbox
@@ -141,14 +154,27 @@ class GoalWidget(QWidget):
         # (2) Stackedlayout
         self.goal_lyt = QStackedLayout()
 
-        goal_text_wdg = GoalTextWidget(goal, to_prove=to_prove,
-                                       open_problem=open_problem,
-                                       apply_statement=True)
-        if goal.context:
+        if goal:
+            goal_text_wdg = GoalTextWidget(goal=goal,
+                                           to_prove=to_prove,
+                                           open_problem=open_problem,
+                                           apply_statement=True)
+        elif math_object:
+            goal_text_wdg = GoalTextWidget(math_object=math_object,
+                                           to_prove=to_prove,
+                                           open_problem=open_problem,
+                                           apply_statement=True)
+
+        else:
+            raise ValueError("GoalWidget needs either a goal or a math_object")
+        if goal and goal.context:
             goal_math_wdg = GoalMathWidget(goal, to_prove=to_prove,
                                            open_problem=open_problem)
         else:
-            goal_math_wdg = TargetLabel(goal.target)
+            target = goal.target.math_type if goal else math_object
+            text = target.to_display(format_='html')
+
+            goal_math_wdg = MathTextWidget(text)
 
         self.goal_lyt.insertWidget(0, goal_text_wdg)
         self.goal_lyt.insertWidget(1, goal_math_wdg)

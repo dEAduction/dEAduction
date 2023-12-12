@@ -658,7 +658,8 @@ class CalculatorController:
                  target_types=None,
                  titles=None,
                  task_description=None,
-                 task_goal=None):
+                 task_goal=None,
+                 prop=None):
 
         self.goal = goal
         self.targets = []
@@ -681,7 +682,8 @@ class CalculatorController:
                                                titles=titles,
                                                task_title=task_title,
                                                task_description=task_description,
-                                               task_goal=task_goal)
+                                               task_goal=task_goal,
+                                               prop=prop)
             self.targets_window = targets_window
             # wdg_classes = [CalculatorAllButtons,
             #                CalculatorButtonsGroup,
@@ -804,7 +806,8 @@ class CalculatorController:
 
     @classmethod
     def get_items(cls, goal=None,
-                  missing_output: MissingCalculatorOutput=None):
+                  missing_output: MissingCalculatorOutput = None)->\
+                                                        ([MathObject], bool):
         """
         Get one or several targets.
         """
@@ -814,6 +817,7 @@ class CalculatorController:
         task_description = missing_output.task_description()
         statement = missing_output.statement
         task_goal = statement.goal() if statement else None
+        prop = missing_output.explicit_math_type_of_prop()
 
         log.debug(f"Calculator with target types")
         calculator_controller = cls(goal=goal,
@@ -822,7 +826,8 @@ class CalculatorController:
                                     target_types=target_types,
                                     titles=titles,
                                     task_description=task_description,
-                                    task_goal=task_goal)
+                                    task_goal=task_goal,
+                                    prop=prop)
         # Execute the ButtonsDialog and wait for results
         calculator_controller.buttons_window.show()
         OK = calculator_controller.targets_window.exec()

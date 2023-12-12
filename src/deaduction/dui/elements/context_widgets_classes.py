@@ -634,7 +634,10 @@ class TargetLabel(MathLabel):
     def set_target(self, target, format_='html'):
         if target:
             self.math_object = target
-            text = target.math_type_to_display(format_=format_)
+            if target.is_prop():
+                text = target.to_display(format_=format_)
+            else:
+                text = target.math_type_to_display(format_=format_)
         else:
             text = '…'
         self.setText(text)
