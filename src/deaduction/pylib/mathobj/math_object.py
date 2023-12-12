@@ -1259,7 +1259,27 @@ class MathObject:
         if quant:
             return quant.children[2]
 
-    def types_n_vars_of_univ_prop(self, implicit_def=True):
+    def bound_prop_n_actual_body_of_bounded_quant(self):
+        """
+        Check if math_object.math_type has the form
+        ∀ x:X, (x R ? ==>  Q)
+        where R is some relation, and if so return "x R ?" and Q.
+        """
+
+        explicit_self = self.explicit_quant()
+        # math_type = explicit_self.children[0]
+        dummy_var = explicit_self.children[1]
+        body: MathObject = explicit_self.children[2]
+        if body.is_implication(is_math_type=True):
+            premise = body.children[0]
+            tests = (premise.is_inequality(is_math_type=True),
+                     premise.is_belongs_or_included(is_math_type=True))
+            if any(tests) and dummy_var == premise.children[0]:
+                conclusion = body.children[1]
+                return premise, conclusion
+
+    def types_n_vars_of_univ_prop(self, implicit_def=True,
+                                  jump_first_ineq=True):
         """
         If self is a universal property, either explicit or implicit,
         extract the type of the variable, and the name in the explicit case.
@@ -1278,7 +1298,15 @@ class MathObject:
 
         types_n_vars.append((math_type, dummy_var))
 
-        more = body.types_n_vars_of_univ_prop(implicit_def=False)
+        if jump_first_ineq:
+            test = body.bound_prop_n_actual_body_of_bounded_quant()
+            if test:
+                premise, new_body = test
+                if premise.is_inequality(is_math_type=True):
+                    body = new_body
+
+        more = body.types_n_vars_of_univ_prop(implicit_def=False,
+                                              jump_first_ineq=False)
         if more:
             types_n_vars.extend(more)
 

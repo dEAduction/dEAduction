@@ -117,29 +117,38 @@ def inequality_from_pattern_matching(math_object: MathObject,
     where R is some inequality relation, and if this statement may be
     applied to variable. If so, return inequality with x replaced by variable
     """
-    inequality = None
-    if not math_object.is_for_all(implicit=True):
-        return None
 
-    if not math_object.is_for_all(is_math_type=False):
-        # Implicit "for all"
-        math_object = MathObject.last_rw_object
-    else:
-        math_object = math_object.math_type
-
-    math_type, var, body = math_object.children
-    # NB: following line does not work because of coercions
-    # if var.math_type == variable.math_type:
-    if body.is_implication(is_math_type=True):
-        premise = body.children[0]  # children (2,0)
-        if (premise.is_inequality(is_math_type=True) and
-                var == premise.children[0]):
-            children = [variable, premise.children[1]]
-            inequality = MathObject(node=premise.node,
+    # inequality = None
+    # if not math_object.is_for_all(implicit=True):
+    #     return None
+    #
+    # if not math_object.is_for_all(is_math_type=False):
+    #     # Implicit "for all"
+    #     math_object = MathObject.last_rw_object
+    # else:
+    #     math_object = math_object.math_type
+    #
+    # math_type, var, body = math_object.children
+    # # NB: following line does not work because of coercions
+    # # if var.math_type == variable.math_type:
+    # if body.is_implication(is_math_type=True):
+    #     premise = body.children[0]  # children (2,0)
+    #     if (premise.is_inequality(is_math_type=True) and
+    #             var == premise.children[0]):
+    #         children = [variable, premise.children[1]]
+    #         inequality = MathObject(node=premise.node,
+    #                                 info={},
+    #                                 children=children,
+    #                                 math_type=premise.math_type)
+    inequality, body = math_object.bound_prop_n_actual_body_of_bounded_quant()
+    if inequality.is_inequality(is_math_type=True):
+        children = [variable, inequality.children[1]]
+        new_inequality = MathObject(node=inequality.node,
                                     info={},
                                     children=children,
-                                    math_type=premise.math_type)
-    return inequality
+                                    math_type=inequality.math_type)
+
+        return new_inequality
 
 
 def have_new_property(operator,  #: Union[MathObject, Statement]
@@ -263,7 +272,8 @@ def use_forall_with_ineq(proof_step, arguments,
     code = CodeForLean.empty_code()
 
     # (1) Try to prove inequality
-    if inequality in math_types:  # Check if inequality is in context
+    if inequality in math_types:
+        # Check if inequality is in context
         ineq_in_ctxt = True
         index = math_types.index(inequality)
         context_inequality = goal.context[index]
@@ -271,8 +281,8 @@ def use_forall_with_ineq(proof_step, arguments,
         # inequality will be passed to the "have" tactics:
         variables.append(context_inequality)
     else:
-        ineq_in_ctxt = False
         # If not, assert inequality as a new goal:
+        ineq_in_ctxt = False
         inequality_name = new_hypo_name
         variables.append(inequality_name)
         unsolved_inequality_counter += 1
@@ -316,14 +326,14 @@ def use_forall_with_ineq(proof_step, arguments,
         else:
             nbg = proof_step.nb_of_goals
             more_code0 = CodeForLean.from_string(f"rotate {nbg}")
-
         code = code.and_then(more_code0)
-        # Try to solve1 inequality by norm_num, maybe followed by compute:
-        more_code1 = compute(proof_step).try_()
-        # more_code = more_code0.and_then(more_code1).try_()
-        more_code1.add_success_msg(_("Property {} added to the context").
-                                   format(new_hypo_name))
-        code = code.and_then(more_code1)
+
+        if inequality.is_inequality(is_math_type=True):
+            # Try to solve1 inequality by norm_num, maybe followed by compute:
+            more_code1 = compute(proof_step).try_()
+            more_code1.add_success_msg(_("Property {} added to the context").
+                                       format(new_hypo_name))
+            code = code.and_then(more_code1)
 
     if not unsolved_inequality_counter:
         # Success msg when there is no inequality to solve:
