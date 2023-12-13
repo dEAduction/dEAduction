@@ -141,15 +141,17 @@ def inequality_from_pattern_matching(math_object: MathObject,
     #                                 children=children,
     #                                 math_type=premise.math_type)
     math_object = math_object.math_type
-    inequality, body = math_object.bound_prop_n_actual_body_of_bounded_quant()
-    if inequality.is_inequality(is_math_type=True):
-        children = [variable, inequality.children[1]]
-        new_inequality = MathObject(node=inequality.node,
-                                    info={},
-                                    children=children,
-                                    math_type=inequality.math_type)
+    p_n_b = math_object.bound_prop_n_actual_body_of_bounded_quant()
+    if p_n_b:
+        inequality, body = p_n_b
+        if inequality.is_inequality(is_math_type=True):
+            children = [variable, inequality.children[1]]
+            new_inequality = MathObject(node=inequality.node,
+                                        info={},
+                                        children=children,
+                                        math_type=inequality.math_type)
 
-        return new_inequality
+            return new_inequality
 
 
 def have_new_property(operator,  #: Union[MathObject, Statement]

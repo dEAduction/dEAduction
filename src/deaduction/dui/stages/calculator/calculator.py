@@ -668,8 +668,10 @@ class CalculatorController:
         self.targets = []
         self.target_types = target_types if target_types else None
         nb = self.nb_of_targets
-        # One history list per target:
-        self.histories: [[MarkedPatternMathObject]] = [[]] * nb
+        # One history empty list per target, but they must be distinct lists!
+        self.histories: [[MarkedPatternMathObject]] = []
+        for idx in range(nb):
+            self.histories.append([])
         # First target history will be updated immediately (so set at -1)
         self.history_indices = [0] * nb
 
@@ -772,6 +774,7 @@ class CalculatorController:
             self.__init_signals()
 
         self.__init_histories()
+        self.__init_targets()
         self.set_target_and_update_ui()
 
     @classmethod
@@ -925,6 +928,24 @@ class CalculatorController:
         n_bar.end_action.triggered.connect(self.go_to_end)
         calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
+
+    def __init_histories(self):
+        for target, history in zip(self.targets, self.histories):
+            history.append(target)
+
+    def __init_targets(self):
+        if self.targets_window:
+            idx = 0
+            for target, target_wdg in zip(self.targets,
+                                          self.targets_window.target_wdgs):
+                target.set_math_cursor()
+                target.math_cursor.go_to_end()
+                target_wdg.setHtml(target.to_display(format_='html'))
+                self.targets_window.set_focused_target_idx(idx)
+                self.update_cursor()
+                idx += 1
+
+            self.targets_window.set_focused_target_idx(0)
 
     def show(self):
         if self.target_types:
@@ -1156,10 +1177,6 @@ class CalculatorController:
     ##################
     # Target editing #
     ##################
-
-    def __init_histories(self):
-        for target, history in zip(self.targets, self.histories):
-            history.append(target)
 
     def history_update(self):
         """
