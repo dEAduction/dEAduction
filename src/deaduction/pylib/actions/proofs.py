@@ -38,6 +38,8 @@ from deaduction.pylib.actions.utils import pre_process_lean_code
 from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
+                                      MissingCalculatorOutput,
+                                      CalculatorRequest,
                                       WrongUserInput,
                                       action,
                                       CodeForLean)
@@ -218,13 +220,16 @@ def method_case_based(proof_step,
             #      title=_("cases"),
             #      output=_("Enter the property you want to discriminate on:")
             #                             )
-            raise MissingParametersError(InputType.Calculator,
-                                         title=_("Enter the property you want to discriminate on:"),
-                                         target=MathObject.PROP)
+            raise MissingCalculatorOutput(CalculatorRequest.StateSubGoal,
+                                          proof_step=proof_step)
+
+            # raise MissingParametersError(InputType.Calculator,
+            #                              title=_("Enter the property you want to discriminate on:"),
+            #                              target=MathObject.PROP)
 
         else:
             # h0 = pre_process_lean_code(user_input[1])
-            prop = user_input[1]
+            prop = user_input[1][0]
             h0 = (prop.to_display(format_='lean')
                   if isinstance(prop, MathObject) else prop)
 
@@ -479,9 +484,11 @@ def action_new_object(proof_step) -> CodeForLean:
                                              output=output)
             else:  # Ask for new object
                 # output = new_objects
-                raise MissingParametersError(InputType.Calculator,
-                                             title=_("Introduce a new object"),
-                                             target=None)
+                raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
+                                              proof_step=proof_step)
+                # raise MissingParametersError(InputType.Calculator,
+                #                              title=_("Introduce a new object"),
+                #                              target=None)
                 # raise MissingParametersError(InputType.Text,
                 #                                  title=_("Introduce a new object"),
                 #                                  output=output)
@@ -490,12 +497,12 @@ def action_new_object(proof_step) -> CodeForLean:
             new_hypo_name = get_new_hyp(proof_step, name='Def')
 
             # Process object from auto_step or from Calculator:
-            math_object = user_input[2]
-            if isinstance(math_object, str):
-                math_object = MathObject(node="RAW_LEAN_CODE",
-                                         info={'name': '(' + math_object + ')'},
-                                         children=[],
-                                         math_type=None)
+            math_object = user_input[2][0]
+            # if isinstance(math_object, str):
+            #     math_object = MathObject(node="RAW_LEAN_CODE",
+            #                              info={'name': '(' + math_object + ')'},
+            #                              children=[],
+            #                              math_type=None)
 
             new_object = math_object.to_display(format_='lean')
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
