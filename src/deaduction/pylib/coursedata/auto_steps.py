@@ -260,7 +260,9 @@ class AutoStep(UserAction):
     @classmethod
     def from_string(cls, string):
         """
-        Analyze a string to extract an AutoStep instance.
+        Analyze a string to extract an AutoStep instance, e.g.
+        coming from a history or test file.
+
         The string should contain a button symbol (e.g. '∀')
         xor a statement name (e.g. 'definition.inclusion').
         Items are separated by spaces, and the last item should represents
@@ -273,6 +275,8 @@ class AutoStep(UserAction):
             @P3 @P2 ⇒ success=propriété_H3_ajoutée_au_contexte,
             @P4 @P1 ⇒ success=propriété_H4_ajoutée_au_contexte,
             Goal!
+
+        cf some history files for more elaborated examples.
         """
 
         string.replace("\\n", " ")
@@ -333,10 +337,35 @@ class AutoStep(UserAction):
             pass
 
         # Remaining non-trivial items are user input
-        user_input = [item.replace('__', ' ')
-                      for item in items[button_or_statement_rank+1:] if item]
-        user_input = [int(item) if item.isdecimal() else item
-                      for item in user_input]
+        # Some of them, between [ ], must be gathered in a single list item
+        user_input = []
+        calc_item = None
+        for item in items[button_or_statement_rank+1:]:
+            if not item:
+                continue
+            elif item == '[':  # Start a list item
+                calc_item = []
+                user_input.append(calc_item)
+            elif item == ']':  # End a list item
+                calc_item = None
+            else:
+                new_item = item.replace('__', ' ')
+                if new_item.isdecimal():
+                    new_item = int(new_item)
+                if calc_item is not None:
+                    # Encode in a MathObject
+                    if new_item == '_':
+                        new_item = MathObject.place_holder()
+                    else:
+                        new_item = MathObject.raw_lean_code(new_item)
+                    calc_item.append(new_item)
+                else:
+                    user_input.append(new_item)
+
+        # user_input = [item.replace('__', ' ')
+        #               for item in items[button_or_statement_rank+1:] if item]
+        # user_input = [int(item) if item.isdecimal() else item
+        #               for item in user_input]
 
         return cls(selection, button, statement_name, user_input,
                    target_selected, string, error_type, error_msg, success_msg)
@@ -345,7 +374,8 @@ class AutoStep(UserAction):
     def from_proof_step(cls, proof_step, emw):
         """
         Convert proof_step to the corresponding AutoStep, e.g. for use as
-        with auto_test.
+        with auto_test. This method is supposed to be some kind of inverse to
+        the from_string() classmethod.
         
         :param proof_step: instance of ProofStep 
         :param emw:         ExerciseMainWindow
@@ -353,8 +383,9 @@ class AutoStep(UserAction):
         """
 
         user_action: UserAction = proof_step.user_action
-
-        # Selection: [str]
+        ###############################################
+        # Store selected context obj in a list: [str] #
+        ###############################################
         selection = []
         if user_action.selection:
             # log.debug("Analysing selection...")
@@ -380,6 +411,9 @@ class AutoStep(UserAction):
         if user_action.target_selected:
             selection.append("target")
 
+        ####################################
+        # Store action: button / statement #
+        ####################################
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'
         button = user_action.prove_or_use_button_name()
@@ -394,12 +428,28 @@ class AutoStep(UserAction):
         if not (button or statement):
             return None
 
-        # User input: int
+        ######################################
+        # Store user inputs: list of int/str #
+        ######################################
+        # Some user_input items are themselves lists
+        #  (e.g. coming from Calculator)
+        #  they are stored as '[ <item1> <item2> ... ]'
+        # (1) Flatten list items
         user_input = []
-        if user_action.user_input:
-            user_input = [item.to_display(format_='lean')
-                          if isinstance(item, MathObject) else
-                          str(item) for item in user_action.user_input]
+        for item in user_action.user_input:
+            if isinstance(item, list):
+                user_input.append('[')
+                user_input.extend(item)
+                user_input.append(']')
+            else:
+                user_input.append(item)
+        # (2) Replace by str
+        user_input_str = [item.to_display(format_='lean')
+                          if isinstance(item, MathObject)
+                          else str(item) for item in user_input]
+        # (3) Replace spaces inside items by '__'
+        user_input_str = [item.replace(' ', '__')
+                          for item in user_input_str]
 
         error_msg = proof_step.error_msg
         if error_msg:
@@ -415,10 +465,9 @@ class AutoStep(UserAction):
         if selection:
             string = ' '.join(selection) + ' '
         string += button + statement
-        if user_input:
+        if user_input_str:
             # Replace spaces by '__' to be able to retrieve items
-            user_input = [item.replace(' ', '__') for item in user_input]
-            string += ' ' + ' '.join(user_input)
+            string += ' ' + ' '.join(user_input_str)
         if proof_step.is_error():
             string += ' ' + AutoStep.error_dic[proof_step.error_type]
             string += ' ' + error_msg
