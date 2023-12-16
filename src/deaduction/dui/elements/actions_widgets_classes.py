@@ -231,7 +231,8 @@ class ActionButton(QPushButton):
         The test is only that length = 1...
         The other option could be to provide a list.
         """
-        return len(self.symbol) == 1
+        test = len(self.symbol) < 4  # , not self.symbol.isascii())
+        return test
 
     @property
     def name(self):
@@ -815,8 +816,11 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         """
         Set the math content of the statement as tooltip.
         """
-        self.setToolTip(0, self.statement.caption(
-            is_exercise=self.is_exercise))
+
+        text = self.statement.caption(is_exercise=self.is_exercise)
+        # Prevent wrap mode
+        text = "<p style='white-space:pre'>" + text
+        self.setToolTip(0, text)
         # These tooltips contain maths
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)

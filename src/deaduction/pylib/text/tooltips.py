@@ -138,8 +138,13 @@ __tooltips = {
         [_('Add equalities or inequalities')],
     'triangular_inequality':
         [_('Obtain a triangular inequality adapted to a selected equality or '
-           'inequality'),
-         _('(under dev) Apply the triangular inequality to some numbers')]
+           'inequality')],
+        # _('(under dev) Apply the triangular inequality to some numbers')],
+    'simplify': [_("Try to simplify expression")],
+    'commute': [_("Use a commutativity rule")],
+    "associativity": [_("Use an associativity rule")],
+    "transitivity":  [_("Use a transitivity rule, e.g. for chaining "
+                        "inequalities")],
 }
 
 for key in ('forall', 'exists', 'implies', 'and', 'or'):
@@ -184,7 +189,8 @@ __logic_translation =\
      _('USE OR'),
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
      _('NEW OBJECT'), _('PROOF METHODS'), _('ASSUMPTION'),
-     _('SUM')]
+     _('SUM'), _('TRANSITIVITY'), _('ASSOCIATIVITY'), _('COMMUTE'),
+     _('TRIANGULAR INEQUALITY'), _('SIMPLIFY')]
 
 
 def __compute_buttons_symbols_dict():
@@ -205,6 +211,11 @@ def __compute_buttons_symbols_dict():
         # 'assumption_old': 'Goal! (old)',
         'assumption': _("Goal!"),
         'compute': _('Compute'),
+        'simplify': _("Simp"),
+        'triangular_inequality': "△",
+        'commute': "↔",
+        "associativity": "()",
+        "transitivity": "<<",
         'CQFD': _('Goal!') + "+"
     }
     __buttons_symbols.update(non_logic_buttons_symbols)

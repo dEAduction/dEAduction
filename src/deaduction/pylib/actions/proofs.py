@@ -484,11 +484,11 @@ def action_new_object(proof_step) -> CodeForLean:
                                              output=output)
             else:  # Ask for new object
                 # output = new_objects
-                raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
-                                              proof_step=proof_step)
-                # raise MissingParametersError(InputType.Calculator,
-                #                              title=_("Introduce a new object"),
-                #                              target=None)
+                # raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
+                #                               proof_step=proof_step)
+                raise MissingParametersError(InputType.Calculator,
+                                             title=_("Introduce a new object"),
+                                             target=None)
                 # raise MissingParametersError(InputType.Text,
                 #                                  title=_("Introduce a new object"),
                 #                                  output=output)

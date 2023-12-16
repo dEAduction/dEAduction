@@ -114,7 +114,8 @@ def action_sum(proof_step) -> CodeForLean:
         code = CodeForLean.from_string(
             f"smart_add {H0} {H1} with {new_hypo_name}")
         code.add_success_msg(_(f"Adding {H0} and {H1} to get {new_hypo_name}"))
-        code.add_error_msg(f"I cannot add {H0} and {H1}")
+        error_msg = _("I cannot add {} and {}").format(H0, H1)
+        code.add_error_msg(error_msg)
         code.add_used_properties(selected_objects)
         # code.add_error_msg(f"Use the + button for inequalities")
         return code
@@ -159,39 +160,6 @@ def action_sum(proof_step) -> CodeForLean:
 #
 #     # TODO: add one ineg to a number
 
-@action()
-def action_simplify(proof_step) -> CodeForLean:
-    """
-    Try norm_num, and various simp lemmas, on selection. Only one selected
-    prop at a time.
-    TODO: this should be customizable in lean super-user file.
-    """
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
-
-    test_selection(selected_objects, target_selected, exclusive=True,
-                   select_default_target=True)
-
-    selected_name = ""
-    if len(selected_objects) == 1:  # no selection : simplify everything??
-        selected_name = selected_objects[0].name
-    elif len(selected_objects) > 1:
-        raise WrongUseModeInput("Select only one object at a time")
-
-    location = "" if target_selected else " at " + selected_name
-
-    code1 = CodeForLean("norm_num")
-    simp2 = f"simp only [] with simp_arith {location}"
-    code2 = CodeForLean(simp2)
-    code = ((code1.and_then(code2)).or_else(code2)).or_else(code1)
-
-    msg = ("Target simplified" if target_selected
-           else f"Property {selected_name} simplified")
-    code.add_success_msg(msg)
-    code.add_error_msg(_("Unable to simplify"))
-    return code
-
-
 # @action()
 # def action_factorize(proof_step) -> CodeForLean:
 #     pass
@@ -224,7 +192,8 @@ def action_transitivity(proof_step) -> CodeForLean:
     code = CodeForLean.from_string(
         f"smart_trans {H0} {H1} with {new_hypo_name}")
     code.add_success_msg(_(f"Chaining {H0} and {H1} to get {new_hypo_name}"))
-    code.add_error_msg(f"I cannot chain {H0} and {H1}")
+    error_msg = _("I cannot chain {} and {}").format(H0, H1)
+    code.add_error_msg(error_msg)
     # code.add_error_msg(f"Use the + button for inequalities")
     return code
 
@@ -252,7 +221,8 @@ def action_commute(proof_step) -> CodeForLean:
         code = CodeForLean(f"smart_comm {selected_name}")
         msg = _("Apply commutation on {}").format(selected_name)
         code.add_success_msg(msg)
-        code.add_error_msg(f"I don't know how to apply commutation.")
+        error_msg = _("I don't know how to apply commutation.")
+        code.add_error_msg(error_msg)
         return code
 
     else:
@@ -274,7 +244,8 @@ def action_associativity(proof_step) -> CodeForLean:
         code = CodeForLean(f"smart_assoc_on_target")
         msg = _(f"Apply associativity on target")
         code.add_success_msg(msg)
-        code.add_error_msg(f"I don't know how to apply associativity.")
+        error_msg = _("I don't know how to apply associativity.")
+        code.add_error_msg(error_msg)
         return code
 
     elif len(selected_objects) == 1:  # no selection : simplify everything??
@@ -282,7 +253,8 @@ def action_associativity(proof_step) -> CodeForLean:
         code = CodeForLean(f"smart_assoc {selected_name}")
         msg = _("Apply associativity on {}").format(selected_name)
         code.add_success_msg(msg)
-        code.add_error_msg(f"I don't know how to apply associativity.")
+        error_msg = _("I don't know how to apply associativity.")
+        code.add_error_msg(error_msg)
         return code
 
     else:
@@ -307,7 +279,7 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     if len(selected_objects) == 1:  # no selection : simplify everything??
         selected_name = selected_objects[0].name
     elif len(selected_objects) > 1:
-        raise WrongUseModeInput("Select only one object")
+        raise WrongUseModeInput(_("Select only one object"))
     elif not selected_objects:
         target_selected = True
 
@@ -322,10 +294,45 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     code2 = CodeForLean(simp2)
     code = code1.and_then(code2)
 
-    msg = f"Triangular inequality {new_hyp} added to the context"
+    msg = _("Triangular inequality {} added to the context").format(new_hyp)
     code.add_success_msg(msg)
     code.add_error_msg(_("No absolute value found in {}").format(location))
     return code
+
+
+@action()
+def action_simplify(proof_step) -> CodeForLean:
+    """
+    Try norm_num, and various simp lemmas, on selection. Only one selected
+    prop at a time.
+    TODO: this should be customizable in lean super-user file.
+    """
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+
+    test_selection(selected_objects, target_selected, exclusive=True,
+                   select_default_target=True)
+
+    selected_name = ""
+    if len(selected_objects) == 1:  # no selection : simplify everything??
+        selected_name = selected_objects[0].name
+    elif len(selected_objects) > 1:
+        raise WrongUseModeInput(_("Select only one object at a time"))
+
+    location = "" if target_selected else " at " + selected_name
+
+    code1 = CodeForLean("norm_num")
+    simp2 = f"simp only [] with simp_arith {location}"
+    code2 = CodeForLean(simp2)
+    code = ((code1.and_then(code2)).or_else(code2)).or_else(code1)
+
+    msg = (_("Target simplified") if target_selected
+           else _("Property {} simplified").format(selected_name))
+    code.add_success_msg(msg)
+    code.add_error_msg(_("Unable to simplify"))
+    return code
+
+
 
 
 

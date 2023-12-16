@@ -397,7 +397,8 @@ class Statement:
             text = goal.to_tooltip(type_=type_)
             if cvars.get("functionality.allow_implicit_use_of_definitions"):
                 if isinstance(self, Definition) and self.implicit_use:
-                    text = '(' + _("implicit use allowed") + ')' + '\n' + text
+                    implicit = '<i>(' + _("implicit use allowed") + ')</i><br>'
+                    text = implicit + text
         return text
 
     @property
