@@ -192,7 +192,8 @@ class MissingCalculatorOutput(MissingParametersError):
             go_on = False
             for other_type, v in types_n_vars[idx:]:
                 # Search for var
-                if other_type.contains_including_types(var):
+                if (other_type.contains_including_types(var) or
+                        var.is_instance()):
                     # Replace var by a place_holder
                     types_n_vars[idx] = math_type, math_object.place_holder()
                     self.initial_place_holders.append(

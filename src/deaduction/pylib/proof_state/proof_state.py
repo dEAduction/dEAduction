@@ -158,6 +158,24 @@ class Goal:
     def context_included_hidden(self):
         return self._context
 
+    def context_objects_included_hidden(self) -> [ContextMathObject]:
+        """
+        Return the list of objects of the context that are not proposition.
+        Note that instance witnesses are excluded
+        (i.e. variables whose name starts with "_inst_" )
+        """
+        if self.context is None:
+            return
+        objects = [cmo for cmo in self.context_included_hidden()
+                   if not cmo.math_type.is_prop()]
+        return objects
+
+    def context_props_included_hidden(self) -> [ContextMathObject]:
+        if self.context is not None:
+            props = [cmo for cmo in self.context_included_hidden()
+                     if cmo.math_type.is_prop()]
+            return props
+
     @property
     def context_objects(self) -> [ContextMathObject]:
         """
@@ -1008,7 +1026,7 @@ class Goal:
         """
 
         # (1) Compute body of universal prop:
-        props = [prop.math_type for prop in self.context_props]
+        props = [prop.math_type for prop in self.context_props_included_hidden()]
         target = self.target.math_type
         if props:
             conjunction = MathObject.conjunction(props)
@@ -1016,8 +1034,8 @@ class Goal:
         else:
             body = target
 
-        # (2) Compute the "∀x, ∀y, ..." part:
-        objs = [obj for obj in self.context_objects]  # List shadow copy
+        # (2) Compute the "∀x, ∀y, ..." part (list shadow copy):
+        objs = [obj for obj in self.context_objects_included_hidden()]
         while objs:
             obj = objs.pop()
             body = MathObject.forall(obj, body)
