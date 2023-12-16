@@ -1307,12 +1307,14 @@ class Goal:
         # Goal
         if type_ == "exercise":
             goal_text = _("Goal:")
-        else:
+        elif context:
             goal_text = _("Conclusion:")
-        if format_ == 'html':
+        else:
+            goal_text = ""
+        if format_ == 'html' and goal_text:
             goal_text = "<b>" + goal_text + "</b>"
-
-        text += (goal_text + cr)
+        if goal_text:
+            text += (goal_text + cr)
         text += " " + target.math_type_to_display(format_=format_)
         # except:
         #     print(target.math_type)
