@@ -1269,7 +1269,7 @@ class Goal:
         text += target.math_type_to_display(format_="utf8")
         return text
 
-    def to_tooltip(self, type_='exercise') -> str:
+    def to_tooltip(self, type_='exercise', format_='html') -> str:
         """
         Return context and target in a raw form as a tooltip for a goal.
         """
@@ -1279,33 +1279,41 @@ class Goal:
 
         context: [ContextMathObject] = self.context
         target = self.target
+        text = ""
+        cr = "<br>" if format_ == 'html' else "\n"
 
         # Context
         if context:
             if type_ == "exercise":
-                text = _("Context:")
+                hypo_text = _("Context:")
             else:
-                text = _("Hypothesis:") if len(context) == 1 else \
+                hypo_text = _("Hypothesis:") if len(context) == 1 else \
                     _("Hypotheses:")
-            text += "\n"
+            if format_ == 'html':
+                hypo_text = "<b>" + hypo_text + "</b>"
+            text = hypo_text + cr
         else:
             # text = _("Empty context") + "\n"
             text = ""
+
         for math_object in context:
             # math_type = math_object.math_type
-            name = math_object.to_display(format_="utf8")
+            name = math_object.to_display(format_=format_)
             # name_type = math_type.old_to_display(is_math_type=True)
-            name_type = math_object.math_type_to_display(format_="utf8")
+            name_type = math_object.math_type_to_display(format_=format_)
             text_object = name + _(": ") + name_type
-            text += "  " + text_object + "\n"
+            text += "  " + text_object + cr
 
         # Goal
         if type_ == "exercise":
-            text += _("Goal:")
+            goal_text = _("Goal:")
         else:
-            text += _("Conclusion:")
-        text += "\n"
-        text += " " + target.math_type_to_display(format_="utf8")
+            goal_text = _("Conclusion:")
+        if format_ == 'html':
+            goal_text = "<b>" + goal_text + "</b>"
+
+        text += (goal_text + cr)
+        text += " " + target.math_type_to_display(format_=format_)
         # except:
         #     print(target.math_type)
         return text
