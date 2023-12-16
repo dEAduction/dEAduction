@@ -229,30 +229,34 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
 # EXISTS #
 ##########
 
-def prove_exists(proof_step, user_input: [str]) -> CodeForLean:
+def prove_exists(proof_step, witness: MathObject) -> CodeForLean:
     """
     Assuming the target is an existential property '∃ x, P(x)' and no other
     object has been selected, prove it by providing a witness x and proving P(x).
     """
 
+    # FIXME: put MissingCalc in action_exists()
+    #  then here witness should be MathObject (not [MathObject])
     proof_step.prove_or_use = "prove"
-    target: MathObject = proof_step.goal.target.math_type
-    if not user_input:
-        # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
-        # raise MissingParametersError(InputType.Text,
-        #                              title=_("Exist"),
-        #                              output=output)
-        # if not goal.target.is_exists(implicit=False):
-        #     # implicit exists
-        # input_target = target.type_of_explicit_quant()
-        # raise MissingParametersError(InputType.Calculator,
-        #                              title=_("Prove an existential property"),
-        #                              target=input_target)
-        raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
-                                      proof_step=proof_step,
-                                      prop=proof_step.goal.target)
 
-    [x] = user_input[0]
+    # if not witness:
+    #     # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
+    #     # raise MissingParametersError(InputType.Text,
+    #     #                              title=_("Exist"),
+    #     #                              output=output)
+    #     # if not goal.target.is_exists(implicit=False):
+    #     #     # implicit exists
+    #     # input_target = target.type_of_explicit_quant()
+    #     # raise MissingParametersError(InputType.Calculator,
+    #     #                              title=_("Prove an existential property"),
+    #     #                              target=input_target)
+    #     raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
+    #                                   proof_step=proof_step,
+    #                                   prop=proof_step.goal.target)
+
+    # ui = witness[0]
+    # x = ui[0] if isinstance(ui, list) else ui
+    x = witness
     x_lean = x.to_display(format_='lean')
     x = x.to_display(format_='utf8')
     # if isinstance(x, MathObject):
@@ -279,7 +283,7 @@ def prove_exists_with_selected_witness(prove, witness, proof_step):
                   "property").format(witness)
         raise WrongUserInput(error)
     else:
-        return prove_exists(proof_step, [witness])
+        return prove_exists(proof_step, witness)
 
 
 def use_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
@@ -398,8 +402,23 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
         elif not goal.target.is_exists(implicit=True):
             error = _("Target is not existential property '∃x, P(x)'")
             raise WrongUserInput(error)
-        else:
-            return prove_exists(proof_step, user_input)
+        elif not user_input:
+            # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
+            # raise MissingParametersError(InputType.Text,
+            #                              title=_("Exist"),
+            #                              output=output)
+            # if not goal.target.is_exists(implicit=False):
+            #     # implicit exists
+            # input_target = target.type_of_explicit_quant()
+            # raise MissingParametersError(InputType.Calculator,
+            #                              title=_("Prove an existential property"),
+            #                              target=input_target)
+            raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
+                                          proof_step=proof_step,
+                                          prop=proof_step.goal.target)
+
+        else:  # user_input contains Calculator output
+            return prove_exists(proof_step, user_input[0][0])
     elif len(selected_objects) == 1 and not user_input:
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
