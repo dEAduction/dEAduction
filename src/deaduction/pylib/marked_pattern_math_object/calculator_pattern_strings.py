@@ -133,19 +133,22 @@ class CalculatorAbstractButton:
     def __init__(self, symbol: str,
                  tooltip: Optional[str],
                  patterns: [MarkedPatternMathObject],  # or just one
-                 menu=False):
+                 menu=False,
+                 shortcut=None):
         self.symbol = symbol
         self.tooltip = tooltip
         if not patterns:
             patterns = CalculatorPatternLines.marked_patterns.get(symbol)
         self.patterns = patterns if isinstance(patterns, list) else [patterns]
         self.menu = menu
+        self.shortcut = shortcut
 
     @classmethod
     def from_node(cls, node: Node):
         return cls(symbol=node.button_symbol(),
                    tooltip=node.button_tooltip(),
                    patterns=node.marked_pattern_math_objects(),
+                   shortcut=node.shortcut,
                    menu=False)
 
     @classmethod

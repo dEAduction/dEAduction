@@ -77,6 +77,7 @@ class Node:
                  display_in_calculator=True):
 
         self._node_name = node_name
+        self.shortcut = None
 
         # Populate self._node_patterns
         self._node_patterns: [str] = []
@@ -117,6 +118,9 @@ class Node:
 
     def set_button_tooltip(self, tooltip: str):
         self._button_tooltip = tooltip
+
+    def set_shortcut(self, shortcut):
+        self.shortcut = shortcut
 
     @property
     def node_name(self):
@@ -552,6 +556,7 @@ abs_ = InequalityNode('abs',
                       ('|', -1, '|'))
 abs_.set_button_symbol('|·|')
 abs_.set_button_tooltip(_("Absolute value"))
+abs_.set_shortcut('\\abs')
 
 
 class SpecialNode(Node):

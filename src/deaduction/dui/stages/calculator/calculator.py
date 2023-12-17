@@ -365,6 +365,8 @@ class CalculatorAllButtons(QWidget):
     A class to display groups of CalculatorButtons, with a vertical scroll bar.
     """
 
+    # FIXME: no tooltips ??
+
     send_pattern = Signal(MarkedPatternMathObject)
     targets_window: CalculatorTargets = None
     controller = None  # Set by CalculatorController
@@ -373,7 +375,7 @@ class CalculatorAllButtons(QWidget):
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
-        self.setWindowTitle(_("Math Calculator"))
+        self.setWindowTitle(_("Logical Calculator"))
         # self.setFocusPolicy(Qt.NoFocus)
         self.buttons_groups = []
         # Clear ancient shortcuts!!
@@ -656,7 +658,7 @@ class CalculatorController:
     def __init__(self, target_type=None,
                  goal=None,
                  calculator_groups=None,
-                 window_title="Math Calculator",
+                 window_title="Logical Calculator",
                  task_title=None,
                  target_types=None,
                  titles=None,

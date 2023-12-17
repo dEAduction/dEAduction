@@ -133,13 +133,15 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     shortcuts_dic = dict()
 
-    def __init__(self, symbol, tooltip=None, patterns=None, menu=False):
+    def __init__(self, symbol, tooltip=None, patterns=None, menu=False,
+                 shortcut=None):
         super().__init__()
-        CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns, menu)
+        CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns,
+                                          menu, shortcut=shortcut)
 
         self.clicked.connect(self.process_click)
         self.setText(symbol)
-        self.shortcut = ''
+        # self.shortcut = ''
         self.add_shortcut()
         self.set_tooltip()
         symbol_size = deaduction_fonts.symbol_button_font_size
@@ -196,7 +198,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         If two buttons have the same text, only one will have a shortcut.
         """
 
-        text = self.text()
+        text = self.shortcut if self.shortcut else self.text()
 
         # (0) Macros
         # Case of calc_shortcuts_macro, mainly latex-like patterns, e.g. \implies
