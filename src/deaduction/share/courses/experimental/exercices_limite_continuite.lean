@@ -379,8 +379,8 @@ PrettyName
 -- open definitions
 
 -- --------------------------------------------------
-namespace exemples
 
+-- namespace exemples
 -- Ne fonctionnent pas : 
 -- il faut manipuler des partie entières,
 
