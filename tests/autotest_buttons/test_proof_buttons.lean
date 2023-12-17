@@ -265,7 +265,7 @@ lemma exercise.test_introduce_new_object
 :=
 /- dEAduction
 AutoTest
-    new_object 0 z x,
+    new_object 0 z [ x ],
     ∃ z
 -/
 begin
@@ -279,7 +279,7 @@ lemma exercise.test_introduce_new_subgoal
 :=
 /- dEAduction
 AutoTest
-    new_object 1 P∨Q,
+    new_object 1 [ P__∨__Q ],
     ∨ 1, CQFD, CQFD
 -/
 begin

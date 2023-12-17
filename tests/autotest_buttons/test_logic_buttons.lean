@@ -400,7 +400,7 @@ begin
 end
 
 lemma exercise.test_apply_implies_to_hyp3
-(P Q : Prop)
+(P Q : Prop) 
 (H1: (P → Q) ↔ (¬ P ∨ Q))
 (H2: P → Q) :
 (¬ P ∨ Q) :=
@@ -412,22 +412,7 @@ AutoTest
 begin
   todo
 end
-
-
-lemma exercise.test_apply_implies_to_hyp3
-(P Q : Prop)
-(H1: (P → Q) ↔ (¬ P ∨ Q))
-(H2: P → Q) :
-(¬ P ∨ Q) :=
-/- dEAduction
-AutoTest
-    H1 H2 →,
-    CQFD
--/
-begin
-  todo
-end
-
+ 
 
 lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
@@ -441,7 +426,7 @@ AutoTest
 begin
   todo
 end
-
+ 
 
 
 lemma exercise.test_apply_iff_mp_to_hyp
@@ -663,12 +648,26 @@ lemma exercise.test_construct_exists_2
 ∃ x:X, P(x) :=
 /- dEAduction
 AutoTest
-    ∃ z,
+    ∃ [ z ],
     CQFD
 -/
 begin
   todo
 end
+
+lemma exercise.test_construct_exists_3
+(X: Type) (P: X → Prop) (z z': X)
+(H1: P(z))  (Def1: z=z'):
+∃ x:X, P(x) :=
+/- dEAduction
+AutoTest
+    @P2 ∃,
+    CQFD
+-/
+begin
+  todo
+end
+
 
 lemma exercise.test_apply_exists_and_construct_exists_on_hyp
 (X: Type) (P Q: X → Prop)
