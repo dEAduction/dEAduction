@@ -309,7 +309,7 @@ class ExerciseCentralWidget(QWidget):
         groups = [(_('Prove:'), [prove_wdg]),
                   (_('Use:'), [use_wdg]),
                   (None, other_wdgs),
-                  (_('Compute: '), [self.__compute_btns])
+                  (_('Compute (experimental):'), [self.__compute_btns])
                   ]
         self.__action_btns_lyt = ActionButtonsLyt(groups)
                                                   # display_prove_use=dpu,

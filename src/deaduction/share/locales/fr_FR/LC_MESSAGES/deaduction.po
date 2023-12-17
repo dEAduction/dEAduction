@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-12-16 19:04+0100\n"
-"PO-Revision-Date: 2023-12-16 19:06+0100\n"
+"POT-Creation-Date: 2023-12-17 17:27+0100\n"
+"PO-Revision-Date: 2023-12-17 17:28+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -83,25 +83,25 @@ msgstr "Démontrer :"
 msgid "Use:"
 msgstr "Utiliser :"
 
-#: dui/elements/actions_widgets_classes.py:864
+#: dui/elements/actions_widgets_classes.py:867
 msgid "saved on "
 msgstr "sauvegarde du "
 
-#: dui/elements/actions_widgets_classes.py:865
+#: dui/elements/actions_widgets_classes.py:868
 msgid "steps"
 msgstr "étapes"
 
-#: dui/elements/actions_widgets_classes.py:1141
+#: dui/elements/actions_widgets_classes.py:1144
 #: dui/stages/start_coex/start_coex_widgets.py:842
 #: dui/stages/start_coex/start_coex_widgets.py:1144
 msgid "Exercises"
 msgstr "Exercices"
 
-#: dui/elements/actions_widgets_classes.py:1141
+#: dui/elements/actions_widgets_classes.py:1144
 msgid "Saved proofs"
 msgstr "Sauvegardes"
 
-#: dui/elements/actions_widgets_classes.py:1143
+#: dui/elements/actions_widgets_classes.py:1146
 msgid "Statements"
 msgstr "Enoncés"
 
@@ -721,8 +721,8 @@ msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:312
-msgid "Compute: "
-msgstr "Calculer :"
+msgid "Compute (experimental):"
+msgstr "Calculer (expérimental) :"
 
 #: dui/stages/exercise/_exercise_main_window_widgets.py:321
 msgid "Actions (logical rules and statements)"
@@ -1687,7 +1687,7 @@ msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:461 pylib/actions/proofs.py:490
+#: pylib/actions/proofs.py:461
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
@@ -1828,15 +1828,15 @@ msgstr "Exercices dans la liste d’énoncés"
 msgid "implicit use allowed"
 msgstr "peut être utilisée implicitement"
 
-#: pylib/coursedata/exercise_classes.py:459
+#: pylib/coursedata/exercise_classes.py:460
 msgid "definition"
 msgstr "définition"
 
-#: pylib/coursedata/exercise_classes.py:461
+#: pylib/coursedata/exercise_classes.py:462
 msgid "theorem"
 msgstr "théorème"
 
-#: pylib/coursedata/exercise_classes.py:463
+#: pylib/coursedata/exercise_classes.py:464
 msgid "exercise"
 msgstr "exercice"
 
@@ -2213,8 +2213,8 @@ msgstr "neuf"
 msgid "ten"
 msgstr "dix"
 
-#: pylib/math_display/display_data.py:486 pylib/proof_state/proof_state.py:1466
-#: pylib/proof_state/proof_state.py:1480
+#: pylib/math_display/display_data.py:486 pylib/proof_state/proof_state.py:1468
+#: pylib/proof_state/proof_state.py:1482
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -3517,6 +3517,9 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#~ msgid "Compute: "
+#~ msgstr "Calculer :"
 
 #~ msgid "Move up"
 #~ msgstr "Aller en haut"

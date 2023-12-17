@@ -381,31 +381,34 @@ PrettyName
 -- --------------------------------------------------
 namespace exemples
 
-lemma exercise.limit_inverse :
-converging_seq (λ n, 1/n)  := 
-/- dEAduction
-PrettyName
-  La suite des inverses des entiers est convergente.
-Description
-  Un exemple très simple de limite.
-  Savez-vous trouver le bon "N" ?
--/
-begin
-  todo,
-end
+-- Ne fonctionnent pas : 
+-- il faut manipuler des partie entières,
 
-lemma exercise.limit_racine :
-limit_plus_infinity  (λ n,  n^(1/2))  := 
-/- dEAduction
-PrettyName
-  La suite des racines carrées des entiers tend vers l'infini.
-Description
-  Un deuxième exemple, cette fois-ci avec une suite divergente.
--/
-begin
-  todo,
-end
-end exemples
+-- lemma exercise.limit_inverse :
+-- converging_seq (λ n, 1/n)  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite des inverses des entiers est convergente.
+-- Description
+--   Un exemple très simple de limite.
+--   Savez-vous trouver le bon "N" ?
+-- -/
+-- begin
+--   todo,
+-- end
+
+-- lemma exercise.limit_racine :
+-- limit_plus_infinity  (λ n,  n^(1/2))  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite des racines carrées des entiers tend vers l'infini.
+-- Description
+--   Un deuxième exemple, cette fois-ci avec une suite divergente.
+-- -/
+-- begin
+--   todo,
+-- end
+-- end exemples
 
 
 lemma exercise.limit_constante 
