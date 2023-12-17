@@ -394,7 +394,7 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
 
     user_input = proof_step.user_input
     goal = proof_step.goal
-    prop_type = "an existential property '∃x, P(x)'"
+    prop_type = _("an existential property '∃x, P(x)'")
 
     if len(selected_objects) == 0:
         if not prove:
@@ -425,15 +425,17 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             if selected_hypo.is_equality(is_math_type=False):
                 witness = selected_hypo.math_type.children[0]
                 # Try prove_exists with term of equality
+                if not prove:
+                    raise WrongUseModeInput(prop=prop_type)
                 return prove_exists_with_selected_witness(prove, witness,
                                                           proof_step)
 
             # Try to apply property "exists x, P(x)" to get a new MathObject x
-            if not use:
-                raise WrongProveModeInput(prop=prop_type)
-            elif not selected_hypo.is_exists(implicit=True):
+            if not selected_hypo.is_exists(implicit=True):
                 error = _("Selection is not existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
+            elif not use:
+                raise WrongProveModeInput(prop=prop_type)
             else:
                 return use_exists(proof_step, selected_objects)
         else:  # h_selected is not a property : get an existence property
