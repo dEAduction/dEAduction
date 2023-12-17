@@ -31,8 +31,8 @@ Description
     cherchez un contre-exemple...
 AvailableProof
     proof_methods new_object
-AvailableMagic
-    assumption
+AvailableCompute
+    NONE
 AvailableExercises
   UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
   -image_de_image_reciproque_I -image_reciproque_de_image_II
@@ -51,7 +51,7 @@ local attribute [instance] classical.prop_decidable
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
-parameters {X Y Z: Type}
+variables {X Y Z: Type}
 
 
 open set
@@ -394,8 +394,6 @@ PrettyName
   Image réciproque de l'image
 -/
 begin
-  -- intros A x H1,
-  -- have H2 := definitions.applications.exercise.image_directe,
   todo
 end
 
@@ -638,12 +636,6 @@ PrettyName
   Image directe et intersection (ii)
 -/
 begin
-  -- intros A B y H,
-  -- cases H with HA HB,
-  -- rw definitions.applications.definition.image_directe at HA HB,
-  -- cases HA with x,
-  -- cases HB with x,
-  -- have H: ∃ x: X, ∀ x: Y, x =x ,
   todo
 end
 
@@ -756,29 +748,7 @@ AvailableTheorems
   UNTIL_NOW
 -/
 begin
-  -- todo
-  intro f,
-contrapose,
-intro H1,
-push_neg_once, simp only [ne.def],
-rw ensembles_et_applications.definitions.applications.definition.injectivite at H1,
-push_neg_once at H1,
-cases H1 with x H2,
-push_neg_once at H2,
-cases H2 with y H4,
-push_neg_once at H4, simp only [ne.def] at H4,
-cases H4 with H6 H7,
-use ({x}),
-rw ensembles_et_applications.definitions.generalites.definition.double_inclusion,
-push_neg_once,
-right,
-rw ensembles_et_applications.definitions.generalites.definition.inclusion,
-push_neg_once,
-push_neg_once,
-use (y),
-split,
-rw ensembles_et_applications.definitions.applications.definition.image_reciproque,
-rw definitions.applications.theorem.image_singleton,
+    todo
 end
 
 lemma exercise.caracterisation_surjectivite :
@@ -937,10 +907,6 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  -- intros surj_f A B incl y y_dans_A,
-  -- have ex_x := surj_f y, cases ex_x with x eq,
-  -- have but: (x dans (set.preimage f A)),
-  -- todo, todo,
   todo
 end
 

@@ -1,42 +1,12 @@
 import tactic
 import data.real.basic
 -- import data.set
-/-
-- nom des variables dans la def de limite !
-- variables muettes = variables globales : bof
-- calcul avec abs : abs (l'-l) /2 >0 ??
-(x ≠ 0 → |x| >0)
-- ne pas ajouter l'inégalité au contexte si elle y est déjà !
-- 'dsimp only at h' effectue les beta-réduction : (λ x, f x) 37 = f 37
-- max : def et propriétés
-- utiliser specialize ??
-
--/
 
 
 -- dEAduction tactics
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
 import user_notations   -- notations that can be used in deaduction UI for a new object
-/-
-max : Π {α : Type u_1} [_inst_1 : decidable_linear_order α], α → α → α
--/
-
-/-
-tactic failed, there are unsolved goals
-state:
-u v : ℕ → ℝ,
-l l' : ℝ,
-H1 : l' < l,
-e : ℝ := (l - l') / 2,
-H2 : e = (l - l') / 2,
-H' : ∀ (ε : ℝ), ε > 0 → (∃ (N : ℕ), ∀ (n : ℕ), n ≥ N → |v n - l'| < ε),
-H : ∀ (ε : ℝ), ε > 0 → (∃ (N : ℕ), ∀ (n : ℕ), n ≥ N → |u n - l| < ε),
-H3 : e > 0,
-H4 : ∃ (N : ℕ), ∀ (n : ℕ), n ≥ N → |u n - l| < e
-⊢ ∃ (n : ℕ), v n < u n
--/
-
 import compute_all
 import push_neg_once    -- pushing negation just one step
 
@@ -124,26 +94,6 @@ abs_pos : 0 < |a| ↔ a ≠ 0
 abs_mul x y : |x * y| = |x| * |y|
 abs_add x y : |x + y| ≤ |x| + |y|
 -/
-
-/-
-Max :
-def
-max ≥ n et n'
-1) We will be using `max` a lot in this workshop. `max A B` is
-the max of `A` and `B`. `max` is a definition, not a theorem, so 
-that means that there will be an API associated with it, i.e. 
-a list of little theorems which make `max` possible to use.
-We just saw the two important theorems which we'll be using:
-`le_max_left A B : A ≤ max A B` and
-`le_max-right A B : B ≤ max A B`.
-There are other cool functions in the `max` API, for example
-`max_le : A ≤ C → B ≤ C → max A B ≤ C`. The easiest way to 
-find your way around the `max` API is to *guess* what the names
-of the theorems are! For example what do you think 
-`max A B < C ↔ A < C ∧ B < C` is called?
--/
-
-
 
 ----------------------------------
 namespace maximum
@@ -442,10 +392,24 @@ PrettyName
 -- open definitions
 
 -- --------------------------------------------------
--- namespace exemples
+namespace exemples
+
+lemma exercise.limit_inverse
+converging_seq (lam  :=
+/- dEAduction
+PrettyName
+  La limite d'une suite constante !
+Description
+  Dans ce premier exercice,
+  il s'agit de démontrer, dans un cas très simple,
+  l'existence d'une limite.
+-/
+begin
+  todo,
+end
 
 
--- end exemples
+end exemples
 
 lemma exercise.limit_constante 
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
@@ -459,12 +423,6 @@ Description
   l'existence d'une limite.
 -/
 begin
---   rw definition.limit,
---   intros ε Hε,
---   use 0,
---   intros n H1,
---   rw H,
--- `[ solve1 {norm_num at * }, trace "EFFECTIVE CODE n°4.0"] <|> `[ `[ norm_num at *, trace "EFFECTIVE CODE n°5.0"] <|> `[ skip, trace "EFFECTIVE CODE n°5.1"], compute_n 10, trace "EFFECTIVE CODE n°4.1"],
   todo,
 end
 
@@ -805,13 +763,11 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  -- have H2: sqrt 3 > ((0) : @real), rotate, 
-  -- have H3 := H0 (((3) : real)^((-2))) H2,
   todo
 end
 
 
-lemma exercise.composition_continuite (f: ℝ → ℝ) (g: ℝ → ℝ)
+lemma exercise.composition_continuite (f: ℝ →  ℝ) (g: ℝ → ℝ)
 (H: continuous f) (H': continuous g):
 continuous (composition g f) :=
 /- dEAduction

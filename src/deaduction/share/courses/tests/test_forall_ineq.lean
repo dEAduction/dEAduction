@@ -51,6 +51,26 @@ end definitions
 
 section course 
 
+lemma exercise.test_but_compute
+(u v l l' e: ℝ)
+(H: |u + v - (l+l') | < e/2 + e/2):
+|(u-l) + (v-l')| < e
+:=
+begin
+  todo
+end
+
+lemma exercise.test_triangular
+(u v l l' e: ℝ) 
+(H: |u - l| +|v -l'| < e):
+|(u-l) + (v-l')| < e
+:=
+begin
+  todo
+end
+
+
+
 lemma exercise.test_for_all_ineq
 (u : ℕ → ℝ) (l : ℝ) :
 (limit u l) ↔ 

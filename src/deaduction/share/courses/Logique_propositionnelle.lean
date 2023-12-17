@@ -24,10 +24,10 @@ Description
     Ce fichier, qui peut servir de tutoriel, contient quelques énoncés de logiques propositionnelle.
     Le but n'est pas de les démontrer du point de vue de la logique propositionnelle,
     mais plutôt de voir comment l'interface fonctionne sur ces énoncés.
-DefaultAvailableProof
+AvailableProof
     NONE
-DefaultAvailableMagic
-    Assumption
+AvailableCompute
+    NONE
 -/
 
 
