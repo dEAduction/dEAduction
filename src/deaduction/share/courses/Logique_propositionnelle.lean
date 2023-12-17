@@ -26,7 +26,7 @@ Description
     mais plutôt de voir comment l'interface fonctionne sur ces énoncés.
 AvailableProof
     NONE
-AvailableCompute
+Availableompute
     NONE
 -/
 

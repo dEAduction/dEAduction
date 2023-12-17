@@ -460,7 +460,7 @@ PrettyName
     Définitions
 -/
 
-lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+lemma definition.image_directe (y : Y) :  y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
     todo
 end
