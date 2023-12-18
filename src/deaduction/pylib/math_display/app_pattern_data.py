@@ -430,6 +430,14 @@ class PatternMathDisplay:
         e.g.         "converging_seq": ((-1, ), r'\text_is', _(" converging")).
         """
 
+        display = cls.special_latex_shapes.get(name)
+        if display:
+            if r'\text_is' in display:
+                display_not = (r'\text_is_not' if item == r'\text_is'
+                               else item for item in display)
+                return display_not
+            else:
+                return
         pretty_name = cls.constants_pretty_names.get(name, name)
         shape = ((0, -1), r'\text_is_not', pretty_name)
         return shape
@@ -468,7 +476,7 @@ class PatternMathDisplay:
         lean_from_app_constant_patterns dicts.
         """
 
-        # TODO: negation patterns/shapes
+        # TODO: special negation patterns/shapes
         for name in cls.all_constants_names():
             key = cls.app_pattern_from_cst_name(name)
             key_not = cls.not_pattern_from_cst_name(name)
