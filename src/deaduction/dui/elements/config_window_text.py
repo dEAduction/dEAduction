@@ -85,8 +85,10 @@ PRETTY_NAMES = {
         _("Allow implicit use of definitions"),
     'functionality.automatic_intro_of_variables_and_hypotheses':
         _("Automatic intro of variables and hypotheses"),
-    'functionality.automatic_intro_of_exists':
-        _("Automatic intro of existence properties"),
+    'functionality.automatic_use_of_exists':
+        _("Automatically destruct existence context properties"),
+    'functionality.automatic_use_of_and':
+        _("Automatic destruct context conjunctions"),
     # 'functionality.save_solved_exercises_for_autotest':
     #     _("Save exercises for autotest"),
     'functionality.save_history_of_solved_exercises':

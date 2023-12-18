@@ -590,6 +590,25 @@ class ProofStep:
     def is_equal(self):
         return self.button_name == "equal"
 
+    def is_prove_and_from_ctxt(self):
+        """
+        True if step has proved 'P AND Q' from P,Q in the context
+        """
+
+        if (self.button_name and self.button_name.endswith('and') and
+                self.prove_or_use == "prove" and len(self.selection) == 2):
+            return True
+
+    def is_prove_exists_from_ctxt(self):
+        """
+        True if step has proved 'Exists z, P(z)'
+        from some x and P(x) in the context.
+        """
+
+        if (self.button_name and self.button_name.endswith('exists') and
+                self.prove_or_use == "prove" and len(self.selection) == 2):
+            return True
+
     # def rw_item(self):
     #     if self.is_definition():
     #         return _("Definition"), self.statement.pretty_name

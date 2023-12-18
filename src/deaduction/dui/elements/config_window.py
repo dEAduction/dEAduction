@@ -133,9 +133,12 @@ CONFIGS['Functionalities'] = {
     'functionality.allow_sorry': (None, True,
         _("'Admit current sub-goal!' is available with the Proof methods "
           "button")),
-    'functionality.automatic_intro_of_exists': (None, True,
+    'functionality.automatic_use_of_exists': (None, True,
         _("When an existence property appears in the context, "
           "the ∃ button is operated automatically")),
+    'functionality.automatic_use_of_and': (None, True,
+        _("When a conjunction appears in the context, "
+          "the AND button is operated automatically")),
     'functionality.target_selected_by_default': (None, True,
         _("Buttons act on the target if no context object is selected")),
     'functionality.allow_implicit_use_of_definitions': (None, True,
@@ -167,7 +170,8 @@ CONFIGS['Functionalities'] = {
 PRE_DEFINED['Functionalities'] = {
     'selected_level': 'functionality.default_functionality_level',
     'Beginner': {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': False,
                  'functionality.allow_implicit_use_of_definitions': False,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': False,
@@ -178,7 +182,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.automatic_intro_of_variables_and_hypotheses': False
                  },
     'Intermediate': {'functionality.allow_proof_by_sorry': True,
-                     'functionality.automatic_intro_of_exists': True,
+                     'functionality.automatic_use_of_exists': True,
+                     'functionality.automatic_use_of_and': True,
                      'functionality.target_selected_by_default': True,
                      'functionality.allow_implicit_use_of_definitions': True,
                      'functionality.auto_solve_inequalities_in_bounded_quantification': True,
@@ -189,7 +194,8 @@ PRE_DEFINED['Functionalities'] = {
                      'functionality.automatic_intro_of_variables_and_hypotheses': False
                      },
     'Advanced': {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,
                  'functionality.allow_implicit_use_of_definitions': True,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': True,
@@ -200,7 +206,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.automatic_intro_of_variables_and_hypotheses': False
                  },
     'Expert':   {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,
                  'functionality.allow_implicit_use_of_definitions': True,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': True,

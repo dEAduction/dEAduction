@@ -1064,8 +1064,7 @@ class Coordinator(QObject):
         # self.nursery.start_soon(self.emw.simulate_user_action,
         #                         next_step, duration)
 
-    @staticmethod
-    def automatic_actions(goal: Goal) -> UserAction:
+    def automatic_actions(self, goal: Goal) -> UserAction:
         """
         Return a UserAction if some automatic_intro is on and there is a
         pertinent automatic action to perform. Automatic actions include:
@@ -1081,35 +1080,36 @@ class Coordinator(QObject):
         # Fixme: move this to a Goal method?
 
         target = goal.target
+        pps = self.previous_proof_step
 
         user_action = None
-        # TODO: auto use_and
-        # (0) Check automatic intro of conjunction
-        # auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
-        # if True:
-        #     prop: ContextMathObject
-        #     for prop in goal.context_props:
-        #         if prop.is_and() and prop.allow_auto_action:
-        #             user_action = UserAction(selection=[prop],
-        #                                      button_name="use_and")
-        #             # Turn off auto_action for this prop:
-        #             prop.turn_off_auto_action()
-        #             return user_action
-
         # (1) Check automatic intro of existence hypos
-        auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
+        auto_exists = cvars.get("functionality.automatic_use_of_exists", True)
         if auto_exists:
             prop: ContextMathObject
             for prop in goal.context_props:
-                if (prop.is_exists() and prop.allow_auto_action and not
-                        prop.is_new):
+                if (prop.is_exists() and prop.allow_auto_action
+                        and not pps.is_prove_exists_from_ctxt()):
                     user_action = UserAction(selection=[prop],
                                              button_name="use_exists")
                     # Turn off auto_action for this prop:
                     prop.turn_off_auto_action()
                     return user_action
 
-        # (2) Check automatic intro of hypos' premises
+        # (2) Check automatic intro of conjunction
+        auto_and = cvars.get("functionality.automatic_use_of_and", True)
+        if auto_and:
+            prop: ContextMathObject
+            for prop in goal.context_props:
+                if (prop.is_and() and prop.allow_auto_action
+                        and not pps.is_prove_and_from_ctxt()):
+                    user_action = UserAction(selection=[prop],
+                                             button_name="use_and")
+                    # Turn off auto_action for this prop:
+                    prop.turn_off_auto_action()
+                    return user_action
+
+        # (3) Check automatic intro of hypos' premises
         ask_auto_premises = cvars.get(
             "functionality.ask_to_prove_premises_of_implications", True)
         context_types = [p.math_type for p in goal.context_props]
@@ -1146,7 +1146,7 @@ class Coordinator(QObject):
                                                  button_name="use_implies")
                     return user_action
 
-        # (3) Check automatic intro of variables and hypotheses
+        # (4) Check automatic intro of variables and hypotheses
         auto_for_all = cvars.get("functionality.automatic_intro_of" +
                                  "_variables_and_hypotheses", False)
         if auto_for_all and target.allow_auto_action:
@@ -1165,7 +1165,7 @@ class Coordinator(QObject):
         emw.automatic_action is set to True so that emw knows about it,
         in particular TargetSelected will be true whatever.
         """
-        user_action = Coordinator.automatic_actions(goal)
+        user_action = self.automatic_actions(goal)
         if user_action:
             self.emw.automatic_action = True
             # log.debug(f"Automatic action: {action}")
