@@ -802,7 +802,7 @@ class GlobalToolbar(QToolBar):
         self.stop = QAction(
                 QIcon(str((icons_dir / 'icons8-stop-sign-48').resolve())),
                 _('Stop me from thinking!'), self)
-        self.stop.setShortcut(QKeySequence(QKeySequence.Cancel))
+        # self.stop.setShortcut(QKeySequence(QKeySequence.Cancel))
 
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),

@@ -200,6 +200,7 @@ def set_quant_pattern():
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)
 latex_from_pattern_string = {
+    "LOCAL_CONSTANT: !SET_PRODUCT(...)": (),
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)":
         # ("toto",),
         # FIXME: the following crashes!!!
@@ -303,6 +304,7 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
+    "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is treated above
     "?:CONSTANT/name=MetricSpace": (r'\type_point', local_constant_shape),  # a point of...

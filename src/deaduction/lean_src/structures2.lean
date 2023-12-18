@@ -138,6 +138,7 @@ match e with
 | `(sing %%x) := return ("SET_EXTENSION1", [x])
 | `(_root_.set %%X) := return ("SET", [X])
 | `(prod %%A %%B) := return ("SET_PRODUCT", [A, B])
+| `(set.prod %%A %%B) := return ("SET_PRODUCT", [A, B])
 | `(prod.mk %%x %%y) := return ("COUPLE", [x, y])
 -- set in extension, e.g. A = {x | P x} or A = {x:X | P x} :
 | `(@set_of %%X %%P) := match P with
