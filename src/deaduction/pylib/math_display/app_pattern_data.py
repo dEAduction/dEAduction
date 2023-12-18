@@ -181,10 +181,6 @@ def app_pattern_from_constants(additional_data=None):
                                   else item for item in new_value)
             latex_from_app_constant_patterns[new_not_key] = new_not_value
         latex_from_app_constant_patterns[new_key] = new_value
-        # Debug
-        # if key in ('divise', 'delta'):
-        #     log.debug(f"{key} added in dic")
-        #     print(latex_from_app_constant_patterns)
     latex_from_app_pattern.update(latex_from_app_constant_patterns)
 
     # latex_from_app_pattern.update(generic_app_dict)

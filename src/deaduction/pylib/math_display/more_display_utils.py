@@ -46,18 +46,18 @@ def cut_spaces(string: str) -> Optional[str]:
         return new_string
 
 
-def cut_successive_spaces(string1, string2: str) -> Optional[str]:
+def cut_successive_spaces(previous_string, string: str) -> Optional[str]:
     """
     Remove unnecessary spaces between sucessive strings.
     """
 
-    if not (string1 and string2):
+    if not (previous_string and string):
         return
 
     # if string1[-1] in (' ', '(', ')'):
-    if string1[-1] in (' ', '('):
-        if string2[0] == ' ':
-            return string2[:-1]
+    if previous_string[-1] in (' ', '('):
+        if string[0] == ' ':
+            return string[1:]
 
 
 def text_to_subscript_or_sup(structured_string,
