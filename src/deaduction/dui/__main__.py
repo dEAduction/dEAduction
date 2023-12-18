@@ -560,6 +560,10 @@ class WindowManager(QObject):
             # Show window
             self.chooser_window.show()
         else:
+            # If hidden (by 'esc' kay)
+            if self.chooser_window.isHidden():
+                self.chooser_window.show()
+
             # Focus on chooser window
             self.chooser_window.raise_()
             self.chooser_window.activateWindow()
