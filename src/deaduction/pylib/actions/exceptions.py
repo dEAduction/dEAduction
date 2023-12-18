@@ -51,6 +51,16 @@ class InputType(IntEnum):
 class MissingParametersError(Exception):
     def __init__(self, input_type: InputType, choices=None, title="", output="",
                  converter=lambda n: n, target=None):
+        """
+
+        @param input_type: Text, Choice (in a list), YesNo, Calculator (
+        obsolete)
+        @param choices: list of (text) choices
+        @param title: title of the window QDialog
+        @param output: text of the question
+        @param converter: 
+        @param target: (for calculator)
+        """
         self.input_type         = input_type
         self.choices            = choices
         self.title              = title

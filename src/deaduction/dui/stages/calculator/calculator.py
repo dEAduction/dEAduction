@@ -858,6 +858,7 @@ class CalculatorController:
                 # math_object = MathObject.place_holder()
                 break
             elif calculator_controller.lean_mode:
+                # FIXME
                 target = target.toPlainText()
                 math_object = MathObject(node="RAW_LEAN_CODE",
                                          info={'name': '(' + target + ')'},

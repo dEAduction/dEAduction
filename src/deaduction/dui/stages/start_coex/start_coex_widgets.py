@@ -1363,11 +1363,13 @@ def check_negate_statement(exercise) -> bool:
         #     log.warning("Exercise is an open question but has variables:"
         #                 "negation will not be correct!!")
 
-        title = _("Do you want to prove this statement or its negation?")
+        title = _("True or False?")
         if exercise.initial_proof_state:
             goal = exercise.initial_proof_state.goals[0]
             output = goal.goal_to_text(text_mode=False, to_prove=False,
                                        open_problem=True)
+            ask = _("Do you want to prove this statement or its negation?")
+            output = ask + "\n" + output
         else:
             output = exercise.lean_variables + "   " \
                      + exercise.lean_core_statement

@@ -180,7 +180,7 @@ def action_proof_methods(proof_step) -> CodeForLean:
         choices = ProofMethods.choices()
         raise MissingParametersError(InputType.Choice,
                                      choices,
-                                     title=_("Choose proof method"),
+                                     title=_("Proof methods"),
                                      output=_("Which proof method?"),
                                      converter=ProofMethods.local_to_absolute_nb
                                      )
@@ -348,7 +348,7 @@ def method_induction(proof_step,
         raise MissingParametersError(
             InputType.Choice,
             choices,
-            title=_("Choose sub-goal"),
+            title=_("Proof by induction"),
             output=_("Which property to prove first?"))
     elif user_input[1] == 0:
         code = CodeForLean.induction(var_name)
@@ -469,7 +469,7 @@ def action_new_object(proof_step) -> CodeForLean:
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
-                                         title="+",
+                                         title="New object",
                                          output=_("Give a name for your "
                                                   "new object:"))
         elif len(user_input) == 2:
@@ -480,7 +480,7 @@ def action_new_object(proof_step) -> CodeForLean:
                 user_input.pop()
                 output = _("This name already exists, please give a new name:")
                 raise MissingParametersError(InputType.Text,
-                                             title="+",
+                                             title="New object",
                                              output=output)
             else:  # Ask for new object
                 # output = new_objects

@@ -641,7 +641,7 @@ def implies_hyp(proof_step):
         raise MissingParametersError(
             InputType.YesNo,
             choices=[],
-            title=_("Introduce new sub-goal?"),
+            title=_("Prove premise?"),
             output=msg)
     # (4) Add premise as a new sub-goal
     elif user_input[0] == 0:  # Should always be the case here
@@ -771,7 +771,7 @@ def prove_and(proof_step, user_input: [str]) -> CodeForLean:
         raise MissingParametersError(
             InputType.Choice,
             choices,
-            title=_("Choose sub-goal"),
+            title=_("Prove a conjunction"),
             output=_("Which property to prove first?"))
     else:
         if implicit_definition:
@@ -916,7 +916,7 @@ def prove_or(proof_step, user_input: [str]) -> CodeForLean:
     if not user_input:
         raise MissingParametersError(InputType.Choice,
                                      choices,
-                                     title=_("Choose new goal"),
+                                     title=_("Prove a disjunction"),
                                      output=_("Which property will you "
                                               "prove?"))
     code = None
@@ -963,7 +963,7 @@ def use_or(proof_step,
                    (_("Right"), right.to_display(format_="utf8"))]
         raise MissingParametersError(InputType.Choice,
                                      choices=choices,
-                                     title=_("Choose case"),
+                                     title=_("Use a conjunction"),
                                      output=_("Which case to assume first?"))
     else:  # len(user_input) == 1
         if user_input[0] == 1:
@@ -1027,13 +1027,14 @@ def prove_or_on_hyp(proof_step,
             user_input = user_input[1:]
 
     if not user_input:  # Usr still has to choose side
+        # FIXME: raise Calculator
         raise MissingParametersError(
             InputType.Choice,
             [(_("Left"),
               f'({first_hypo_name}) OR ({second_name})'),
              (_('Right'),
               f'({second_name}) OR ({first_hypo_name})')],
-            title=_("Choose side"),
+            title=_("Obtain 'P OR Q'"),
             output=_(f'On which side do you want') + f' {first_hypo_name} ?')
 
     new_hypo_name = get_new_hyp(proof_step)
@@ -1180,7 +1181,7 @@ def choose_substitution(equality0: MathObject, equality1: MathObject):
     raise MissingParametersError(
         InputType.Choice,
         choices,
-        title=_("Precision of substitution"),
+        title=_("Use an equality/equivalence"),
         output=_("Choose which equality to use for substitution"))
 
 
@@ -1202,7 +1203,7 @@ def prove_iff(proof_step, user_input: [str]) -> CodeForLean:
         raise MissingParametersError(
             InputType.Choice,
             choices,
-            title=_("Choose sub-goal"),
+            title=_("Prove an equivalence"),
             output=_("Which implication to prove first?"))
 
     elif len(user_input) == 1:
@@ -1483,7 +1484,7 @@ def apply_substitute(proof_step,
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
-                    title=_("Precision of substitution"),
+                    title=_("Use an equality/equivalence"),
                     output=_("Choose which expression you want to replace"))
             else:  # Try both direction
                 more_code1 = code_for_substitution(heq,
@@ -1514,7 +1515,7 @@ def apply_substitute(proof_step,
                 raise MissingParametersError(
                     InputType.Choice,
                     choices,
-                    title=_("Precision of substitution"),
+                    title=_("Use an equality/equivalence"),
                     output=_("Choose which expression you want to replace"))
 
             else:
@@ -1731,7 +1732,7 @@ def action_map(proof_step) -> CodeForLean:
                     output = _("Enter element on which you want to apply "
                                "the map {}:").format(name)
                     raise MissingParametersError(InputType.Text,
-                                                 title=_("Map"),
+                                                 title=_("Apply a function"),
                                                  output=output)
                 else:
                     # Apply function to user input:

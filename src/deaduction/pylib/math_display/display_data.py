@@ -258,6 +258,7 @@ class MathDisplay:
         "NUMBER": (display_lean_value, ),
         "RAW_LEAN_CODE": (display_name, ),
         'COMPOSITION': ('(', 0, r'\circ', 1, ')'),
+        "POWER": ('', 0, [' ^ ', 1], '')
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
