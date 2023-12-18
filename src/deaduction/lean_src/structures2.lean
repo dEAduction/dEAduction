@@ -1,6 +1,6 @@
 /-
 This files provides the tactics 
-    hypo_analysis
+    hypo_analysis hypo_analysis2
     targets_analysis
 which output a string reflecting the lean expr for objects in the
 and in the target. The key function is analysis_expr_step that pattern
@@ -17,7 +17,7 @@ import data.real.basic
 import tactic
 import parser_analysis_definitions
 
-import user_notations
+-- import user_notations
 import set_definitions
 
 namespace tactic.interactive

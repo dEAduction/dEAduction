@@ -1,4 +1,5 @@
 
+import utils
 
 namespace induction
 
@@ -19,14 +20,14 @@ theorem two_step_induction {P : ℕ → Prop} (HR0 : P 0) (HR1 : P 1)
 -- | 1               := HR1
 -- | (succ (succ n)) := HR2 n ⟨two_step_induction n, two_step_induction (n+1)⟩
 begin
-  sorry
+  todo
 end
 
 theorem strong_induction {P : ℕ → Prop} (HR0 : P 0)
 (HR2 : ∀ n, ( (∀ k < n, P k) → P n)) :
 ∀n, P n :=
 begin
-  sorry
+  todo
 end
 
 end induction

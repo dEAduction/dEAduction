@@ -2,9 +2,9 @@
 import tactic
 
 -- dEAduction tactics
+-- structures2 and utils are vital
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
 import push_neg_once
 
 -- dEAduction definitions
@@ -32,9 +32,9 @@ Title
 Author
     Alice Laroche
 Institution
-    
-AvailableMagic
-    ALL
+    Sorbonne Université
+AvailableCompute
+    NONE
 Description
     Exercices d'un cours de maths discrètes à Sorbonne Université.
     Les numéros de questions font référence à la feuille de TD.

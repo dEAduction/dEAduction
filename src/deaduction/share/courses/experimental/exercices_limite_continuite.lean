@@ -1,24 +1,44 @@
+/-
+This is a d∃∀duction file providing exercises about limits and continuity.
+-/
+
+-- Lean standard imports
 import tactic
 import data.real.basic
--- import data.set
-
 
 -- dEAduction tactics
-import structures2      -- hypo_analysis, targets_analysis
-import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute_all
-import push_neg_once    -- pushing negation just one step
+-- structures2 and utils are vital
+import deaduction_all_tactics
+-- import structures2      -- hypo_analysis, targets_analysis
+-- import utils            -- no_meta_vars
+-- import compute_all      -- Tactics for the compute buttons
+-- import push_neg_once    -- Pushing negation just one step
+-- import induction        -- Induction theorems
 
 -- dEAduction definitions
 import set_definitions
 import real_definitions
 
-
+-- Use classical logic
 local attribute [instance] classical.prop_decidable
 
+-------------------------
+-- dEAduction METADATA --
+-------------------------
+/- dEAduction
+Title
+    Limite et continuité
+Author
+    Frédéric Le Roux
+Institution
+    Université du monde
+Description
+    Des exercices sur les limites des suites
+    et la continuité des fonctions 
+-/
 
-/-- `l` is the limit of the sequence `a` of reals -/
+
+/-- Lots of definitions -/
 definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 
@@ -145,7 +165,7 @@ end
 
 lemma theorem.valeur_absolue :
 ∀ x : RealSubGroup,
-((0:RealSubGroup) ≤ x) → (abs x = x) and ((x ≤ 0) → (abs x = -x)) :=
+((0 ≤ x) → (abs x = x)) ∧ ((x ≤ 0) → (abs x = -x)) :=
 begin
   intro x, split, exact abs_of_nonneg, exact abs_of_nonpos,
 end
@@ -379,6 +399,25 @@ PrettyName
 -- open definitions
 
 -- --------------------------------------------------
+
+-- lemma exercise.limit_alt :
+-- not (converging_seq (λ n, (-1)^n))  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite -1, 1, -1, 1, ... ne converge pas.
+-- -/
+-- begin
+--   by_contradiction H1,
+--   cases H1 with l H2,
+--   have H4: (((1): @real)) > ((0): @real), rotate, have H5 := @H2 (((1): @real)) (H4), rotate 1, solve1 {norm_num at * },
+--   cases H5 with N H6,
+--   have H8: (((2): @nat) * N) ≥ N, rotate, have H9 := @H6 (((2): @nat) * N) (H8), rotate 1, solve1 {norm_num at *, compute_n 10 },
+--   simp only [] with simp_arith  at H9,
+--   have H10: (((-1: int) ^ (2 * N)) = 1),
+
+
+-- end
+
 
 -- namespace exemples
 -- Ne fonctionnent pas : 

@@ -2,17 +2,24 @@
 This is a d∃∀duction file providing exercises for sets and maps. French version.
 -/
 
-import data.set
+-- Lean standard imports
 import tactic
+-- import data.real.basic
 
--- dEAduction tactics
+
+-- dEAduction tactics and theorems
+-- structures2 and utils are vital
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
 import push_neg_once    -- pushing negation just one step
+-- import induction     -- theorem for the induction proof method
+-- import compute_all   -- tactics for the compute buttons
 
 -- dEAduction definitions
 import set_definitions
+
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
 
 -------------------------
 -- dEAduction METADATA --
@@ -46,7 +53,6 @@ Settings
     functionality.allow_induction --> false
 -/
 
-local attribute [instance] classical.prop_decidable
 ---------------------------------------------
 -- global parameters = implicit variables --
 ---------------------------------------------
@@ -67,7 +73,7 @@ PrettyName
 
 namespace logique
 
-lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) and (Q → P)) :=
+lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
 /- dEAduction
 PrettyName
     Equivalence logique
@@ -144,7 +150,7 @@ end
 
 lemma definition.singleton
 {x x_0: X} :
-x ∈ ({x_0}:set X) ↔ x=x_0
+(x ∈ sing x_0) ↔ x=x_0
 :=
 begin
     refl,
@@ -152,7 +158,7 @@ end
 
 lemma definition.paire
 {x x_0 x_1: X} :
-(x ∈ ({x_0, x_1}:set X) ) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ pair x_0 x_1) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,

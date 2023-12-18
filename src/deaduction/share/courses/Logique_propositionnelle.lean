@@ -1,18 +1,25 @@
--- import data.set
+
+-- Lean standard imports
 import tactic
+import data.real.basic
 
--- dEAduction imports
-import structures2
-import utils
-import push_neg_once
+-- dEAduction tactics
+-- structures2 and utils are vital
+-- import deaduction_all_tactics
+import structures2      -- hypo_analysis, targets_analysis
+import utils            -- no_meta_vars
+-- import compute_all      -- Tactics for the compute buttons
+import push_neg_once    -- Pushing negation just one step
+-- import induction        -- Induction theorems
 
--- General principles :
--- Type should be defined as parameters, in order to be implicit everywhere
--- other parameters are implicit in definitions, i.e. defined using '{}' (e.g. {A : set X} )
--- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
--- each definition must be an iff statement (since it will be called with 'rw' or 'symp_rw')
+-- dEAduction definitions
+import set_definitions
+-- import real_definitions
 
--- no Magic button ("compute")
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
+
+
 /- dEAduction
 Title
     Logique propositionnelle (tutoriel)
@@ -26,28 +33,18 @@ Description
     mais plutôt de voir comment l'interface fonctionne sur ces énoncés.
 AvailableProof
     NONE
-Availableompute
+AvailableCompute
     NONE
 -/
 
-
--- logic names ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists']
--- proofs names ['proof_methods', 'new_object', 'apply']
--- magic names ['compute', 'assumption']
-
-
+-- Use classical logic
 local attribute [instance] classical.prop_decidable
+
 ---------------------------------------------
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
 variables (P Q R: Prop) -- NOT global
-notation [parsing_only] P ` \and ` Q := P ∧ Q
-notation [parsing_only]  P ` \or ` Q := P ∨ Q
-notation [parsing_only]  ` \not ` P := ¬ P
-notation [parsing_only]  P ` \implies ` Q := P → Q
-notation [parsing_only]  P ` \iff ` Q := P ↔ Q
-
 
 ------------------
 -- COURSE TITLE --
@@ -69,7 +66,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.et :
@@ -86,7 +83,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.et_commutatif_I :
@@ -103,7 +100,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.et_commutatif_II :
@@ -122,7 +119,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.ou_commutatif :
@@ -141,7 +138,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.non_non :
@@ -160,7 +157,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.non_ET :
@@ -178,7 +175,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -198,7 +195,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.negation_implication :
@@ -218,7 +215,7 @@ AvailableMagic
 
 -/
 begin
-    sorry
+    todo
 end
 
 
@@ -242,7 +239,7 @@ AvailableMagic
 
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.ou_implication_I :
@@ -261,7 +258,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 lemma exercise.ou_implication_II :
@@ -283,7 +280,7 @@ AvailableMagic
     assumption
 -/
 begin
-    sorry
+    todo
 end
 
 
