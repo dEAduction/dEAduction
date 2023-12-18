@@ -1544,7 +1544,8 @@ class Coordinator(QObject):
         elif not (self.previous_proof_step.is_history_move()
                   or self.previous_proof_step.is_error()
                   or self.test_mode):
-            self.__process_automatic_actions(proof_state.goals[0])
+            if not self.proof_step.history_nb == 0:
+                self.__process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing
 
