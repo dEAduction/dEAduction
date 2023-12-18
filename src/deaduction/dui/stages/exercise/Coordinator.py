@@ -1083,12 +1083,26 @@ class Coordinator(QObject):
         target = goal.target
 
         user_action = None
+        # TODO: auto use_and
+        # (0) Check automatic intro of conjunction
+        # auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
+        # if True:
+        #     prop: ContextMathObject
+        #     for prop in goal.context_props:
+        #         if prop.is_and() and prop.allow_auto_action:
+        #             user_action = UserAction(selection=[prop],
+        #                                      button_name="use_and")
+        #             # Turn off auto_action for this prop:
+        #             prop.turn_off_auto_action()
+        #             return user_action
+
         # (1) Check automatic intro of existence hypos
         auto_exists = cvars.get("functionality.automatic_intro_of_exists", True)
         if auto_exists:
             prop: ContextMathObject
             for prop in goal.context_props:
-                if prop.is_exists() and prop.allow_auto_action:
+                if (prop.is_exists() and prop.allow_auto_action and not
+                        prop.is_new):
                     user_action = UserAction(selection=[prop],
                                              button_name="use_exists")
                     # Turn off auto_action for this prop:
