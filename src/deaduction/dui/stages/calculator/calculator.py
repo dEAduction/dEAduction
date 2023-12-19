@@ -64,8 +64,7 @@ from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
                                QSizePolicy, QScrollArea,
                                QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
-                               QCheckBox,
-                               QGroupBox)
+                               QCheckBox, QGroupBox, QSpacerItem)
 
 import deaduction.pylib.config.dirs as cdirs
 from deaduction.pylib.actions import MissingCalculatorOutput
@@ -198,6 +197,37 @@ class NavigationBar(AbstractToolBar):
         self.addAction(self.delete)
 
 
+class DisclosureTitleWidget(QLabel):
+    hidden_triangle = "<b>▷ </b>"
+    shown_triangle = "<b>▽ </b>"
+    # ► ▼
+
+    clicked = Signal()
+
+    def __init__(self, title, hidden=False):
+        super().__init__()
+        # self.setFocusPolicy(Qt.NoFocus)
+        self.title = title
+        self.hidden = hidden
+        self.set_text()
+
+    def set_text(self):
+        title = '<b>' + self.title + '</b>'
+        text = (self.hidden_triangle + title if self.hidden
+                else self.shown_triangle + title)
+        self.setText(text)
+
+    def set_hidden(self, hidden=None):
+        if hidden is None:
+            self.hidden = not self.hidden
+        else:
+            self.hidden = hidden
+        self.set_text()
+
+    def mousePressEvent(self, event):
+        self.clicked.emit()
+
+
 class CalculatorButtonsGroup(QWidget):
     """
     A widget to display a list of CalculatorButtons, with a title and a
@@ -212,24 +242,23 @@ class CalculatorButtonsGroup(QWidget):
                  col_size=None, hidden=False):
 
         super().__init__()
-        self.hidden = hidden
+        # self.setFocusPolicy(Qt.NoFocus)
         self.title = title
-        self.disclosure_triangle = DisclosureTriangle(
-            slot=self.toggle_disclosure_triangle, hidden=hidden)
-        self.disclosure_triangle.setSizePolicy(QSizePolicy.Fixed,
-                                               QSizePolicy.Fixed)
-        self.disclosure_triangle.setFocusPolicy(Qt.NoFocus)
 
         self.group_box = QGroupBox()
-        # super().__init__(title)
 
+        # Title widget #
+        self.title_widget = DisclosureTitleWidget(title=self.title,
+                                                  hidden=hidden)
+        self.title_widget.clicked.connect(self.set_hidden)
+
+        # Buttons widget #
         if col_size:
             self.col_size = col_size
         self.buttons = []
         self.buttons_layout = QGridLayout()
         for btn in calculator_buttons:
             self.add_button(btn)
-        # self.include_buttons()
 
         self.margin_btns_lyt = QHBoxLayout()
         self.margin_btns_lyt.addStretch()
@@ -241,35 +270,24 @@ class CalculatorButtonsGroup(QWidget):
         group_box_layout.addLayout(self.margin_btns_lyt)
         self.group_box.setLayout(group_box_layout)
 
-        # main_lyt = QHBoxLayout()
-        # main_lyt.addWidget(self.disclosure_triangle)
-        # main_lyt.setAlignment(self.disclosure_triangle, Qt.AlignTop)
-        # main_lyt.addWidget(self.group_box)
-        disclosure_lyt = QHBoxLayout()
-        disclosure_lyt.addWidget(self.disclosure_triangle)
-        disclosure_lyt.addWidget(QLabel(self.title))
-        disclosure_lyt.addStretch()
-        disclosure_lyt.setAlignment(Qt.AlignLeft)
-
         main_lyt = QVBoxLayout()
-        main_lyt.addLayout(disclosure_lyt)
+        main_lyt.setSpacing(0)
+        main_lyt.setContentsMargins(0, 0, 0, 0)
+
+        main_lyt.addWidget(self.title_widget)
         main_lyt.addWidget(self.group_box)
         self.setLayout(main_lyt)
 
-        if self.hidden:
+        if self.title_widget.hidden:
             self.toggle_buttons()
 
-    # def include_buttons(self):
-    #     """
-    #     Add self's buttons in self.buttons_layout.
-    #     """
-    #
-    #     for line in range(len(self.buttons) // self.col_size + 1):
-    #         col = 0
-    #         for button in self.buttons[self.col_size * line:
-    #                                    self.col_size * (line + 1)]:
-    #             self.buttons_layout.addWidget(button, line, col)
-    #             col += 1
+    @property
+    def hidden(self):
+        return self.title_widget.hidden
+
+    @hidden.setter
+    def hidden(self, yes):
+        self.title_widget.hidden = yes
 
     def init_btns_lyt(self):
         # TODO: clear lyt
@@ -343,6 +361,7 @@ class CalculatorButtonsGroup(QWidget):
         super().deleteLater()
 
     def toggle_buttons(self):
+        self.title_widget.set_hidden(self.hidden)
         if self.hidden:
             self.group_box.hide()
             for button in self.buttons:
@@ -352,7 +371,7 @@ class CalculatorButtonsGroup(QWidget):
             for button in self.buttons:
                 button.show()
 
-    def toggle_disclosure_triangle(self, hidden=None):
+    def set_hidden(self, hidden=None):
         if hidden is None:
             self.hidden = not self.hidden
         else:
@@ -375,8 +394,9 @@ class CalculatorAllButtons(QWidget):
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
+        self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
         self.setWindowTitle(_("Logical Calculator"))
-        # self.setFocusPolicy(Qt.NoFocus)
+        # self.setFocusPolicy(Qt.NoFocus)  --> Buttons cannot be clicked!
         self.buttons_groups = []
         # Clear ancient shortcuts!!
         CalculatorButton.shortcuts_dic = {}
@@ -386,13 +406,13 @@ class CalculatorAllButtons(QWidget):
         # Add buttons #
         ###############
         self.btns_wgt = QWidget()
-        btns_lyt = QVBoxLayout()
+        # btns_lyt = QVBoxLayout()
 
         # Lines from pattern_lines
         for calc_pattern in calc_patterns:
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
                 calc_pattern)
-            btns_lyt.addWidget(buttons)
+            # btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
 
         # Lines from nodes
@@ -402,11 +422,13 @@ class CalculatorAllButtons(QWidget):
                                     (InequalityNode, 5)):
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
                                                                 col_size)
-            btns_lyt.addWidget(buttons)
+            # btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
 
-        btns_lyt.addStretch()
-        self.btns_wgt.setLayout(btns_lyt)
+        self.btns_lyt = QVBoxLayout()
+        self.set_buttons()
+        self.btns_wgt.setLayout(self.btns_lyt)
+
         self.btns_scroll_area = QScrollArea()
         self.btns_scroll_area.setWidgetResizable(True)
         # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
@@ -421,6 +443,16 @@ class CalculatorAllButtons(QWidget):
 
         self.set_geometry()
 
+    def set_buttons(self):
+        btns_lyt = self.btns_lyt
+        idx = 0
+        for btn in self.buttons_groups:
+            if idx:
+                btns_lyt.addSpacing(20)
+            btns_lyt.addWidget(btn)
+            idx += 1
+        btns_lyt.addStretch()
+
     def set_geometry(self, geometry=None):
         settings = QSettings("deaduction")
         value = settings.value("calculator/geometry")
@@ -431,14 +463,13 @@ class CalculatorAllButtons(QWidget):
 
         for buttons in self.buttons_groups:
             hidden = settings.value(f"calculator/{buttons.title}",
-                                     buttons.hidden)
+                                    buttons.hidden)
             hidden = (hidden in (True, "true"))
-            dt = buttons.disclosure_triangle
-            if dt.hidden != hidden:
-                buttons.hidden = not hidden
-                dt.toggle()
-            else:
-                buttons.toggle_disclosure_triangle(hidden=hidden)
+            # if buttons.hidden != hidden:
+            #     buttons.hidden = not hidden
+            #     buttons.toggle_buttons()
+            # else:
+            buttons.set_hidden(hidden=hidden)
 
     def closeEvent(self, event):
         if not self.targets_window_is_closed:
@@ -456,7 +487,7 @@ class CalculatorAllButtons(QWidget):
             settings.setValue(f"calculator/{buttons.title}",
                               buttons.hidden)
         super().close()
-        print("Buttons wd closed!")
+        # print("Buttons wd closed!")
         # self.window_closed.emit()
 
     def buttons(self) -> [CalculatorButton]:
@@ -584,12 +615,12 @@ class CalculatorMainWindow(QDialog):
             hidden = settings.value(f"calculator/{buttons.title}",
                                      buttons.hidden)
             hidden = (hidden in (True, "true"))
-            dt = buttons.disclosure_triangle
-            if dt.hidden != hidden:
-                buttons.hidden = not hidden
-                dt.toggle()
-            else:
-                buttons.toggle_disclosure_triangle(hidden=hidden)
+            # dt = buttons.hidden
+            # if dt.hidden != hidden:
+            #     buttons.hidden = not hidden
+            #     dt.toggle()
+            # else:
+            buttons.set_hidden(hidden=hidden)
 
     def close(self):
         # Save window geometry
@@ -830,47 +861,38 @@ class CalculatorController:
         prop = missing_output.explicit_math_type_of_prop()
 
         log.debug(f"Calculator with target types")
-        calculator_controller = cls(goal=goal,
-                                    window_title=window_title,
-                                    task_title=task_title,
-                                    target_types=target_types,
-                                    titles=titles,
-                                    # task_description=task_description,
-                                    task_goal=task_goal,
-                                    prop=prop)
+        cc = cls(goal=goal,
+                 window_title=window_title,
+                 task_title=task_title,
+                 target_types=target_types,
+                 titles=titles,
+                 # task_description=task_description,
+                 task_goal=task_goal,
+                 prop=prop)
         # Execute the ButtonsDialog and wait for results
-        calculator_controller.buttons_window.show()
-        OK = calculator_controller.targets_window.exec()
+        cc.buttons_window.show()
+        OK = cc.targets_window.exec()
 
         if not OK:
-            calculator_controller.targets_window_closed()
+            cc.targets_window_closed()
             return [], OK
         ############################
         # After exec: post-process #
         ############################
-        targets = calculator_controller.targets
+        targets = cc.targets
         math_objects = []
 
         for target in targets:
             target.unmark()
             if not target.assigned_math_object:
                 # No more data from this point
-                # math_object = MathObject.place_holder()
                 break
-            elif calculator_controller.lean_mode:
-                # FIXME
-                target = target.toPlainText()
-                math_object = MathObject(node="RAW_LEAN_CODE",
-                                         info={'name': '(' + target + ')'},
-                                         children=[],
-                                         math_type=None)
+            elif cc.lean_mode:
+                lean_code = cc.current_target_wdg.toPlainText()
+                math_object = MathObject.raw_lean_code(lean_code)
             else:
-                # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
                 math_object = target.assigned_math_object
             math_objects.append(math_object)
-
-        # while len(targets) > 0 and targets[-1].is_place_holder():
-        #     targets.pop()
 
         math_objects = missing_output.initial_place_holders + math_objects
         return math_objects, OK
@@ -900,10 +922,10 @@ class CalculatorController:
         targets_window = self.targets_window
 
         t_bar = targets_window.toolbar
-        t_bar.rewind.triggered.connect(self.history_to_beginning)
+        t_bar.undo_all.triggered.connect(self.history_to_beginning)
         t_bar.undo_action.triggered.connect(self.history_undo)
         t_bar.redo_action.triggered.connect(self.history_redo)
-        t_bar.go_to_end.triggered.connect(self.history_to_end)
+        t_bar.redo_all.triggered.connect(self.history_to_end)
 
         n_bar = targets_window.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
@@ -911,7 +933,7 @@ class CalculatorController:
         # n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
         n_bar.end_action.triggered.connect(self.go_to_end)
-        targets_window.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
+        targets_window.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
     def __init_signals(self):
@@ -929,7 +951,7 @@ class CalculatorController:
         # n_bar.up_action.triggered.connect(self.move_up)
         n_bar.right_action.triggered.connect(self.move_right)
         n_bar.end_action.triggered.connect(self.go_to_end)
-        calc_ui.lean_mode_wdg.stateChanged.connect(self.set_lean_mode)
+        calc_ui.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
     def __init_histories(self):
@@ -957,7 +979,7 @@ class CalculatorController:
             self.calculator_ui.show()
 
     def targets_window_closed(self):
-        print("Targets wd closed")
+        # print("Targets wd closed")
         self.buttons_window.targets_window_is_closed = True
         self.buttons_window.close()
 
@@ -1025,12 +1047,15 @@ class CalculatorController:
             return self.target.math_cursor
 
     @Slot()
-    def set_lean_mode(self):
+    def toggle_lean_mode(self):
         self.current_target_wdg.lean_mode = self.lean_mode
-        if self.lean_mode:
-            self.set_target()
+        if not self.lean_mode:
+            # Leaving lean mode, set target as a MathObject from code
+            self.set_lean_target()
+            self.history_update()
         else:
-            self.set_target_and_update_ui()
+            # Entering Lean mode, modify display
+            self.set_target()
 
     @property
     def lean_mode(self) -> bool:
@@ -1098,6 +1123,32 @@ class CalculatorController:
     def redo_action(self):
         return self.toolbar.redo_action
 
+    @property
+    def undo_all(self):
+        return self.toolbar.undo_all
+
+    @property
+    def redo_all(self):
+        return self.toolbar.redo_all
+
+    def set_lean_target(self):
+        """
+        This method is called when self goes from lean_mode=True to
+        lean_mode=False.
+        """
+        # Lean code to MathObject
+        lean_code = self.current_target_wdg.toPlainText()
+        math_object_code = MathObject.raw_lean_code(lean_code)
+
+        # Set target
+        math_type = self.target.math_type
+        target = MarkedMetavar.from_mvar(MetaVar(math_type=math_type))
+        target.assigned_math_object = math_object_code
+
+        target.set_math_cursor()
+        target.math_cursor.go_to_end()
+        self.target = target
+
     @Slot()
     def set_target(self):
         self.current_target_wdg.setHtml(self.html_target)
@@ -1128,6 +1179,8 @@ class CalculatorController:
         self.end_action.setEnabled(not cursor.is_at_end())
         self.undo_action.setEnabled(self.history_idx > 0)
         self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
+        self.undo_all.setEnabled(self.history_idx > 0)
+        self.redo_all.setEnabled(self.history_idx < len(self.history) - 1)
 
         # Has usr filled-in enough targets?
         #  All place_holders must be at the end,
@@ -1295,6 +1348,17 @@ class CalculatorController:
         beforehand the pattern APP(g, ?) for every context function g.
         """
 
+        if not isinstance(pattern_s, list):
+            pattern_s = [pattern_s]
+
+        if self.lean_mode:
+            text_wdg = self.current_target_wdg
+            code = pattern_s[0].to_display(format_='lean')
+            text_wdg.insertPlainText(code)
+            self.set_lean_target()
+            self.history_update()
+            return
+
         new_target = self.target.deep_copy(self.target)
         # Do not affect marked_descendant:
         new_target.set_math_cursor(go_to_end=False)
@@ -1309,10 +1373,7 @@ class CalculatorController:
         # print(new_target.ordered_descendants(include_cursor=True))
 
         assigned_mvar = None
-        print(f"New target: {new_target}")
-
-        if not isinstance(pattern_s, list):
-            pattern_s = [pattern_s]
+        # print(f"New target: {new_target}")
 
         # (1) Normal insert
         for pattern in pattern_s:

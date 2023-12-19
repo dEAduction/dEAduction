@@ -220,6 +220,7 @@ class MathDisplay:
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
          "PLACE_HOLDER": (r'\place_holder',),
+         "RAW_LEAN_CODE": (display_name,)
          # "COMPOSITE_NUMBER": (0, 1),
          # "CURSOR": ('_', ),
          # "CLOSED_PARENTHESIS": (0,)

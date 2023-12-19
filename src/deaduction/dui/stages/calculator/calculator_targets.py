@@ -60,7 +60,7 @@ class CalculatorToolbar(AbstractToolBar):
         # TODO: implement tooltips for shortcuts
         undo_shortcut = QKeySequence.keyBindings(QKeySequence.Undo)[0].toString()
         redo_shortcut = QKeySequence.keyBindings(QKeySequence.Redo)[0].toString()
-        self.rewind = QAction(QIcon(str((icons_dir /
+        self.undo_all = QAction(QIcon(str((icons_dir /
                                     'goback-begining.png').resolve())),
                 _('Undo all'), self)
         self.undo_action = QAction(QIcon(str((icons_dir /
@@ -69,14 +69,14 @@ class CalculatorToolbar(AbstractToolBar):
         self.redo_action = QAction(QIcon(str((icons_dir /
                                          'redo_action.png').resolve())),
                 _('Redo'), self)
-        self.go_to_end = QAction(QIcon(str((icons_dir /
+        self.redo_all = QAction(QIcon(str((icons_dir /
                                             'go-end-96.png').resolve())),
                 _('Redo all'), self)
 
-        self.addAction(self.rewind)
+        self.addAction(self.undo_all)
         self.addAction(self.undo_action)
         self.addAction(self.redo_action)
-        self.addAction(self.go_to_end)
+        self.addAction(self.redo_all)
 
 
 class NavigationBar(AbstractToolBar):

@@ -590,6 +590,9 @@ class MathObject:
         Return a fake MathObject to encapsulate a piece of pure string Lean
         code.
         """
+
+        # TODO: remove all obviously unnecessary parentheses
+
         new_object = MathObject(node='RAW_LEAN_CODE',
                                 info={'name': '(' + code + ')'},
                                 children=[],
