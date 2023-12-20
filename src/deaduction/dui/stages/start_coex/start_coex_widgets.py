@@ -486,7 +486,7 @@ class CourseChooser(AbstractCoExChooser):
             if course:
                 self.add_browsed_course(course, browsed=True)
             else:
-                dialog = QMessageBox()
+                dialog = QMessageBox(title=_('File selector'))
                 dialog.setText(_("No file selected!\nSelect a '.lean' file"))
                 dialog.setIcon(QMessageBox.Warning)
                 dialog.exec_()
@@ -1177,16 +1177,19 @@ class AbstractStartCoEx(QDialog):
         yes_no_dialog = YesNoDialog()
         # (1st case) Delete all saved proofs for 1 file!
         if not exercise:
+            yes_no_dialog.setWindowTitle(_('Deleting all saved proofs?'))
             yes_no_dialog.setIcon(QMessageBox.Warning)
             yes_no_dialog.setText(_("This will delete ALL saved proofs for "
                                     "this file. Are you sure about this?"))
         # (2nd case) Delete all saved proofs for 1 exercise!
         elif not exercise.history_date():
+            yes_no_dialog.setWindowTitle(_('Deleting all saved proofs'))
             yes_no_dialog.setIcon(QMessageBox.Warning)
             yes_no_dialog.setText(_("This will delete ALL saved proofs for "
                                     "this exercise. Are you sure about this?"))
         # (3rd case) Delete one saved proof
         else:
+            yes_no_dialog.setWindowTitle(_('Deleting a saved proof'))
             yes_no_dialog.setText(_("Do you want to delete this saved proof?"))
 
         yes_no_dialog.exec_()

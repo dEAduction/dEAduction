@@ -1142,7 +1142,7 @@ class Coordinator(QObject):
                                              button_name="use_implies")
                     return user_action
                 elif ask_auto_premises:
-                    msg_box = QMessageBox()
+                    msg_box = QMessageBox(title=_("Prove premise?"))
                     msg_box.setText(_('Do you want to prove the premise "{}" '
                                       'as a new sub-goal?')
                                     .format(premise.to_display(format_='utf8')))
