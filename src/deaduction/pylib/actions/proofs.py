@@ -473,7 +473,7 @@ def action_new_object(proof_step) -> CodeForLean:
                                          output=_("Give a name for your "
                                                   "new object:"))
         elif len(user_input) == 2:
-            # Check name does not already exists
+            # Check name does not already exist
             name = pre_process_lean_code(user_input[1])
             names = [obj.display_name for obj in goal.context]
             if name in names:
@@ -484,7 +484,9 @@ def action_new_object(proof_step) -> CodeForLean:
                                              output=output)
             else:  # Ask for new object
                 # output = new_objects
+                new_name = user_input[1]
                 raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
+                                              new_name=new_nameœ,
                                               proof_step=proof_step)
                 # raise MissingParametersError(InputType.Calculator,
                 #                              title=_("Introduce a new object"),

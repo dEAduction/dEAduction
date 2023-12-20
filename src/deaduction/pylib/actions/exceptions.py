@@ -105,7 +105,7 @@ class MissingCalculatorOutput(MissingParametersError):
         @param proof_step:
         @param prop: a ContextMathObject (use prop.math_type).
         @param statement:
-        @param new_name:
+        @param new_name: name for a new object
         @param requested_type: type of object to enter
         """
         super().__init__(input_type=InputType.Calculator)
