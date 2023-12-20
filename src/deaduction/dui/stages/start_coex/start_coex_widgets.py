@@ -531,6 +531,8 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         self.course = course
         self.servint = servint
+        self.servint.initial_proof_state_set.connect(
+            self.__check_proof_state_for_preview)
 
         browser_layout = QVBoxLayout()
 
@@ -647,8 +649,6 @@ class ExerciseChooser(AbstractCoExChooser):
             main_widget_lyt.addLayout(btns_lyt)
             self.__main_widget_lyt = main_widget_lyt
         else:
-            self.servint.initial_proof_state_set.connect(
-                                        self.__check_proof_state_for_preview)
             # Try to get preview with high priority:
             exercise_ = (exercise if not exercise.original_exercise
                          else exercise.original_exercise)

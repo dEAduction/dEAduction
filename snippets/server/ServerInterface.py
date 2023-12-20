@@ -96,7 +96,6 @@ class ServerInterface(QObject):
         self.lean_file.redo()
         await self.__update()
 
-
     #####################
     # Lean instructions #
     #####################

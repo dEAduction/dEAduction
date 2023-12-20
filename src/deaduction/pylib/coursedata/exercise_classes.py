@@ -382,13 +382,16 @@ class Statement:
         open_namespaces = "\n".join(namespaces_lines)
         return open_namespaces + '\n'
 
-    def caption(self, is_exercise=False) -> str:
+    def caption(self, is_exercise=False, only_ips=True) -> str:
         """
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip).
         """
         if not self.initial_proof_state:
-            text = self.lean_core_statement
+            if only_ips:
+                text = ""
+            else:
+                text = self.lean_core_statement
         else:
             goal = self.initial_proof_state.goals[0]
             # target = goal.target

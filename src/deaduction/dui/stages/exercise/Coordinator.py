@@ -316,6 +316,8 @@ class Coordinator(QObject):
         self.set_definitions_for_implicit_use()
         # self.emw.ecw.statements_tree.update_tooltips()
 
+        self.emw.ecw.update_statements_tooltips()
+
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
         if not statements:

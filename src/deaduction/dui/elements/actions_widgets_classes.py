@@ -812,12 +812,18 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         if self.parent:
             return self.parent.is_exercise_list
 
-    def set_tooltip(self):
+    def set_tooltip(self, only_ips=True):
         """
         Set the math content of the statement as tooltip.
+        If the flag only_ips is True, then no tooltips are shown if the
+        initial proof states is not available. Otherwise the tooltip will
+        show the Lean code content of the statement.
         """
 
-        text = self.statement.caption(is_exercise=self.is_exercise)
+        text = self.statement.caption(is_exercise=self.is_exercise,
+                                      only_ips=only_ips)
+        if not text:
+            return
         # Prevent wrap mode
         text = "<p style='white-space:pre'>" + text
         self.setToolTip(0, text)
@@ -1115,7 +1121,7 @@ class StatementsTreeWidget(QTreeWidget):
         self.expand_node_timer = QTimer()
         self.expand_node_timer.timeout.connect(self.expand_current_node)
 
-        self.items: [QTreeWidgetItem] = [] # List of items
+        self.items: [QTreeWidgetItem] = []  # List of items
         self._init_tree(statements, outline)
         self.update_tooltips()
         # By default, drag and drop disabled. See _exercise_main_window_widgets.

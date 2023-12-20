@@ -194,6 +194,7 @@ class MathDisplay:
          "MULT": (0, r" \mul ", 1),
          "PRODUCT": (0, r" \times ", 1),
          "DIV": (0, r"/", 1),
+         "INV": (0, "\inverse"),
          "MINUS": ("-", 0),
          "POWER": ('', 0, [r'^', 1], ''),  # Paren for Calculator
          "SQRT": ('√', -1),
@@ -278,6 +279,7 @@ class MathDisplay:
         r'\proposition': 'Prop',
         r'\set': 'Type',
         r'\set_image': " '' ",
+        r'\inverse': "⁻¹",
         r'\set_inverse': " ⁻¹' ",
         r'\set_of_subsets': "set ",
         r'\if': "",
@@ -340,6 +342,7 @@ class MathDisplay:
             r'\leq': '≤',
             r'\geq': '≥',
             r'\set_inverse': ['^', '-1'],
+            r'\inverse': ['^', '-1'],
         }
 
         cls.latex_to_utf8_dic = {
@@ -571,6 +574,7 @@ class MathDisplay:
                   {'POINT'},  # FIXME: DECIMAL?
                   {'COMPOSITION'},
                   {'APPLICATION'},
+                  {'INV'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
                   {'MINUS'},
