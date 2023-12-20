@@ -1070,71 +1070,78 @@ class Coordinator(QObject):
         """
         Return a UserAction if some automatic_intro is on and there is a
         pertinent automatic action to perform. Automatic actions include:
-        (1) Intro of a variable when some context property if an
-        existential statement.
-        (2) Intro of premise when an implication appears in the context.
-        This happens only if premise is not obviously in the context.
-        The user is asked if OK.
-        (3) Intro of variables and hypotheses when target is a
+        (1) Destruction of an existential context property
+        (2) Destruction of a context conjunction
+        (3) Intro of the premise of a context implication
+        This happens only if premise is not obviously in the context, and not
+        equal to the target. The user is asked if OK.
+        (4) Intro of variables and hypotheses when target is a
         universal statement or an implication.
+
+        Each context prop should be examined once and for all:
+        if automatic action is not pertinent for a given context prop,
+        then automatic action will be turned off for all its descendant in
+        future proof_steps.
         """
 
         # Fixme: move this to a Goal method?
 
         target = goal.target
         pps = self.previous_proof_step
-
+        context_types = [p.math_type for p in goal.context_props]
+        context_premises = [p.premise() for p in goal.context_props]
         user_action = None
+
         # (1) Check automatic intro of existence hypos
         auto_exists = cvars.get("functionality.automatic_use_of_exists", True)
         if auto_exists:
             prop: ContextMathObject
             for prop in goal.context_props:
-                if (prop.is_exists() and prop.allow_auto_action
-                        and not pps.is_prove_exists_from_ctxt()):
-                    user_action = UserAction(selection=[prop],
-                                             button_name="use_exists")
-                    # Turn off auto_action for this prop:
-                    prop.turn_off_auto_action()
-                    return user_action
+                if prop.is_exists() and prop.allow_auto_action:
+                    prop.turn_off_auto_action()  # No more asking for this one
+                    if not pps.is_prove_exists_from_ctxt():
+                        user_action = UserAction(selection=[prop],
+                                                 button_name="use_exists")
+                        return user_action
 
         # (2) Check automatic intro of conjunction
         auto_and = cvars.get("functionality.automatic_use_of_and", True)
         if auto_and:
             prop: ContextMathObject
             for prop in goal.context_props:
-                if (prop.is_and() and prop.allow_auto_action
-                        and not pps.is_prove_and_from_ctxt()):
-                    user_action = UserAction(selection=[prop],
-                                             button_name="use_and")
-                    # Turn off auto_action for this prop:
-                    prop.turn_off_auto_action()
-                    return user_action
+                if prop.is_and() and prop.allow_auto_action:
+                    prop.turn_off_auto_action()  # No more asking for this one
+                    if pps.is_prove_and_from_ctxt():
+                        continue
+                    # Do not destruct prop if it is some context's premise:
+                    if prop.math_type not in context_premises:
+                        user_action = UserAction(selection=[prop],
+                                                 button_name="use_and")
+                        return user_action
 
         # (3) Check automatic intro of hypos' premises
         ask_auto_premises = cvars.get(
             "functionality.ask_to_prove_premises_of_implications", True)
-        context_types = [p.math_type for p in goal.context_props]
         for prop in goal.context_props:
             premise = prop.premise()  # None if prop is not an implication
             if premise and prop.allow_auto_action:
-                # (1) If premise is in context, do nothing unless
-                # it is an inequality,
-                # in which case add auto action without asking usr
+                prop.turn_off_auto_action()  # No more asking for this one
                 if premise == target.math_type:
+                    # If premise is target, no need to add it as a new goal!
                     continue
                 elif premise in context_types:
+                    # If premise is in context, do nothing unless
+                    # it is an inequality,
+                    # in which case add auto action without asking usr
                     if not premise.is_inequality(is_math_type=True):
                         continue
                     # Premise is an inequality in the context: do apply!
-                    prop.turn_off_auto_action()
                     index = context_types.index(premise)
                     context_premise = goal.context_props[index]
                     user_action = UserAction(selection=[context_premise, prop],
                                              button_name="use_implies")
                     return user_action
                 elif ask_auto_premises:
-                    prop.turn_off_auto_action()  # No more asking for this one
                     msg_box = QMessageBox()
                     msg_box.setText(_('Do you want to prove the premise "{}" '
                                       'as a new sub-goal?')
@@ -1167,6 +1174,13 @@ class Coordinator(QObject):
         emw.automatic_action is set to True so that emw knows about it,
         in particular TargetSelected will be true whatever.
         """
+
+        # Avoid automatic actions at start:
+        if self.proof_step.history_nb == 0:
+            for prop in goal.context_props:
+                prop.turn_off_auto_action()
+            return
+
         user_action = self.automatic_actions(goal)
         if user_action:
             self.emw.automatic_action = True
