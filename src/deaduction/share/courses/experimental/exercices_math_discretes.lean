@@ -448,8 +448,8 @@ PrettyName
 -- end
 
 
-lemma definition.produit_de_parties {A : set X} {B : set Y} {x:X} {y:Y} :
-(x,y) ∈ set.prod A B ↔ x ∈ A ∧ y ∈ B :=
+lemma definition.produit_de_parties {A : set X} {B : set Y} {a: X × Y}:
+a ∈ set.prod A B ↔ ∃x ∈ A, ∃y ∈ B, a= (x,y) :=
 /- dEAduction
 PrettyName
     Produit cartésien de deux parties
@@ -751,6 +751,9 @@ PrettyName
     Question 5
 -/ 
 begin
+    rw generalites.definition.double_inclusion, split,
+    intros x Hx,
+    hypo_analysis,
     todo,
 end
 

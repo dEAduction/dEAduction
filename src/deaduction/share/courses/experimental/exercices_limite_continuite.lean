@@ -98,6 +98,43 @@ PrettyName
   Généralités
 -/
 
+lemma theorem.archimedien : ∀ x:ℝ, ∃ n:ℕ, x < n
+:=
+/- dEAduction
+PrettyName
+  ℝ est archimédien
+-/
+begin
+  todo
+end
+
+lemma definition.inverse (a:ℝ)
+(HP1: a ≠ 0):
+a⁻¹ = 1/a
+:=
+/- dEAduction
+PrettyName
+  Définition de la fonction "inverse"
+-/
+begin
+  todo
+end
+
+
+lemma theorem.inverse_decroissante (a b:ℝ)
+(HP1: a > 0) (HP2:b > 0):
+a < b → b⁻¹ < a⁻¹ 
+:=
+/- dEAduction
+PrettyName
+  La fonction "inverse" renverse les inégalités
+-/
+begin
+  todo
+end
+
+-- #check real.exists_floor
+
 /-
 abs_pos : 0 < |a| ↔ a ≠ 0
 abs_mul x y : |x * y| = |x| * |y|
@@ -163,11 +200,26 @@ begin
   todo
 end
 
-lemma theorem.valeur_absolue :
+lemma theorem.valeur_absolue_de_positif :
 ∀ x : RealSubGroup,
-((0 ≤ x) → (abs x = x)) ∧ ((x ≤ 0) → (abs x = -x)) :=
+((0 ≤ x) → (abs x = x)) :=
+/- dEAduction
+PrettyName
+  Valeur absolue d'un nombre positif
+-/
 begin
-  intro x, split, exact abs_of_nonneg, exact abs_of_nonpos,
+  intro x, exact abs_of_nonneg,
+end
+
+lemma theorem.valeur_absolue_de_negatif :
+∀ x : RealSubGroup,
+((x ≤ 0) → (abs x = -x)) :=
+/- dEAduction
+PrettyName
+  Valeur absolue d'un nombre négatif
+-/
+begin
+  intro x, exact abs_of_nonpos,
 end
 
 lemma theorem.majoration_valeur_absolue :
@@ -208,8 +260,9 @@ end
 end valeur_absolue
 
 end generalites
-namespace suites
 
+
+namespace suites
 ------------------------------
 -- Définitions de la limite --
 ------------------------------
@@ -420,34 +473,6 @@ PrettyName
 
 
 -- namespace exemples
--- Ne fonctionnent pas : 
--- il faut manipuler des partie entières,
-
--- lemma exercise.limit_inverse :
--- converging_seq (λ n, 1/n)  := 
--- /- dEAduction
--- PrettyName
---   La suite des inverses des entiers est convergente.
--- Description
---   Un exemple très simple de limite.
---   Savez-vous trouver le bon "N" ?
--- -/
--- begin
---   todo,
--- end
-
--- lemma exercise.limit_racine :
--- limit_plus_infinity  (λ n,  n^(1/2))  := 
--- /- dEAduction
--- PrettyName
---   La suite des racines carrées des entiers tend vers l'infini.
--- Description
---   Un deuxième exemple, cette fois-ci avec une suite divergente.
--- -/
--- begin
---   todo,
--- end
--- end exemples
 
 
 lemma exercise.limit_constante 
@@ -464,6 +489,41 @@ Description
 begin
   todo,
 end
+
+lemma exercise.limit_inverse :
+converging_seq (λ n, n⁻¹)  := 
+/- dEAduction
+PrettyName
+  La suite des inverses des entiers est convergente.
+Description
+  Un exemple très simple de limite.
+  Savez-vous trouver le bon "N" ?
+-/
+begin
+  -- use (((0): @real)),
+  -- rw definitions.suites.definition.limit, intro ε, intro H1,
+  -- have H2 := @definitions.generalites.theorem.archimedien (((1): @real)/ε),
+  -- cases H2 with n H3,
+  -- use (n),
+  -- intro p, intro H5,
+  -- norm_num,
+  -- targets_analysis,
+  todo
+end
+
+-- lemma exercise.limit_racine :
+-- limit_plus_infinity  (λ n,  n^(1/2))  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite des racines carrées des entiers tend vers l'infini.
+-- Description
+--   Un deuxième exemple, cette fois-ci avec une suite divergente.
+-- -/
+-- begin
+--   todo,
+-- end
+-- end exemples
+
 
 lemma exercise.croissante_non_majoree
 (u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :

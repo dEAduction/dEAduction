@@ -220,6 +220,7 @@ match e with
 | `(has_mul.mul %%a %%b) := return ("MULT", [a, b]) -- TODO: distinguish types/numbers
 -- | `(%%a × %%b) := return ("PRODUCT", [a, b]) -- TODO: distinguish types/numbers
 | `(%%a / %%b) := return ("DIV", [a, b])
+| `(has_inv.inv %%a) := return ("INV", [a])
 | `(%%a ^ %%b) := return ("POWER", [a, b])
 | `(real.sqrt %%a) := return ("SQRT", [a])
 ------------------------------ Leaves with data ---------------------------
