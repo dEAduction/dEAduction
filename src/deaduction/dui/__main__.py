@@ -264,6 +264,7 @@ class InstallDependenciesStage(QObject):
     def really_quit(self, reason: str):
         # log.debug("really_quit")
         msg_box = QMessageBox()
+        msg_box.setWindowTitle('d∃∀duction')
         msg_box.setText(_("Quitting d∃∀duction"))
         msg_box.setInformativeText(reason)
         msg_box.exec()
@@ -405,6 +406,14 @@ def copy_lean_files_to_home():
         rmtree(str(usr_lean_src_dir), ignore_errors=True)
     copytree(str(lean_src_dir),
              str(usr_lean_src_dir),
+             ignore_dangling_symlinks=True)
+    # Copy autotests:
+    pkg_tests_dir = cdirs.pkg_tests_dir
+    usr_tests_dir = cdirs.usr_tests_dir
+    if usr_tests_dir.exists():
+        rmtree(str(usr_tests_dir), ignore_errors=True)
+    copytree(str(pkg_tests_dir),
+             str(usr_tests_dir),
              ignore_dangling_symlinks=True)
 
 

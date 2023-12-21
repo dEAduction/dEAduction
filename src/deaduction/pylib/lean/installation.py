@@ -53,10 +53,13 @@ class LeanEnvironment:
         #  the deaduction lean src.
         usr_dir = cdirs.usr_lean_exercises_dir
         usr_subdirs = [x for x in usr_dir.iterdir() if x.is_dir()]
-        paths = [(self.lean_path / "lib" / "lean" / "library").resolve(),
-                 (self.mathlib_path / "src").resolve(),
-                 cdirs.usr_lean_src_dir,
-                 usr_dir] + usr_subdirs + [cdirs.history.resolve()]
+        tests_dir = cdirs.usr_tests_dir
+        tests_subdirs = [x for x in tests_dir.iterdir() if x.is_dir()]
+        paths = ([(self.lean_path / "lib" / "lean" / "library").resolve(),
+                  (self.mathlib_path / "src").resolve(),
+                  cdirs.usr_lean_src_dir,
+                  usr_dir, tests_dir, cdirs.history.resolve()]
+                 + usr_subdirs + tests_subdirs)
 
         return paths
 

@@ -36,13 +36,15 @@ log = logging.getLogger(__name__)
 ############################################
 # Path objects
 ############################################
-pkg_dir  = (Path(__file__) / "../../../").resolve()
+pkg_dir = (Path(__file__) / "../../../").resolve()
 
 # Share paths
 share          = (pkg_dir / "share").resolve()
 icons          = (share / "graphical_resources" / "icons").resolve()
 courses        = (share / "courses").resolve()
 fonts          = (share / "fonts").resolve()
+pkg_tests_dir = (share / "autotests")
+lean_src_dir = (pkg_dir / "lean_src").resolve()
 
 # Home paths
 home     = Path.home()
@@ -58,8 +60,8 @@ history        = (local / "history").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
-lean_src_dir = (pkg_dir / "lean_src").resolve()
 usr_lean_src_dir = (local / "lean_src").resolve()
+usr_tests_dir = (local / "autotests")
 lean = local / "lean"
 mathlib = local / "mathlib"
 
