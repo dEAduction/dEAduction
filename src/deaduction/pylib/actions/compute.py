@@ -178,10 +178,8 @@ def action_transitivity(proof_step) -> CodeForLean:
     Try several transitivity lemma (the 'smart_trans' tactic), in particular
     chaining inequalities. This is a symmetric tactic.
     """
-    selected_objects = proof_step.selection
-    target_selected = proof_step.target_selected
 
-    # test_selection(selected_objects, target_selected)
+    selected_objects = proof_step.selection
 
     if len(selected_objects) != 2:
         raise WrongUseModeInput("Transitivity needs exactly two properties")
@@ -194,6 +192,7 @@ def action_transitivity(proof_step) -> CodeForLean:
     code.add_success_msg(_(f"Chaining {H0} and {H1} to get {new_hypo_name}"))
     error_msg = _("I cannot chain {} and {}").format(H0, H1)
     code.add_error_msg(error_msg)
+    code.add_used_properties(selected_objects[0:1])
     # code.add_error_msg(f"Use the + button for inequalities")
     return code
 
@@ -223,6 +222,7 @@ def action_commute(proof_step) -> CodeForLean:
         code.add_success_msg(msg)
         error_msg = _("I don't know how to apply commutation.")
         code.add_error_msg(error_msg)
+        # code.add_used_properties(selected_objects)   BOF
         return code
 
     else:
@@ -255,6 +255,7 @@ def action_associativity(proof_step) -> CodeForLean:
         code.add_success_msg(msg)
         error_msg = _("I don't know how to apply associativity.")
         code.add_error_msg(error_msg)
+        # code.add_used_properties(selected_objects)  BOF
         return code
 
     else:
@@ -297,6 +298,7 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     msg = _("Triangular inequality {} added to the context").format(new_hyp)
     code.add_success_msg(msg)
     code.add_error_msg(_("No absolute value found in {}").format(location))
+    # code.add_used_properties(selected_objects) BOF
     return code
 
 
