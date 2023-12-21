@@ -222,9 +222,6 @@ class MathDisplay:
          "GENERIC_NODE": (0, '¿', 1),
          "PLACE_HOLDER": (r'\place_holder',),
          "RAW_LEAN_CODE": (display_name,)
-         # "COMPOSITE_NUMBER": (0, 1),
-         # "CURSOR": ('_', ),
-         # "CLOSED_PARENTHESIS": (0,)
          }
 
     #####################
@@ -259,7 +256,8 @@ class MathDisplay:
         # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
         "NUMBER": (display_lean_value, ),
         "RAW_LEAN_CODE": (display_name, ),
-        'COMPOSITION': ('(', 0, r'\circ', 1, ')'),
+        # Beware to be coherent with definition statement:
+        'COMPOSITION': ('composition ', 0, ' ', 1),
         "POWER": ('', 0, [' ^ ', 1], '')
     }
     # (r'\{', 0, r'\}')
