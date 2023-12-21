@@ -266,7 +266,7 @@ lemma exercise.test_introduce_new_object
 /- dEAduction
 AutoTest
     new_object 0 z [ x ],
-    ∃ z
+    ∃ [ z ]
 -/
 begin
   todo

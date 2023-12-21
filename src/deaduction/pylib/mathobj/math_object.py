@@ -874,6 +874,38 @@ class MathObject:
 
         WARNING: this should probably not be used for bound variables.
         """
+        return self.is_equal_to(other,
+                                remove_generic_paren=False,
+                                use_assigned_math_obj=False)
+
+    def is_equal_to(self, other,
+                    remove_generic_paren=False,
+                    use_assigned_math_obj=False) -> bool:
+
+        ##########################################################
+        # Mod out by generic_parentheses / assigned_math_objects #
+        ##########################################################
+        mo0 = self
+        mo1 = other
+        if use_assigned_math_obj:
+            if hasattr(self, 'assigned_math_object'):
+                if self.assigned_math_object:
+                    mo0 = self.assigned_math_object
+            if hasattr(other, 'assigned_math_object'):
+                if other.assigned_math_object:
+                    mo1 = other.assigned_math_object
+
+        if remove_generic_paren:
+            if mo0.node == "GENERIC_PARENTHESES":
+                mo0 = self.children[0]
+            elif mo1.node == "GENERIC_PARENTHESES":
+                mo1 = other.children[0]
+
+        if (mo0 is not self) or (mo1 is not other):
+            test = mo0.is_equal_to(mo1,
+                                   remove_generic_paren=remove_generic_paren,
+                                   use_assigned_math_obj=use_assigned_math_obj)
+            return test
 
         # Successively test for
         #                           nodes
@@ -899,8 +931,16 @@ class MathObject:
         if (self.node, self.is_bound_var, self.name, self.value) != \
                 (other.node, other.is_bound_var, other.name, other.value):
             return False
-        if self.math_type != other.math_type:
+
+        # Test math_types
+        mt0 = self.math_type
+        mt1 = other.math_type
+        test = mt0.is_equal_to(mt1,
+                               remove_generic_paren=remove_generic_paren,
+                               use_assigned_math_obj=use_assigned_math_obj)
+        if not test:
             return False
+
         # BoundVar has an __eq__() method
         # if self.is_bound_var:
         #     if self.bound_var_nb() != other.bound_var_nb():
@@ -933,8 +973,13 @@ class MathObject:
                 # log.debug(f"Comparing {self} and {other}")
                 # log.debug(f"Marking BV {bound_var_1, bound_var_2}")
 
-            for child0, child1 in zip(self.children, other.children):
-                if child0 != child1:
+            # Test children
+            for ch0, ch1 in zip(self.children, other.children):
+                test = ch0.is_equal_to(ch1,
+                                       remove_generic_paren=remove_generic_paren,
+                                       use_assigned_math_obj=use_assigned_math_obj)
+
+                if not test:
                     # if self.node == 'PROP_≥':
                     #     log.debug(f"Distinct child: {child0} ")
                     #     log.debug(f"and {child1}")
@@ -947,6 +992,21 @@ class MathObject:
                 bound_var_2.unmark_bound_var()
 
             return equal
+
+    def is_in(self, others: [],
+              remove_generic_paren=False,
+              use_assigned_math_obj=False) -> bool:
+        """
+        True is self is in others, with the is_equal method instead of __eq__.
+        """
+
+        for other in others:
+            test = self.is_equal_to(other,
+                                    remove_generic_paren=remove_generic_paren,
+                                    use_assigned_math_obj=use_assigned_math_obj)
+            if test:
+                return True
+        return False
 
     def contains(self, other) -> int:
         """

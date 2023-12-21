@@ -283,7 +283,9 @@ def use_forall_with_ineq(proof_step, arguments,
     code = CodeForLean.empty_code()
 
     # (1) Try to prove inequality
-    if inequality in math_types:
+    if inequality.is_in(math_types,
+                        remove_generic_paren=True,
+                        use_assigned_math_obj=True):
         # Check if inequality is in context
         ineq_in_ctxt = True
         index = math_types.index(inequality)
