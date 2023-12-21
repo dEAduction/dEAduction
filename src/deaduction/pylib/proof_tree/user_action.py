@@ -1,5 +1,6 @@
 """
-# user_action.py : a class to store user actions in the UI #
+# user_action.py : a class to store user actions in the UI
+FIXME: this file is not used, see coursedata/auto_steps #
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr

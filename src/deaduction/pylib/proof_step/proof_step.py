@@ -374,6 +374,9 @@ class ProofStep:
     @button_name.setter
     def button_name(self, button_name):
         self.user_action.button_name = button_name
+        if self.statement:
+            log.warning("Both statement AND button_name for this "
+                        "proof_step.user_action")
 
     @property
     def statement(self):
@@ -382,6 +385,9 @@ class ProofStep:
     @statement.setter
     def statement(self, statement):
         self.user_action.statement = statement
+        if self.button_name:
+            log.warning("Both button_name AND statement for this "
+                        "proof_step.user_action")
 
     @property
     def user_input(self):
