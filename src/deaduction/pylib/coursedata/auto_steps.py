@@ -427,7 +427,10 @@ class AutoStep(UserAction):
 
         if not (button or statement):
             return None
-
+        elif button and statement:
+            log.warning("Bad ProofStep with both button AND statement")
+            log.debug("Removing statement")
+            statement = ''
         ######################################
         # Store user inputs: list of int/str #
         ######################################
