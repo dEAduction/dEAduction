@@ -486,7 +486,8 @@ class CourseChooser(AbstractCoExChooser):
             if course:
                 self.add_browsed_course(course, browsed=True)
             else:
-                dialog = QMessageBox(title=_('File selector'))
+                dialog = QMessageBox()  # title=_('File selector')
+                dialog.setWindowTitle(_('File selector') + '— d∃∀duction')
                 dialog.setText(_("No file selected!\nSelect a '.lean' file"))
                 dialog.setIcon(QMessageBox.Warning)
                 dialog.exec_()

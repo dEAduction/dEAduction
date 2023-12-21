@@ -1142,7 +1142,8 @@ class Coordinator(QObject):
                                              button_name="use_implies")
                     return user_action
                 elif ask_auto_premises:
-                    msg_box = QMessageBox(title=_("Prove premise?"))
+                    msg_box = QMessageBox()  # title=
+                    msg_box.setWindowTitle(_("Prove premise?"))
                     msg_box.setText(_('Do you want to prove the premise "{}" '
                                       'as a new sub-goal?')
                                     .format(premise.to_display(format_='utf8')))
@@ -1310,7 +1311,7 @@ class Coordinator(QObject):
                 and not self.proof_step.is_goto()\
                 and not self.test_mode\
                 and not self.history_mode:
-            title = _('Target solved')
+            title = _('Target solved' + " — d∃∀duction")
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self.emw)
             msg_box.setText(text)

@@ -50,7 +50,7 @@ class LeanEditor(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(_('Code sent to Lean'))
+        self.setWindowTitle(_('Code sent to Lean') + " — d∃∀duction")
         self.editor = QPlainTextEdit()
         self.send_btn = QPushButton(_('Send to L∃∀N'))
 

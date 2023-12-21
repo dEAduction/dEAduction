@@ -145,7 +145,7 @@ class HelpWindow(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle(_("Help"))
+        self.setWindowTitle(_("Help") + " — d∃∀duction")
         # Window stay on top of parent:
 
         nb = version_info[1]

@@ -428,6 +428,7 @@ class ConfigMainWindow(QDialog):
         if info:
             title = _("Wrong settings!")
             dialog = QMessageBox()
+            dialog.setWindowTitle('Settings)' + " — d∃∀duction")
             dialog.setText(title)
             dialog.setInformativeText(info)
             dialog.setIcon(QMessageBox.Warning)
