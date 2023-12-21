@@ -79,6 +79,7 @@ class CalculatorRequest(IntEnum):
     StateSubGoal = 3
     DefineObject = 4
     EnterObject = 5
+    EnterProp = 6
 
 
 class MissingCalculatorOutput(MissingParametersError):
@@ -100,13 +101,12 @@ class MissingCalculatorOutput(MissingParametersError):
                  new_name=None,
                  object_of_requested_math_type=None):
         """
-
         @param request_type:
         @param proof_step:
         @param prop: a ContextMathObject (use prop.math_type).
         @param statement:
         @param new_name: name for a new object
-        @param requested_type: type of object to enter
+        @param object_of_requested_math_type: type of object to enter
         """
         super().__init__(input_type=InputType.Calculator)
         self.request_type = request_type
@@ -133,6 +133,8 @@ class MissingCalculatorOutput(MissingParametersError):
             self.title = _("Introduce a new sub-goal")
         elif self.request_type is CalculatorRequest.EnterObject:
             self.title = _("Define an object")
+        elif self.request_type is CalculatorRequest.EnterProp:
+            self.title = _("Enter a property")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:
@@ -143,6 +145,8 @@ class MissingCalculatorOutput(MissingParametersError):
             title = _("Provide a witness for the existential property:")
         elif self.request_type is CalculatorRequest.StateSubGoal:
             title = _("State a new sub-goal:")
+        elif self.request_type is CalculatorRequest.EnterProp:
+            title = _("Enter a property:")
         elif self.request_type is CalculatorRequest.DefineObject:
             title = _("Introduce a new object: {} = ?").format(self.name)
         elif self.request_type is CalculatorRequest.EnterObject:
@@ -165,7 +169,8 @@ class MissingCalculatorOutput(MissingParametersError):
         if self.object_of_requested_math_type:
             # e.g. CalculatorRequest.EnterObject
             return self.object_of_requested_math_type.math_type
-        elif self.request_type is CalculatorRequest.StateSubGoal:
+        elif self.request_type in (CalculatorRequest.StateSubGoal,
+                                   CalculatorRequest.EnterProp):
             return self.MathObject.PROP
 
     def explicit_math_type_of_prop(self):
@@ -221,7 +226,9 @@ class MissingCalculatorOutput(MissingParametersError):
         titles = []
         if self.request_type in (CalculatorRequest.EnterObject,
                                  CalculatorRequest.StateSubGoal,
-                                 CalculatorRequest.DefineObject):
+                                 CalculatorRequest.DefineObject,
+                                 CalculatorRequest.EnterProp
+                                 ):
             types = [self.target_type()]
             titles = []  # No individual title
 

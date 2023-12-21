@@ -395,7 +395,7 @@ class CalculatorAllButtons(QWidget):
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
         self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
-        self.setWindowTitle(_("Logical Calculator"))
+        self.setWindowTitle(_("Logical Calculator") + " — d∃∀duction")
         # self.setFocusPolicy(Qt.NoFocus)  --> Buttons cannot be clicked!
         self.buttons_groups = []
         # Clear ancient shortcuts!!

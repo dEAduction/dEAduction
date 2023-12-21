@@ -1008,44 +1008,45 @@ def prove_or_on_hyp(proof_step,
             error = _("Selected items are not properties")
             raise WrongUserInput(error)
         else:
-            second_selected_property = selected_property[1]
-            second_name = second_selected_property.info["name"]
-            second_lean_code = \
-                second_selected_property.math_type.to_display(format_='lean')
+            selected_prop_2 = selected_property[1]
+            # second_name = selected_prop_2.info["name"]
+            lean_code_2 = selected_prop_2.math_type.to_display(format_='lean')
+            user_input.append(0)  # Artificially choose side
+
     elif len(selected_property) == 1:
         if not selected_property[0].math_type.is_prop():
             error = _("Selected item is not a property")
             raise WrongUserInput(error)
-        if not user_input:  # User has to choose 2nd property
+        if not user_input:  # User has to choose side
             raise MissingParametersError(
-                InputType.Text,
+                InputType.Choice,
+                [(_("Left"),
+                  f'({first_hypo_name}) OR ...'),
+                 (_('Right'),
+                  f'... OR ({first_hypo_name})')],
                 title=_("Obtain 'P OR Q'"),
-                output=_("Enter the property you want to use:"))
+                output=_(
+                    f'On which side do you want') + f' {first_hypo_name} ?')
+        elif len(user_input) == 1:  # Usr has to enter 2nd property
+            raise MissingCalculatorOutput(CalculatorRequest.EnterProp,
+                                          proof_step)
+            # raise MissingParametersError(
+            #     InputType.Text,
+            #     title=_("Obtain 'P OR Q'"),
+            #     output=_("Enter the property you want to use:"))
         else:
-            second_name = user_input[0]
-            second_lean_code = second_name
-            user_input = user_input[1:]
-
-    if not user_input:  # Usr still has to choose side
-        # FIXME: raise Calculator
-        raise MissingParametersError(
-            InputType.Choice,
-            [(_("Left"),
-              f'({first_hypo_name}) OR ({second_name})'),
-             (_('Right'),
-              f'({second_name}) OR ({first_hypo_name})')],
-            title=_("Obtain 'P OR Q'"),
-            output=_(f'On which side do you want') + f' {first_hypo_name} ?')
+            prop_2 = user_input[1][0]
+            lean_code_2 = prop_2.to_display(format_='lean')
 
     new_hypo_name = get_new_hyp(proof_step)
     # Mind Lean syntax: @or.inl P Q HP ; @or.inr P Q HQ
     if user_input[0] == 0:
         possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inl _ ({second_lean_code}) '
+                              f'@or.inl _ ({lean_code_2}) '
                               f'({first_hypo_name})')
     elif user_input[0] == 1:
         possible_codes.append(f'have {new_hypo_name} := '
-                              f'@or.inr ({second_lean_code}) _ '
+                              f'@or.inr ({lean_code_2}) _ '
                               f'({first_hypo_name})')
     else:
         raise WrongUserInput("Unexpected error")
