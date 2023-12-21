@@ -992,6 +992,16 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         log.debug(f"Right descendants: {rd}")
         return rd
 
+    def leaf_just_before_cursor(self):
+        left_descendants = self.left_descendants()
+        if left_descendants:
+            return left_descendants[-1]
+
+    def leaf_just_after_cursor(self):
+        right_descendants = self.right_descendants()
+        if right_descendants:
+            return right_descendants[0]
+
     def appears_left_of_cursor(self, other) -> bool:
         """
         True iff there is an item on the left of cursor whose
@@ -1515,7 +1525,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         return True
 
-    def insert_if_you_can(self, new_pmo, mvar, parent_mvar=None,
+    def insert_if_you_can(self, new_pmo, mvar,  # parent_mvar=None,
                           check_types=False, old_target=None):
         """
         Try to insert new_pmo at mvar.
@@ -1532,8 +1542,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         assert isinstance(new_pmo, MarkedPatternMathObject)
         assert isinstance(mvar, MarkedMetavar)
-        if parent_mvar:
-            assert isinstance(parent_mvar, MarkedPatternMathObject)
+        # if parent_mvar:
+        #     assert isinstance(parent_mvar, MarkedPatternMathObject)
 
         left = self.appears_left_of_cursor(mvar)
         right = self.appears_right_of_cursor(mvar)
@@ -1541,7 +1551,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         pmo_display = new_pmo.to_display(format_='utf8')
         log.debug(f"Trying to insert {pmo_display} at {mvar}")
         log.debug(f"left/right of cursor = {left, right}")
-        log.debug(f"Parent mvar = {parent_mvar}")
+        # log.debug(f"Parent mvar = {parent_mvar}")
 
         ######################
         # (A) Priority tests #
@@ -1609,7 +1619,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             parent_mvar = self.parent_of(mvar)
 
             while mvar:
-                success = self.insert_if_you_can(new_pmo_copy, mvar, parent_mvar)
+                success = self.insert_if_you_can(new_pmo_copy, mvar)
                 if success:
                     return mvar
 
@@ -1795,7 +1805,11 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         new_pmo_value = new_pmo.value if new_pmo.node == 'NUMBER' else '.'
 
-        for mvar in (self.marked_descendant(), self.on_the_other_side()):
+        # for mvar in (self.marked_descendant(), self.on_the_other_side()):
+        mvars = [self.leaf_just_before_cursor(), self.leaf_just_after_cursor()]
+        if not self.cursor_is_after_marked_descendant():
+            mvars.reverse()
+        for mvar in mvars:
             if not mvar:
                 continue
             number = mvar.assigned_math_object
@@ -1862,8 +1876,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # (1) Unassigned children mvar?
         for child in assigned_mvar.ordered_children():
-            # FIXME: MarkedMetavar has no "ordered_descendants"??
-        # for child in assigned_mvar.ordered_descendant():
             if child.is_metavar() and not child.is_assigned:
                 math_cursor.go_to(child)
                 return
