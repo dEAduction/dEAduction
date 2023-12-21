@@ -193,57 +193,59 @@ end maximum
 namespace valeur_absolue
 variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup] 
 
-lemma definition.valeur_absolue (a b : RealSubGroup) :
+lemma definition.valeur_absolue
+(a b : RealSubGroup) :
 a = abs b ↔ (a ≥ 0 ∧ (a=b ∨ a=-b))
 :=
 begin
   todo
 end
 
-lemma theorem.valeur_absolue_de_positif :
-∀ x : RealSubGroup,
+lemma theorem.valeur_absolue_de_positif
+(x : RealSubGroup) :
 ((0 ≤ x) → (abs x = x)) :=
 /- dEAduction
 PrettyName
   Valeur absolue d'un nombre positif
 -/
 begin
-  intro x, exact abs_of_nonneg,
+  exact abs_of_nonneg,
 end
 
-lemma theorem.valeur_absolue_de_negatif :
-∀ x : RealSubGroup,
+lemma theorem.valeur_absolue_de_negatif
+(x : RealSubGroup) :
 ((x ≤ 0) → (abs x = -x)) :=
 /- dEAduction
 PrettyName
   Valeur absolue d'un nombre négatif
 -/
 begin
-  intro x, exact abs_of_nonpos,
+  exact abs_of_nonpos,
 end
 
-lemma theorem.majoration_valeur_absolue :
-∀ x r : RealSubGroup, (abs x < r) ↔ ((-r < x) ∧ (x < r))
+lemma theorem.majoration_valeur_absolue
+(x r : RealSubGroup):
+(abs x < r) ↔ ((-r < x) ∧ (x < r))
 := 
 /- dEAduction
 PrettyName
   Majoration d'une valeur absolue
 -/
 begin
-  intros x r,
   exact abs_lt
 end
 
 
-lemma theorem.inegalite_triangulaire :
-∀ x y : RealSubGroup, |x + y| ≤ |x| + |y|
+lemma theorem.inegalite_triangulaire
+(x y : RealSubGroup):
+|x + y| ≤ |x| + |y|
 := 
 /- dEAduction
 PrettyName
   Inégalité triangulaire
 -/
 begin
-  intros x y, exact abs_add x y 
+  exact abs_add x y 
 end
 
 lemma theorem.valeur_absolue_produit :
@@ -494,7 +496,7 @@ lemma exercise.limit_inverse :
 converging_seq (λ n, n⁻¹)  := 
 /- dEAduction
 PrettyName
-  La suite des inverses des entiers est convergente.
+  (**) La suite des inverses des entiers est convergente.
 Description
   Un exemple très simple de limite.
   Savez-vous trouver le bon "N" ?

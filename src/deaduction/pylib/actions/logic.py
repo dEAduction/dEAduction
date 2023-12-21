@@ -1628,7 +1628,7 @@ def action_equal(proof_step) -> CodeForLean:
 
 def apply_map_to_element(proof_step,
                          map_: MathObject,
-                         var_name: str,
+                         var_: MathObject,
                          other_names=None):
     """
     Return Lean code to apply map_ to element.
@@ -1642,6 +1642,7 @@ def apply_map_to_element(proof_step,
     if other_names is None:
         other_names = []
     map_name = map_.info["name"]
+    var_name = var_.to_display(format_='lean')
     # if isinstance(element, MathObject):
     #     x = element.info["name"]
     # elif isinstance(element, str):
@@ -1657,8 +1658,8 @@ def apply_map_to_element(proof_step,
     msg = _("New objet {} added to the context").format(name)
     # code = CodeForLean.from_string(f"set {name} := {f} {x} with {new_h}",
     #                                success_msg=msg)
-    codes = CodeForLean.from_string(f"let {name} := {map_name} {var_name}")
-    codes = codes.and_then(f"have {new_h} : {name} = {map_name} {var_name}")
+    codes = CodeForLean.from_string(f"let {name} := {map_name} ({var_name})")
+    codes = codes.and_then(f"have {new_h} : {name} = {map_name} ({var_name})")
     codes = codes.and_then("refl")
     codes.operator = map_
     codes.success_msg = msg
@@ -1692,7 +1693,7 @@ def apply_function(proof_step, map_, arguments: [MathObject]):
         else:
             # Function applied to element x:
             #   create new element y and new equality y=f(x)
-            x = arguments[0].info["name"]
+            x = arguments[0]
             codes = codes.and_then(apply_map_to_element(proof_step,
                                                         map_,
                                                         x,
@@ -1726,21 +1727,26 @@ def action_map(proof_step) -> CodeForLean:
     for i in range(len(selected_objects)):
         math_object = selected_objects[i]
         if math_object.is_function():
+            math_type = math_object.math_type.children[0]
             if len(selected_objects) == 1:
                 # A function, but no other object:
                 if not user_input:
-                    name = math_object.display_name
-                    output = _("Enter element on which you want to apply "
-                               "the map {}:").format(name)
-                    raise MissingParametersError(InputType.Text,
-                                                 title=_("Apply a function"),
-                                                 output=output)
+                    raise MissingCalculatorOutput(
+                        CalculatorRequest.ApplyFunction,
+                        proof_step=proof_step,
+                        object_of_requested_math_type=math_type)
+                    # name = math_object.display_name
+                    # output = _("Enter element on which you want to apply "
+                    #            "the map {}:").format(name)
+                    # raise MissingParametersError(InputType.Text,
+                    #                              title=_("Apply a function"),
+                    #                              output=output)
                 else:
                     # Apply function to user input:
-                    x = user_input[0]
+                    x = user_input[0][0]
                     code = apply_map_to_element(proof_step,
                                                 map_=math_object,
-                                                var_name=x)
+                                                var_=x)
 
                     return code
             else:

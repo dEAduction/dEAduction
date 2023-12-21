@@ -220,7 +220,7 @@ def method_case_based(proof_step,
             #      title=_("cases"),
             #      output=_("Enter the property you want to discriminate on:")
             #                             )
-            raise MissingCalculatorOutput(CalculatorRequest.StateSubGoal,
+            raise MissingCalculatorOutput(CalculatorRequest.ProofByCases,
                                           proof_step=proof_step)
 
             # raise MissingParametersError(InputType.Calculator,

@@ -77,9 +77,11 @@ class CalculatorRequest(IntEnum):
     ApplyStatement = 1
     ProveExists = 2
     StateSubGoal = 3
+    EnterProp = 31
+    ProofByCases = 32
     DefineObject = 4
-    EnterObject = 5
-    EnterProp = 6
+    EnterObject = 41
+    ApplyFunction = 42
 
 
 class MissingCalculatorOutput(MissingParametersError):
@@ -131,10 +133,14 @@ class MissingCalculatorOutput(MissingParametersError):
             self.title = _("Introduce the new object {}").format(new_name)
         elif self.request_type is CalculatorRequest.StateSubGoal:
             self.title = _("Introduce a new sub-goal")
-        elif self.request_type is CalculatorRequest.EnterObject:
-            self.title = _("Define an object")
         elif self.request_type is CalculatorRequest.EnterProp:
             self.title = _("Enter a property")
+        elif self.request_type is CalculatorRequest.ProofByCases:
+            self.title = _("Proof by cases")
+        elif self.request_type is CalculatorRequest.EnterObject:
+            self.title = _("Define an object")
+        elif self.request_type is CalculatorRequest.ApplyFunction:
+            self.title = _("Apply a function")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:
@@ -145,7 +151,13 @@ class MissingCalculatorOutput(MissingParametersError):
             title = _("Provide a witness for the existential property:")
         elif self.request_type is CalculatorRequest.StateSubGoal:
             title = _("State a new sub-goal:")
-        elif self.request_type is CalculatorRequest.EnterProp:
+        elif self.request_type is CalculatorRequest.ApplyFunction:
+            title = _("Enter the element of {} on which the function will be "
+                      "applied:")
+            title = title.format(self.object_of_requested_math_type,
+                                 self.name)
+        elif self.request_type in (CalculatorRequest.EnterProp,
+                                   CalculatorRequest.ProofByCases):
             title = _("Enter a property:")
         elif self.request_type is CalculatorRequest.DefineObject:
             title = _("Introduce a new object: {} = ?").format(self.name)
@@ -170,7 +182,8 @@ class MissingCalculatorOutput(MissingParametersError):
             # e.g. CalculatorRequest.EnterObject
             return self.object_of_requested_math_type.math_type
         elif self.request_type in (CalculatorRequest.StateSubGoal,
-                                   CalculatorRequest.EnterProp):
+                                   CalculatorRequest.EnterProp,
+                                   CalculatorRequest.ProofByCases):
             return self.MathObject.PROP
 
     def explicit_math_type_of_prop(self):
@@ -225,9 +238,11 @@ class MissingCalculatorOutput(MissingParametersError):
         types = []
         titles = []
         if self.request_type in (CalculatorRequest.EnterObject,
+                                 CalculatorRequest.ApplyFunction,
                                  CalculatorRequest.StateSubGoal,
                                  CalculatorRequest.DefineObject,
-                                 CalculatorRequest.EnterProp
+                                 CalculatorRequest.EnterProp,
+                                 CalculatorRequest.ProofByCases
                                  ):
             types = [self.target_type()]
             titles = []  # No individual title
