@@ -486,7 +486,7 @@ def action_new_object(proof_step) -> CodeForLean:
                 # output = new_objects
                 new_name = user_input[1]
                 raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
-                                              new_name=new_nameœ,
+                                              new_name=new_name,
                                               proof_step=proof_step)
                 # raise MissingParametersError(InputType.Calculator,
                 #                              title=_("Introduce a new object"),
