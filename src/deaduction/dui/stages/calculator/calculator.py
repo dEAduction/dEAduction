@@ -82,7 +82,7 @@ from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject
                                                          CalculatorPatternLines)
 
 # from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
-from deaduction.dui.primitives import DisclosureTriangle
+from deaduction.dui.primitives import DisclosureTitleWidget
 
 from deaduction.dui.stages.calculator.calculator_targets import (
     CalculatorTarget, CalculatorTargets)
@@ -195,37 +195,6 @@ class NavigationBar(AbstractToolBar):
         self.addAction(self.right_action)
         self.addAction(self.end_action)
         self.addAction(self.delete)
-
-
-class DisclosureTitleWidget(QLabel):
-    hidden_triangle = "<b>▷ </b>"
-    shown_triangle = "<b>▽ </b>"
-    # ► ▼
-
-    clicked = Signal()
-
-    def __init__(self, title, hidden=False):
-        super().__init__()
-        # self.setFocusPolicy(Qt.NoFocus)
-        self.title = title
-        self.hidden = hidden
-        self.set_text()
-
-    def set_text(self):
-        title = '<b>' + self.title + '</b>'
-        text = (self.hidden_triangle + title if self.hidden
-                else self.shown_triangle + title)
-        self.setText(text)
-
-    def set_hidden(self, hidden=None):
-        if hidden is None:
-            self.hidden = not self.hidden
-        else:
-            self.hidden = hidden
-        self.set_text()
-
-    def mousePressEvent(self, event):
-        self.clicked.emit()
 
 
 class CalculatorButtonsGroup(QWidget):

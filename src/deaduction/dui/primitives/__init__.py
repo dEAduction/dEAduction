@@ -32,4 +32,4 @@ from .yes_no_dialog       import YesNoDialog
 from .font_config         import deaduction_fonts
 from .base_math_widgets_styling import (MathLabel, MathItem, MathTextWidget,
                                         GoalTextWidget)
-from .disclosure_triangle import DisclosureTriangle
+from .disclosure_triangle import DisclosureTriangle, DisclosureTitleWidget
