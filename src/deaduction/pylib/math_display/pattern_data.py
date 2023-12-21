@@ -339,17 +339,11 @@ lean_from_pattern_string = {
     "QUANT_∃(?0: !set ?3, ?1, ?2)":
         (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
-        # ("toto",),
-        # FIXME: the following crashes!!!
-        # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
-        # (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
-        # (r"\{", local_constant_shape, ['_', (1,)], ', ',
-        #  (1,), r"\in_symbol", (0,), r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
-        ('lam ', ),   # FIXME
+        ('λ', (1, ),  ', ', (2, )),
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
-        ('lam ', ),   # FIXME
+        ('λ', (1, ),  ', ', (2, )),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'real',)
 }
