@@ -1311,7 +1311,7 @@ class Coordinator(QObject):
                 and not self.proof_step.is_goto()\
                 and not self.test_mode\
                 and not self.history_mode:
-            title = _('Target solved' + " — d∃∀duction")
+            title = _('Target solved') + " — d∃∀duction"
             text = _('The proof is complete!')
             msg_box = QMessageBox(parent=self.emw)
             msg_box.setText(text)

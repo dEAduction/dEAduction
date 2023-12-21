@@ -340,7 +340,7 @@ class CalculatorTargets(QDialog):
             titles += [None]*(len(target_types) - len(titles))
 
         super().__init__()
-        self.setWindowTitle(window_title)
+        self.setWindowTitle(window_title + " — d∃∀duction")
         self.setWindowModality(Qt.WindowModal)
         # self.setWindowModality(Qt.NonModal)
 
