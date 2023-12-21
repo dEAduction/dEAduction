@@ -552,6 +552,10 @@ class ExerciseCentralWidget(QWidget):
         new_props = new_goal.context_props
         self.objects_wgt.set_math_objects(new_objects)
         self.props_wgt.set_math_objects(new_props)
+        if new_goal.new_objects:
+            self.objects_wgt.scrollToBottom()
+        if new_goal.new_props:
+            self.props_wgt.scrollToBottom()
 
         pgn = len(pending_goals)
         self.target_wgt.replace_target(new_target)

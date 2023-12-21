@@ -148,7 +148,9 @@ class Goal:
     def context(self):
         """
         Return only non-hidden ContextMathObjects, except if include_hidden.
+        Remove double properties.
         """
+
         return [obj for obj in self._context if not obj.is_hidden]
 
     @context.setter
@@ -191,9 +193,20 @@ class Goal:
 
     @property
     def context_props(self) -> [ContextMathObject]:
-        if self.context is not None:
-            props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
-            return props
+        if self.context is None:
+            return
+
+        props = []
+        prop_types = []
+        for obj in self._context:
+            if ((not obj.math_type.is_prop()) or obj.is_hidden
+                    or obj.math_type in prop_types):
+                pass
+            else:
+                props.append(obj)
+                prop_types.append(obj.math_type)
+
+        return props
 
     @property
     def new_context(self):
@@ -203,6 +216,24 @@ class Goal:
         """
         if self.context is not None:
             return [cmo for cmo in self.context if cmo.is_new]
+
+    @property
+    def new_props(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        if self.context_props is not None:
+            return [cmo for cmo in self.context_props if cmo.is_new]
+
+    @property
+    def new_objects(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        if self.context_objects is not None:
+            return [cmo for cmo in self.context_objects if cmo.is_new]
 
     @property
     def modified_context(self):
