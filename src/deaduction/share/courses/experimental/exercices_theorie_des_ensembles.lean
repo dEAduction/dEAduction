@@ -815,28 +815,29 @@ PrettyName
     (+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties
 -/
 begin
-    by_contradiction H14,
-    let A := {x | x ∉ f x}, have H15 : A = {x | x ∉ f x}, refl,
-    rw theorie_des_ensembles.applications_II.definitions.definition.surjectivite at H14,
-    have H16 := H14 A,
-    cases H16 with x H17,
-    cases (classical.em (x dans A)) with H22 H23,
-    {
-        have H22b: x ∉ A,
-        rw H15 at H22,
-        rw generalites.definition.ensemble_extension at H22,
-        rw H17, assumption,
-        contradiction,
-    },
-    {
-        have H22b: x ∈ A,
-        rw H15 at H23,
-        -- simp only[ensemble_extension] at H23,
-        rw generalites.definition.ensemble_extension at H23,
-        push_neg at H23,
-        rw H17, assumption,
-        contradiction
-    }
+    -- by_contradiction H14,
+    -- let A := {x | x ∉ f x}, have H15 : A = {x | x ∉ f x}, refl,
+    -- rw theorie_des_ensembles.applications_II.definitions.definition.surjectivite at H14,
+    -- have H16 := H14 A,
+    -- cases H16 with x H17,
+    -- cases (classical.em (x ∈ A)) with H22 H23,
+    -- {
+    --     have H22b: x ∉ A,
+    --     rw H15 at H22,
+    --     rw generalites.definition.ensemble_extension at H22,
+    --     rw H17, assumption,
+    --     contradiction,
+    -- },
+    -- {
+    --     have H22b: x ∈ A,
+    --     rw H15 at H23,
+    --     -- simp only[ensemble_extension] at H23,
+    --     rw generalites.definition.ensemble_extension at H23,
+    --     push_neg at H23,
+    --     rw H17, assumption,
+    --     contradiction
+    -- }
+    todo
 end
 
 

@@ -751,9 +751,9 @@ PrettyName
     Question 5
 -/ 
 begin
-    rw generalites.definition.double_inclusion, split,
-    intros x Hx,
-    hypo_analysis,
+    -- rw generalites.definition.double_inclusion, split,
+    -- intros x Hx,
+    -- hypo_analysis,
     todo,
 end
 
