@@ -1405,9 +1405,10 @@ class CalculatorController:
             assigned_mvar.adjust_type_of_assigned_math_object()
             self.target = new_target
             # self.check_new_bound_var(assigned_mvar)
-            was_at_end = (self.target.math_cursor.is_at_end()
-                          or self.target.marked_descendant() ==
-                          self.target.ordered_descendants()[-1])
+            # was_at_end = (self.target.math_cursor.is_at_end()
+            #               or self.target.marked_descendant() ==
+            #               self.target.ordered_descendants()[-1])
+            was_at_end = self.target.math_cursor.is_at_end()
             self.target.move_after_insert(assigned_mvar,
                                           was_at_end=was_at_end)
             self.history_update()

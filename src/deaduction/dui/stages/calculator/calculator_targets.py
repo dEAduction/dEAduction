@@ -145,6 +145,9 @@ class CalculatorTarget(MathTextWidget):
     kbd events are intercepted and serve as shorcuts from buttons. All input
     come from the buttons.
     """
+
+    key_event_item_interval = 1000
+
     def __init__(self):
         super().__init__()
         self.set_highlight(True)
@@ -154,12 +157,14 @@ class CalculatorTarget(MathTextWidget):
         self.setLineWrapMode(QTextEdit.NoWrap)
         # self.setLineWrapColumnOrWidth(10000)
 
-        self.key_event_buffer = ""
         self.navigation_bar = None
         self.toolbar = None
         self.button_box = None
 
+        # Set key_event_buffer and timer
+        self.key_event_buffer = ""
         self.key_buffer_timer = QTimer()
+        self.key_buffer_timer.setInterval(self.key_event_item_interval)
         self.key_buffer_timer.setSingleShot(True)
         self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
 
@@ -190,7 +195,6 @@ class CalculatorTarget(MathTextWidget):
             super().keyPressEvent(event)
             return
 
-        self.key_buffer_timer.setInterval(1000)
         self.key_buffer_timer.start()
 
         key = event.key()
@@ -212,8 +216,9 @@ class CalculatorTarget(MathTextWidget):
         if key_sequence == QKeySequence("Return"):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
         elif key_sequence == QKeySequence("Space"):
-            self.key_buffer_timer.stop()
             self.key_buffer_timeout()
+            event.ignore()
+            return
 
         # QAction key sequences
         action = None
@@ -269,6 +274,9 @@ class CalculatorTarget(MathTextWidget):
 
     @Slot()
     def key_buffer_timeout(self):
+        if self.key_buffer_timer.isActive():
+            self.key_buffer_timer.stop()
+
         CalculatorButton.process_key_events(self.key_event_buffer,
                                             timeout=True)
         self.key_event_buffer = ""
