@@ -637,6 +637,7 @@ class Coordinator(QObject):
                     break
 
                 self.statusBar.erase()
+                self.statusBar.stop_timer()
                 self.freeze()  # DO NOT forget to unfreeze at the end.
 
                 ########################

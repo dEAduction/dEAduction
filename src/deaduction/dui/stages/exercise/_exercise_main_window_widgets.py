@@ -593,6 +593,8 @@ class ExerciseStatusBar(QStatusBar):
 
         # Pending msgs
         self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.show_pending_msgs)
         # self.pending_msgs = []
         self.proof_msg: callable = None  # This will be set from outside
 
@@ -657,6 +659,7 @@ class ExerciseStatusBar(QStatusBar):
         display on top of the usual success/error msgs.
         """
 
+        self.erase()
         proof_msg = self.proof_msg()
         if proof_msg:
             self.show_normal_msg(proof_msg)
@@ -687,6 +690,11 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
         self.set_message(msg)
 
+    def stop_timer(self):
+        # print(f"Timer remaining {self.timer.remainingTime()}, stopped?")
+        if self.timer.isActive():
+            self.timer.stop()
+
     def manage_msgs(self, proof_step):
         """
         Display a message in the status bar. Three kinds of messages are
@@ -697,8 +705,8 @@ class ExerciseStatusBar(QStatusBar):
         - success and error msgs are temporary msgs.
         """
 
-        if self.timer.isSingleShot():
-            self.timer.stop()
+        self.stop_timer()
+
         # self.enable_msgs()
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
@@ -720,16 +728,20 @@ class ExerciseStatusBar(QStatusBar):
         # Show proof msg if any:
         if tmp_msg:
             duration = self.pending_msg_time_interval
-            self.timer.singleShot(duration, self.show_pending_msgs)
+            self.timer.setInterval(duration)
+            # self.timer.singleShot(duration, self.show_pending_msgs)
+            self.timer.start()
         else:  # Show immediately
             self.show_pending_msgs()
 
     def show_tmp_msg(self, msg: str, duration=None):
         if not duration:
             duration = self.pending_msg_time_interval
+        self.timer.setInterval(duration)
         self.set_message(msg)
-        self.timer.singleShot(duration, self.erase)
-        self.timer.singleShot(duration, self.show_pending_msgs)
+        self.timer.start()
+        # self.timer.singleShot(duration, self.erase)
+        # self.timer.singleShot(duration, self.show_pending_msgs)
 
 
 class ExerciseToolBar(QToolBar):
