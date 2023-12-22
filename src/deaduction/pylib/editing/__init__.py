@@ -211,6 +211,21 @@ class VirtualFile:
 
         self.history[-1].cursor_pos = self.current_pos
 
+    def find_first_insertion_of(self, text):
+        """
+        Find the first time that text was contained in inserted text,
+        and return the inserted text (or "" if not found).
+        """
+
+        inserted_text = ""
+        for idx in range(self.idx):
+            entry_dict = self.history[idx].misc_info
+            inserted_text = entry_dict.get('inserted_text', '')
+            if inserted_text.find(text) != -1:
+                break
+
+        return inserted_text
+
     ################################
     # Actions
     ################################
@@ -218,9 +233,8 @@ class VirtualFile:
         """
         Inserts text at cursor position, and update cursor position.
 
-        :param lbl:         Label of the history entry of this modification
+        :param label:         Label of the history entry of this modification
         :param add_txt:     The text to insert at the given cursor position
-        :param misc_info:   Misc. info to store with history entry
         :param move_cursor: Move cursor after inserted text.
         """
 
@@ -232,6 +246,18 @@ class VirtualFile:
             current_pos += len(add_txt)
 
         self.state_add(label, next_txt, current_pos)
+        self.state_info_attach(inserted_text=add_txt)
+
+    def replace(self, label, old, new):
+        """
+        In the current text, replace first occurence of old with new.
+        """
+        current_pos = self.current_pos
+        next_txt = self.__txt.replace(old, new, 1)
+        # Improve: this assume that cursor is after old in the text.
+        current_pos += (len(new) - len(old))
+        self.state_add(label, next_txt, current_pos)
+        self.state_info_attach(replaced_text=(old, new))
 
     def state_add(self,
                   label: str, next_txt: str,

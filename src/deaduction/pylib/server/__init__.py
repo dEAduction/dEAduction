@@ -228,7 +228,7 @@ class ServerQueue(list):
                     print(f"task duration: {task.duration}")
                     if task.pertinent_duration:
                         self.task_durations.append(task.duration)
-                        print(f"task durations: {self.task_durations}")
+                        # print(f"task durations: {self.task_durations}")
                     ################
                 if self.cancel_scope.cancelled_caught:
                     self.log.debug("Cancelling current task")
@@ -724,10 +724,35 @@ class ServerInterface(QObject):
         self.__desirable_lean_rqst_fpps_method(force_normal=True)
         self.exercise_set.emit()
 
+    async def code_replace(self, task, label, proof_step):
+        """
+        TODO
+        @param task:
+        @param label:
+        @param old_code:
+        @param new_code:
+        @return:
+        """
+
+        request = ProofStepRequest(task=task,
+                                   proof_step=proof_step,
+                                   exercise=self.__exercise_current,
+                                   lean_file=self.lean_file,
+                                   from_previous_proof_state_method=False)
+        # FIXME: find info in proof_step.code_for_lean
+        old = ""
+        new = ""
+        self.lean_file.replace(label, old, new)
+
+        await self.__get_response_for_request(request=request)
+
     async def code_insert(self, task, label: str, proof_step):
         """
         Inserts code in the Lean virtual file.
         """
+        # FIXME:
+        #  if proof_step.replace (or in code_for_lean):
+        #  await self.code_replace(blabla)
 
         method = from_previous_state_method()
         self.log.debug(f"FPPS Method: {method}")
@@ -800,7 +825,7 @@ class ServerInterface(QObject):
         as stored in course_data.
         """
 
-        self.log.info('Getting initial proof states')
+        self.log.info('Asking Lean for initial proof states')
         request = InitialProofStateRequest(task=task,
                                            course=course,
                                            statements=statements)

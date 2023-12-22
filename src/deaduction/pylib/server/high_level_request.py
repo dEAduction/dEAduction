@@ -281,7 +281,7 @@ class InitialProofStateRequest(HighLevelServerRequest):
 
 class ProofStepRequest(HighLevelServerRequest):
     """
-    A request to get the new proof state from an action, as encode in a
+    A request to get the new proof state from an action, as encoded in a
     ProofStep instance.
     """
 
@@ -328,36 +328,6 @@ class ProofStepRequest(HighLevelServerRequest):
     ##########################################
     # Compute contents for from state method #
     ##########################################
-    # def __lean_import_course_preamble(self) -> str:
-    #     file_name = self.exercise.course.course_file_name
-    #     return f"import {file_name}\n"
-
-    # @staticmethod
-    # def __lean_classical_logic() -> str:
-    #     return "local attribute[instance] classical.prop_decidable\n"
-
-    # def __analysis_code2(self) -> str:
-    #     """
-    #     NB: self.seq_num must be up to date!
-    #     """
-    #     nb = self.seq_num
-    #     code = f"    targets_analysis2 {nb},\n" \
-    #            f"    all_goals {{hypo_analysis2 {nb}}},\n"
-    #     return  code
-    #
-    # def __begin_end_code(self, code_string: str) -> str:
-    #     code_string = code_string.strip()
-    #     if not code_string.endswith(","):
-    #         code_string += ","
-    #
-    #     if not code_string.endswith("\n"):
-    #         code_string += "\n"
-    #
-    #     code = "begin\n" \
-    #            + code_string \
-    #            + self.__analysis_code2() \
-    #            + "end\n"
-    #     return code
 
     def __file_contents_from_previous_state(self, goal, code_lines):
         """
@@ -371,18 +341,6 @@ class ProofStepRequest(HighLevelServerRequest):
         end
         """
         exercise = self.exercise
-        # file_content = f"-- Seq num {self.seq_num}\n" \
-        #     + self.__lean_import_course_preamble() \
-        #     + self.__lean_classical_logic() \
-        #     + "section course\n" \
-        #     + exercise.open_namespace_str() \
-        #     + exercise.open_read_only_namespace_str() \
-        #     + goal.to_lean_example() \
-        #     + self.__begin_end_code(code_string) \
-        #     + exercise.close_namespace_str() \
-        #     + "end course\n"
-
-        # code_lines = self.__begin_end_code(code_lines)
         file_content = exercise.file_contents_from_goal(goal=goal,
                                                         seq_num=self.seq_num,
                                                         code_lines=code_lines)
@@ -397,15 +355,6 @@ class ProofStepRequest(HighLevelServerRequest):
             self.set_lean_file_afterword()
             self.lean_file.cursor_move_to(0)
             self.lean_file.cursor_save()
-
-    # def lean_file_afterword(self) -> str:
-    #     # Construct short end of file by closing all open namespaces
-    #     exercise = self.exercise
-    #     end_of_file = "end\n"
-    #     end_of_file += exercise.close_namespace_str()
-    #     end_of_file += "end course"
-    #     lean_file_afterword = exercise.analysis_code2() + end_of_file
-    #     return lean_file_afterword
 
     def set_lean_file_afterword(self):
         """
@@ -477,7 +426,7 @@ class ProofStepRequest(HighLevelServerRequest):
 
 class ExerciseRequest(ProofStepRequest):
     """
-
+    A request to initialise an exercise in Lean.
     """
     expected_nb_hypos = 1
 
