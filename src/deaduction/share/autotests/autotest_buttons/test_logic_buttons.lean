@@ -291,7 +291,7 @@ lemma exercise.test_construct_or_on_hyp_left
 P ∨ Q :=
 /- dEAduction
 AutoTest
-    H1 ∨ Q 0,
+    H1 ∨ 0 [ Q ],
     CQFD
 -/
 begin
@@ -303,7 +303,7 @@ lemma exercise.test_construct_or_on_hyp_right
 P ∨ Q :=
 /- dEAduction
 AutoTest
-    H1 ∨ P 1,
+    H1 ∨ 1 [ P ],
     CQFD
 -/
 begin
