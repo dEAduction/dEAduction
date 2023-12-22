@@ -196,5 +196,4 @@ htmlcov/
 tags
 #Lean files
 _target/
-*.olean
 #leanpkg.path
