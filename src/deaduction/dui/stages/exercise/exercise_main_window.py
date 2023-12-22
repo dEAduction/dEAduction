@@ -880,7 +880,7 @@ class ExerciseMainWindow(QMainWindow):
         log.debug("Simulating user action...")
 
         # Adapt to prove/use current mode
-        self.harmonize_buttons_and_user_action(user_action)
+        # self.harmonize_buttons_and_user_action(user_action)
 
         msg = ""
         msg += f"    -> selection = {user_action.selection}"
