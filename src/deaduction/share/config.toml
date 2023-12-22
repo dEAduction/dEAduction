@@ -122,7 +122,7 @@ Lean_request_method = "normal"
 copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.358"
+version_nb = "0.3580"
 os = ""  # Let this to "" except for debugging
 
 #########################
