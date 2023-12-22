@@ -25,11 +25,15 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import QLabel, QTextEdit
+from PySide2.QtWidgets import QLabel, QTextEdit, QWidget, QHBoxLayout
 from PySide2.QtGui import QStandardItem
 
 import deaduction.pylib.config.vars as cvars
 from .font_config import deaduction_fonts
+
+
+def highlight_color():
+    return "yellow"
 
 
 def color_dummy_variables():
@@ -68,10 +72,12 @@ class AbstractMathHtmlText:
     setHtml or setText method.
     """
 
-    def __init__(self, use_color=True, font_size=None, text_mode=False):
+    def __init__(self, use_color=True, font_size=None, text_mode=False,
+                 activate_highlight=False):
         self.use_color = use_color
         self.font_size = font_size  # FIXME: not used
         self.text_mode = text_mode
+        self.activate_highlight = activate_highlight
 
     def set_use_color(self, yes=True):
         self.use_color = yes
@@ -83,6 +89,9 @@ class AbstractMathHtmlText:
 
     def set_text_mode(self, yes=True):
         self.text_mode = yes
+
+    def set_highlight(self, yes=True):
+        self.activate_highlight = yes
 
     def math_font_style(self):
         fonts_name = deaduction_fonts.math_fonts_name
@@ -117,10 +126,18 @@ class AbstractMathHtmlText:
 
         return style
 
+    def highlight_style(self):
+        if self.activate_highlight:
+            style = f".highlight {{ background-color: {highlight_color()} }}"
+        else:
+            style = ""
+        return style
+
     @property
     def html_style(self):
         style = ("<style> " + self.text_font_style()
                  + self.math_font_style() + self.color_styles()
+                 + self.highlight_style()
                  + "</style>")
         return style
 
@@ -146,6 +163,7 @@ class MathLabel(QLabel, AbstractMathHtmlText):
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
+        self.set_highlight()
 
     def setText(self, text: str):
         super().setText(self.html_style + self.preamble + text + self.postamble)
@@ -160,6 +178,7 @@ class MathItem(QStandardItem, AbstractMathHtmlText):
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
+        self.set_highlight()
 
     def setText(self, text: str):
         super().setText(self.html_style + '<div>' + text + '</div>')
@@ -169,24 +188,35 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
     """
     A QTextEdit subclass to display math in html, incorporating styling.
     """
-    def __init__(self):
+    def __init__(self, text=None):
         super().__init__()
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
+        self.set_highlight(False)
+        # self.setReadOnly(True)
+        if text:
+            self.setHtml(text)
 
     def setHtml(self, text: str):
         # print(self.html_style + text)
         super().setHtml(self.html_style + '<div>' + text + '</div>')
 
 
+class GoalTextWidget(MathTextWidget):
+    """
+    A MathTextWidget to display a goal in text mode. This can be a statement,
+    an exercise (to_prove=True), or an open question.
+    This used in StartCoEx, and in CalculatorTargets.
+    """
+    def __init__(self, goal, to_prove=False, open_problem=False):
+        super().__init__()
 
-
-
-
-
-
-
-
+        # self.__text_wgt.setFont(self.math_fonts)
+        text = goal.goal_to_text(format_="html",
+                                 text_mode=True,
+                                 to_prove=to_prove,
+                                 open_problem=open_problem)
+        self.setHtml(text)
 
 

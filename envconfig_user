@@ -30,7 +30,7 @@ ENVPATH="$(pwd)/env"
 
 if [ ! -d $ENVPATH ] ; then
     echo "Installing python env."
-	  $PYTHON_FOR_DEADUCTION -m venv ${ENVPATH}
+	  $PYTHON_FOR_DEADUCTION -m venv ${ENVPATH}  #--upgrade-deps
 fi
 
 if [ -f $ENVPATH/bin/activate ] ; then

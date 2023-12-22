@@ -69,7 +69,7 @@ from   deaduction.pylib.utils.filesystem import path_helper
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.dui.primitives import MathLabel, MathItem
-from deaduction.dui.elements import ( StatementsTreeWidget,
+from .actions_widgets_classes import (StatementsTreeWidget,
                                       StatementsTreeWidgetItem)
 
 log = logging.getLogger(__name__)
@@ -195,6 +195,9 @@ class MathObjectWidgetItem(MathItem):
         return self is other  # Brutal but that is what we need.
 
     def highlight(self, yes=True, duration=None):
+        """
+        Change background to highlight self.
+        """
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")
         self.setBackground(QBrush(QColor(color)) if yes else QBrush())
@@ -208,7 +211,7 @@ class MathObjectWidgetItem(MathItem):
         # self.setBackground(color)
 
     # def un_highlight(self):
-    #     self.highlight(yes=False)
+    #     self.activate_highlight(yes=False)
 
     def select(self, yes=True):
         self.math_object_wdg.select_item(self, yes)
@@ -573,7 +576,7 @@ class MathObjectWidget(QListView):
                 self.select_index(index, False)
                 return
 
-            print(f"Source : {source}, dragged index: {dragged_index}")
+            # print(f"Source : {source}, dragged index: {dragged_index}")
             # # print(f"Source selected items: {len(source.selected_items())}")
             # if dragged_index not in source.selectedIndexes():
             #     source.select_index(dragged_index)
@@ -585,7 +588,7 @@ class MathObjectWidget(QListView):
             # Emit signal
             premise = source.item_from_index(dragged_index)
             operator = self.item_from_index(index)
-            print(premise, operator)
+            # print(premise, operator)
             if premise and operator:
                 self.set_selection([premise, operator])
             self.math_object_dropped.emit(premise, operator)
@@ -628,10 +631,13 @@ class TargetLabel(MathLabel):
         self.setTextFormat(Qt.RichText)
         self.set_target(target)
 
-    def set_target(self, target):
+    def set_target(self, target, format_='html'):
         if target:
             self.math_object = target
-            text = target.math_type_to_display()
+            if target.is_prop():
+                text = target.to_display(format_=format_)
+            else:
+                text = target.math_type_to_display(format_=format_)
         else:
             text = '…'
         self.setText(text)
@@ -661,6 +667,7 @@ class TargetLabel(MathLabel):
             # self.target_label.setStyleSheet(self.unselected_style)
 
     def highlight(self, yes=True, duration=None):
+        # FIXME: obsolete
         # self.select(not yes)
         color = cvars.get("display.color_for_highlight_in_proof_tree",
                           "yellow")
@@ -673,7 +680,7 @@ class TargetLabel(MathLabel):
             QTimer.singleShot(duration, unlit)
 
     # def un_highlight(self):
-    #     self.highlight(yes=False)
+    #     self.activate_highlight(yes=False)
 
 
 class TargetWidget(QWidget):

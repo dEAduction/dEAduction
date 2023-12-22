@@ -3,20 +3,25 @@ This is a d∃∀duction file providing first exercises about quantifiers and nu
 French version.
 -/
 
-import data.set
+-- Lean standard import
 import data.real.basic
 import tactic
 
 -- dEAduction tactics
-import structures2      -- hypo_analysis, targets_analysis
-import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute          -- tactics for computation, used by the Goal! button
-import push_neg_once
-
+-- structures2 and utils are vital
+import deaduction_all_tactics
+-- import structures2      -- hypo_analysis, targets_analysis
+-- import utils            -- no_meta_vars
+-- import compute_all      -- Tactics for the compute buttons
+-- import push_neg_once    -- Pushing negation just one step
+-- import induction        -- Induction theorems
 
 -- dEAduction definitions
 -- import set_definitions
+-- import real_definitions
+
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
 
 
 -- General principles :
@@ -30,13 +35,6 @@ import push_neg_once
 ---------------------
 -- Course metadata --
 ---------------------
--- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
--- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
--- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
--- Note for Python devs:
---      Any supplementary metadata will be put in the 'info' dict of each exo
-
 /- dEAduction
 Author
     Frédéric Le Roux
@@ -182,7 +180,7 @@ begin
 end
 
 lemma theorem.double_negation (P: Prop) :
-(non non P) ↔ P :=
+(not not P) ↔ P :=
 /- dEAduction
 PrettyName
     Double négation

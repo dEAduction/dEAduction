@@ -1,5 +1,5 @@
 """
-# __init__.py : #ShortDescription #
+# __init__.py #
     
     https://en.meming.world/images/en/8/8e/All_Right_Then%2C_Keep_Your_Secrets.jpg
 
@@ -29,10 +29,16 @@ This file is part of dEAduction.
 from .actiondef import (    Action,
                             action)
 
-from .exceptions import (   InputType,
-                            MissingParametersError,
-                            WrongUserInput,
-                            test_selection)
+from .exceptions import (InputType,
+                         MissingParametersError,
+                         CalculatorRequest,
+                         MissingCalculatorOutput,
+                         WrongUserInput,
+                         WrongProveModeInput,
+                         WrongUseModeInput,
+                         SelectDefaultTarget,
+                         test_selection,
+                         test_prove_use)
 
 from .code_for_lean import (LeanCombinator,
                             CodeForLean,
@@ -40,24 +46,18 @@ from .code_for_lean import (LeanCombinator,
 
 from .generic import action_definition
 
-from .logic import (action_not,
+from .logic import (action_forall,
+                    action_exists,
                     action_implies,
                     action_and,
                     action_or,
-                    action_forall,
-                    action_exists,
+                    action_not,
                     action_equal,
-                    action_map,
-                    apply_exists,
-                    apply_and,
-                    apply_or,
-                    apply_implies,
-                    apply_implies_to_hyp,
-                    have_new_property,
-                    apply_substitute)
+                    action_map)
 
-from .proofs import action_proof_methods, introduce_new_subgoal
+from .proofs import action_proof_methods, introduce_new_subgoal, ProofMethods
 from .magic import action_assumption, context_obj_solving_target
+from .compute import action_sum
 from .special_actions import drag_n_drop
 
 

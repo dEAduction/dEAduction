@@ -70,9 +70,9 @@ class ServerInterface(QObject):
     ###########################
     def exercise_set(self, exercise: Exercise):
         """
-        initialise the virtual_file from exercise
+        initialise the lean_file from exercise
         :param exercise:
-        :return:virtual_file
+        :return:lean_file
         """
         file_content = exercise.course.file_content
         lines = file_content.splitlines()
@@ -95,7 +95,6 @@ class ServerInterface(QObject):
     async def history_redo(self):
         self.lean_file.redo()
         await self.__update()
-
 
     #####################
     # Lean instructions #

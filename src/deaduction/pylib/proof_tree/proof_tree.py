@@ -30,8 +30,9 @@ from copy import deepcopy
 from typing import Optional
 import logging
 
-from deaduction.pylib.proof_state import Goal, ProofState
-from deaduction.pylib.mathobj import ProofStep, MathObject
+from deaduction.pylib.proof_state import Goal
+from deaduction.pylib.mathobj import MathObject
+from deaduction.pylib.proof_step import ProofStep
 log = logging.getLogger(__name__)
 global _
 
@@ -105,7 +106,7 @@ class GoalNode:
         cls._truncate_at_proof_step_nb = proof_step_nb
 
     @property
-    def child_proof_step(self):
+    def child_proof_step(self) -> Optional[ProofStep]:
         if not self._child_proof_step:
             return None
 
@@ -226,6 +227,16 @@ class GoalNode:
         if (self.brother_number is not None
                 and len(self.parent_node.children_goal_nodes) == 2):
             return self.parent_node.children_goal_nodes[1-self.brother_number]
+
+    @property
+    def brothers_including_self(self):
+        parent = self.parent_node
+        if parent:
+            return parent.children_goal_nodes
+
+    @property
+    def is_last_brother(self):
+        return self.brother_number == len(self.brothers_including_self) -1
 
     @property
     def target_has_changed(self) -> bool:
@@ -487,7 +498,8 @@ class GoalNode:
         CodeForLean.outcome_operator is not None.
         """
         proof_step = self.parent
-        return proof_step and proof_step.outcome_operator
+        if proof_step:
+            return self.is_last_brother and proof_step.outcome_operator
 
     def __msg(self, format_, use_color=True, bf=False):
         """
@@ -551,6 +563,19 @@ class GoalNode:
 
         elif self.parent.is_by_contradiction():
             html_msg = _("Proof by contradiction")
+
+        elif self.parent.is_by_induction():
+            if len(self.parent.user_input) >= 2:
+                bc_nb = self.parent.user_input[1]
+                is_nb = 1 - bc_nb
+            else:  # Default values
+                bc_nb = 0
+                is_nb = 1
+
+            if self.brother_number == bc_nb:
+                html_msg = _("Base case")
+            elif self.brother_number == is_nb:
+                html_msg = _("Induction step")
 
         elif self.goal.target.math_type is MathObject.NO_MORE_GOALS:
             msg = self.goal.target.math_type.to_display(format_="utf8")
@@ -626,6 +651,13 @@ class GoalNode:
         if self.child_proof_step:
             return self.child_proof_step.is_sorry()
 
+    def proof_uses_sorry(self):
+        if self.is_immediately_sorry():
+            return True
+        else:
+            return any([child.is_immediately_sorry()
+                        for child in self.children_goal_nodes])
+
     def is_recursively_sorry(self, truncate=False):
         """
         Self is recursively sorry all of its children are solved or sorry,
@@ -673,29 +705,6 @@ class GoalNode:
             for child in self.children_goal_nodes:
                 unsolved_leaves.extend(child.unsolved_leaves)
             return unsolved_leaves
-
-    # def truncated_unsolved_leaves(self, till_proof_step_nb=None) -> []:
-    #     """
-    #     Return the list of unsolved leaves of self (truncating all proof steps
-    #     after till_proof_step_nb). Admitted is considered as solved.
-    #     """
-    #     if till_proof_step_nb is None:
-    #         return self.unsolved_leaves
-    #
-    #     if (not self.child_proof_step or self.child_proof_step.pf_nb >
-    #             till_proof_step_nb):
-    #         # Unsolved leaf of the truncated ProofTree
-    #         return [self]
-    #     elif self.is_immediately_solved or self.is_immediately_sorry():
-    #         # Leaf is solved NOT AFTER till_proof_step_nb
-    #         return []
-    #
-    #     # Add unsolved leaves of children
-    #     unsolved_leaves = []
-    #     for child in self.children_goal_nodes:
-    #         child_leaves = child.truncated_unsolved_leaves(till_proof_step_nb)
-    #         unsolved_leaves.extend(child_leaves)
-    #     return unsolved_leaves
 
     def total_degree(self):
         """
@@ -760,6 +769,26 @@ class GoalNode:
         # Disconnect child_proof_step and clear future info
         self.clear_descendance()
 
+    def descendant_proof_steps(self) -> [ProofStep]:
+        """
+        Return the list of proof_steps encountered in a depth-first search
+        of the tree.
+        """
+
+        # FIXME: truncate_mode = ??
+        # self.set_truncate_mode(False)
+
+        proof_step = self.child_proof_step
+
+        if not proof_step:
+            return []
+        elif proof_step.has_solved_one_goal:
+            return [proof_step]
+        else:
+            return [proof_step] + proof_step.descendant_proof_steps()
+
+        # self.set_truncate_mode(truncate_mode)
+
 
 class RootGoalNode(GoalNode):
     """
@@ -785,9 +814,13 @@ class VirtualBrotherAuxGoalNode(GoalNode):
     P
     P --> P => Q --> Q.
 
-    Note that P is the target of self.brother, Q is the target of
+    Note that P is the target of the child of self.parent, Q is the target of
     self.parent_node, and P => Q should have been stored in the CodeForLean,
     and is accessed via self.outcome_operator.
+
+    More generally, this should work when applying theorem (P, P', ...) => Q
+    generating sub-goals P, P', ... ; e.g. when applying the induction
+    principle.
     """
     def __init__(self, parent: ProofStep, type_: str):
         super().__init__(parent, goal=None, is_solved=(type_ == "operator"))
@@ -816,8 +849,9 @@ class VirtualBrotherAuxGoalNode(GoalNode):
             premises = [obj for obj in selection
                         if obj != self.outcome_operator]
         else:
-            premises = []
-        premises.append(self.main_premise)
+            premises = [child.goal.target
+                        for child in self.parent.children_goal_nodes]
+            # premises.append(self.main_premise)
         return premises
 
     @property
@@ -847,6 +881,9 @@ class ProofTree:
     be recovered by following the ProofSteps's first child:
     Root node -> child_proof_step -> children_goal_node[0] -> child_proof_step
     ... and so on.
+
+    The pure tree structure is obtained by ignoring those ProofSteps for which
+    attribute proof_step.has_solved_one_goal is True.
     """
 
     # TODO: add a permutation to reflect Lean's own list of unsolved goals.
@@ -866,6 +903,12 @@ class ProofTree:
         self._last_proof_step: Optional[ProofStep] = None
 
         GoalNode.set_truncate_mode = self.set_truncate_mode
+
+    def __str__(self):
+        """
+        Print tree of the First ProofStep.
+        """
+        return str(self.root_node.parent)
 
     @property
     def last_proof_step(self):
@@ -912,7 +955,8 @@ class ProofTree:
         fork node. This is the pertinent goal_node for the proof msg to be
         displayed in the status bar.
         """
-        return self.current_goal_node.last_child_fork_node
+        if self.current_goal_node:
+            return self.current_goal_node.last_child_fork_node
 
     def current_proof_msg(self) -> Optional[str]:
         """
@@ -959,18 +1003,9 @@ class ProofTree:
         self.set_truncate_mode(False)
         return leaves
 
-    # def pending_goal_nodes(self, till_proof_step_nb=None) -> [GoalNode]:
-    #     """
-    #     The list of unsolved oal nodes, except current_goal_node.
-    #     """
-    #     pgn = [gn for gn in self.unsolved_goal_nodes(till_proof_step_nb)
-    #            if gn is not self.current_goal_node]
-    #     return pgn
-    #
-
     def pending_goal_nodes(self, truncated=True) -> [GoalNode]:
         """
-        The list of unsolved oal nodes, except current_goal_node.
+        The list of unsolved goal nodes, except current_goal_node.
         """
         pgn = [gn for gn in self.unsolved_goal_nodes(truncated)
                if gn is not self.current_goal_node]
@@ -1008,9 +1043,10 @@ class ProofTree:
         elif self.current_goal_node.is_suffices_to:
             proof_step = self.current_goal_node.parent
             # goal = proof_step.proof_state.goals[0]
-            brothers = [VirtualBrotherAuxGoalNode(parent=proof_step,
-                                                  # goal=goal,
-                                                  type_='premise'),
+            brothers = [
+                        # VirtualBrotherAuxGoalNode(parent=proof_step,
+                        #                           # goal=goal,
+                        #                           type_='premise'),
                         VirtualBrotherAuxGoalNode(parent=proof_step,
                                                   # goal=goal,
                                                   type_='operator')]
@@ -1058,7 +1094,7 @@ class ProofTree:
         # ─────── Compute delta goal ─────── #
         # NB; this must be done BEFORE connecting new_proof_step, since we
         # want the nb of unsolved goals BEFORE new_proof_step (which might
-        # solved (maybe by sorry) the current_goal_node).
+        # solve (maybe by sorry) the current_goal_node).
         new_goal = new_proof_state.goals[0]
         unsolved_gn = self.unsolved_goal_nodes()
         delta_goal = (len(new_proof_state.goals)
@@ -1092,12 +1128,9 @@ class ProofTree:
                 assert delta_goal == 1
                 # Provisionally create other goal node
                 other_goal = new_proof_state.goals[1]
-                # other_goal.name_bound_vars()
                 other_goal_node = GoalNode(parent=new_proof_step,
                                            goal=other_goal)
                 children_gn = [next_goal_node, other_goal_node]
-
-            # self.add_outcomes()
 
         new_proof_step.children_goal_nodes = children_gn
         self.last_proof_step = new_proof_step
@@ -1107,18 +1140,15 @@ class ProofTree:
         previous_goal = self.current_goal_node.parent_node.goal
         Goal.compare(new_goal, previous_goal)
         Goal.transfer_name_hints_from(new_goal, previous_goal)
-        # print("ProofTree:")
-        # print(str(self))
+        print("ProofTree:")
+        print(str(self.root_node.parent))
 
-    # def prune(self, proof_step_nb):
-    #     """
-    #     Remove from self all information posterior to the given proof_step.
-    #     This includes info on ContextMathObjects, so that self should be as
-    #     it was before.
-    #     Value proof_step_nb = 0 corresponds to initial goal (as this is the
-    #     step number of self.root_node.parent).
-    #     """
-    #     self.root_node.prune_from(proof_step_nb)
+    def proof_steps(self):
+        """
+        Return the list of proof_steps encountered in a depth-first search
+        of the tree. If the proof is complete, the corresponding list of
+        CodeForLean (or AutoSteps) should reconstruct the whole proof!
+        """
 
-    def __str__(self):
-        return str(self.root_node)
+        return self.root_node.descendant_proof_steps()
+

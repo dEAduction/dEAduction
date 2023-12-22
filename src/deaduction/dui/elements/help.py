@@ -34,6 +34,7 @@ from PySide2.QtWidgets import QDialog, QRadioButton, QVBoxLayout, QHBoxLayout,\
 
 from PySide2.QtGui import QIcon  # QKeyEvent, QKeySequence
 
+from sys import version_info
 from typing import Union, Optional
 
 import deaduction.pylib.config.vars as cvars
@@ -144,9 +145,16 @@ class HelpWindow(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle(_("Help"))
+        self.setWindowTitle(_("Help") + " — d∃∀duction")
         # Window stay on top of parent:
-        self.setWindowFlags(self.windowFlags() | Qt.Dialog)
+
+        nb = version_info[1]
+        if nb <= 9:
+            flags = self.windowFlags() | Qt.Dialog
+            self.setWindowFlags(flags)
+        # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
+        # FIXME: this is for python 3.11
+        # self.setWindowFlags |= Qt.Dialog
         # self.main_txt, self.detailed_txt, self.hint = None, None, None
         self.msgs_list = []
         self.main_texts = []

@@ -36,6 +36,7 @@ from PySide2.QtWidgets import ( QHBoxLayout,
                                 QPushButton,
                                 QVBoxLayout,
                                 QWidget)
+global _
 
 
 class LeanEditor(QWidget):
@@ -49,6 +50,7 @@ class LeanEditor(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle(_('Code sent to Lean') + " — d∃∀duction")
         self.editor = QPlainTextEdit()
         self.send_btn = QPushButton(_('Send to L∃∀N'))
 

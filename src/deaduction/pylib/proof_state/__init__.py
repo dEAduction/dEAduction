@@ -26,4 +26,4 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from .proof_state import Goal, ProofState
-
+from .lean_response import LeanResponse

@@ -24,6 +24,5 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .pattern_math_objects import PatternMathObject
+from .pattern_math_objects import PatternMathObject, MetaVar
 from .definition_math_object import DefinitionMathObject
-

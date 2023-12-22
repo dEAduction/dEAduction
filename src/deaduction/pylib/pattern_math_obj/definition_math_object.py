@@ -33,6 +33,7 @@ from deaduction.pylib.mathobj.math_object import MathObject
 from deaduction.pylib.pattern_math_obj.pattern_math_objects import (PatternMathObject,
                                                                     MetaVar)
 from deaduction.pylib.coursedata import Definition
+from deaduction.pylib.math_display import PatternMathDisplay
 
 
 log = logging.getLogger(__name__)
@@ -55,16 +56,24 @@ class DefinitionMathObject(MathObject, Definition):
     pattern: PatternMathObject = None
     _last_matched_math_object: Optional[MathObject] = None
 
+    # FIXME: clear at exo change
+    instances = []  # List of all instances
+
     def __init__(self, definition: Definition):
         """
         Init self from a definition.
         """
         self.definition = definition
+        self.instances.append(self)
         self.__dict__.update(self.definition.__dict__)
 
         # definition_args = definition.__dict__
         # Definition.__init__(self, **definition_args)
         self.check_proof_state()
+
+    @classmethod
+    def clear_instances(cls):
+        cls.instances = []
 
     @property
     def target(self):
@@ -78,15 +87,44 @@ class DefinitionMathObject(MathObject, Definition):
         if self.definition.initial_proof_state:
             return self.definition.initial_proof_state.goals[0].target
 
+    @classmethod
+    def clear_instances(cls):
+        cls.instances = []
+
+    @classmethod
+    def get_constants(cls):
+        """
+        Add all CONSTANTS in self to the all_constants list.
+        """
+
+        # FIXME: croiser avec PatternMathDisplay.all_constants_names
+        all_constants = dict()
+        for defi in cls.instances:
+            # hierarchy_of_sections = (_(title).capitalize() for title in
+            #                          defi.definition.ugly_hierarchy())
+            outline = defi.definition.course.outline
+            hierarchy_of_sections = defi.definition.pretty_hierarchy(outline)
+            section = ' / '.join(hierarchy_of_sections)
+            if section not in all_constants:
+                all_constants[section] = []
+            csts = all_constants[section]
+            if defi.lhs_pattern:
+                for cst in defi.lhs_pattern.constants_in_self():
+                    if (cst.name in PatternMathDisplay.all_constants_names()
+                            and cst not in csts):
+                        csts.append(cst)
+
+        return all_constants
+
     def check_proof_state(self) -> bool:
         """
         Init the MathObject parameters with initial_proof_state if not None.
         Return True if successful.
         This is useful because exercise may start before ips is set.
         """
-        match_pattern = self.info.get("MatchPattern")
-        if match_pattern:
-            print(match_pattern)
+        # match_pattern = self.info.get("MatchPattern")
+        # if match_pattern:
+        #     print(match_pattern)
 
         if not self.definition.initial_proof_state:
             return False
@@ -118,7 +156,7 @@ class DefinitionMathObject(MathObject, Definition):
 
     def clear_matching(self):
         for mvar in self.metavars:
-            mvar.clear_matching()
+            mvar.clear_assignment()
 
     def match(self, math_object) -> bool:
         """
@@ -144,7 +182,7 @@ class DefinitionMathObject(MathObject, Definition):
         if self._last_matched_math_object is not math_object:
             self.match(math_object)
         if self._last_matched_math_object:
-            rhs_math_object = self.rhs_pattern.apply_matching()
+            rhs_math_object = self.rhs_pattern.math_object_from_matching()
             return rhs_math_object
 
     @classmethod

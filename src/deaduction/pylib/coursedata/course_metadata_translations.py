@@ -40,5 +40,6 @@ metadata_nice_text = {'author': _('Author(s)'),
                       'available_magic': _('"Magic" buttons'),
                       'available_logic': _('"Logic" buttons'),
                       'available_proof': _('"Proof" buttons'),
+                      'available_compute': _('"Compute" buttons'),
                       'available_exercises': _("Exercises in statements list")
                       }

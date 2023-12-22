@@ -63,6 +63,8 @@ class YesNoDialog(QMessageBox):
         """
 
         super().__init__()
+        # (Bad) default title
+        self.setWindowTitle(_("Yes or no?"))
         self.setModal(True)
 
         self.__yes = False

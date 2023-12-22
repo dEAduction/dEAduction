@@ -46,14 +46,18 @@ from deaduction.pylib.mathobj.lean_analysis import (lean_expr_with_type_grammar,
 from deaduction.pylib.utils import inj_list
 from deaduction.pylib.give_name.name_hint import NameHint
 
-from deaduction.pylib.math_display import (plural_types, numbers, plurals,
-                                           update_plurals)
+from deaduction.pylib.math_display import MathDisplay
 
 log = logging.getLogger(__name__)
 
 global _
 
 DEBUG = False
+
+
+# plurals = MathDisplay.plurals
+# plural_types = MathDisplay.plural_types
+# numbers = MathDisplay.numbers
 
 
 ##################
@@ -80,10 +84,19 @@ class Goal:
     - splitting goals into objects and properties,
     - "smartly" naming variables, in particular all bound variables,
     - printing goals.
+
+    unmodified_context reflects the order the context is recorded by Lean.
+    This order may be modified in self._context, typically when a
+    substitution occurs within a property H, the new property H' is put at
+    the place where H was, thus resulting in a property where a term x
+    occurs before it is declared. In summary,
+        _context is used in the gui,
+        unmodified_context is used for Lean communication.
     """
 
     def __init__(self, context: [ContextMathObject], target: ContextMathObject):
         self._context = context
+        self.unmodified_context = context
         self.target = target
         self.name_hints = []
         # self.smart_name_bound_vars()
@@ -135,7 +148,9 @@ class Goal:
     def context(self):
         """
         Return only non-hidden ContextMathObjects, except if include_hidden.
+        Remove double properties.
         """
+
         return [obj for obj in self._context if not obj.is_hidden]
 
     @context.setter
@@ -144,6 +159,24 @@ class Goal:
 
     def context_included_hidden(self):
         return self._context
+
+    def context_objects_included_hidden(self) -> [ContextMathObject]:
+        """
+        Return the list of objects of the context that are not proposition.
+        Note that instance witnesses are excluded
+        (i.e. variables whose name starts with "_inst_" )
+        """
+        if self.context is None:
+            return
+        objects = [cmo for cmo in self.context_included_hidden()
+                   if not cmo.math_type.is_prop()]
+        return objects
+
+    def context_props_included_hidden(self) -> [ContextMathObject]:
+        if self.context is not None:
+            props = [cmo for cmo in self.context_included_hidden()
+                     if cmo.math_type.is_prop()]
+            return props
 
     @property
     def context_objects(self) -> [ContextMathObject]:
@@ -160,9 +193,20 @@ class Goal:
 
     @property
     def context_props(self) -> [ContextMathObject]:
-        if self.context is not None:
-            props = [cmo for cmo in self.context if cmo.math_type.is_prop()]
-            return props
+        if self.context is None:
+            return
+
+        props = []
+        prop_types = []
+        for obj in self._context:
+            if ((not obj.math_type.is_prop()) or obj.is_hidden
+                    or obj.math_type in prop_types):
+                pass
+            else:
+                props.append(obj)
+                prop_types.append(obj.math_type)
+
+        return props
 
     @property
     def new_context(self):
@@ -174,6 +218,24 @@ class Goal:
             return [cmo for cmo in self.context if cmo.is_new]
 
     @property
+    def new_props(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        if self.context_props is not None:
+            return [cmo for cmo in self.context_props if cmo.is_new]
+
+    @property
+    def new_objects(self):
+        """
+        Return objects and props of the context that are new, i.e. they have
+        no parent.
+        """
+        if self.context_objects is not None:
+            return [cmo for cmo in self.context_objects if cmo.is_new]
+
+    @property
     def modified_context(self):
         """
         Return objects and props of the context that are new, i.e. they have
@@ -181,6 +243,22 @@ class Goal:
         """
         if self.context is not None:
             return [cmo for cmo in self.context if cmo.is_modified]
+
+    def defining_equalities(self):
+        """
+        Return the list of defining equalities in self.context. A prop is a
+        defining equality iff its name starts with "Def" and it is an
+        equality whose left term is a local constant of self.context.
+        """
+        eq = []
+        for p in self.context_props:
+            if p.is_equality():
+                name = p.name
+                lc = p.math_type.children[0]
+                if name.startswith('Def') and lc in self.context_objects:
+                    eq.append(p)
+
+        return eq
 
     def remove_future_info(self):
         for obj in self.context:
@@ -643,7 +721,7 @@ class Goal:
     def __recursive_name_all_bound_vars(self, p: MathObject,
                                         include_sequences=True):
         """
-        Recursively name all bound vars in self. Each bound var should be 
+        Recursively name all bound vars in p. Each bound var should be
         named only once (!).
         """
 
@@ -967,12 +1045,117 @@ class Goal:
     ###################
     # Display methods #
     ###################
+    def to_math_object(self) -> MathObject:
+        """
+        Return a math_object obtained by integrating all the context in the
+        target, using universal quantifiers and implications. e.g. if
+        self.context contains objects x, y and properties P, Q, the new goal
+        will be
+                        ∀x, ∀y, (P and Q ) ==> target.
+        This is not a recursive method since we do not want to create new goals
+        (to avoid creating new ContextMathObjects).
+        """
+
+        # (1) Compute body of universal prop:
+        props = [prop.math_type for prop in self.context_props_included_hidden()]
+        target = self.target.math_type
+        if props:
+            conjunction = MathObject.conjunction(props)
+            body = MathObject.implication(conjunction, target)
+        else:
+            body = target
+
+        # (2) Compute the "∀x, ∀y, ..." part (list shadow copy):
+        objs = [obj for obj in self.context_objects_included_hidden()]
+        while objs:
+            obj = objs.pop()
+            body = MathObject.forall(obj, body)
+
+        self.__recursive_name_all_bound_vars(body)
+        return body
+
+    def negate(self) -> MathObject:
+        """
+        Return a math_object obtained by negating self. e.g. if self.context
+        contains objects x, y and properties P, Q, the new goal will be
+             NOT  ( ∀x, ∀y, (P and Q ) ==> target ).
+        """
+
+        # # (1) Compute body of universal prop:
+        # props = [prop.math_type for prop in self.context_props]
+        # target = self.target.math_type
+        # if props:
+        #     conjunction = MathObject.conjunction(props)
+        #     body = MathObject.implication(conjunction, target)
+        # else:
+        #     body = target
+        #
+        # # (2) Compute the "∀x, ∀y, ..." part:
+        # objs = [obj for obj in self.context_objects]  # List shadow copy
+        # while objs:
+        #     obj = objs.pop()
+        #     body = MathObject.forall(obj, body)
+
+        # (3) Negate!
+        new_prop = MathObject.negate(self.to_math_object())
+
+        return new_prop
+
+    @classmethod
+    def negated_goal(cls, old_goal):
+        """
+        Return a new goal which is the negation of old_goal.
+        """
+        new_prop = old_goal.negate()
+        new_target = ContextMathObject(node="LOCAL_CONSTANT",
+                                       info={'name': "target"},
+                                       children=[],
+                                       math_type=new_prop)
+        negated_goal = cls(context=[], target=new_target)
+        # Bound vars are named like the old context vars they stand for,
+        # but for dummy var for sequences.
+        negated_goal.smart_name_bound_vars()
+        return negated_goal
+
+    def context_to_lean(self):
+        """
+        Return  self's context in Lean format, e.g.
+        (x: X) (A: set X) (H1: x ∈ A)
+        """
+        lean_context = ""
+        for co in self.unmodified_context:
+            lean_context += f"({co.to_lean_with_type()}) "
+
+        return lean_context
+
+    def target_to_lean(self):
+        """
+        Return  self's target in Lean format, e.g.
+        x ∈ B
+        """
+        return self.target.math_type.to_display(format_='lean')
+
+    def to_lean_statement(self, title="deaduction"):
+        """
+        Return self's content as a Lean exercise, e.g.
+        'lemma exercise.blabla
+        (x: X) (A: set X) (H1: x ∈ A) :
+        x ∈ B :='
+        """
+        context = self.context_to_lean()
+        target = self.target_to_lean()
+        lean_statement = f"lemma exercise.{title}\n {context} :\n {target}"
+        # lean_proof = "begin\n\nend\n"
+        # debug:
+        # print(lean_statement)
+        return lean_statement + " :=\n"  # + lean_proof
+
     def goal_to_text(self,
                      format_="utf8",
                      to_prove=True,
                      text_mode=True,
                      open_problem=False,
-                     by_type=True) -> str:
+                     apply_statement=False) -> str:
         """
         Compute a displayable version of the goal as the statement of an
         exercise.
@@ -982,10 +1165,10 @@ class Goal:
             If True, the goal will be formulated as "Prove that..."
             If False, the goal will be formulated as "Then..." (useful if
             the goal comes from a Theorem or Definition)
-        :param text_depth:  int
-            A higher value entail a more verbose formulation (more symbols will
-            be replaced by words).
+        :param text_mode:  boolean.
         :param open_problem: if True, then display as "True or False?"
+        @param apply_statement: if True, the (non-implicit) hypotheses are
+        separated by a CR.
 
         :return: a text version of the goal
         """
@@ -999,6 +1182,9 @@ class Goal:
         context = self.context
         target = self.target
         text = ""
+        #######################
+        # (1) Display context #
+        #######################
         previous_object_is_prop = None
         counter = 0
         while counter < len(context):
@@ -1037,6 +1223,8 @@ class Goal:
                 if object_is_prop != previous_object_is_prop:
                     # New line only to separate objects and propositions.
                     text += text_cr
+                elif apply_statement and (not object_is_prop):
+                    text += text_cr
                 else:
                     # New sentence
                     text += " "
@@ -1049,7 +1237,12 @@ class Goal:
         if text:
             text += text_cr
 
-        target_text = target.math_type_to_display(text=text_mode)
+        ######################
+        # (2) Display target #
+        ######################
+        target_text = target.math_type_to_display(text=text_mode,
+                                                  format_=format_)
+        # Helper for syntactic rules:
         target_utf8 = target.math_type_to_display(text=text_mode,
                                                   format_='utf8')
         if to_prove and not open_problem:
@@ -1064,13 +1257,15 @@ class Goal:
             target_text = prove_that + target_text
         elif text:
             target_text = _("Then") + " " + target_text
-        else:
-            target_text = target_text.capitalize()
+        else:  # Capitalise but inside html formatters...
             # Little issue: if sentence starts with a lower case
             # variable. This should never happen though...
+            first_word = target_utf8.split()[0]
+            target_text = target_text.replace(first_word,
+                                              first_word.capitalize(),
+                                              1)
         if open_problem:
-            text = _("True or False?") + text_cr + text
-
+            text = _("True or False:") + text_cr + text
         text += target_text + "."
         return text
 
@@ -1105,7 +1300,7 @@ class Goal:
         text += target.math_type_to_display(format_="utf8")
         return text
 
-    def to_tooltip(self, type_='exercise') -> str:
+    def to_tooltip(self, type_='exercise', format_='html') -> str:
         """
         Return context and target in a raw form as a tooltip for a goal.
         """
@@ -1115,33 +1310,45 @@ class Goal:
 
         context: [ContextMathObject] = self.context
         target = self.target
+        text = ""
+        cr = "<br>" if format_ == 'html' else "\n"
 
         # Context
         if context:
             if type_ == "exercise":
-                text = _("Context:")
+                hypo_text = _("Context:")
             else:
-                text = _("Hypothesis:") if len(context) == 1 else \
+                hypo_text = _("Hypothesis:") if len(context) == 1 else \
                     _("Hypotheses:")
-            text += "\n"
+            if format_ == 'html':
+                hypo_text = "<b>" + hypo_text + "</b>"
+            text = hypo_text + cr
         else:
             # text = _("Empty context") + "\n"
             text = ""
+
         for math_object in context:
             # math_type = math_object.math_type
-            name = math_object.to_display(format_="utf8")
+            name = math_object.to_display(format_=format_)
             # name_type = math_type.old_to_display(is_math_type=True)
-            name_type = math_object.math_type_to_display(format_="utf8")
+            name_type = math_object.math_type_to_display(format_=format_)
             text_object = name + _(": ") + name_type
-            text += "  " + text_object + "\n"
+            text += "  " + text_object + cr
 
         # Goal
         if type_ == "exercise":
-            text += _("Goal:")
+            goal_text = _("Goal:")
+        elif context:
+            goal_text = _("Conclusion:")
         else:
-            text += _("Conclusion:")
-        text += "\n"
-        text += " " + target.math_type_to_display(format_="utf8")
+            goal_text = ""
+        if format_ == 'html' and goal_text:
+            goal_text = "<b>" + goal_text + "</b>"
+        if goal_text:
+            text += (goal_text + cr)
+        text += " " + target.math_type_to_display(format_=format_)
+        # except:
+        #     print(target.math_type)
         return text
 
 
@@ -1164,37 +1371,60 @@ class ProofState:
     goals: List[Goal]
     lean_data: Tuple[str, str] = None
 
+    @property
+    def main_goal(self):
+        return self.goals[0]
+
     @classmethod
-    def from_lean_data(cls, hypo_analysis: str, targets_analysis: str,
-                       to_prove=False):
+    def from_lean_data(cls, hypo_analysis: [str], targets_analysis: [str],
+                       to_prove=False, previous_proof_state=None):
         """
-        :param hypo_analysis:    string from the lean tactic hypo_analysis
-        :param targets_analysis: string from the lean tactic targets_analysis
-        (with one line per target)
+        :param hypo_analysis:    list of strings from the lean tactic
+        hypo_analysis, one string for each goal
+        :param targets_analysis: list of string from the lean tactic
+        targets_analysis
+        :param to_prove: True iff the main goal is the current exercise's goal
+        (this affect bound vars naming).
+        :param previous_proof_state: previous Proof State. If not know,
+        the new proof state is used as an update to the previous proof state:
+        - the previous main goal is deleted,
+        - the new goals are inserted at index 0 in ProofState.goals
 
         :return: a ProofState
         """
 
         log.info("Creating new ProofState from lean strings")
-        targets = targets_analysis.split("¿¿¿")
-        # Put back "¿¿¿" and remove '\n' :
-        targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
-        targets.pop(0)  # Removing title line ("targets:")
-        main_goal = None
-        if targets:
-            # Create main goal:
-            main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
-                                            to_prove=to_prove)
-        else:
-            log.warning(f"No target, targets_analysis={targets_analysis}")
-        goals = [main_goal]
-        for other_string_goal in targets[1:]:
-            other_goal = Goal.from_lean_data(hypo_analysis="",
-                                             target_analysis=other_string_goal,
-                                             to_prove=False)
-            goals.append(other_goal)
+        # targets = targets_analysis.split("¿¿¿")
+        # # Put back "¿¿¿" and remove '\n' :
+        # targets = ['¿¿¿' + item.replace('\n', '') for item in targets]
+        # targets.pop(0)  # Removing title line ("targets:")
+        targets = targets_analysis
+        # if not targets:
+        #     log.warning(f"No target, targets_analysis={targets_analysis}")
+        if len(hypo_analysis) != len(targets):
+            log.warning("Nb of hypo analysis does not match nb of targets")
 
-        return cls(goals, (hypo_analysis, targets_analysis))
+        else:
+            # main_goal = None
+            # # Create main goal:
+            # main_goal = Goal.from_lean_data(hypo_analysis, targets[0],
+            #                                             to_prove=to_prove)
+            # goals = [main_goal]
+            # for other_string_goal in targets[1:]:
+            #     other_goal = Goal.from_lean_data(hypo_analysis="",
+            #                                      target_analysis=other_string_goal,
+            #                                      to_prove=False)
+            #     goals.append(other_goal)
+            new_goals = [Goal.from_lean_data(hypo, target, to_prove=to_prove)
+                         for hypo, target in zip(hypo_analysis, targets)]
+
+            if previous_proof_state:
+                goals = new_goals + previous_proof_state.goals[1:]
+            else:
+                goals = new_goals
+            new_proof_state = cls(goals, (hypo_analysis, targets_analysis))
+
+            return new_proof_state
 
 
 def print_proof_state(goal: Goal):
@@ -1256,7 +1486,7 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
     # Fixme: changing i18n does not update the following dic,
     #  even if module is reloaded (see config_window)
     # from deaduction.pylib.math_display import plural_types, numbers, plurals
-    update_plurals()
+    # update_plurals() FIXME: done in settings?
     new_sentence = ""
     if not objects:
         return new_sentence
@@ -1271,16 +1501,16 @@ def introduce_several_object(objects: [MathObject], format_) -> str:
     else:  # More than one object
         names = ", ".join([obj.to_display(format_) for obj in objects])
         number = len(objects)
-        if len(objects) <= len(numbers):
-            number = numbers[number]  # text version of the number
+        if len(objects) <= len(MathDisplay.numbers):
+            number = MathDisplay.numbers[number]  # text version of the number
         utf8_type = objects[0].math_type_to_display(format_='utf8',
                                                     text=True)
         type_ = objects[0].math_type_to_display(format_=format_,
                                                 text=True)
-        plural_type = plural_types(type_, utf8_type)
+        plural_type = MathDisplay.plural_types(type_, utf8_type)
 
         if plural_type:
-            shape = plurals[_("Let {} be {}")]
+            shape = MathDisplay.plurals[_("Let {} be {}")]
             new_sentence = shape.format(names, number, plural_type) + "."
 
     if not new_sentence:  # No plural found: introduce one by one.

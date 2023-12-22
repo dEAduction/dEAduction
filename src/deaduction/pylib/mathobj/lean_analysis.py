@@ -89,7 +89,7 @@ details = """
             info_field (sep_slash info_field)*
             closed_bra
     info_field = info_field_name ": " info_field_content    
-    info_field_name = !"type" ("name" / "identifier" / "pp_type" / "value") 
+    info_field_name = ("name" / "identifier" / "pp_type" / "value" / "binder_info") 
     info_field_content = any_non_sep_symbol+ 
     
     node_name = ~"[a-z A-Z 0-9 _∀∃+-<>≥≤!]"+

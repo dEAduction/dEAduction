@@ -35,6 +35,8 @@ This file is part of d∃∀duction.
 
 import                          logging
 
+from typing import Optional
+
 from PySide2.QtCore import    ( Slot,
                                 QTimer,
                                 Qt)
@@ -54,17 +56,22 @@ from PySide2.QtWidgets import ( QAction,
                                 QSplitter,
                                 QSizePolicy,
                                 QAbstractItemView,
-                                QPushButton)
+                                QPushButton,
+                                QFrame)
 
-from deaduction.dui.utils               import   replace_widget_layout
-from deaduction.dui.elements            import ( ActionButton,
-                                                 ActionButtonsWidget,
-                                                 StatementsTreeWidget,
-                                                 StatementsTreeWidgetItem,
-                                                 MathObjectWidget,
-                                                 MathObjectWidgetItem,
-                                                 TargetWidget)
+from deaduction.dui.utils               import   clear_layout
+from deaduction.dui.elements            import (ActionButton,
+                                                ProveUseModeSetter,
+                                                ActionButtonsLine,
+                                                ActionButtonsGroup,
+                                                ActionButtonsLyt,
+                                                StatementsTreeWidget,
+                                                StatementsTreeWidgetItem,
+                                                MathObjectWidget,
+                                                MathObjectWidgetItem,
+                                                TargetWidget)
 from deaduction.dui.primitives          import deaduction_fonts
+from deaduction.dui.stages.calculator import CalculatorController
 
 from deaduction.pylib.coursedata        import   Exercise
 from deaduction.pylib.proof_state       import   Goal
@@ -91,9 +98,7 @@ class ExerciseCentralWidget(QWidget):
             - the properties widget (self.props_wgt) for math.
               properties (e.g. f is continuous);
         - the 'action area' widgets:
-            - the logic buttons (self.logic_btns);
-            - the proof buttons (self.proof_btns);
-            - the magic buttons (self.magic_btns), if any
+            - the action buttons,
             - the statements tree (self.statements_tree, see
               StatementsTreeWidget.__doc__).
 
@@ -111,11 +116,11 @@ class ExerciseCentralWidget(QWidget):
     with the method update_goal. Note that neither the exercise (used in
     self.__init__) nor the goal are kept as class attributes!
 
-    :attribute logic_btns ActionButtonsWidget: Logic buttons available
+    :attribute logic_btns ActionButtonsLine: Logic buttons available
         for this exercise.
     :attribute objects_wgt MathObjectWidget: Widget for context
         objects (e.g. f:X->Y a function).
-    :attribute proof_btns ActionButtonsWidget: Proof buttons
+    :attribute proof_btns ActionButtonsLine: Proof buttons
         available for this exercise.
     :attribute props_wgt MathObjectWidget: Widget for context
         properties (e.g. f is continuous).
@@ -152,19 +157,35 @@ class ExerciseCentralWidget(QWidget):
         self.__context_lyt  = QVBoxLayout()
         self.__context_actions_lyt = QHBoxLayout()
         self.__actions_lyt         = QVBoxLayout()
-        self.__action_btns_lyt     = QVBoxLayout()
+        # self.__action_buttons_widgets_dict = dict()
+        self.__action_btns_lyt     = None  # init by init_action_layout
 
-        self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        self.__action_btns_lyt.setSpacing(0)
-        action_title = _('Actions (logical rules and statements)')
+        # self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         context_title = _('Context (objects and properties)')
-        self.__actions_gb = QGroupBox(action_title)
+        self.__actions_gb = None
         self.__context_gb = QGroupBox(context_title)
 
         # ──────────────── Init Actions area ─────────────── #
-        ActionButton.from_symbol = dict()
-        self.action_btns_wdgs = []
+        # Action buttons
+        ActionButton.from_name = dict()
+        self.__prove_btns = ActionButtonsLine(exercise.available_logic_prove,
+                                              show_label=False)
+        self.__use_btns = ActionButtonsLine(exercise.available_logic_use,
+                                            show_label=False)
+        self.__logic_1_btns = ActionButtonsLine(exercise.available_logic_1)
+        self.__logic_2_btns = ActionButtonsLine(exercise.available_logic_2)
+        self.__compute_btns = ActionButtonsLine(exercise.available_compute)
+        self.__magic_proof_btns = ActionButtonsLine(exercise.available_magic +
+                                                    exercise.available_proof)
 
+        # !! Somehow, this does not work for self.__prove_buttons if called
+        # after these are set into ths GroupBox in switch mode, so I put it
+        # here:
+        self.set_font_for_action_buttons()
+
+        self.init_action_btns_layout()
+
+        # Statements
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
@@ -183,10 +204,6 @@ class ExerciseCentralWidget(QWidget):
 
         # ───────────── Put widgets in layouts ───────────── #
 
-        # Actions
-        self.init_action_layout()
-        self.__actions_gb.setLayout(self.__actions_lyt)
-
         # Context
         self.splitter = True
         self.__context_splitter = QSplitter(Qt.Vertical)
@@ -198,16 +215,22 @@ class ExerciseCentralWidget(QWidget):
         #       arbitrarily long
         #       - Actions should be fixed size, determined by the
         #       number of buttons
+        # self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
+        #                                 QSizePolicy.Preferred)
+        # self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
+        #                                 QSizePolicy.Preferred)
+
+        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
+
+        self.__context_actions_lyt.addWidget(self.__context_gb)
+        self.set_actions_gb()
+        self.__context_actions_lyt.addWidget(self.__actions_gb)
         self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
                                         QSizePolicy.Preferred)
         self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
                                         QSizePolicy.Preferred)
 
-        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-
-        self.__context_actions_lyt.addWidget(self.__context_gb)
-        self.__context_actions_lyt.addWidget(self.__actions_gb)
-
+        # Set main layout
         self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
 
@@ -230,35 +253,94 @@ class ExerciseCentralWidget(QWidget):
 
         self.__context_gb.setTitle(_('Context (objects and properties)'))
 
-    def init_action_layout(self):
+    def set_switch_mode(self, to_prove=True):
+        return self.__action_btns_lyt.set_switch_mode(to_prove)
+
+    @property
+    def switch_mode(self) -> str:
+        """
+        Return either 'prove' or 'use' or None.
+        """
+        return self.__action_btns_lyt.switch_mode
+
+    def init_action_btns_layout(self):
+        """
+        This method populates self.__action_btns_lyt. The basic bricks are
+        ActionButtonsWidgets, which are lines of ActionButtons. There are two
+        cases:
+        - In the simplest case, we just populate directly with
+        ActionButtonsWidgets.
+        - The more complicated case is when one or two buttons lines are
+        prove or use lines. Then the layout is split into two QGroupBoxes,
+        the first one will contain the prove/use buttons lines, maybe with a
+        switcher, and the second one contains the other buttons.
+        """
+
+        # (1) Remove ActionButtonWidgets from layout
+        if self.__action_btns_lyt:
+            for action_buttons_widget in self.__action_buttons_lines:
+                self.__action_btns_lyt.removeWidget(action_buttons_widget)
+
         exercise = self.exercise
+        mode = cvars.get('logic.button_use_or_prove_mode')
 
-        # ───────────── Action buttons ───────────── #
-        short = cvars.get("display.short_buttons_line", True)
-        if short:
-            action_lines = [exercise.available_logic_1,
-                            exercise.available_logic_2,
-                            exercise.available_magic + exercise.available_proof]
-        else:
-            action_lines = [exercise.available_logic,
-                            exercise.available_proof,
-                            exercise.available_magic]
-        self.action_btns_wdgs = []
-        for line in action_lines:
-            if line:
-                btns_wdg = ActionButtonsWidget(line)
-                self.action_btns_wdgs.append(btns_wdg)
-                self.__action_btns_lyt.addSpacing(5)
-                self.__action_btns_lyt.addWidget(btns_wdg)
-                inner = True
-        # ───────────── Statements ───────────── #
-        statements = exercise.available_statements
-        outline = exercise.course.outline
-        self.statements_tree = StatementsTreeWidget(statements, outline)
+        # if exercise.prove_use_mode_set_by_exercise():
+        #     dpu = False
+        #     prove_wdg = None
+        #     use_wdg = None
+        #     other_wdgs = []
+        if mode == 'display_unified':
+            dpu = False
+            prove_wdg = None
+            use_wdg = None
+            other_wdgs = [self.__logic_1_btns,
+                          self.__logic_2_btns,
+                          self.__magic_proof_btns]
+        else:  # mode == "display_both" or "display_switch"
+            dpu = True
+            prove_wdg = self.__prove_btns
+            use_wdg = self.__use_btns
+            other_wdgs = [self.__logic_2_btns,
+                          self.__magic_proof_btns]
 
-        # Put action buttons and statement tree in lyt
+        switcher = (mode == 'display_switch')
+
+        # List of (title, [ActionButtonsLine]):
+        groups = [(_('Prove:'), [prove_wdg]),
+                  (_('Use:'), [use_wdg]),
+                  (None, other_wdgs),
+                  (_('Compute (experimental):'), [self.__compute_btns])
+                  ]
+        self.__action_btns_lyt = ActionButtonsLyt(groups)
+                                                  # display_prove_use=dpu,
+                                                  # switcher=switcher)
+
+        self.__action_btns_lyt.setSpacing(2)
+
+    def set_actions_gb(self):
+        action_title = _('Actions (logical rules and statements)')
+        new_actions_gb = QGroupBox(action_title)
+
+        # Insert btns and statements in layout
+        self.__actions_lyt         = QVBoxLayout()
+
+        self.__actions_lyt.setSpacing(10)
+        # print(f"margins {self.__actions_lyt.contentsMargins()}")
+        mode = cvars.get('logic.button_use_or_prove_mode')
+        # self.__actions_lyt.setContentsMargins(0,
+        #                                       0 if mode == "display_unified" else -2,
+        #                                       0, 0)
         self.__actions_lyt.addLayout(self.__action_btns_lyt)
         self.__actions_lyt.addWidget(self.statements_tree)
+        # Expand statements but not buttons:
+        self.__actions_lyt.setStretch(0, 0)  # Buttons
+        self.__actions_lyt.setStretch(1, 10)  # Statements
+
+        new_actions_gb.setLayout(self.__actions_lyt)
+        new_actions_gb.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+
+        # self.__context_actions_lyt.addWidget(new_actions_gb)
+        self.__actions_gb = new_actions_gb
 
     def set_drag_and_drop_config(self):
         # (1) Drags statements:
@@ -310,13 +392,36 @@ class ExerciseCentralWidget(QWidget):
 # Methods called by __init__ #
 ##############################
 
+    @property
+    def __action_buttons_lines(self) -> [ActionButtonsLine]:
+        return [self.__prove_btns,
+                self.__use_btns,
+                self.__logic_1_btns,
+                self.__logic_2_btns,
+                self.__magic_proof_btns,
+                self.__compute_btns]
+
+    @property
+    def action_buttons(self) -> [ActionButton]:
+        btns = sum([action_buttons_widgets.buttons
+                    for action_buttons_widgets in
+                    self.__action_buttons_lines], [])
+        return btns
+
+    def set_font_for_action_buttons(self):
+        symbol_size = deaduction_fonts.symbol_button_font_size
+        for btn in self.action_buttons:
+            btn.update()
+            if btn.is_symbol():
+                btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+
     def set_font(self):
         """
         OBSOLETE doc:
         Set the font size for some sub-widgets.
         Button font sizes are set in the widgets methods.
         Target font size is set in TargetWidget.
-        ActionButtonsWidget max-height is set so that they keep their nice
+        ActionButtonsLine max-height is set so that they keep their nice
         appearance on Mac, whatever the font size.
         """
 
@@ -343,13 +448,7 @@ class ExerciseCentralWidget(QWidget):
             palette.setBrush(palette.Inactive, palette.Highlight, color)
             wdg.setPalette(palette)
 
-        # Modify font for symbol buttons
-        symbol_size = self.deaduction_fonts.symbol_button_font_size
-        for btns_wdg in self.action_btns_wdgs:
-            for btn in btns_wdg.buttons:
-                btn.update()
-                if btn.is_symbol():
-                    btn.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+        self.set_font_for_action_buttons()
 
     def organise_main_layout(self):
         """
@@ -363,7 +462,7 @@ class ExerciseCentralWidget(QWidget):
                 # context_actions_lyt = self.__main_lyt.itemAt(0)
                 self.__main_lyt.removeItem(self.__context_actions_lyt)
                 self.__main_lyt.addLayout(self.__context_actions_lyt)
-            elif  not self.target_display_on_top and \
+            elif not self.target_display_on_top and \
                     self.__main_lyt.indexOf(self.target_wgt) == 0:
                 self.__main_lyt.removeWidget(self.target_wgt)
                 self.__main_lyt.addWidget(self.target_wgt)
@@ -374,6 +473,10 @@ class ExerciseCentralWidget(QWidget):
             else:
                 self.__main_lyt.addLayout(self.__context_actions_lyt)
                 self.__main_lyt.addWidget(self.target_wgt)
+
+    def update_statements_tooltips(self):
+        if self.statements_tree:
+            self.statements_tree.update_tooltips()
 
     def update(self):
         """
@@ -387,7 +490,7 @@ class ExerciseCentralWidget(QWidget):
 
         # for buttons in (self.logic_btns, self.proof_btns, self.magic_btns):
         #     buttons.update()
-        for btn in self.actions_buttons:
+        for btn in self.action_buttons:
             btn.update()
 
     ##############
@@ -396,20 +499,6 @@ class ExerciseCentralWidget(QWidget):
     @property
     def target_display_on_top(self):
         return cvars.get('display.target_display_on_top', True)
-
-    @property
-    def actions_buttons(self) -> [ActionButton]:
-        """
-        A list of all logic buttons and proof
-        buttons (instances of the class ActionButton).
-        """
-        btns = []
-        for line in self.action_btns_wdgs:
-            btns.extend(line.buttons)
-        return btns
-        # return self.logic_btns.buttons \
-        #         + self.proof_btns.buttons \
-        #         + self.magic_btns.buttons
 
     ###########
     # Methods #
@@ -433,15 +522,13 @@ class ExerciseCentralWidget(QWidget):
         :param yes: See above.
         """
 
-        to_freeze = [self.objects_wgt,
+        to_freeze = [# self.__context_gb,
+                     self.objects_wgt,
                      self.props_wgt,
-                     # self.logic_btns,
-                     # self.proof_btns,
-                     # self.magic_btns,
-                     self.statements_tree]
-        to_freeze += self.action_btns_wdgs
+                     self.__actions_gb]
         for widget in to_freeze:
-            widget.setEnabled(not yes)
+            if widget:
+                widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
                     pending_goals):
@@ -454,6 +541,10 @@ class ExerciseCentralWidget(QWidget):
         just display the nb of pending goals.
         """
 
+        # # FIXME!!!!!
+        # self.calculator = CalculatorController(context=new_goal.context_objects)
+        # self.calculator.show()
+        #
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         new_target     = new_goal.target
@@ -461,13 +552,16 @@ class ExerciseCentralWidget(QWidget):
         new_props = new_goal.context_props
         self.objects_wgt.set_math_objects(new_objects)
         self.props_wgt.set_math_objects(new_props)
+        if new_goal.new_objects:
+            self.objects_wgt.scrollToBottom()
+        if new_goal.new_props:
+            self.props_wgt.scrollToBottom()
 
         pgn = len(pending_goals)
         self.target_wgt.replace_target(new_target)
         self.target_wgt.set_pending_goals_counter(pgn)
 
         self.current_goal = new_goal
-        # self.set_font()
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
 
@@ -492,6 +586,8 @@ class ExerciseStatusBar(QStatusBar):
     erased but a blank msg stays in the list.
     """
 
+    pending_msg_time_interval = 5000
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -501,6 +597,8 @@ class ExerciseStatusBar(QStatusBar):
 
         # Pending msgs
         self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.timeout.connect(self.show_pending_msgs)
         # self.pending_msgs = []
         self.proof_msg: callable = None  # This will be set from outside
 
@@ -528,6 +626,10 @@ class ExerciseStatusBar(QStatusBar):
         self.help_button.hide()
         self.show_success_icon()  # Trick: the status bar adapts its height
         self.hide_icon()
+
+    @property
+    def txt(self):
+        return self.messageWidget.text()
 
     @property
     def display_success_msgs(self):
@@ -560,19 +662,11 @@ class ExerciseStatusBar(QStatusBar):
         This method is called by the timer, when there is a new_goal msg to
         display on top of the usual success/error msgs.
         """
-        # if self.pending_msgs:
-        #     msg = self.pending_msgs.pop(0)
-        #     if msg:
-        #         self.show_normal_msg(msg)
 
+        self.erase()
         proof_msg = self.proof_msg()
         if proof_msg:
             self.show_normal_msg(proof_msg)
-
-    # def cancel_pending_msgs(self):
-    #     if self.pending_msgs:
-    #         log.debug("(Cancelling first pending msg)")
-    #         self.pending_msgs = [""] * len(self.pending_msgs)
 
     def show_error_icon(self):
         self.iconWidget.setPixmap(self.error_pixmap)
@@ -588,6 +682,7 @@ class ExerciseStatusBar(QStatusBar):
     def set_message(self, msg: str):
         self.stop_thinking()
         self.messageWidget.setText(msg)
+        return
 
     def erase(self):
         self.set_message("")
@@ -599,6 +694,11 @@ class ExerciseStatusBar(QStatusBar):
         self.hide_icon()
         self.set_message(msg)
 
+    def stop_timer(self):
+        # print(f"Timer remaining {self.timer.remainingTime()}, stopped?")
+        if self.timer.isActive():
+            self.timer.stop()
+
     def manage_msgs(self, proof_step):
         """
         Display a message in the status bar. Three kinds of messages are
@@ -609,8 +709,8 @@ class ExerciseStatusBar(QStatusBar):
         - success and error msgs are temporary msgs.
         """
 
-        if self.timer.isSingleShot():
-            self.timer.stop()
+        self.stop_timer()
+
         # self.enable_msgs()
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
@@ -631,9 +731,21 @@ class ExerciseStatusBar(QStatusBar):
 
         # Show proof msg if any:
         if tmp_msg:
-            self.timer.singleShot(3000, self.show_pending_msgs)
+            duration = self.pending_msg_time_interval
+            self.timer.setInterval(duration)
+            # self.timer.singleShot(duration, self.show_pending_msgs)
+            self.timer.start()
         else:  # Show immediately
             self.show_pending_msgs()
+
+    def show_tmp_msg(self, msg: str, duration=None):
+        if not duration:
+            duration = self.pending_msg_time_interval
+        self.timer.setInterval(duration)
+        self.set_message(msg)
+        self.timer.start()
+        # self.timer.singleShot(duration, self.erase)
+        # self.timer.singleShot(duration, self.show_pending_msgs)
 
 
 class ExerciseToolBar(QToolBar):
@@ -698,6 +810,7 @@ class ExerciseToolBar(QToolBar):
         self.go_to_end.setText(_('Jump to end of proof'))
         self.toggle_lean_editor_action.setText(_('Toggle L∃∀N'))
         self.toggle_proof_outline_action.setText(_('Toggle proof outline'))
+        self.toggle_proof_tree.setText(_("Toggle proof tree"))
         self.toggle_help_action.setText(_('Toggle help window'))
 
 
@@ -706,6 +819,11 @@ class GlobalToolbar(QToolBar):
         super().__init__(_('Toolbar'))
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
+        self.stop = QAction(
+                QIcon(str((icons_dir / 'icons8-stop-sign-48').resolve())),
+                _('Stop me from thinking!'), self)
+        # self.stop.setShortcut(QKeySequence(QKeySequence.Cancel))
+
         self.settings_action = QAction(
                 QIcon(str((icons_dir / 'settings').resolve())),
                 _('Settings'), self)
@@ -714,8 +832,14 @@ class GlobalToolbar(QToolBar):
         self.change_exercise_action = QAction(
                 QIcon(str((icons_dir / 'change_exercise.png').resolve())),
                 _('Change exercise'), self)
+        self.save_history_action = QAction(
+            QIcon(str((icons_dir / 'icons8-save-96.png').resolve())),
+            _("Save proof"), self)
 
+        self.addAction(self.stop)
         self.addAction(self.settings_action)
+        self.addAction(self.save_history_action)
+        self.save_history_action.setShortcut(QKeySequence.Save)
         self.addAction(self.change_exercise_action)
         self.setLayoutDirection(Qt.RightToLeft)
 
@@ -725,5 +849,7 @@ class GlobalToolbar(QToolBar):
     def update(self):
         self.change_exercise_action.setText(_('Change exercise'))
         self.settings_action.setText(_("Settings"))
+        self.stop.setText(_('Stop me from thinking!'))
+        self.save_history_action.setText(_("Save proof"))
 
 

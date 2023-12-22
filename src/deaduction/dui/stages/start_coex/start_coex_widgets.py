@@ -46,40 +46,39 @@ from PySide2.QtCore    import (Qt,
                                Slot,
                                QEvent,
                                QSettings)
-from PySide2.QtGui     import (QFont,
-                               QFontMetrics,
-                               QPixmap)
-from PySide2.QtWidgets import (QApplication,
-                               QCheckBox,
-                               QDialog,
-                               QFileDialog,
-                               QHBoxLayout,
-                               QLabel,
-                               QLayout,
-                               QLineEdit,
-                               QSpacerItem,
-                               QPushButton,
-                               QTabWidget,
-                               QTextEdit,
-                               QVBoxLayout,
-                               QWidget)
+from PySide2.QtGui     import  QKeySequence, QIcon
+from PySide2.QtWidgets import (QApplication, QCheckBox, QDialog, QFileDialog,
+                               QHBoxLayout, QLabel, QLayout, QSpacerItem,
+                               QPushButton, QTabWidget, QTextEdit, QVBoxLayout,
+                               QWidget, QShortcut, QToolBar, QAction, QFrame,
+                               QStackedLayout, QMessageBox)
 
 import deaduction.pylib.config.vars  as     cvars
 import deaduction.pylib.config.dirs  as     cdirs
-from deaduction.dui.primitives      import (DisclosureTriangle,
+
+import deaduction.pylib.utils.filesystem as fs
+from deaduction.dui.primitives      import (DisclosureDict,
                                             ButtonsDialog,
-                                            MathTextWidget)
+                                            MathTextWidget,
+                                            GoalTextWidget,
+                                            YesNoDialog)
 from deaduction.dui.elements        import (MathObjectWidget,
                                             TargetLabel,
-                                            RecentCoursesLW,
-                                            RecentCoursesLWI,
+                                            CoursesLW,
+                                            CoursesLWI,
                                             StatementsTreeWidget,
-                                            StatementsTreeWidgetItem)
+                                            StatementsTreeWidgetItem,
+                                            GoalTextWidget,
+                                            GoalMathWidget)
+
+from deaduction.dui.elements.start_coex_widget_classes import ChooseExerciseWidgetItem
+
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
+from deaduction.pylib.math_display.pattern_init import PatternInit
 from deaduction.pylib.server import ServerInterface
 
 log = logging.getLogger(__name__)
@@ -131,7 +130,8 @@ class AbstractCoExChooser(QWidget):
 
         super().__init__()
 
-        self.__preview_wgt = QLabel(_('No preview yet.'))
+        self.__preview_wgt = QTextEdit(_('No preview yet.'))
+        self.__preview_wgt.setReadOnly(True)
         self.__preview_wgt.setStyleSheet('color: gray;')
         spacer1             = QSpacerItem(1, 5)
         spacer2             = QSpacerItem(1, 5)
@@ -205,7 +205,7 @@ class AbstractCoExChooser(QWidget):
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
         if details:
-            details_wgt = DisclosureTriangle(_('Details:'), details)
+            details_wgt = DisclosureDict(_('Details:'), details)
             details_wgt.expand(expand_details)
 
             layout.addWidget(details_wgt)
@@ -229,9 +229,9 @@ class CourseChooser(AbstractCoExChooser):
     """
 
     course_chosen = Signal(Course)
-    goto_exercise = Signal()
+    goto_exercises = Signal()
 
-    def __init__(self, servint):
+    def __init__(self, servint, select_first_item=True):
         """
         See AbstractCoExChooser.__init__ docstring. Here, the browser
         layout is made of a browse-button to browse courses files
@@ -243,34 +243,105 @@ class CourseChooser(AbstractCoExChooser):
         self.servint: ServerInterface = servint
 
         # Browse button
-        self.__browse_btn = QPushButton(_('Browse files...'))
+        self.__browse_btn = QPushButton(_('Browse all files...'))
         self.__browse_btn.setAutoDefault(False)
         self.__browse_btn.clicked.connect(self.__browse_courses)
 
         # Recent courses widget
-        self.__recent_courses_wgt = RecentCoursesLW()
+        self.__courses_lyt = QStackedLayout()
+        self.__preset_courses_wgt = CoursesLW(recent=False)
+        self.__recent_courses_wgt = CoursesLW(recent=True)
+        self.__courses_lyt.addWidget(self.__preset_courses_wgt)
+        self.__courses_lyt.addWidget(self.__recent_courses_wgt)
+
         browser_layout = QVBoxLayout()
+        self.__label_title = QLabel()
+        self.__label_title.setStyleSheet('font-weight: bold;')
+                                         # 'font-size:   17pt;')
+        browser_layout.addWidget(self.__label_title)
+        browser_layout.addLayout(self.__courses_lyt)
         browser_layout.addWidget(self.__browse_btn)
-        label_title = QLabel(_("Recent files") + _(":"))
-        browser_layout.addWidget(label_title)
-        browser_layout.addWidget(self.__recent_courses_wgt)
 
         # Signals
+        self.__courses_wgt = self.__preset_courses_wgt
+        self.__preset_courses_wgt.currentItemChanged.connect(
+            self.current_item_changed)
+        self.__preset_courses_wgt.itemDoubleClicked.connect(
+                lambda x: self.goto_exercises.emit())
         self.__recent_courses_wgt.currentItemChanged.connect(
             self.current_item_changed)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
-                lambda x: self.goto_exercise.emit())
+                lambda x: self.goto_exercises.emit())
 
         super().__init__(browser_layout)
+        self.show_recent_courses()
+        if select_first_item and self.__courses_wgt:
+            self.__courses_wgt.select_first_item()
+            # self.current_item_changed()
 
+    @property
+    def __current_item(self):
+        return self.__courses_wgt.currentItem()
+
+    def set_selected_course(self):
+        """
+        Select the current course item:
+            - Call for loading of initial proof states
+            - Preview course.
+        """
+        course_item: CoursesLWI = self.__courses_wgt.currentItem()
+        if course_item:
+            if not course_item.course:
+                abs_path = course_item.abs_course_path
+                course_item.course = Course.from_file(abs_path)
+                self.__set_initial_proof_states(course_item.course)
+            self.set_preview(course_item.course)
+
+    def give_focus_to_course_wdg(self):
+        """
+        Give the focus to the course list. This should be called after any
+        action that gives focus to another part of the window. It allows usr
+        to select course with the keyboard's arrows.
+        """
+        self.__courses_wgt.setFocus()
+        if self.__current_item:
+            self.__courses_wgt.setItemSelected(self.__current_item, True)
+
+    @Slot()
     def current_item_changed(self):
-        course_item = self.__recent_courses_wgt.currentItem()
-        course_path = course_item.course_path
-        course = Course.from_file(course_path)
-        self.__set_initial_proof_states(course)
-        self.set_preview(course)
+        """
+        This is called when the course item changes: the course is selected,
+        usr sees the details, and we give focus back to the course list widget.
+        """
+        self.set_selected_course()
+        self.give_focus_to_course_wdg()
 
-    def add_browsed_course(self, course: Course):
+    @Slot()
+    def show_recent_courses(self, yes=None):
+        """
+        Select recent courses / preset courses.
+        If yes is None then select according to the config settings.
+        """
+        if yes is None:
+            yes = cvars.get('functionality.show_recent_courses_only')
+        else:
+            cvars.set('functionality.show_recent_courses_only', yes)
+
+        if yes:
+            self.__courses_lyt.setCurrentIndex(1)
+            self.__courses_wgt = self.__recent_courses_wgt
+            title = _("Recent files")
+
+        else:
+            self.__courses_lyt.setCurrentIndex(0)
+            self.__courses_wgt = self.__preset_courses_wgt
+            title = _("Preset files")
+
+        # self.__label_title.setText(title + _(" (double click to select file):"))
+        self.__label_title.setText(title + _(":"))
+        self.current_item_changed()
+
+    def add_browsed_course(self, course: Course, browsed=False):
         """
         Add the Course course to the list of recent courses
         (self.__recent_courses_wgt) as if usr had chose this course by
@@ -278,12 +349,21 @@ class CourseChooser(AbstractCoExChooser):
         useful in the method AbstractCoExChooser.__preset_exercise to
         preset / preview an exercise.
 
+        If browsed is True, then indicate that the course has been browsed.
+
         :param course: Course to be added to the recent courses list.
         """
-
-        course_path  = course.relative_course_path
-        course_title = course.title
-        self.__recent_courses_wgt.add_browsed_course(course_path, course_title)
+        # Add course on top of self.__recent_course_wgt,
+        # and set the current corresponding item
+        self.__recent_courses_wgt.add_browsed_course(course,
+                                                     browsed=browsed)
+        yes = cvars.get('functionality.show_recent_courses_only')
+        if not yes:
+            # Try to select course in preset courses
+            in_preset = self.__preset_courses_wgt.set_current_item(course)
+            # If fails, switch to recent courses to display course
+            if not in_preset:
+                self.show_recent_courses(yes=True)
 
     def set_preview(self, course: Course):
         """
@@ -294,7 +374,7 @@ class CourseChooser(AbstractCoExChooser):
         course files or clicking on a recent course in
         self.__recent_courses_wgt), the signal course_chosen is emitted with
         the course. It is received in StartExerciseDialog, which then
-        instanciates an ExerciseChooser for this course and the view is set to
+        instantiates an ExerciseChooser for this course and the view is set to
         the exercise chooser.
         """
 
@@ -323,6 +403,13 @@ class CourseChooser(AbstractCoExChooser):
 
         if not details:  # Set details to None if empty
             details = None
+
+        log.info(course.metadata)
+        # print(course.metadata)
+        display_constant = course.metadata.get('display')
+        # print(display_constant)
+        if display_constant:
+            PatternInit.pattern_init(display_constant)
 
         super().set_preview(main_widget=None, title=title, subtitle=subtitle,
                             details=details, description=description,
@@ -362,6 +449,12 @@ class CourseChooser(AbstractCoExChooser):
             log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
             self.servint.set_statements(course, [course.statements[0]])
 
+    def find_course(self, abs_course_path):
+        course = self.__preset_courses_wgt.find_course(abs_course_path)
+        if not course:
+            course = self.__recent_courses_wgt.find_course(abs_course_path)
+        return course
+
     #########
     # Slots #
     #########
@@ -373,22 +466,31 @@ class CourseChooser(AbstractCoExChooser):
         course-file, a Course object is instantiated and the method
         set_preview is called.
         """
+
+        # FIXME: directory and filter do not work on Linux?!
         directory = cvars.get('others.course_directory',
-                              str(cdirs.usr_lean_exercises_dir))
+                              str(cdirs.usr_lean_exercises_dir.resolve()))
+        # directory = str(cdirs.home.resolve())
         dialog = QFileDialog(directory=directory)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean')
-        # dialog.setNameFilter('*.lean *.pkl')
 
         # TODO: Stop using exec_, not recommended by documentation
         if dialog.exec_():
-            course_path = Path(dialog.selectedFiles()[0])
-            course = Course.from_file(course_path)
+            abs_path = Path(dialog.selectedFiles()[0]).resolve()
+            # course_path = cdirs.relative_to_home(path)
+            course = self.find_course(abs_path)
+            if not course:
+                course = Course.from_file(abs_path)
 
-            title = course.title
-            self.__recent_courses_wgt.add_browsed_course(course_path, title)
-            self.__set_initial_proof_states(course)
-            self.set_preview(course)
+            if course:
+                self.add_browsed_course(course, browsed=True)
+            else:
+                dialog = QMessageBox()  # title=_('File selector')
+                dialog.setWindowTitle(_('File selector') + '— d∃∀duction')
+                dialog.setText(_("No file selected!\nSelect a '.lean' file"))
+                dialog.setIcon(QMessageBox.Warning)
+                dialog.exec_()
 
 
 class ExerciseChooser(AbstractCoExChooser):
@@ -418,6 +520,7 @@ class ExerciseChooser(AbstractCoExChooser):
     # received in the instance ofStartExerciseDialog and the Start
     # exercise button is enabled and set to default.
     exercise_previewed = Signal()
+    # current_exercise_changed = Signal()
 
     def __init__(self, course: Course, servint: ServerInterface):
         """
@@ -429,16 +532,18 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         self.course = course
         self.servint = servint
+        self.servint.initial_proof_state_set.connect(
+            self.__check_proof_state_for_preview)
 
-        self.__exercise = None
         browser_layout = QVBoxLayout()
-        exercises_tree = StatementsTreeWidget(course.exercises,
+
+        exercises = course.exercises_including_saved_version()
+        exercises_tree = StatementsTreeWidget(exercises,
                                               course.outline,
                                               is_exercise_list=True)
         exercises_tree.resizeColumnToContents(0)
-        browser_layout.addWidget(exercises_tree)
 
-        exercises_tree.currentItemChanged.connect(self.current_item_changed)
+        browser_layout.addWidget(exercises_tree)
 
         self.__exercises_tree = exercises_tree
         self.__text_mode_checkbox = None
@@ -449,24 +554,57 @@ class ExerciseChooser(AbstractCoExChooser):
 
         self.__scrollbar_current_item_pos = 0
 
-        # Load fonts for math widgets
-        # self.deaduction_fonts = DeaductionFonts(self)
-        # font_size = self.deaduction_fonts.chooser_math_font_size
-        # self.math_fonts = self.deaduction_fonts.math_fonts
-        # self.math_fonts.setPointSize(font_size)
-
         super().__init__(browser_layout)
 
-    def current_item_changed(self):
+    @property
+    def __current_item(self):
         item = self.__exercises_tree.currentItem()
-        if isinstance(item, StatementsTreeWidgetItem):
-            exercise = item.statement
-            self.set_preview(exercise)
+        if hasattr(item, 'statement'):
+            return item
+
+    @property
+    def current_item_changed(self):
+        if self.__exercises_tree:
+            return self.__exercises_tree.currentItemChanged
+
+    @property
+    def exercise(self):
+        if self.__exercises_tree:
+            item = self.__exercises_tree.currentItem()
+            if isinstance(item, StatementsTreeWidgetItem):
+                exercise = item.statement
+                return exercise
+
+    def goto_exercise(self, exercise=None):
+        self.__exercises_tree.goto_statement(exercise)
+
+    def give_focus_to_exercises_wdg(self):
+        self.__exercises_tree.setFocus()
+        if not self.__current_item:
+            self.goto_exercise()  # Go to first exercise
+
+        self.__exercises_tree.setItemSelected(self.__current_item, True)
+
+    def show_statements(self, statements, yes=True):
+        """
+        Hide all the provided statements. Based on item_from_statement.
+        """
+        tree_widget = self.__exercises_tree
+        tree_widget.hide_statements(statements, not yes)
+        tree_widget.setColumnCount(2 if yes else 1)
 
     def exercises_tree_double_clicked_connect(self, slot):
         self.__exercises_tree.itemDoubleClicked.connect(slot)
 
-    def set_preview(self, exercise: Exercise):
+    def give_focus_to_exercises_tree(self):
+        self.__exercises_tree.setFocus()
+
+    def selected_exercise_is_from_history_file(self):
+        exercise = self.exercise
+        if exercise:
+            return exercise.history_date()
+
+    def preview_exercise(self):
         """
         Set exercise preview. See AbstractCoExChooser.set_preview
         docstring. The exercise's title, subtitle and description are
@@ -478,25 +616,25 @@ class ExerciseChooser(AbstractCoExChooser):
         :param exercise: The exercise to be previewed.
         """
 
-        self.__exercise = exercise
         main_widget     = QWidget()
         main_widget_lyt = QVBoxLayout()
         main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-        # with_preview = exercise.course.filetype == '.pkl'
-        # TODO: in case no initial ps, do the same thing except the text,
-        #  so that the window does not resize.
-        #  When Lean's answer comes, just call a fonction that changes the
-        #  text.
+        exercise = self.exercise
+        if not exercise:
+            return
 
         if exercise.initial_proof_state:
 
             # Checkbox
             self.__text_mode_checkbox = QCheckBox(_('Text mode'))
             self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
-            cb_lyt = QHBoxLayout()
-            cb_lyt.addStretch()
-            cb_lyt.addWidget(self.__text_mode_checkbox)
+            # self.__history_checkbox = QCheckBox(_('Show saved exercises'))
+            # self.__history_checkbox.clicked.connect(self.toggle_history)
+            btns_lyt = QHBoxLayout()
+            # btns_lyt.addWidget(self.__history_checkbox)
+            btns_lyt.addStretch()
+            btns_lyt.addWidget(self.__text_mode_checkbox)
 
             main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
@@ -509,14 +647,14 @@ class ExerciseChooser(AbstractCoExChooser):
             self.__goal_widget = self.create_widget()
             main_widget_lyt.addWidget(self.__goal_widget)
             main_widget_lyt.addStretch()  # -> check box at bottom
-            main_widget_lyt.addLayout(cb_lyt)
+            main_widget_lyt.addLayout(btns_lyt)
             self.__main_widget_lyt = main_widget_lyt
         else:
-            self.servint.initial_proof_state_set.connect(
-                                        self.__check_proof_state_for_preview)
             # Try to get preview with high priority:
+            exercise_ = (exercise if not exercise.original_exercise
+                         else exercise.original_exercise)
             self.servint.set_statements(exercise.course,
-                                        [exercise],
+                                        [exercise_],
                                         on_top=True)
             widget_lbl = QTextEdit(_('Preview not available (be patient...)'))
             widget_lbl.setStyleSheet('color: gray;')
@@ -529,18 +667,15 @@ class ExerciseChooser(AbstractCoExChooser):
 
         # TODO: Add subtitle, task…
         title       = exercise.pretty_name
+        if exercise.history_date():
+            title += " " + _("(saved proof)")
         description = exercise.description
-
-        self.__exercises_tree.goto_statement(exercise)
 
         super().set_preview(main_widget=main_widget, title=title,
                             subtitle=None, details=None,
                             description=description, expand_details=False)
 
         self.exercise_previewed.emit()
-        # item = self.__exercises_tree.currentItem()
-        # self.__exercises_tree.scrollToItem(item)
-                               # hint=self.__exercises_tree.PositionAtCenter)
 
     def create_widget(self):
         """
@@ -550,19 +685,9 @@ class ExerciseChooser(AbstractCoExChooser):
         The widget is actually created only at first call.
         """
         # Logical data
-        exercise = self.__exercise
+        exercise = self.exercise
         proofstate = exercise.initial_proof_state
         goal = proofstate.goals[0]  # Only one goal
-        # goal.name_bound_vars(to_prove=False)
-
-        # BOF: keep standard size here.
-        # main_font_size = cvars.get('display.main_font_size')
-        # tooltips_font_size = cvars.get('display.tooltips_font_size',
-        #                                "14pt")
-        # style = f'QTextEdit {{font-size: {main_font_size};}}' \
-        #         f'QListView {{font-size: {main_font_size};}}' \
-        #         f'QToolTip {{font-size: {tooltips_font_size};}}'
-        # self.setStyleSheet(style)
 
         # ────────────────────── Rest ────────────────────── #
         if self.__text_mode_checkbox.isChecked():
@@ -570,89 +695,30 @@ class ExerciseChooser(AbstractCoExChooser):
             # Text widget #
             ###############
             # The goal is presented in a single widget.
-            self.__text_wgt = MathTextWidget()
-            # self.__text_wgt.setObjectName("math_widget")
-            # print(f"Coex Font: {self.__text_wgt.font().defaultFamily()}")
-            # height = self.__text_wgt.sizeHint().height()
-            # print(f"Height: {height}")
-            # self.__text_wgt.setMaximumHeight(height)
-
-            self.__text_wgt.setReadOnly(True)
-            # self.__text_wgt.setFont(self.math_fonts)
-            text = goal.goal_to_text(format_="html")
-            self.__text_wgt.setHtml(text)
+            open_problem = exercise.is_open_question
+            self.__text_wgt = GoalTextWidget(goal,
+                                             open_problem=open_problem,
+                                             to_prove=True)
             widget = self.__text_wgt
+            # self.__text_wgt.setReadOnly(True)
+            # # self.__text_wgt.setFont(self.math_fonts)
+            # text = goal.goal_to_text(format_="html",
+            #                          text_mode=True,
+            #                          open_problem=exercise.is_open_question)
+            # self.__text_wgt.setHtml(text)
+            # widget = self.__text_wgt
         else:
             #############
             # UI widget #
             #############
             # The widget with lists for math. objects and properties
             # and a QLAbel for the target.
-            target = goal.target
-            objects = goal.context_objects
-            properties = goal.context_props
-
-            # ───────────── Objects and properties ───────────── #
-            propobj_lyt = QHBoxLayout()
-            objects_wgt = MathObjectWidget(objects)
-            properties_wgt = MathObjectWidget(properties)
-            objects_lyt = QVBoxLayout()
-            properties_lyt = QVBoxLayout()
-
-            # Math font
-            objects_wgt.adjustSize()
-            # objects_wgt.setFont(self.math_fonts)
-            properties_wgt.adjustSize()
-            # properties_wgt.setFont(self.math_fonts)
-
-            objects_lyt.addWidget(QLabel(_('Objects:')))
-            properties_lyt.addWidget(QLabel(_('Properties:')))
-            objects_lyt.addWidget(objects_wgt)
-            properties_lyt.addWidget(properties_wgt)
-            propobj_lyt.addLayout(objects_lyt)
-            propobj_lyt.addLayout(properties_lyt)
-
-            # ───────────────────── Target ───────────────────── #
-            # target_wgt = MathObjectWidget(target=target)
-            target_wgt = TargetLabel(target)
-            # target_wgt.setFont(self.math_fonts)
-            # Set target_wgt height to 1 line: USELESS with QLabel
-            # font_metrics = QFontMetrics(math_font)
-            # text_size = font_metrics.size(0, target.math_type_to_display())
-            # text_height = text_size.height() * 2  # Need to tweak
-            # target_wgt.setMaximumHeight(text_height)
-
-            self.__ui_wgt = QWidget()
-
-            friendly_wgt_lyt = QVBoxLayout()
-            friendly_wgt_lyt.addLayout(propobj_lyt)
-            friendly_wgt_lyt.addWidget(QLabel(_('Target:')))
-            friendly_wgt_lyt.addWidget(target_wgt)
-            self.__ui_wgt.setLayout(friendly_wgt_lyt)
-            friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
-
+            open_problem = exercise.is_open_question
+            self.__ui_wgt = GoalMathWidget(goal, to_prove=True,
+                                           open_problem=open_problem)
             widget = self.__ui_wgt
 
         return widget
-
-    ##############
-    # Properties #
-    ##############
-    @property
-    def exercise(self) -> Optional[Exercise]:
-        """
-        Return self.__exercise if it exists, None otherwise. Useful in
-        StartExerciseDialog.__start_exercise to get the exercise being
-        previewed and start it.
-
-        :return: The exercise being previewed if it is not none, None
-            otherwise.
-        """
-
-        if self.__exercise is not None:
-            return self.__exercise
-        else:
-            return None
 
     #########
     # Slots #
@@ -665,14 +731,14 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         cvars.set('display.text_mode_in_chooser_window',
                   self.__text_mode_checkbox.isChecked())
-        self.set_preview(self.__exercise)
+        self.preview_exercise()
         # NB: cvars will be saved only when (and if) exercise starts
 
     @Slot()
     def __check_proof_state_for_preview(self):
-        if self.__exercise and self.__exercise.initial_proof_state:
+        if self.exercise and self.exercise.initial_proof_state:
             log.debug("Lean initial proof state received, updating preview")
-            self.set_preview(self.__exercise)
+            self.preview_exercise()
         self.__exercises_tree.update_tooltips()
 
 
@@ -697,7 +763,7 @@ class AbstractStartCoEx(QDialog):
     a new tab and usr browses exercises.  When usr clicks on an
     exercise, this exercise is kept as is previewed by calling
     self.__exercise_chooser.set_preview with the exercise as argument
-    (and the exercise is kept in self.__exercise_chooser.__exercise,
+    (and the exercise is kept in self.__exercise_chooser.exercise,
     accessible with a property).  Once usr confirms their choice of
     exercice, they click on the 'Start exercise' button, which closes
     the dialog and sends a signal to launch the exercice main window.
@@ -736,54 +802,57 @@ class AbstractStartCoEx(QDialog):
 
         super().__init__()
 
+        self.servint = servint
+
         settings = QSettings("deaduction")
         geometry = settings.value("coex_chooser/Geometry")
-        # maximised = settings.value("coex_chooser/isMaximised")
         if geometry:
             self.restoreGeometry(geometry)
-            # if maximised:
-            #     self.showMaximized()
 
-        self.servint = servint
+        self.toolbar = QToolBar()
+        self.__init_toolbar()
+
         if title:
             self.setWindowTitle(title)
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        self.course_chooser   = CourseChooser(servint)
+        yes = True if exercise else False
+        self.__course_chooser = CourseChooser(servint, select_first_item=yes)
         self.__exercise_chooser = QWidget()
 
-        # Somehow the order of connections changes performances
-        self.course_chooser.goto_exercise.connect(self.__goto_exercise)
-        self.course_chooser.course_chosen.connect(self.__preview_exercises)
+        # Somehow the order of connections changes performances?
+        self.__course_chooser.goto_exercises.connect(self.__goto_exercises)
+        self.__course_chooser.course_chosen.connect(self.__preview_exercises)
 
         # ───────────────────── Buttons ──────────────────── #
 
         self.__quit_btn     = QPushButton(_('Quit'))
-        # self.__quit_btn.setDefault(False)
         self.__quit_btn.setAutoDefault(False)
         self.__start_ex_btn = QPushButton(_('Start exercise'))
 
-        # self.__quit_btn.setEnabled(False)
         self.__start_ex_btn.setEnabled(False)
 
         self.__quit_btn.clicked.connect(self.quit_deaduction)
         self.__start_ex_btn.clicked.connect(self.__start_exercise)
-
         self.disable_start_btn = None
 
         # ───────────────────── Layouts ──────────────────── #
-
         self.__tabwidget = QTabWidget()
-        self.__tabwidget.addTab(self.course_chooser, _('Files'))
+        self.__tabwidget.addTab(self.__course_chooser, _('Files'))
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
+        self.__tabwidget.currentChanged.connect(self.__current_tab_changed)
 
         buttons_lyt = QHBoxLayout()
-        buttons_lyt.addStretch()
         buttons_lyt.addWidget(self.__quit_btn)
+        buttons_lyt.addStretch()
         buttons_lyt.addWidget(self.__start_ex_btn)
 
         main_layout = QVBoxLayout()
+        main_layout.addWidget(self.toolbar)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        # main_layout.addWidget(separator)
         # # FIXME: put this in the right place
         # explanation = _("First select a course, then choose "
         #                                "an exercise.")
@@ -792,15 +861,72 @@ class AbstractStartCoEx(QDialog):
         if widget:
             main_layout.addWidget(widget)
         main_layout.addWidget(self.__tabwidget)
+        # main_layout.addLayout(history_buttons_lyt)
         main_layout.addLayout(buttons_lyt)
 
         self.setLayout(main_layout)
 
         # ───────────────────── Others ───────────────────── #
+        self.__enter_shortcut = QShortcut(QKeySequence(Qt.Key_Return),
+                                          self.__course_chooser)
+        self.__enter_shortcut.activated.connect(self.__goto_exercises)
 
         self.__tabwidget.setTabEnabled(1, False)
+
+        # show_history = cvars.get('display.show_saved_exercises')
+        # self.__history_checkbox.setChecked(show_history)
+
         if exercise:
             self.__preset_exercise(exercise)
+            self.__enter_shortcut.setEnabled(False)
+            self.__toggle_history()
+            self.__exercise_chooser.give_focus_to_exercises_wdg()
+        else:
+            self.__enter_shortcut.setEnabled(True)
+            self.__course_chooser.set_selected_course()
+            self.__course_chooser.give_focus_to_course_wdg()
+
+        if not self.__show_history_action.isChecked():
+            self.__delete_history_action.setDisabled(True)
+
+    # def keyPressEvent(self, event) -> None:
+    #     print(event.key, event.type)
+
+    def __init_toolbar(self):
+        icons_base_dir = cvars.get("icons.path")
+        icons_dir = fs.path_helper(icons_base_dir)
+
+        # Courses actions
+        self.__recent_courses_action = QAction(
+            QIcon(str((icons_dir / 'icons8-history-folder-96.png').resolve())),
+            _('Show only recent files'), self)
+        self.__recent_courses_action.setCheckable(True)
+        show_recent_courses = cvars.get('functionality.show_recent_courses_only')
+        self.__recent_courses_action.setChecked(show_recent_courses)
+
+        # Exercises actions
+        self.__show_history_action = QAction(
+            QIcon(str((icons_dir / 'icons8-save-96.png').resolve())),
+            _("Show saved proofs"), self)
+        self.__show_history_action.setCheckable(True)
+        show_history = cvars.get('display.show_saved_exercises')
+        self.__show_history_action.setChecked(show_history)
+
+        self.__delete_history_action = QAction(
+            QIcon(str((icons_dir / 'icons8-delete-96.png').resolve())),
+            _("Delete saved proofs"), self)
+        self.__delete_history_action.setShortcut(QKeySequence.Delete)
+
+        self.toolbar.addAction(self.__recent_courses_action)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.__delete_history_action)
+        self.toolbar.addAction(self.__show_history_action)
+
+        # Connect signals:
+        self.__show_history_action.triggered.connect(self.__toggle_history)
+        self.__delete_history_action.triggered.connect(self.__delete_history)
+        self.__recent_courses_action.triggered.connect(
+            self.__show_recent_courses)
 
     def closeEvent(self, event: QEvent):
         """
@@ -809,9 +935,9 @@ class AbstractStartCoEx(QDialog):
 
         :param event: Some Qt mandatory thing.
         """
-        if self.course_chooser.current_course:
+        if self.__course_chooser.current_course:
             # Save ips of the previous course if any
-            self.course_chooser.current_course.save_initial_proof_states()
+            self.__course_chooser.current_course.save_initial_proof_states()
 
         # Save window geometry
         settings = QSettings("deaduction")
@@ -823,6 +949,16 @@ class AbstractStartCoEx(QDialog):
         super().closeEvent(event)
         # super().closeEvent(event)
         # self.deleteLater()
+
+    @property
+    def course(self):
+        if self.__course_chooser:
+            return self.__course_chooser.current_course
+
+    @property
+    def exercise(self):
+        if self.__exercise_chooser:
+            return self.__exercise_chooser.exercise
 
     def __preset_exercise(self, exercise: Exercise):
         """
@@ -837,17 +973,56 @@ class AbstractStartCoEx(QDialog):
         for this is not very smart so if you want to enhance it, do it
         (see CONTRIBUTING.md file).
         """
-        # TODO: adapt goto_exercise to unfold tree so that the exercise is
-        #  visible.
+        if self.course is not exercise.course:
+            self.__course_chooser.set_preview(exercise.course)
 
-        self.course_chooser.set_preview(exercise.course)
-        self.course_chooser.add_browsed_course(exercise.course)
-        self.__exercise_chooser.set_preview(exercise)
-        self.__goto_exercise()
+        self.__course_chooser.add_browsed_course(exercise.course)
+        yes = cvars.get('functionality.show_recent_courses_only')
+        self.__recent_courses_action.setChecked(yes)
+
+        self.__preview_exercises(self.course)  # Init __exercise_choser
+        self.__exercise_chooser.goto_exercise(exercise)
+        self.__exercise_chooser.preview_exercise()
+        self.__toggle_history()
+        self.__goto_exercises()
 
     #########
     # Slots #
     #########
+    @Slot()
+    def __show_recent_courses(self):
+        yes = self.__recent_courses_action.isChecked()
+        self.__course_chooser.show_recent_courses(yes)
+
+    @Slot()
+    def __toggle_history(self):
+        """
+        Show or hide all saved versions according to bool yes.
+        """
+
+        show_history = self.__show_history_action.isChecked()
+        cvars.set('display.show_saved_exercises', show_history)
+        history_versions = self.course.saved_exercises_in_history_course()
+        # tree_widget = self.__exercises_tree
+        # tree_widget.hide_statements(history_versions, not yes)
+        # tree_widget.setColumnCount(2 if yes else 1)
+        ex_chooser = self.__exercise_chooser
+        if isinstance(ex_chooser, ExerciseChooser):
+            # Hide / show history exercises
+            ex_chooser.show_statements(history_versions, show_history)
+            if ((not show_history) and self.exercise
+                    and self.exercise.original_exercise):
+                ex_chooser.goto_exercise(self.exercise.original_exercise)
+
+        if self.course:
+            # is_history = bool(self.exercise.history_date())
+            freeze = not show_history  # and is_history)
+        else:
+            freeze = True
+        self.__delete_history_action.setDisabled(freeze)
+        if isinstance(ex_chooser, ExerciseChooser):
+            ex_chooser.give_focus_to_exercises_wdg()
+
     @Slot()
     def emw_not_ready(self):
         """
@@ -886,16 +1061,66 @@ class AbstractStartCoEx(QDialog):
         """
         if self.__exercise_chooser and self.__exercise_chooser.exercise and \
                 not self.disable_start_btn:
-            self.__start_ex_btn.setEnabled(True)
-            self.__start_ex_btn.setDefault(True)
+            start_btn = self.__start_ex_btn
+            start_btn.setEnabled(True)
+            start_btn.setDefault(True)
+            if self.__exercise_chooser.selected_exercise_is_from_history_file():
+                start_btn.setText(_('Load proof'))
+            else:
+                start_btn.setText(_('Start exercise'))
+
+        # start_btn = self.__start_ex_btn
+        # if self.courses_tab_is_selected:
+        #     start_btn.setText(_('Select file'))
+        # elif self.exercises_tab_is_selected:
+        #     if self.__exercise_chooser.selected_exercise_is_from_history_file():
+        #         start_btn.setText(_('Load history'))
+        #     else:
+        #         start_btn.setText(_('Start exercise'))
+        #
+        # start_btn.setEnabled(True)
+
+    @property
+    def exercises_tab_is_selected(self):
+        return self.__exercise_chooser and self.__tabwidget.currentIndex() == 1
+    
+    @property
+    def courses_tab_is_selected(self):
+        return self.__tabwidget.currentIndex() == 0
 
     @Slot()
-    def __goto_exercise(self):
+    def __current_tab_changed(self):
+        """
+        This method is called when usr select a tab, i.e. files or exercises.
+        """
+        if self.courses_tab_is_selected:
+            # ex_chooser = self.__exercise_chooser
+            # log.debug('Course tab')
+            self.__start_ex_btn.setEnabled(False)
+            self.__course_chooser.give_focus_to_course_wdg()
+            self.__enter_shortcut.setEnabled(True)
+            # self.__course_chooser.set_selected_recent_course()
+        else:
+            # self.__preview_exercises(self.course)
+            # log.debug('Ex tab')
+            # log.debug(self.__tabwidget.currentIndex())
+            self.__enter_shortcut.setEnabled(False)
+            self.__enable_start_ex_btn()
+            self.__exercise_chooser.give_focus_to_exercises_wdg()
+
+    @Slot()
+    def __goto_exercises(self):
         """
         Go to the exercise tab.
         """
+        if self.__tabwidget.isTabEnabled(1):
+            self.__tabwidget.setCurrentIndex(1)
 
-        self.__tabwidget.setCurrentIndex(1)
+    def __goto_courses(self):
+        """
+        Go to the file tab.
+        """
+        self.__tabwidget.setCurrentIndex(0)
 
     @Slot(Course, str)
     def __preview_exercises(self, course: Course):
@@ -915,15 +1140,96 @@ class AbstractStartCoEx(QDialog):
         self.__start_ex_btn.setEnabled(False)
 
         # Tab 0 is course, 1 is exercise
-        self.__tabwidget.removeTab(1)
-        self.__tabwidget.setTabEnabled(1, True)
         self.__exercise_chooser = ExerciseChooser(course, self.servint)
+        self.__tabwidget.removeTab(1)
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
+        self.__tabwidget.setTabEnabled(1, True)
 
+        self.__exercise_chooser.current_item_changed.connect(
+            self.__current_exercise_changed)
         self.__exercise_chooser.exercise_previewed.connect(
                 self.__enable_start_ex_btn)
         self.__exercise_chooser.exercises_tree_double_clicked_connect(
             self.__process_double_click)
+
+        self.__toggle_history()
+
+    @Slot()
+    def __current_exercise_changed(self):
+        exercise = self.exercise
+        if exercise:
+            self.__exercise_chooser.preview_exercise()
+
+        freeze = not self.__show_history_action.isChecked()
+        # is_history = bool(exercise.history_date())
+        # freeze = not yes  # and is_history)
+        # else:
+        #     freeze = True
+        self.__delete_history_action.setDisabled(freeze)
+
+    @Slot()
+    def __delete_history(self):
+
+        exercise = self.exercise
+
+        #######################
+        # Warning message box #
+        #######################
+        yes_no_dialog = YesNoDialog()
+        # (1st case) Delete all saved proofs for 1 file!
+        if not exercise:
+            yes_no_dialog.setWindowTitle(_('Deleting all saved proofs?'))
+            yes_no_dialog.setIcon(QMessageBox.Warning)
+            yes_no_dialog.setText(_("This will delete ALL saved proofs for "
+                                    "this file. Are you sure about this?"))
+        # (2nd case) Delete all saved proofs for 1 exercise!
+        elif not exercise.history_date():
+            yes_no_dialog.setWindowTitle(_('Deleting all saved proofs'))
+            yes_no_dialog.setIcon(QMessageBox.Warning)
+            yes_no_dialog.setText(_("This will delete ALL saved proofs for "
+                                    "this exercise. Are you sure about this?"))
+        # (3rd case) Delete one saved proof
+        else:
+            yes_no_dialog.setWindowTitle(_('Deleting a saved proof'))
+            yes_no_dialog.setText(_("Do you want to delete this saved proof?"))
+
+        yes_no_dialog.exec_()
+        if yes_no_dialog.no:
+            # log.debug('no')
+            return
+
+        ##############################
+        # Delete, and handle display #
+        ##############################
+        # (1st case) Delete all saved proofs for 1 file!
+        if not exercise:
+            log.info("Deleting saved proof file")
+            course = self.course
+            course.delete_history_file()
+            self.course.set_history_course()
+            exercise_to_display = None
+
+        # (2nd case) Delete all saved proofs for 1 exercise!
+        elif not exercise.history_date():
+            log.info("Deleting all saved proofs for this exercise")
+            course = self.course
+            course.delete_all_saved_proofs_of_exercise(exercise)
+            exercise_to_display = exercise
+        # (3rd case) Delete one saved proof
+        else:
+            log.info("Deleting this saved proof")
+            exercise_to_display = exercise.next_exercise()
+            exercise.delete_in_history_file()
+
+        # Reset history course since file has changed
+        self.course.set_history_course()
+        self.__preview_exercises(self.course)
+        if exercise_to_display:
+            self.__exercise_chooser.goto_exercise(exercise_to_display)
+            self.__exercise_chooser.preview_exercise()
+            self.__goto_exercises()
+        else:
+            self.__goto_courses()
 
     @Slot()
     def __process_double_click(self, tree_item):
@@ -941,24 +1247,27 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
 
+        # (1) Check if exercise is from history file
+        if exercise.history_date():
+            # Back to original, incorporating auto_steps
+            exercise = exercise.from_history_exercise()
+
         # check if exercise must be negated (e.g. is an open question)
         # TODO: this should be moved elsewhere, e.g. in __main__
-        if not check_negate_statement(exercise):
-            return
+        else:
+            if not check_negate_statement(exercise):
+                return
 
         # Save course_path, title, and exercise number
         # in user_config's previous_courses_list
         # TODO: Rename the list recent_courses_list?
-        course_type = exercise.course.filetype
+        # course_type = exercise.course.filetype
         course      = exercise.course
-        course_path = course.relative_course_path
-        title       = course.title
-        if exercise in course.statements:
-            exercise_number = course.statements.index(exercise)
-        else:
-            exercise_number = -1
-        add_to_recent_courses(course_path, course_type, title,
-                              exercise_number)
+        statements = course.statements
+        exercise_nb = (statements.index(exercise) if exercise in statements
+                       else -1)
+        add_to_recent_courses(course.abs_course_path, course.title,
+                              exercise_nb)
 
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
@@ -995,46 +1304,46 @@ class StartCoExStartup(AbstractStartCoEx):
                          servint=servint)
 
 
-class StartCoExExerciseFinished(AbstractStartCoEx):
-    """
-    The CoEx chooser after usr just finished an exercise. It displays
-    a CoEx chooser with the finished exercise
-    being preset / previewed. See AbstractStartCoEx docstring.
-    """
-    # FIXME: not used
-
-    def __init__(self, finished_exercise: Exercise):
-        """
-        Init self.
-
-        :param finisehd_exercise: Exercise that usr just finished.
-        """
-
-        congrats_wgt = QWidget()
-        lyt          = QHBoxLayout()
-        img          = QLabel()
-        pixmap       = QPixmap(cdirs.icons / 'confetti.png')
-        pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
-        img.setPixmap(pixmap)
-        lyt.addWidget(img)
-        lyt.addStretch()
-        lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
-        congrats_wgt.setLayout(lyt)
-        title = _('Exercise finished — d∃∀duction')
-
-        super().__init__(title=title, widget=congrats_wgt,
-                         exercise=finished_exercise)
-
-    def closeEvent(self, event: QEvent):
-        """
-        Overload native Qt closeEvent method — which is called when self
-        is closed — to send the signal self.window_closed.
-
-        :param event: Some Qt mandatory thing.
-        """
-
-        super().closeEvent(event)
-        self.window_closed.emit()
+# class StartCoExExerciseFinished(AbstractStartCoEx):
+#     """
+#     The CoEx chooser after usr just finished an exercise. It displays
+#     a CoEx chooser with the finished exercise
+#     being preset / previewed. See AbstractStartCoEx docstring.
+#     """
+#     # FIXME: not used
+#
+#     def __init__(self, finished_exercise: Exercise):
+#         """
+#         Init self.
+#
+#         :param finisehd_exercise: Exercise that usr just finished.
+#         """
+#
+#         congrats_wgt = QWidget()
+#         lyt          = QHBoxLayout()
+#         img          = QLabel()
+#         pixmap       = QPixmap(cdirs.icons / 'confetti.png')
+#         pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
+#         img.setPixmap(pixmap)
+#         lyt.addWidget(img)
+#         lyt.addStretch()
+#         lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
+#         congrats_wgt.setLayout(lyt)
+#         title = _('Exercise finished — d∃∀duction')
+#
+#         super().__init__(title=title, widget=congrats_wgt,
+#                          exercise=finished_exercise)
+#
+#     def closeEvent(self, event: QEvent):
+#         """
+#         Overload native Qt closeEvent method — which is called when self
+#         is closed — to send the signal self.window_closed.
+#
+#         :param event: Some Qt mandatory thing.
+#         """
+#
+#         super().closeEvent(event)
+#         self.window_closed.emit()
 
 
 def check_negate_statement(exercise) -> bool:
@@ -1050,19 +1359,20 @@ def check_negate_statement(exercise) -> bool:
 
     ok = True  # default value
     open_question = exercise.info.setdefault('open_question', False)
-    if ('negate_statement' in exercise.info
-            and exercise.info['negate_statement']):
+    if exercise.info.get('negate_statement', False):
         exercise.negate_statement = True
     elif open_question:
-        # exercise is an open question and the user has to choose her way
-        if exercise.lean_variables:
-            log.warning("Exercise is an open question but has variables:"
-                        "negation will not be correct!!")
+        # exercise is an open question and user has to choose her way
+        # if exercise.lean_variables:
+        #     log.warning("Exercise is an open question but has variables:"
+        #                 "negation will not be correct!!")
 
-        title = _("Do you want to prove this statement or its negation?")
+        title = _("True or False?")
         if exercise.initial_proof_state:
             goal = exercise.initial_proof_state.goals[0]
             output = goal.goal_to_text(text_mode=False, to_prove=False)
+            ask = _("Do you want to prove this statement or its negation?")
+            output = ask + "\n \n" + output + "\n"
         else:
             output = exercise.lean_variables + "   " \
                      + exercise.lean_core_statement

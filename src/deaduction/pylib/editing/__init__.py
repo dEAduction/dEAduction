@@ -36,7 +36,7 @@ import deaduction.pylib.config.dirs as        cdirs
 import deaduction.pylib.config.vars as        cvars
 from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import    ProofStep
+from deaduction.pylib.proof_step import    ProofStep
 
 dmp = diff_match_patch()
 
@@ -211,6 +211,21 @@ class VirtualFile:
 
         self.history[-1].cursor_pos = self.current_pos
 
+    def find_first_insertion_of(self, text):
+        """
+        Find the first time that text was contained in inserted text,
+        and return the inserted text (or "" if not found).
+        """
+
+        inserted_text = ""
+        for idx in range(self.idx):
+            entry_dict = self.history[idx].misc_info
+            inserted_text = entry_dict.get('inserted_text', '')
+            if inserted_text.find(text) != -1:
+                break
+
+        return inserted_text
+
     ################################
     # Actions
     ################################
@@ -218,9 +233,8 @@ class VirtualFile:
         """
         Inserts text at cursor position, and update cursor position.
 
-        :param lbl:         Label of the history entry of this modification
+        :param label:         Label of the history entry of this modification
         :param add_txt:     The text to insert at the given cursor position
-        :param misc_info:   Misc. info to store with history entry
         :param move_cursor: Move cursor after inserted text.
         """
 
@@ -232,6 +246,18 @@ class VirtualFile:
             current_pos += len(add_txt)
 
         self.state_add(label, next_txt, current_pos)
+        self.state_info_attach(inserted_text=add_txt)
+
+    def replace(self, label, old, new):
+        """
+        In the current text, replace first occurence of old with new.
+        """
+        current_pos = self.current_pos
+        next_txt = self.__txt.replace(old, new, 1)
+        # Improve: this assume that cursor is after old in the text.
+        current_pos += (len(new) - len(old))
+        self.state_add(label, next_txt, current_pos)
+        self.state_info_attach(replaced_text=(old, new))
 
     def state_add(self,
                   label: str, next_txt: str,
@@ -381,7 +407,7 @@ class VirtualFile:
     @property
     def inner_contents(self):
         """
-        Retrieve the inner text
+        Retrieve the inner text.
         """
         self.__update()
         return self.__txt
@@ -480,6 +506,7 @@ class LeanFile(VirtualFile):
 
     @property
     def current_proof_step(self) -> ProofStep:
+        log.debug(f"Getting current proof step; hst nb = {self.target_idx}")
         return self.history[self.target_idx].misc_info.get('proof_step')
 
     @property
@@ -522,47 +549,6 @@ class LeanFile(VirtualFile):
     def delta_goals_count(self):
         return self.current_number_of_goals - self.previous_number_of_goals
 
-    # def proof(self):  # Proof
-    #     """
-    #     Return the current proof outline, an instance of the Proof class.
-    #     """
-    #     # FIXME: useless?
-    #     proof_steps = list(map(lambda entry: entry.misc_info.get('proof_step'),
-    #                        self.history))
-    #     proof = Proof.from_proof_steps(proof_steps)
-    #     return proof
-
-    def save_exercise_for_autotest(self, emw):
-        """
-
-        :param emw: ExerciseMainWindow instance
-        """
-        # FIXME: this has been transfered to a Coordinator method
-        save = cvars.get('functionality.save_solved_exercises_for_autotest',
-                         False)
-        if not save:
-            return
-
-        proof_steps = [entry.proof_step for entry in self.history]
-        auto_steps = [ps.auto_step for ps in proof_steps if ps is not None]
-        auto_steps = [step for step in auto_steps if step is not None]
-
-        exercise = emw.exercise
-        exercise.refined_auto_steps = auto_steps
-        filename = ('test_' + exercise.lean_short_name).replace('.', '_') \
-            + '.pkl'
-        file_path = cdirs.test_exercises / filename
-        check_dir(cdirs.test_exercises, create=True)
-
-        total_string = 'AutoTest\n'
-        for step in auto_steps:
-            total_string += '    ' + step.raw_string + ',\n'
-        print(total_string)
-
-        log.debug(f"Saving auto_steps in {file_path}")
-        with open(file_path, mode='wb') as output:
-            dump(exercise, output, HIGHEST_PROTOCOL)
-
     def add_seq_num(self, seq_num: int):
         """
         Add seq_num in a comment at the beginning of the preamble.
@@ -570,8 +556,8 @@ class LeanFile(VirtualFile):
         seq_num_str = f"-- Seq num {seq_num}\n"
         if self.preamble:
             old_seq_num_str, _, raw_preamble = self.preamble.partition("\n")
-        if old_seq_num_str.startswith('-- Seq num'):
-            self.preamble = seq_num_str + raw_preamble
-        else:
-            self.preamble = seq_num_str + self.preamble
+            if old_seq_num_str.startswith('-- Seq num'):
+                self.preamble = seq_num_str + raw_preamble
+            else:
+                self.preamble = seq_num_str + self.preamble
 

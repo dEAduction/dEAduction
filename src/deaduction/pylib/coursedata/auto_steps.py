@@ -31,7 +31,7 @@ from typing import Union
 
 import deaduction.pylib.config.vars as cvars
 
-# from deaduction.pylib.mathobj import ProofStep
+from deaduction.pylib.mathobj import MathObject
 import deaduction.pylib.actions.logic
 import deaduction.pylib.actions.magic
 import logging
@@ -42,72 +42,43 @@ global _
 ##############################################
 # Lists of all instances of the Action class #
 ##############################################
-LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
-PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
-MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
-# e.g. key = action_and, value = corresponding instance of the class Action
-
-LOGIC_BUTTONS_SYMBOLS = [LOGIC_BUTTONS[key].symbol for key in LOGIC_BUTTONS]
-PROOF_BUTTONS_SYMBOLS = [PROOF_BUTTONS[key].symbol for key in PROOF_BUTTONS]
-MAGIC_BUTTONS_SYMBOLS = [MAGIC_BUTTONS[key].symbol for key in MAGIC_BUTTONS]
-
-
-# Tentative grammar
-# auto_steps = """
-# steps = step ("," step)*
+# LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
+# PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
+# MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+# # e.g. key = action_and, value = corresponding instance of the class Action
 #
-# step = (selections "/")* button_symbol ("/" user_inputs)*
-#
-# selections = spaces* (selection spaces*)+
-# selection = any_char_not_space*
-#
-# button_symbol = spaces* button_symbol_ spaces*
-#
-# user_inputs = spaces* (user_input spaces*)+
-# user_input = any_char*
-#
-# any_char_not_space = !"/" !spaces
-# spaces = (" " / end_of_line)*
-# end_of_line = "\\n"
-# """
-# auto_steps_grammar= Grammar(auto_steps)
-#
-# class AutoStepVisitor(NodeVisitor):
-#     def visit_auto_steps(self,
-#                         node: str,
-#                         visited_children: []):
-#         pass
-#
-#
-#     def visit_step(self, node, visited_children):
-#         return None
-#
-#
-#     def visit_selections(self, node, visited_children):
-#         return None
-#
-#     def visit_selection(self, node, visited_children):
-#         return node.txt
-#
-#
-#
-#     def generic_visit(self, node, visited_children):
-#         return None
+# LOGIC_BUTTONS_SYMBOLS = [LOGIC_BUTTONS[key].symbol for key in LOGIC_BUTTONS]
+# PROOF_BUTTONS_SYMBOLS = [PROOF_BUTTONS[key].symbol for key in PROOF_BUTTONS]
+# MAGIC_BUTTONS_SYMBOLS = [MAGIC_BUTTONS[key].symbol for key in MAGIC_BUTTONS]
 
 
-BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
-                  + MAGIC_BUTTONS_SYMBOLS \
-                  + PROOF_BUTTONS_SYMBOLS
+
+# BUTTONS_SYMBOLS = LOGIC_BUTTONS_SYMBOLS \
+#                   + MAGIC_BUTTONS_SYMBOLS \
+#                   + PROOF_BUTTONS_SYMBOLS
 
 
-button_dict = {'→': "implies",
-               '⇒': "implies",
-               '↔': "iff",
-               '⇔': "iff",
+button_dict = {
                '∀': "forall",
                '∃': "exists",
+               '→': "implies",
+               '⇒': "implies",
                '∧': "and",
                '∨': "or",
+               'prove∀': "prove_forall",
+               'prove∃': "prove_exists",
+               'prove→': "prove_implies",
+               'prove⇒': "prove_implies",
+               'prove∧': "prove_and",
+               'prove∨': "prove_or",
+               'use∀': "use_forall",
+               'use∃': "use_exists",
+               'use→': "use_implies",
+               'use⇒': "use_implies",
+               'use∧': "use_and",
+               'use∨': "use_or",
+               '↔': "iff",
+               '⇔': "iff",
                '¬': "not",
                '=': "equal",
                "CQFD": "assumption",
@@ -115,7 +86,13 @@ button_dict = {'→': "implies",
                '↦': "map",
                'proof': 'proof_methods',
                'new': 'new_object',
-               'object': 'new_object'
+               'object': 'new_object',
+               '+': 'sum',
+                'simp': 'simplify',
+                '>>': 'transitivity',
+                'comm': 'commute',
+                'assoc': 'associativity',
+                'triangle': 'triangular_inequality',
                }
 
 
@@ -127,14 +104,17 @@ class UserAction:
         so that lean_name.endswith(statement_name) is True.
     """
     selection = None  # [ContextMathObject] or [str]
-    button_name = None  # str
-    statement_name = None  # str
-    user_input = None  # Union[int, str]
     target_selected = None
+    button_name = ""  # str
+    statement = None  # Optional[Statement]
+    _statement_name = ""  # str
+    user_input = None  # Union[int, str]
+    prove_or_use = ""  # "" / "prove" / "use"
 
     def __init__(self,
                  selection=None,
                  button_name=None,
+                 statement=None,
                  statement_name=None,
                  user_input=None,
                  target_selected=False):
@@ -144,7 +124,8 @@ class UserAction:
             user_input = []
         self.selection = selection
         self.button_name = button_name
-        self.statement_name = statement_name
+        self.statement = statement
+        self._statement_name = statement_name
         self.user_input = user_input
         self.target_selected = target_selected
 
@@ -155,11 +136,12 @@ class UserAction:
 
     @classmethod
     def from_proof_step(cls, proof_step):
-        return cls(selection=proof_step.selection,
-                   button_name=proof_step.button_name,
-                   statement_name=proof_step.statement_lean_name,
-                   user_input=proof_step.user_input,
-                   target_selected=proof_step.target_selected)
+        return proof_step.user_action
+        # return cls(selection=proof_step.selection,
+        #            button_name=proof_step.button_name,
+        #            statement_name=proof_step.statement_lean_name,
+        #            user_input=proof_step.user_input,
+        #            target_selected=proof_step.target_selected)
 
     def __repr__(self) -> str:
         msg = f"UserAction with {len(self.selection)} selected objects, " \
@@ -168,11 +150,53 @@ class UserAction:
               f"target selected = {self.target_selected}"
         return msg
 
+    @property
+    def statement_name(self):
+        if self.statement:
+            return self.statement.lean_name
+        else:
+            return self._statement_name
+
+    def prove_or_use_button_name(self):
+        name = self.button_name
+        # if name not in ("forall", "exists", "implies", "and", "or"):
+        #     return
+        if not name:
+            return None
+        if self.prove_or_use and not (name.startswith("use_")
+                                      or name.startswith("prove_")):
+            name = self.prove_or_use + '_' + name
+        return name
+
+    def button_name_adapted_to_mode(self, mode=None):
+        """
+        Return the button name that corresponds to self.button_name adapted
+        to mode : without prefix 'prove_' / 'use_' if the unified buttons are
+        displayed, with prefix in the opposite case. Note that the returned
+        name may not be adapted if self.prove_or_use is None.
+        """
+
+        name = self.button_name
+        if not name:
+            return ""
+
+        if not mode:
+            mode = cvars.get('logic.button_use_or_prove_mode')
+
+        adapted_name = name
+        if mode in ('display_switch', 'display_both'):
+            adapted_name = self.prove_or_use_button_name()
+        elif mode == 'display_unified':
+            adapted_name = name.replace('use_', '')
+            adapted_name = adapted_name.replace('prove_', '')
+
+        return adapted_name
+
 
 class AutoStep(UserAction):
     """
-    A class to store one step of proof in deaduction, simulating selection,
-    choice of button or statement, and user input. Attributes error_msg,
+    A class to store one step of proof in deaduction, namely one user_action
+    and deaduction's response. . Attributes error_msg,
     success_msg also allow to store deaduction's answer to the step; this is
     useful for debugging, e.g comparing actual answer to answer in a
     stored exercise.
@@ -218,18 +242,16 @@ class AutoStep(UserAction):
                  2: 'FailedRequestError',
                  3: 'Timeout',
                  4: 'UnicodeDecodeError',
-                 5: 'No proof state'}
+                 5: 'No proof state',
+                 6: 'File unchanged',
+                 7: 'Action cancelled',
+                 10: 'unknown error'}
 
-    def __init__(self, selection, button_name, statement, user_input,
-                 target_selected,
-                 raw_string, error_type, error_msg, success_msg):
+    def __init__(self, selection, button_name, statement_name, user_input,
+                 target_selected, raw_string, error_type, error_msg, success_msg):
 
-        UserAction.__init__(self, selection, button_name,
-                            statement, user_input, target_selected)
-        # self.selection = selection
-        # self.button_name = button_name
-        # self.statement = statement
-        # self.user_input = user_input
+        UserAction.__init__(self, selection, button_name, None,
+                            statement_name, user_input, target_selected)
         self.raw_string = raw_string
         self.error_type = error_type
         self.error_msg = error_msg
@@ -238,7 +260,9 @@ class AutoStep(UserAction):
     @classmethod
     def from_string(cls, string):
         """
-        Analyze a string to extract an AutoStep instance.
+        Analyze a string to extract an AutoStep instance, e.g.
+        coming from a history or test file.
+
         The string should contain a button symbol (e.g. '∀')
         xor a statement name (e.g. 'definition.inclusion').
         Items are separated by spaces, and the last item should represents
@@ -251,11 +275,13 @@ class AutoStep(UserAction):
             @P3 @P2 ⇒ success=propriété_H3_ajoutée_au_contexte,
             @P4 @P1 ⇒ success=propriété_H4_ajoutée_au_contexte,
             Goal!
+
+        cf some history files for more elaborated examples.
         """
 
         string.replace("\\n", " ")
         button = None
-        statement = None
+        statement_name = None
         button_or_statement_rank = None
         error_type = 0
         error_msg = ""
@@ -266,8 +292,9 @@ class AutoStep(UserAction):
         items = [item.strip() for item in string.split(' ') if item]
         for item in items:
             if item.startswith('definition') \
-                    or item.startswith('theorem'):
-                statement = item
+                    or item.startswith('theorem') \
+                    or item.startswith('exercise'):
+                statement_name = item
                 button_or_statement_rank = items.index(item)
             # elif item in BUTTONS_SYMBOLS:
             #     button = item
@@ -299,7 +326,7 @@ class AutoStep(UserAction):
             elif item.startswith('target') or item.startswith(_('target')):
                 target_selected = True
 
-        if not button and not statement:
+        if not button and not statement_name:
             return None
 
         selection = items[:button_or_statement_rank]
@@ -309,28 +336,60 @@ class AutoStep(UserAction):
         except ValueError:
             pass
 
-        user_input = [item for item in items[button_or_statement_rank+1:]
-                      if item]  # Remove if item = ''
+        # Remaining non-trivial items are user input
+        # Some of them, between [ ], must be gathered in a single list item
+        user_input = []
+        calc_item = None
+        for item in items[button_or_statement_rank+1:]:
+            if not item:
+                continue
+            elif item == '[':  # Start a list item
+                calc_item = []
+                user_input.append(calc_item)
+            elif item == ']':  # End a list item
+                calc_item = None
+            else:
+                new_item = item.replace('__', ' ')
+                if new_item.isdecimal():
+                    new_item = int(new_item)
+                if calc_item is not None:
+                    # Encode in a MathObject
+                    if new_item == '_':
+                        new_item = MathObject.place_holder()
+                    else:
+                        new_item = MathObject.raw_lean_code(new_item)
+                    calc_item.append(new_item)
+                else:
+                    user_input.append(new_item)
 
-        return cls(selection, button, statement, user_input, target_selected,
-                   string, error_type, error_msg, success_msg)
+        # user_input = [item.replace('__', ' ')
+        #               for item in items[button_or_statement_rank+1:] if item]
+        # user_input = [int(item) if item.isdecimal() else item
+        #               for item in user_input]
+
+        return cls(selection, button, statement_name, user_input,
+                   target_selected, string, error_type, error_msg, success_msg)
 
     @classmethod
     def from_proof_step(cls, proof_step, emw):
         """
         Convert proof_step to the corresponding AutoStep, e.g. for use as
-        with auto_test.
+        with auto_test. This method is supposed to be some kind of inverse to
+        the from_string() classmethod.
         
         :param proof_step: instance of ProofStep 
         :param emw:         ExerciseMainWindow
         :return: 
         """
 
-        # Selection: [str]
+        user_action: UserAction = proof_step.user_action
+        ###############################################
+        # Store selected context obj in a list: [str] #
+        ###############################################
         selection = []
-        if proof_step.selection:
+        if user_action.selection:
             # log.debug("Analysing selection...")
-            for math_object in proof_step.selection:
+            for math_object in user_action.selection:
                 # log.debug(f"Searching {math_object.display_name}")
                 # log.debug(f"in {[mo.display_name for mo in emw.objects]}")
                 # log.debug(f"& {[mo.display_name for mo in emw.properties]}")
@@ -348,21 +407,52 @@ class AutoStep(UserAction):
                 if item_str is not None:
                     selection.append(item_str)
 
+        # Target selected ?
+        if user_action.target_selected:
+            selection.append("target")
+
+        ####################################
+        # Store action: button / statement #
+        ####################################
         # Button: '∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'compute', 'CQFD',
         #         'proof_methods', 'new_objects', 'apply'
-        button = proof_step.button_name if proof_step.button_name else ''
+        button = user_action.prove_or_use_button_name()
+
+        if button is None:
+            button = ''
 
         # Statement: short Lean name
-        statement = proof_step.statement.lean_short_name \
-            if proof_step.statement else ''
+        statement = user_action.statement.lean_short_name \
+            if user_action.statement else ''
 
         if not (button or statement):
             return None
-
-        # User input: int
+        elif button and statement:
+            log.warning("Bad ProofStep with both button AND statement")
+            log.debug("Removing statement")
+            statement = ''
+        ######################################
+        # Store user inputs: list of int/str #
+        ######################################
+        # Some user_input items are themselves lists
+        #  (e.g. coming from Calculator)
+        #  they are stored as '[ <item1> <item2> ... ]'
+        # (1) Flatten list items
         user_input = []
-        if proof_step.user_input:
-            user_input = [str(item) for item in proof_step.user_input]
+        for item in user_action.user_input:
+            if isinstance(item, list):
+                user_input.append('[')
+                user_input.extend(item)
+                user_input.append(']')
+            else:
+                user_input.append(item)
+        # (2) Replace by str
+        user_input_str = [item.to_display(format_='lean')
+                          if isinstance(item, MathObject)
+                          else str(item) for item in user_input]
+        # (3) Replace spaces inside items by '__'
+        user_input_str = [item.replace(' ', '__')
+                          for item in user_input_str]
 
         error_msg = proof_step.error_msg
         if error_msg:
@@ -378,8 +468,9 @@ class AutoStep(UserAction):
         if selection:
             string = ' '.join(selection) + ' '
         string += button + statement
-        if user_input:
-            string += ' ' + ' '.join(user_input)
+        if user_input_str:
+            # Replace spaces by '__' to be able to retrieve items
+            string += ' ' + ' '.join(user_input_str)
         if proof_step.is_error():
             string += ' ' + AutoStep.error_dic[proof_step.error_type]
             string += ' ' + error_msg
@@ -394,7 +485,8 @@ class AutoStep(UserAction):
 
 
 if __name__ == '__main__':
-    print(BUTTONS_SYMBOLS)
+    pass
+    # print(BUTTONS_SYMBOLS)
     # french result :
     # ['∧', '∨', '¬', '⇒', '⇔', '∀', '∃', 'Calculer', 'CQFD', 'Méthodes De
     # Preuve', 'Nouvel Objet', 'Appliquer']

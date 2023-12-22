@@ -87,7 +87,7 @@ def file_permissions_octal(fp: Path):
 def check_dir(path: Path, exc=False, create=False):
     """
     Checks that the directory pointed by path exists.
-    Creates the folder if not existing.
+    Creates the folder if not existing (and create=True).
     """
     log.info(_("Checking path: {}").format(str(path)))
 

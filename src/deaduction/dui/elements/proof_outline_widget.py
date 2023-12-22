@@ -38,7 +38,7 @@ from PySide2.QtWidgets import ( QTreeWidget,
                                 QVBoxLayout,
                                 QHBoxLayout)
 
-from deaduction.pylib.mathobj.proof_step import ProofNode, ProofStep
+from deaduction.pylib.proof_step.proof_step import ProofNode, ProofStep
 
 log = logging.getLogger(__name__)
 global _
@@ -301,7 +301,7 @@ class ProofOutlineWindow(QWidget):
 
         self.tree = ProofOutlineTreeWidget()
 
-        self.setWindowTitle(_("List of proof steps"))
+        self.setWindowTitle(_("List of proof steps") + " — d∃∀duction")
         # Buttons
         self.expand_btn = QCheckBox(_("Expand all"))
         self.details_btn = QCheckBox(_("Show details"))
@@ -347,6 +347,8 @@ class ProofOutlineWindow(QWidget):
     @Slot()
     def toggle(self):
         self.setVisible(not self.isVisible())
+        if self.action:
+            self.action.setChecked(self.isVisible())
 
     @Slot()
     def history_goto_btn(self, *args):

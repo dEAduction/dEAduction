@@ -23,7 +23,7 @@ SYNTAX FOR KEYS. Let us analyze the following example:
     "LOCAL_CONSTANT:SET_FAMILY(?3, ?4)(...)"
 
 - We first indicate the node: 'LOCAL_CONSTANT'.
-- Then we (optionnaly) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
+- Then we (optionally) give its type: ':SET_FAMILY(?3, ?4)'. Here ?3 and ?4 are
 meta-variables that can take any value; so the type must have two children
 that can be used for displaying.
 - Then (...) indicates that we do not care about children of the local constant:
@@ -36,10 +36,13 @@ SYNTAX FOR VALUES. e.g.
 
     (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
 Integers refers to metavariables, tuples to children and descendants.
+We avoid metavars as much as possible, since it is more difficult to track
+them from root_math_object if MathList.
+
 We use '_' or '^' to indicate subscripts or superscrits.
 We can use attributes like name, value, math_type, local_constant_display,
 body, bound_var, and so on.
-        e.g.    '(0, 0).name', '0.math_type'
+        e.g.    '(0, 0).name', '0.math_type', 'self.math_type'
 or any callable which will be applied to self, e.g. name and value.
 
 ---------------------
@@ -72,7 +75,10 @@ This file is part of d∃∀duction.
 import logging
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.math_display.display_data import name, value
+from deaduction.pylib.math_display.display_data import (display_name,
+                                                        local_constant_shape,
+                                                        raw_display_name,
+                                                        display_value)
 
 log = logging.getLogger(__name__)
 
@@ -89,14 +95,28 @@ global _
 # "global" in first position in shape means that variables will be  inserted at
 # "{}". This is used for text conversion and translation.
 
+def is_number_type(math_object):
+    return math_object.is_number()
+
+
+def is_int_or_nat(math_object):
+    return math_object.is_N() or math_object.is_Z()
+
+
+def is_inequality(math_object):
+    return math_object.is_inequality(is_math_type=True)
+
+
+metanodes = {'*INEQUALITY': is_inequality,
+             '*NUMBER_TYPES': is_number_type,
+             '*INT_OR_NAT': is_int_or_nat}
+
+
 ###############
 ###############
 # QUANTIFIERS #
 ###############
 ###############
-metanodes = {'*INEQUALITY': ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥",
-                             "PROP_EQUAL_NOT")}
-
 quant_pattern = dict()
 
 
@@ -137,11 +157,10 @@ def set_quant_pattern():
         # for good parenthesing.
         # NB: special case must appear BEFORE general cases, e.g.
         # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
+
         "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_order, ?0), ?1, ?2)": (
-        (2,),),
-        "QUANT_∀(APP(CONSTANT/name=decidable_linear_ordered_comm_ring, ?0), ?1, "
-        "?2)": ((2,),),
+        "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+            ((2,),),
         "QUANT_∀(SET(...), ?0, ?1)":
             (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
         "QUANT_∀(FUNCTION(...), ?0, ?1)":
@@ -155,8 +174,6 @@ def set_quant_pattern():
             (r"\forall", (1,), r" \sequence_in", (0, 1), ", ", (2,)),
         "QUANT_∀(SET_FAMILY(...), ?0, ?1)":
             (r"\forall", (1,), r" \type_family_subset", (0, 1), ", ", (2,)),
-        # "QUANT_∀(LOCAL_CONSTANT/name=RealSubGroup, ?0, ?1)":
-        #     (r"\forall", (1,), r'\in', r'\real', ", ", (2,)),
     })
 
     # (3) Bounded quantification:
@@ -166,6 +183,8 @@ def set_quant_pattern():
         "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
             (r"\forall", (2, 0), ", ", (2, 1)),
         "QUANT_∃(?0, ?1, PROP_∃(*INEQUALITY(?1, ?2), ?3))":
+            (r"\exists", (2, 0), ", ", (2, 1)),
+        "QUANT_∃(?0, ?1, PROP_∃(PROP_BELONGS(?1, ?2), ?3))":
             (r"\exists", (2, 0), ", ", (2, 1)),
     }
     if cvars.get("logic.use_bounded_quantification_notation", True):
@@ -181,23 +200,28 @@ def set_quant_pattern():
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)
 latex_from_pattern_string = {
+    "LOCAL_CONSTANT: !SET_PRODUCT(...)": (),
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)":
         # ("toto",),
         # FIXME: the following crashes!!!
         # (r"\{", name, ['_', (1,)], ', ', (1,), r"\in_symbol", 3, r"\}"),
-        (r"\{", name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
+        # (r"\{", display_name, ['_', 1], ', ', 1, r"\in_symbol", 3, r"\}"),
+        (r"\{", local_constant_shape, ['_', (1,)], ', ',
+         (1,), r"\in_symbol", (0,), r"\}"),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
         # (r"\{", 'self.body', ', ', 'self.bound_var', r"\in_symbol",
         #  'self.bound_var_type', r"\}"),
         (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
-        ('(', name, ['_', 1], ')', ['_', 1, r"\in_symbol", 3]),
+        ('(', local_constant_shape, ['_', (1,)], ')',
+         ['_', (1,), r"\in_symbol", (0,)]),
+        # ('(', display_name, '<sub>', (1,), '</sub>', ')',
+        #  '<sub>', (1,), r"\in_symbol", (0,), '</sub>'),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
 }
-
 
 #########################################
 #########################################
@@ -210,48 +234,50 @@ latex_from_pattern_string = {
 # NB: no parentheses will be put around property P(x)
 # If parentheses are needed then we must switch to children (instead of
 # metavars), e.g. (2,) for indicating P(x).
+# TODO: change metavars refs to children refs
 text_from_pattern_string = {
     "QUANT_∀(SET(...), ?0, ?1)":
-        (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", 1),
+        (_("for every subset") + " ", (1, ), _(" of "), (0, 0), ", ", (2, )),
     "QUANT_∀(FUNCTION(...), ?0, ?1)":
-        (_("for every function") + " ", 0,
-         _(" from "), (0, 0), _(" to "), (0, 1), ", ", 1),
-    "QUANT_∀(PROP, ?0, ?1)": (_("for every proposition") + " ", 0, ", ", 1),
-    "QUANT_∀(TYPE(...), ?0, ?1)": (_("for every set") + " ", 0, ", ", 1),
+        (_("for every function") + " ", (1, ),
+         _(" from "), (0, 0), _(" to "), (0, 1), ", ", (2, )),
+    "QUANT_∀(PROP, ?0, ?1)": (_("for every proposition") + " ", (1, ), ", ", (2, )),
+    "QUANT_∀(TYPE(...), ?0, ?1)": (_("for every set") + " ", (1, ), ", ", (2, )),
     "QUANT_∀(SEQUENCE(...), ?0, ?1)":
         ("global", _("for every sequence {} of elements of {}, {}"),
-         0, (0, 1), 1),
+         (1, ), (0, 1), (2, )),
     "QUANT_∃(SET(...), ?0, ?1)":
         ("global", _("there exists a subset {} of {} such that {}"),
-         0, (0, 0), 1),
+         (1, ), (0, 0), (2, )),
     "QUANT_∃(FUNCTION(...), ?0, ?1)":
         ("global", _("there exists a function {} from {} to {} such that {}"),
-         0, (0, 0), (0, 1), 1),
+         (1, ), (0, 0), (0, 1), (2, )),
     "QUANT_∃(PROP, ?0, ?1)":
-        ("global", _("there exists a proposition {} such that {}"), 0, 1),
+        ("global", _("there exists a proposition {} such that {}"), (1, ), (2, )),
     "QUANT_∃(TYPE(...), ?0, ?1)":
-        (_("there exists a set") + " ", 0, _(" such that "), 1),
+        (_("there exists a set") + " ", (1, ), _(" such that "), (2, )),
     "QUANT_∃(SEQUENCE(...), ?0, ?1)":
         ("global", _("there exists a sequence {} of elements of {} such that {}"),
-         0, (0, 1), 1),
+         (1, ), (0, 1), (2, )),
     "QUANT_∃!(SET(...), ?0, ?1)":
         ("global",
          _("there exists a unique subset {} of {} such that {}"),
-         0, (0, 0), 1),
+         (1, ), (0, 0), (2, )),
     "QUANT_∃!(FUNCTION(...), ?0, ?1)":
         ("global",
          _("there exists a unique function {} from {} to {} such that {}"),
-         0, (0, 0), (0, 1), 1),
+         (1, ), (0, 0), (0, 1), (2, )),
     "QUANT_∃!(PROP, ?0, ?1)":
         ("global", _("there exists a unique  proposition {} such that {}"),
-         0, 1),
+         (1, ), (2, )),
     "QUANT_∃!(TYPE(...), ?0, ?1)":
-        (_("there exists a unique set") + " ", 0, _(" such that "), 1),
+        (_("there exists a unique set") + " ", (1, ), _(" such that "), (2, )),
     "QUANT_∃!(SEQUENCE(...), ?0, ?1)":
         ("global",
          _("there exists a unique sequence {} of elements of {} such that {}"),
-         0, (0, 1), 1)
+         (1, ), (0, 1), (2, ))
 }
+# TODO: add bounded quantification patterns for text
 
 ########################################################
 ########################################################
@@ -268,13 +294,56 @@ latex_from_pattern_string_for_type = {
     "SEQUENCE(...)": (r'\type_sequence', (1, )),
     # TYPE... TODO (r'\type_element', name)
     "TYPE": (r'\set',),
+    "SET_INDEX": (r'\set',),
+    "CONSTANT/name=MetricSpace": (r'\metric_space',),
+    "CONSTANT/name=EspaceTopologique": (r'\topological_space',),
+    "CONSTANT/name=TypePair": (r'{0, 1}',),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
+    "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
     # This is maybe too strong: any guy with undefined math_type will match!! :
-    "?:TYPE": (r'\type_element', name),  # NB: TYPE is treated above
+    "?:TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is treated above
+    "?:CONSTANT/name=MetricSpace": (r'\type_point', local_constant_shape),  # a point of...
     "?:SET(?0)": (r'\type_element', 'self'),
+    "CONSTANT/name=_inst_1": ('Hypo1',)
+}
+
+#################
+#################
+# Lean patterns #
+#################
+#################
+
+# NB: see also lean_from_node
+lean_from_pattern_string = {
+    # Universal quant with adequate binders
+    # This is useful so that the Lean code that works for
+    # from_previous_state_method also works for normal method:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=implicit, ?2)":
+        (r"\forall", '{', (1,), ": ", (0,), '}', ", ", (2,)),
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=strict_implicit, ?2)":
+        (r"\forall", '⦃', (1,), ": ", (0,), '⦄', ", ", (2,)),
+    # type class instance between brackets:
+    "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
+        (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
+    "CONSTANT/name=_inst_1": ('_inst_1',),
+    "CONSTANT/name=_inst_2": ('_inst_2',),
+
+    # If type is imperatively 'set ??' then use 'in' (instead of ':')
+    "QUANT_∀(?0: !set ?3, ?1, ?2)":
+        (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
+    "QUANT_∃(?0: !set ?3, ?1, ?2)":
+        (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
+    "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
+    "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
+        ('λ', (1, ),  ', ', (2, )),
+        # (r"\{", (2,), ', ', (1,), r"\in_symbol", (0,), r"\}"),
+    "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
+    "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
+        ('λ', (1, ),  ', ', (2, )),
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'real',)
 }

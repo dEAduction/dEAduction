@@ -43,11 +43,14 @@ from sys import version_info
 # else:
 #     import pickle
 
+from deaduction.pylib.utils.filesystem import check_dir
 import deaduction.pylib.config.dirs as      cdirs
+# import deaduction.pylib.config.vars as      cvars
 import deaduction.pylib.logger as           logger
 from deaduction.pylib.utils import (        load_object, save_object)
 
-from deaduction.pylib.mathobj import MathObject
+# from deaduction.pylib.mathobj import MathObject
+# from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata import (   Exercise,
                                             Definition,
                                             Theorem,
@@ -67,7 +70,7 @@ class Course:
     which is materialised by a Lean file containing a list of definitions,
     theorems and exercises (all being statements introduced by Lean's
     keyword "lemma"), structured into namespaces that corresponds to sections.
-    Th attributes are:
+    The attributes are:
     - the content of the corresponding Lean file,
     - the course metadata (e.g. authors, institution, etc.)
     - the "outline" of the course, an ordered dict describing namespaces
@@ -77,15 +80,168 @@ class Course:
     file_content:           str
     metadata:               Dict[str, str]
     outline:                OrderedDict
+    opened_namespace_lines: Dict
     statements:             List[Statement]
     relative_course_path:   Path = None
-    # Relative_course_path is added after instantiation.
+    abs_course_path:   Path = None
+    # Relative_course_path, path relative to the home directory, is added after
+    # instantiation.
+
+    __history_course      = None
 
     # Outline description:
     #   keys = lean complete namespaces,
     #   values = corresponding plain language namespace
     #   e. g. section_dict["set_theory.unions_and_intersections"] =
     #   "Unions and intersections"
+
+    @property
+    def course_file_name(self):
+        if self.relative_course_path:
+            name = self.relative_course_path.stem
+            return name
+
+    def lean_import_course_preamble(self) -> str:
+        return f"import {self.course_file_name}\n"
+
+    @property
+    def history_file_path(self):
+        """
+        Return path to history file for this exercise, relative to home.
+        """
+
+        rel_path = cdirs.relative_to_home(self.abs_history_file_path)
+        # print(f"History path:{rel_path}")
+        return rel_path
+
+    @property
+    def abs_history_file_path(self):
+        filename = 'history_' \
+                   + self.course_file_name.replace('.', '_') \
+                   + '.lean'
+
+        check_dir(cdirs.history, create=True)
+        abs_path = cdirs.history / filename
+        # print(f"Abs history path:{abs_path}")
+        return abs_path
+
+    def history_course(self):
+        """
+        Return Course instance created from history version of course,
+        if a history versions exists.
+        """
+
+        if not self.__history_course:
+            self.set_history_course()
+        return self.__history_course
+
+    def set_history_course(self):
+        abs_path = self.abs_history_file_path
+        self.__history_course = (Course.from_file(abs_path)
+                                 if abs_path.exists() else None)
+
+    def original_version_in_history_file(self, exercise: Exercise) -> Exercise:
+        """
+        Return Exercise identical to exercise but in history file.
+        """
+
+        history_course = self.history_course()
+        if history_course:
+            for other in history_course.exercises:
+                if other.is_copy_of(exercise):
+                    return other
+
+            log.warning(f"No copy of original exercise {exercise.pretty_name}"
+                        f"found in history file")
+
+    def saved_exercises_in_history_course(self) -> [Exercise]:
+        """
+        Provide list of all exercises saved in history course.
+        """
+
+        history_course = self.history_course()
+        if not history_course:
+            return []
+
+        exercises = [exo for exo in history_course.exercises
+                     if exo.history_date() and exo.refined_auto_steps]
+        # # debug
+        # for exo in hstr_course.exercises:
+        #     if exo.history_date():
+        #         continue
+
+        return exercises
+
+    def history_versions_from_exercise(self, exercise: Exercise):
+        """
+        Return the versions of exercise as saved in self.history_course().
+        """
+        saved_exercises = self.saved_exercises_in_history_course()
+        exercises = [history_exo for history_exo in saved_exercises
+                     if history_exo.is_history_version_of(exercise)]
+        return exercises
+
+    def delete_all_saved_proofs_of_exercise(self, exercise: Exercise):
+        """
+        This method will delete all history versions of the given exercise in
+        the history file. Do not call without warning usr.
+        """
+        saved_versions = self.history_versions_from_exercise(exercise)
+        while saved_versions:
+            nb = len(saved_versions)
+            saved_version = saved_versions[-1]
+            assert isinstance(saved_version, Exercise)
+            saved_version.delete_in_history_file()
+            # Reset history course, since the line number of the remaining
+            # exercises may have changed
+            self.set_history_course()
+            saved_versions = self.history_versions_from_exercise(exercise)
+            if len(saved_versions) != nb - 1:
+                log.warning("Deleting failed!")
+                break
+
+    def delete_history_file(self):
+        """
+        This method delete the history file. Do not call without warning usr!
+        """
+        file = self.abs_history_file_path
+        try:
+            file.unlink()
+        except FileNotFoundError:
+            log.warning("History file not found")
+
+    def is_history_file(self):
+        return self.course_file_name.startswith('history_')
+
+    def exercises_including_saved_version(self):
+        """
+        Return a list containing self's exercises and all saved versions.
+        """
+        original_exercises = self.exercises
+        saved_exercises = self.saved_exercises_in_history_course()
+        log.debug(f"Found {len(saved_exercises)} saved exercises")
+        if not saved_exercises:
+            return self.exercises
+
+        mixed_exercises = []
+        saved_index = 0
+
+        for exercise in original_exercises:
+            mixed_exercises.append(exercise)
+            while saved_index < len(saved_exercises) \
+                    and saved_exercises[saved_index].\
+                    is_history_version_of(exercise):
+                saved_exercise = saved_exercises[saved_index]
+                mixed_exercises.append(saved_exercise)
+                saved_exercise.original_exercise = exercise
+                saved_index += 1
+
+        missing = (len(original_exercises) + len(saved_exercises)
+                   - len(mixed_exercises))
+        if missing > 0:
+            log.warning(f"Missed {missing} saved exercises")
+
+        return mixed_exercises
 
     @property
     def title(self) -> str:
@@ -172,29 +328,47 @@ class Course:
 
         return nice_dict
 
+    # def update_cvars_from_metadata(self):
+    #     metadata_settings = self.metadata.get('settings')
+    #     if metadata_settings:
+    #         more_vars = vars_from_metadata(metadata_settings)
+    #         if more_vars:
+    #             cvars.update(more_vars)
+
     @classmethod
-    def from_file(cls, course_path: Path):
+    def from_file(cls, abs_course_path: Path):
         """
         Instantiate a Course object from the provided file.
 
-        :param course_path:     path for file, either a'.lean' or a '.pkl' file
+        :param abs_course_path: path fora Lean file. WARNING: this should be
+        an absolute path.
+
         :return:                a Course instance
         """
 
-        course_filetype = course_path.suffix
+        # course_filetype = course_path.suffix
+        # if not course_path.exists():
+        #     course_path = cdirs.home / course_path
+        # if course_filetype == '.lean':
+        log.info(f"Parsing file {str(abs_course_path)}")
+        file_content = abs_course_path.read_text(encoding='utf-8')
+        course = Course.from_file_content(file_content)
+        if not course:
+            return
+        # elif course_filetype == '.pkl':  # Obsolete
+        #     with course_path.open(mode='rb') as input_:
+        #         course = load_object(input_)
+        # else:
+        #     return
 
-        if course_filetype == '.lean':
-            log.info(f"Parsing file {str(course_path.resolve())}")
-            file_content = course_path.read_text(encoding='utf-8')
-            course = Course.from_file_content(file_content)
-        elif course_filetype == '.pkl':
-            with course_path.open(mode='rb') as input_:
-                course = load_object(input_)
+        # course.filetype = course_filetype
+        # course_path = course_path.resolve()
+        # home = cdirs.home.resolve()
+        # relative_course_path = Path(os.path.relpath(course_path,
+        #                                             start=home))
+        course.relative_course_path = cdirs.relative_to_home(abs_course_path)
+        course.abs_course_path = abs_course_path
 
-        course.filetype = course_filetype
-        course_path = course_path.resolve()
-        relative_course_path = Path(os.path.relpath(course_path))
-        course.relative_course_path = relative_course_path
         return course
 
     @classmethod
@@ -243,17 +417,25 @@ class Course:
         """
 
         statements = []
-        outline = {}
+        outline = OrderedDict()
+        opened_namespace_lines = {}
         begin_counter = 0
+        # Will be False between statement event and begin_proof event:
         begin_found = True
+
         ########################
         # Parsimonious's magic #
         ########################
         # Transform the file content into a list of events
         # and a dict of metadata.
+
+        # FIXME: handle parsimonius exception if this is not a Deaduction file
         course_tree = parser_course.lean_course_grammar.parse(file_content)
         visitor = parser_course.LeanCourseVisitor()
         course_history, course_metadata = visitor.visit(course_tree)
+        # Meaningless here (and --> crash since dict is not hashable!)
+        if '_raw_metadata' in course_metadata:
+            course_metadata.pop('_raw_metadata')
         # log.debug(f"course history: {course_history}")
         log.info(f"Course metadata: {course_metadata}")
 
@@ -280,6 +462,17 @@ class Course:
                     pass
                     # log.debug(f"(just closing section(?) {name})")
 
+            elif event_name == "open_open":
+                name = event_content['name']
+                if name not in opened_namespace_lines:
+                    opened_namespace_lines[name] = line_counter
+
+            # elif event_name == "begin_metadata":
+            #     # Exercise metadata are before begin_proof event
+            #     if not begin_found and statements:
+            #         info = statements[-1].info
+            #         info['begin_metadata_line'] = line_counter
+
             ##############
             # statements #
             ##############
@@ -303,8 +496,10 @@ class Course:
                     # AvailableDefinitions
                     # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
-                        metadata.setdefault(field_name,
-                                            course_metadata[field_name])
+                        if field_name not in \
+                                Exercise.non_pertinent_course_metadate:
+                            metadata.setdefault(field_name,
+                                                course_metadata[field_name])
                     # Creating Exercise!
                     exercise = Exercise.from_parser_data(metadata, statements)
                     statements.append(exercise)
@@ -336,6 +531,7 @@ class Course:
         course = cls(file_content=file_content,
                      metadata=course_metadata,
                      outline=outline,
+                     opened_namespace_lines=opened_namespace_lines,
                      statements=statements)
 
         # Add reference to course in statements, and test data for coherence
@@ -345,7 +541,7 @@ class Course:
             counter += 1
             if isinstance(st, Exercise):
                 counter_exercises += 1
-            st.course = course  # This makes printing raw exercises slow
+            st.course = course  # This makes __repr__() very slow
         log.info(f"{len(statements)} statements, including"
                  f" {counter_exercises} exercises found by parser")
         counter_lemma_exercises = file_content.count("lemma exercise.")

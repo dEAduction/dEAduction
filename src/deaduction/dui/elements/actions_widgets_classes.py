@@ -12,7 +12,7 @@
     instantiated as an attribute of ExerciseMainWindow. Provided
     classes:
         - ActionButton;
-        - ActionButtonsWidget;
+        - ActionButtonsLine;
         - StatementsTreeWidgetNode;
         - StatementsTreeWidgetItem;
         - StatementsTreeWidget.
@@ -39,30 +39,41 @@ This file is part of d∃∀duction.
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import              logging
-from typing import  Dict
+import logging
+from typing import Dict, Optional
 from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
                                 QColor,
                                 QIcon,
-                                QCursor, QDrag, QPixmap,
-                                QHelpEvent)
+                                QCursor,
+                                QPainter,
+                                QBrush,
+                                QPen)
 from PySide2.QtCore    import ( Signal,
                                 Slot,
                                 Qt,
                                 QModelIndex, QMimeData,
-                                QTimer)
+                                QTimer,
+                                QRect)
 from PySide2.QtWidgets import ( QHBoxLayout,
+                                QVBoxLayout,
                                 QPushButton,
                                 QWidget,
-                                QAbstractItemView)
+                                QAbstractItemView,
+                                QLabel,
+                                QGroupBox,
+                                QStackedLayout,
+                                QCheckBox)
+
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
-                                QToolTip)
+                                QToolTip,
+                                QSizePolicy)
 
 from deaduction.pylib.text        import ( button_symbol,
                                            button_tool_tip)
+import deaduction.pylib.config.dirs as cdirs
 
 from deaduction.pylib.actions     import   Action
 from deaduction.pylib.coursedata  import ( Definition,
@@ -84,7 +95,7 @@ global _
 # Classes for the two rows of buttons (e.g. ∀ button) in the Actions
 # area of the exercise window. Each button is coded as an instance of
 # the class ActionButton and each row essentially is a container of
-# instances of ActionButton coded as an instance of ActionButtonsWidget.
+# instances of ActionButton coded as an instance of ActionButtonsLine.
 
 
 class ActionButton(QPushButton):
@@ -118,7 +129,7 @@ class ActionButton(QPushButton):
     from_name: dict = {}  # name -> ActionButton
     # ! Must be updated to avoid pointing to deleted items !
 
-    def __init__(self, action: Action):
+    def __init__(self, action: Action, in_demo_or_use_line=False):
         """
         Init self with an instance of the class Action. Set text,
         tooltip and keep the given action as an attribute. When self is
@@ -130,17 +141,26 @@ class ActionButton(QPushButton):
 
         super().__init__()
 
+        self.action = action
+
         # Modify button default color
         if cvars.get('others.os') == "linux":
-            palette = self.palette()
+
+            # if self.name.startswith('use'):
+            #     background_color = '#CC31CC'
+            # else:
+            #     background_color = cvars.get("display.color_for_selection",
+            #                                  "limegreen")
             background_color = cvars.get("display.color_for_selection",
                                          "limegreen")
-            highlight_color = QColor(background_color)
-            palette.setBrush(palette.Normal, palette.Button, highlight_color)
-            palette.setBrush(palette.Inactive, palette.Button, highlight_color)
-            self.setPalette(palette)
+            self.set_color(background_color)
+            # palette = self.palette()
+            # highlight_color = QColor(background_color)
+            # palette.setBrush(palette.Normal, palette.Button, highlight_color)
+            # palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+            # self.setPalette(palette)
 
-        self.action = action
+        self.in_demo_or_use_line = in_demo_or_use_line
         self.update()  # set symbol and tool tip
         self.clicked.connect(self._emit_action)
         # Modify arrow appearance when over a button
@@ -149,13 +169,27 @@ class ActionButton(QPushButton):
         # self.from_name[action.symbol] = self
         self.from_name[action.name] = self
 
+    def set_color(self, color):
+        palette = self.palette()
+        highlight_color = QColor(color)
+        palette.setBrush(palette.Normal, palette.Button, highlight_color)
+        palette.setBrush(palette.Inactive, palette.Button, highlight_color)
+        self.setPalette(palette)
+
     def update(self):
         """
         Set or update text and tooltips in button, using module pylib.text.
         NB: translation is done here.
         """
         name = self.action.name
-        symbol = _(button_symbol(name))
+        symbol = button_symbol(name)
+        if self.in_demo_or_use_line:
+            # Remove ugly prefix, 'use_' or 'prove_'
+            if symbol.startswith('use'):
+                symbol = symbol[4:]
+            elif symbol.startswith('prove'):
+                symbol = symbol[6:]
+        symbol = _(symbol)  # Translate, finally!
         self.setText(symbol)
 
         tool_tip = button_tool_tip(name)
@@ -186,24 +220,27 @@ class ActionButton(QPushButton):
     @property
     def symbol(self):
         """
-        Actual text displayed on self (may be changed by usr).
+        Actual text displayed on self (can be changed by usr).
         """
-        return self.action.symbol
+        return self.text()
+        # return self.action.symbol
 
     def is_symbol(self):
         """
-        Should be true iff self is a mth symbol, e.g. '⇒' or '='.
+        Should be true iff self is a math symbol, e.g. '⇒' or '='.
         The test is only that length = 1...
         The other option could be to provide a list.
         """
-        return len(self.symbol) == 1
+        test = len(self.symbol) < 4  # , not self.symbol.isascii())
+        return test
 
     @property
     def name(self):
         """
         (Immutable) name of the corresponding action.
-        One of  ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
-                 'equal', 'map']
+        One of  ['forall', 'exists', 'implies', 'and', 'or',
+                 'not', 'iff', 'equal', 'map',
+                 'prove_forall', 'use_forall', ...]
         """
         return self.action.name
 
@@ -211,7 +248,7 @@ class ActionButton(QPushButton):
         """
         Test if symbol is the symbol of (the action associated to) self.
         """
-        # TODO: obsolete (?)
+        # TODO: obsolete (?) startswith --> ends_with ?
         return self.action.symbol.startswith(symbol) \
             or self.action.symbol.startswith(symbol.replace('_', ' ')) \
             or _(self.action.symbol).startswith(_(symbol)) \
@@ -242,8 +279,111 @@ class ActionButton(QPushButton):
 # outside of the class definition, as followed.
 ActionButton.action_triggered = Signal(ActionButton)
 
+#
+# class ProveUseModeSetter(QWidget):
+#     clicked = Signal()
+#
+#     def __init__(self):
+#         super().__init__()
+#         self.demo_button = QRadioButton(text=_('Demo'))
+#         self.use_button = QRadioButton(text=_('Use'))
+#         self.lyt = QVBoxLayout()
+#         self.lyt.addWidget(self.demo_button)
+#         self.lyt.addWidget(self.use_button)
+#         self.setLayout(self.lyt)
+#
+#         self.demo_button.clicked.connect(self.clicked)
+#         self.use_button.clicked.connect(self.clicked)
+#         self.demo_button.setChecked(True)
+#
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#     @property
+#     def switch_mode(self):
+#         if self.demo_button.isChecked():
+#             return "demo"
+#         elif self.use_button.isChecked():
+#             return "use"
 
-class ActionButtonsWidget(QWidget):
+
+class Switch(QPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setCheckable(True)
+        # self.setMinimumWidth(66)
+        # self.setMinimumHeight(22)
+
+    def paintEvent(self, event):
+        # label = _("DEMO") if self.isChecked() else _("USE")
+        bg_color = Qt.green
+        label = ""
+        radius = 5
+        width = 20
+        factor = 1.5
+        center = self.rect().center()
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.translate(center)
+        painter.setBrush(QColor(0, 0, 0))
+
+        pen = QPen(Qt.black)
+        pen.setWidth(2)
+        painter.setPen(pen)
+
+        painter.drawRoundedRect(QRect(-width, -radius, 2*width,
+                                            2*radius),
+                                radius, radius)
+        painter.setBrush(QBrush(bg_color))
+        # sw_rect = QRect(-radius, -radius, width + radius, 2*radius)
+        btn_radius = int(radius*factor)
+        sw_rect = QRect(-btn_radius, -btn_radius, 2*btn_radius,
+                        2*btn_radius)
+        if not self.isChecked():
+            sw_rect.moveLeft(-width)
+        else:
+            sw_rect.moveRight(width)
+        painter.drawEllipse(sw_rect)
+        # painter.drawText(sw_rect, Qt.AlignCenter, label)
+
+
+class ProveUseModeSetter(QWidget):
+    """
+    A switch (QPush button displaying two positions) to switch between proof
+    mode and use mode.
+    """
+    clicked = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.switch = Switch()
+        self.switch.setChecked(True)
+        demo_lbl = QLabel(_("Prove mode"))
+        use_lbl = QLabel(_("Use mode"))
+
+        lyt = QHBoxLayout()
+        lyt.setContentsMargins(0, 0, 0, 0)
+
+        lyt.addStretch()
+        lyt.addWidget(use_lbl)
+        lyt.addWidget(self.switch)
+        lyt.addWidget(demo_lbl)
+        self.setLayout(lyt)
+
+        self.switch.clicked.connect(self.clicked)
+
+    @property
+    def switch_mode(self):
+        if self.switch.isChecked():
+            return "prove"
+        else:
+            return "use"
+
+    def click(self):
+        self.switch.setChecked(not self.switch.isChecked())
+        self.clicked.emit()
+
+
+class ActionButtonsLine(QWidget):
     """
     A container class to create and display an ordered row of instances
     of the class Action as buttons (instances of the class
@@ -254,31 +394,81 @@ class ActionButtonsWidget(QWidget):
     :param buttons [ActionButton]: The list of instances of the class
         ActionButton created and displayed in self.__init__. This
         attribute makes accessing them painless.
+    self.demo_line is True iff all buttons are demo buttons.
     """
 
-    def __init__(self, actions: [Action]):
+    init = False
+
+    @classmethod
+    def set_lbl_size(cls):
+        if cls.init:  # Size already set
+            return
+
+        cls.init = True
+        # Determine fixed width
+        demo_lbl = QLabel(_('Prove:'))
+        use_lbl = QLabel(_('Use:'))
+        demo_lbl.show()
+        use_lbl.show()
+        cls.__lbl_width = max(demo_lbl.width(), use_lbl.width())
+        cls.__lbl_height = demo_lbl.height()
+        # print(lbl_height, lbl_width)
+        demo_lbl.deleteLater()
+        use_lbl.deleteLater()
+
+    def __init__(self, actions: [Action], show_label=False):
         """
         Init self with an ordered list of instances of the class Action.
-
         :param actions: The list of instances of the class Action one
             wants to create buttons from.
+        demo_line is True iff all buttons are 'prove' buttons. In this case,
+        a QLabel display 'Prove :'. Likewise for use_line.
+
+        The bool show_label allows display of a label 'Prove:' or 'Use:'
+        (obsolete).
         """
 
         super().__init__()
 
+        self.set_lbl_size()
+
+        self.demo_line = all((action.name.startswith('prove_')
+                              for action in actions))
+        self.use_line = all((action.name.startswith('use_')
+                             for action in actions))
+        demo_or_use_line = self.demo_line or self.use_line
+
         self.buttons = []
 
-        main_layout = QHBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        # (1) Populate h_layout with ActionButtons
+        h_layout = QHBoxLayout()
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+
+        # fixme: Obsolete
+        if show_label:
+            if self.demo_line:
+                demo_lbl = QLabel(_('Prove:'))
+                h_layout.addWidget(demo_lbl)
+                demo_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
+            elif self.use_line:
+                use_lbl = QLabel(_('Use:'))
+                use_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
+                h_layout.addWidget(use_lbl)
 
         for action in actions:
-            action_button = ActionButton(action)
-            main_layout.addWidget(action_button)
+            action_button = ActionButton(action,
+                                         in_demo_or_use_line=demo_or_use_line)
+            h_layout.addWidget(action_button)
             self.buttons.append(action_button)
 
-        main_layout.addStretch()
+        h_layout.addStretch()
 
-        self.setLayout(main_layout)
+        self.setLayout(h_layout)
+
+        sp = self.sizePolicy()
+        sp.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(sp)
 
     def update(self):
         """
@@ -287,6 +477,233 @@ class ActionButtonsWidget(QWidget):
         # Fixme: obsolete
         for button in self.buttons:
             button.update()
+
+    def names(self):
+        return [button.name for button in self.buttons]
+
+
+class ProveUseSwitcherButtonGroupBox(QGroupBox):
+    """
+    This class is a QGrouBox with two lines of buttons. If switcher is True
+    then a button allow usr to switch between lines, otherwise both lines are
+    displayed.
+    """
+    def __init__(self, prove_wdgs, use_wdgs, switcher=True):
+        super().__init__()
+        self.prove_wdgs = prove_wdgs
+        self.use_wdgs = use_wdgs
+        self.lyt = QVBoxLayout()
+        self.prove_use_mode_setter = None
+        # self.toggled.connect(self.hide)
+        # self.recorded_height = 0
+
+        if not switcher:  # Just the two buttons lines
+            self.prove_use_mode_setter = None
+            self.stacked_lyt = None
+            self.lyt.addWidget(prove_wdgs)
+            self.lyt.addWidget(use_wdgs)
+
+        else:
+            # Switcher
+            self.prove_use_mode_setter = ProveUseModeSetter()
+            self.prove_use_mode_setter.clicked.connect(
+                self.update_switch)
+            self.lyt.addWidget(self.prove_use_mode_setter)
+            self.lyt.setAlignment(self.prove_use_mode_setter, Qt.AlignHCenter)
+
+            # Stacked_lyt with prove and use wdgs
+            self.stacked_lyt = QStackedLayout()
+            self.stacked_lyt.addWidget(prove_wdgs)
+            self.stacked_lyt.addWidget(use_wdgs)
+            self.stacked_lyt.setCurrentIndex(0)
+            self.lyt.addLayout(self.stacked_lyt)
+
+        self.setLayout(self.lyt)
+        self.update_switch()
+
+    def update_switch(self):
+        if self.prove_use_mode_setter:
+            switch_mode = self.prove_use_mode_setter.switch_mode
+            if switch_mode == "prove":
+                self.stacked_lyt.setCurrentIndex(0)
+            elif switch_mode == "use":
+                self.stacked_lyt.setCurrentIndex(1)
+
+    @property
+    def switch_mode(self):
+        if self.prove_use_mode_setter:
+            return self.prove_use_mode_setter.switch_mode
+
+    def set_switch_mode(self, to_prove=True):
+        if self.prove_use_mode_setter:
+
+            change = ((to_prove and self.switch_mode == "use")
+                      or (not to_prove) and self.switch_mode == "prove")
+            if change:
+                self.prove_use_mode_setter.click()
+
+    # def hide(self):
+    #     if self.isChecked():
+    #         self.setMaximumHeight(self.recorded_height)
+    #         self.prove_wdgs.show()
+    #         self.use_wdgs.show()
+    #         self.setFlat(False)
+    #     else:
+    #         self.recorded_height = self.height()
+    #         self.prove_wdgs.hide()
+    #         self.use_wdgs.hide()
+    #         self.setFlat(True)
+    #         self.setMaximumHeight(20)
+    #         # self.lyt.setMargin(0)
+    #         # self.lyt.setContentsMargins(0,0,0,0)
+
+
+class ActionButtonsGroup(QGroupBox):
+    """
+    This class is a QGroupbox with a title containing one or several
+    ActionButtonLines.
+
+    TODO:
+    The title could be made clickable (e.g. a checkbox) to allow hide/show
+    the box.
+    """
+
+    def __init__(self, title, action_button_lines: [ActionButtonsLine]):
+        super().__init__()
+        self.setTitle(title)
+        self.lyt = QVBoxLayout()
+
+        self.no_button = True
+        for abw in action_button_lines:
+            if abw.buttons:
+                self.no_button = False
+                self.lyt.addWidget(abw)
+
+        self.setLayout(self.lyt)
+
+
+    # def __init__(self, title, action_button_wdgs: [ActionButtonsLine]):
+    #     super().__init__()
+    #
+    #     # 1 or 2 widgets
+    #     self.title_wdg = QCheckBox(title) if title else None
+    #     self.group_box = QGroupBox()
+    #     self.gb_lyt = QVBoxLayout()
+    #
+    #     for abw in action_button_wdgs:
+    #         self.gb_lyt.addWidget(abw)
+    #     self.group_box.setLayout(self.gb_lyt)
+    #
+    #     self.lyt = QVBoxLayout()
+    #     self.lyt.setContentsMargins(0,0,0,0)
+    #     self.lyt.setMargin(0)
+    #
+    #     if self.title_wdg:
+    #         self.title_wdg.setChecked(True)
+    #         self.lyt.addWidget(self.title_wdg)
+    #         self.title_wdg.stateChanged.connect(self.show_or_hide)
+    #
+    #     self.lyt.addWidget(self.group_box)
+    #     self.setLayout(self.lyt)
+    #
+    # def show_or_hide(self):
+    #     if not self.title_wdg:
+    #         return
+    #
+    #     if self.title_wdg.isChecked():
+    #         self.group_box.show()
+    #
+    #     else:
+    #         self.group_box.hide()
+
+
+class ActionButtonsLyt(QVBoxLayout):
+    """
+    This class provides a QVBoxLayout which contains all action buttons.
+    The action buttons are first grouped by lines in ActionButtonsLines,
+    and lines are grouped in a ActionButtonsGroup with a title:
+    thus the entry data are of type [(str, [[Actions]])].
+
+    Fixme, obsolete:
+    There are two cases:
+    - either prove_wdgs and use_wdgs are provided, then these are used to
+    build a ProveUseSwitcherButtonGroupBox, and the other line wdgs are put
+    in another QGroupBox;
+    - or all the line wdgs are directly put into self.
+    """
+
+    def __init__(self, action_buttons_lines: [(str, [[ActionButtonsLine]])],
+                 switcher=False):
+        super().__init__()
+
+        for (title, group) in action_buttons_lines:
+            group_box = ActionButtonsGroup(title, group)
+            if not group_box.no_button:
+                self.addWidget(group_box)
+
+    @classmethod
+    def from_actions(cls, actions_lines: [(str, [[Action]])]):
+        """
+        The action buttons are first grouped by lines in ActionButtonsLines,
+        and lines are grouped in a ActionButtonsGroup with a title:
+        thus the entry data are of type [(str, [[Actions]])].
+        """
+        pass
+
+    # FIXME:
+    @classmethod
+    def obsolete(cls,
+                 other_line_wdgs: [ActionButtonsLine],
+                 prove_wdgs: ActionButtonsLine = None,
+                 use_wdgs: ActionButtonsLine = None,
+                 display_prove_use=False,
+                 switcher=True):
+
+        super().__init__()
+
+        # Try
+        prove_wdgs = ActionButtonsGroup(_('Prove:'), [prove_wdgs])
+        use_wdgs = ActionButtonsGroup(_('Use:'), [use_wdgs])
+
+        self.prove_use_box = None
+        other_lyt = QVBoxLayout() if display_prove_use else self
+
+        # Populate other_lyt, in the simple case that's enough
+        # first = True
+        for wdg in other_line_wdgs:
+            # if not first:
+            #     pass
+            #     # other_lyt.addSpacing(5)
+            # else:
+            #     first = False
+            other_lyt.addWidget(wdg)
+
+        # In the complicated case, populate self with two QGroupBoxes
+        if display_prove_use:
+            self.prove_use_box = \
+                ProveUseSwitcherButtonGroupBox(prove_wdgs, use_wdgs,
+                                               switcher=switcher)
+            # self.prove_use_box.setTitle('Prove or use')
+            # self.prove_use_box.setCheckable(True)
+            other_box = QGroupBox()
+            other_box.setLayout(other_lyt)
+
+            self.prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
+            self.prove_use_box.layout().setSpacing(5)
+            other_box.layout().setContentsMargins(5, 5, 5, 5)
+            other_box.layout().setSpacing(5)
+
+            self.addWidget(self.prove_use_box)
+            self.addWidget(other_box)
+
+    def set_switch_mode(self, to_prove=True):
+        if self.prove_use_box:
+            return self.prove_use_box.set_switch_mode(to_prove)
+
+    @property
+    def switch_mode(self) -> str:
+        if self.prove_use_box:
+            return self.prove_use_box.switch_mode
 
 
 ##############################
@@ -349,25 +766,39 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         :param statement: The instance of the class (or child) one wants
             to associate to self.
         """
-        if StatementsTreeWidget.show_lean_name_for_statements:
-            to_display = [statement.pretty_name, statement.lean_name]
-        else:
-            to_display = [statement.pretty_name]
-
-        super().__init__(None, to_display)
 
         self.statement = statement
         self.parent = None  # Will be the QTreeWidget when inserted
+
+        super().__init__(None, self.to_display())
 
         # Print second col. in gray
         self.setForeground(1, QBrush(QColor('gray')))
         # TODO: use mono font for lean name column (column 1)
 
+        self.set_icon()
+
+        self.from_lean_name[statement.lean_name] = self
+
+        # Set tooltips: tooltips are set when item is put in the QTReeWidget
+        # so that is_exercise property has a meaning
+        # self.set_tooltip()
+
+    def to_display(self) -> [str]:
+        statement = self.statement
+        # if StatementsTreeWidget.show_lean_name_for_statements:
+        #     to_display = [statement.pretty_name, statement.lean_name]
+        # else:
+        #     to_display = [statement.pretty_name]
+        # return to_display
+        return [statement.pretty_name]
+
+    def set_icon(self):
         # Print icon (D for definition, T for theorem, etc)
         icons_base_dir = cvars.get("icons.path")
         icons_type     = cvars.get("icons.letter_type")
-
         icons_dir = fs.path_helper(icons_base_dir) / icons_type
+        statement = self.statement
         if isinstance(statement, Definition):
             path = icons_dir / 'd.png'
         elif isinstance(statement, Exercise):
@@ -376,23 +807,26 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
             path = icons_dir / 't.png'
         self.setIcon(0, QIcon(str(path.resolve())))
 
-        self.from_lean_name[statement.lean_name] = self
-
-        # Set tooltips: tooltips are set when item is put in the QTReeWidget
-        # so that is_exercise property has a meaning
-        # self.set_tooltip()
-
     @property
     def is_exercise(self):
         if self.parent:
             return self.parent.is_exercise_list
 
-    def set_tooltip(self):
+    def set_tooltip(self, only_ips=True):
         """
         Set the math content of the statement as tooltip.
+        If the flag only_ips is True, then no tooltips are shown if the
+        initial proof states is not available. Otherwise the tooltip will
+        show the Lean code content of the statement.
         """
-        self.setToolTip(0, self.statement.caption(
-            is_exercise=self.is_exercise))
+
+        text = self.statement.caption(is_exercise=self.is_exercise,
+                                      only_ips=only_ips)
+        if not text:
+            return
+        # Prevent wrap mode
+        text = "<p style='white-space:pre'>" + text
+        self.setToolTip(0, text)
         # These tooltips contain maths
         math_font_name = cvars.get('display.mathematics_font', 'Default')
         QToolTip.setFont(math_font_name)
@@ -427,6 +861,47 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         for key in cls.from_lean_name:
             if key.endswith(name):
                 return cls.from_lean_name[key]
+
+
+class ChooseExerciseWidgetItem(StatementsTreeWidgetItem):
+
+    def to_display(self) -> [str]:
+        exercise = self.statement
+        date = exercise.history_date()
+        if date:
+            nb_steps = len(exercise.refined_auto_steps)
+            txt1 = _("saved on ") + date
+            txt2 = f"({nb_steps} " + _("steps") + ")"
+            # to_display = ['\t' + txt1 + '\t' + txt2]
+            to_display = ['', txt1 + '\t' + txt2]
+        else:
+            to_display = [exercise.pretty_name]
+
+        return to_display
+
+    def set_icon(self):
+        # icons_base_dir = cvars.get("icons.path")
+        icons_base_dir = cdirs.icons
+        icons_type     = cvars.get("icons.letter_type")
+        icons_letter_dir = fs.path_helper(icons_base_dir) / icons_type
+
+        exercise = self.statement
+        assert isinstance(exercise, Exercise)
+
+        if exercise.history_date():
+            if exercise.is_solved_in_auto_test():
+                path = icons_base_dir / 'checked.png'
+            else:
+                path = icons_base_dir / 'icons8-in-progress-96.png'
+        elif exercise.is_solved_in_history_course():
+            path = icons_base_dir / 'checked.png'
+        elif exercise.has_versions_in_history_course():
+            path = icons_base_dir / 'icons8-in-progress-96.png'
+        else:
+            path = icons_letter_dir / 'e.png'
+
+        if path:
+            self.setIcon(0, QIcon(str(path.resolve())))
 
 
 class StatementsTreeWidgetNode(QTreeWidgetItem):
@@ -516,8 +991,8 @@ class StatementsTreeWidget(QTreeWidget):
     depth_of_unfold_statements = \
                         cvars.get("display.depth_of_unfold_statements")
 
-    show_lean_name_for_statements = \
-                    cvars.get("display.show_lean_name_for_statements")
+    # show_lean_name_for_statements = \
+    #                 cvars.get("display.show_lean_name_for_statements")
 
     tooltips_font_size = cvars.get('display.tooltips_font_size', 10)
 
@@ -548,7 +1023,10 @@ class StatementsTreeWidget(QTreeWidget):
         # If branch is empty, put statement at the end. This occurs when
         # the branch is already created.
         if not branch:
-            item            = StatementsTreeWidgetItem(statement)
+            if self.is_exercise_list:
+                item = ChooseExerciseWidgetItem(statement)
+            else:
+                item = StatementsTreeWidgetItem(statement)
             self.items.append(item)
             root            = item.text(0)
             extg_tree[root] = (item, dict())
@@ -635,14 +1113,16 @@ class StatementsTreeWidget(QTreeWidget):
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
         StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
+        self.setColumnCount(2 if is_exercise_list else 1)
+
+        self.is_exercise_list = is_exercise_list
         self._potential_drop_receiver = None
         self._current_dragging_node = None
         self.expand_node_timer = QTimer()
         self.expand_node_timer.timeout.connect(self.expand_current_node)
 
-        self.items: [QTreeWidgetItem] = [] # List of items
+        self.items: [QTreeWidgetItem] = []  # List of items
         self._init_tree(statements, outline)
-        self.is_exercise_list = is_exercise_list
         self.update_tooltips()
         # By default, drag and drop disabled. See _exercise_main_window_widgets.
         self.setDragEnabled(False)
@@ -666,13 +1146,14 @@ class StatementsTreeWidget(QTreeWidget):
 
         # Cosmetics
         self.setWindowTitle('StatementsTreeWidget')
-        if StatementsTreeWidget.show_lean_name_for_statements:
-            self.setHeaderLabels([_('Statements'), _('L∃∀N name')])
-            self.resizeColumnToContents(0)
-            self.resizeColumnToContents(1)
+        if self.is_exercise_list:
+            self.setHeaderLabels([_('Exercises'), _('Saved proofs')])
         else:
-            self.resizeColumnToContents(0)
             self.setHeaderLabels([_('Statements')])
+
+        self.expandToDepth(3)  # To get reasonable column size
+        self.resizeColumnToContents(0)
+        self.expandToDepth(self.depth_of_unfold_statements)
 
         # Modify color for selected objects
         palette = self.palette()
@@ -695,13 +1176,12 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.addTopLevelItem(item)
 
-    def goto_statement(self, statement: Statement, expand=True):
+    def goto_statement(self, statement: Optional[Statement], expand=True):
         """
-        Go to to the Statement statement (as if usr clicked on it).
-
+        Go to the Statement statement (as if usr clicked on it).
+        If statement is None then go to the first Exercise.
         :param statement: Statement to go to.
-        :param expand: if True, expandreveal statement by expanding all
-        parents items.
+        :param expand: if True, reveal statement by expanding all parents items.
         """
         log.debug("goto exercise")
         # Thanks @mcosta from https://forum.qt.io/topic/54640/
@@ -710,8 +1190,12 @@ class StatementsTreeWidget(QTreeWidget):
         def traverse_node(item: StatementsTreeWidgetItem):
             # Do something with item
             if isinstance(item, StatementsTreeWidgetItem):
-                if item.statement == statement:
-                    item.setSelected(True)
+                if ((isinstance(statement, Exercise)
+                     and (statement.is_copy_of(item.statement)
+                          or item.statement == statement))
+                    or (statement is None
+                        and isinstance(item.statement, Exercise))):
+                    self.setCurrentItem(item)
                     return True
             for i in range(0, item.childCount()):
                 if traverse_node(item.child(i)):
@@ -721,17 +1205,29 @@ class StatementsTreeWidget(QTreeWidget):
             item = self.topLevelItem(i)
             if traverse_node(item):
                 item.setExpanded(expand)
+                break
+
+        self.setFocus()
 
     @staticmethod
     def item_from_lean_name(lean_name: str) -> StatementsTreeWidgetItem:
         """
-        Return the StatementsTreeWidgetItem whose statement's pretty name is
-        pretty_name.
+        Return the StatementsTreeWidgetItem whose statement's Lean name is
+        lean_name.
         """
-        return StatementsTreeWidgetItem.from_name.get(lean_name)
+        return StatementsTreeWidgetItem.from_lean_name.get(lean_name)
 
     def item_from_statement(self, statement):
         return self.item_from_lean_name(statement.lean_name)
+
+    def hide_statements(self, statements: [Statement], yes=True):
+        """
+        Hide all the provided statements. Based on item_from_statement.
+        """
+        for statement in statements:
+            item = self.item_from_statement(statement)
+            if item:
+                item.setHidden(yes)
 
     def index_from_event(self, event):
         return self.indexAt(event.pos())

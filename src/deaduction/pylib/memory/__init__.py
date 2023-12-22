@@ -50,7 +50,7 @@ import deaduction.pylib.config.vars as        cvars
 import deaduction.pylib.config.dirs as        cdirs
 from deaduction.pylib.utils.filesystem import check_dir
 
-from deaduction.pylib.mathobj import          ProofStep
+from deaduction.pylib.proof_step import          ProofStep
 
 log = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class Journal:
     def save_exercise_with_proof_steps(self, emw):
         """
         (1) Incorporate journal as auto_steps attribute to emw.exercise,
-        and save this to cdirs.journal as a 'pkl' file.
+        and save this to cdirs.journal as a 'pkl' file. FIXME: obsolete
         (2) Compute a text version of each proof step, and save the result
         in a 'txt' file.
 
@@ -110,17 +110,18 @@ class Journal:
             total_string += '    ' + step.raw_string + ',\n'
         print(total_string)
 
-        log.debug(f"Saving auto_steps in {file_path}")
-        save_object(exercise, file_path)
-        # with open(file_path, mode='wb') as output:
-        #     pickle.dump(exercise, output, pickle.HIGHEST_PROTOCOL)
+        # Commented out, file is already saved in
+        # editing.save_exercise_for_autotest
+        # log.debug(f"Saving auto_steps in {file_path}")
+        # save_object(exercise, file_path)
+
 
         file_path = file_path.with_suffix('.txt')
         log.debug(f"Saving journal in {file_path}")
         txt = self.display()
         print(txt)
         try:
-            with open(file_path, mode='xt') as output:
+            with open(file_path, mode='xt', encoding='utf-8') as output:
                 output.write(txt)
         except FileExistsError:
             log.debug("(File already exists, abort saving)")

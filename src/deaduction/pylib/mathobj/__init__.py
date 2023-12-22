@@ -26,10 +26,8 @@ This file is part of dEAduction.
 
 from .drag_n_drop import          DragNDrop
 
-from deaduction.pylib.mathobj.math_object import MathObject
+from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from .context_math_object import                 ContextMathObject
-from .proof_step import          (ProofStep,
-                                  NewGoal)
 
 from .lean_analysis import       (lean_expr_with_type_grammar,
                                   LeanEntryVisitor)

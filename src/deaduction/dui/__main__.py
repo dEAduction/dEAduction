@@ -52,6 +52,7 @@ import qtrio
 import deaduction.pylib.config.dirs              as     cdirs
 import deaduction.pylib.config.environ           as     cenv
 import deaduction.pylib.config.site_installation as     inst
+import deaduction.pylib.config.course            as     ccourses
 import deaduction.pylib.config.vars              as     cvars
 ###################
 # ! DO NOT MOVE ! #
@@ -70,11 +71,10 @@ from deaduction.pylib.coursedata                 import Exercise
 from deaduction.pylib                            import logger
 from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
+from deaduction.pylib.math_display.pattern_data import *
 
 global _
 
-# For debug
-from deaduction.pylib.math_display.pattern_data import *
 
 log = logging.getLogger(__name__)
 
@@ -111,18 +111,30 @@ def set_logger():
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
+                       # 'HighLevelServerRequest',
                        # 'ServerQueue',
                        # 'lean',
-                       'deaduction.dui',
-                       # 'deaduction.pylib',
-                       'logic',
-                       'magic',
-                       'coursedata',
-                       'deaduction.pylib',
-                       'patterns'
+                       # Includes Coordinator, start_coex:
+                       'deaduction.dui.stages',
+                       'deaduction.dui.elements',
+                       # 'deaduction.pylib'
+                       'deaduction.pylib.actions',
+                       # 'deaduction.pylib.coursedata',
+                       'deaduction.pylib.editing',
+                       'deaduction.pylib.pattern_math_obj',
+                       'deaduction.pylib.marked_pattern_math_obj',
+                       # 'logic',
+                       # 'magic',
+                       # 'coursedata',
+                       'deaduction.pylib.math_display.math_cursor',
+                       # 'patterns'
                        # 'math_object'
                        ]
-        # log_domains = [""]
+        # log_domains = ["ServerInterface", "HighLevelServerRequest",
+        #                "ServerQueue",
+        #                "deaduction.dui.stages.start_coex",
+        #                "deaduction.dui.stages.exercise",
+        #                ]
 
     logger.configure(domains=log_domains,
                      display_level=log_level,
@@ -252,6 +264,7 @@ class InstallDependenciesStage(QObject):
     def really_quit(self, reason: str):
         # log.debug("really_quit")
         msg_box = QMessageBox()
+        msg_box.setWindowTitle('d∃∀duction')
         msg_box.setText(_("Quitting d∃∀duction"))
         msg_box.setInformativeText(reason)
         msg_box.exec()
@@ -394,6 +407,14 @@ def copy_lean_files_to_home():
     copytree(str(lean_src_dir),
              str(usr_lean_src_dir),
              ignore_dangling_symlinks=True)
+    # Copy autotests:
+    pkg_tests_dir = cdirs.pkg_tests_dir
+    usr_tests_dir = cdirs.usr_tests_dir
+    if usr_tests_dir.exists():
+        rmtree(str(usr_tests_dir), ignore_errors=True)
+    copytree(str(pkg_tests_dir),
+             str(usr_tests_dir),
+             ignore_dangling_symlinks=True)
 
 
 def check_lean_src():
@@ -444,6 +465,7 @@ def adapt_to_new_version():
         copy_lean_files_to_home()
         log.debug("Erasing previous initial proof states")
         erase_proof_states()
+        ccourses.erase_recent_courses()
         # Create empty dir again:
         cdirs.init()
         # Write new version nb in usr config.toml:
@@ -524,7 +546,7 @@ class WindowManager(QObject):
         """
 
         log.info("Choosing new exercise")
-
+        # trio.sleep(0)  # Give time to save
         if not self.chooser_window:
             # Start chooser window
             self.chooser_window = StartCoExStartup(exercise=self.exercise,
@@ -547,6 +569,10 @@ class WindowManager(QObject):
             # Show window
             self.chooser_window.show()
         else:
+            # If hidden (by 'esc' kay)
+            if self.chooser_window.isHidden():
+                self.chooser_window.show()
+
             # Focus on chooser window
             self.chooser_window.raise_()
             self.chooser_window.activateWindow()
@@ -600,11 +626,12 @@ class WindowManager(QObject):
         log.debug(f"Preparing {self.exercise.pretty_name} for test")
 
         # Start exercise window and test window
-        self.coordinator = Coordinator(self.exercise, self.servint)
+        self.coordinator = Coordinator(self.exercise, self.servint,
+                                       test_mode=True)
         self.test_window = test_window
         self.test_window.show()
-        self.exercise_window.test_mode = True
-        self.coordinator.test_mode = True
+        # self.exercise_window.test_mode = True
+        # self.coordinator.test_mode = True
 
         # Connect signals
         self.exercise_window.window_closed.connect(self.exercise_window_closed)
@@ -645,21 +672,22 @@ def exercise_from_argv() -> Exercise:
 ##################################################################
 async def main():
     """
-    This is the main loop. It opens a trio.nursery, instantiate a Container
-    for signals and slots, and call the Container.choose_exercise method.
+    This is the main loop. It opens a trio.nursery, instantiate a WindowManager
+    for signals and slots, and call the WindowManager.choose_exercise method.
     Then it listens to signals emitted when windows are closed, and decides
     to quit when all windows are closed. Quitting implies stopping the lean
     server that may be running and closing the trio's nursery.
     """
 
     async with trio.open_nursery() as nursery:
+        # Check language
+        language_check()
+
         # Check Lean and mathlib install
         ok = await site_installation_check()
         # print(f"ok={ok}")
         if not ok:
             nursery.cancel_scope.cancel()
-        # Check language
-        language_check()
 
         # Check if version has changed. Anyway, add lean_src if not exist.
         adapt_to_new_version()

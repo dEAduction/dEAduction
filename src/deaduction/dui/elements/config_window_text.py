@@ -54,6 +54,10 @@ PRETTY_NAMES = {
     'display.target_font_size': _("Target font size"),
     'display.proof_tree_font_size': _('Font size for global proof view'),
     'others.course_directory': _('Set directory for choosing courses'),
+    'others.Lean_request_method': _('Lean request method'),
+    'automatic': _('automatic'),
+    'normal': _('normal'),
+    'from_previous_proof_state': _('from_previous_proof_state'),
     'logs.display_level': _('Level of logs'),
     'display.use_symbols_for_logic_button': _("Use symbol for logic buttons"),
     'display.font_size_for_symbol_buttons': _("Font size for symbol buttons"),
@@ -66,21 +70,29 @@ PRETTY_NAMES = {
     'display.display_success_messages': _("Display success messages"),
     'display.color_for_selection': _("Color for selection"),
     'display.math_font_file': _("Maths fonts"),
+    'logic.button_use_or_prove_mode': _('Prove / use mode for action buttons'),
+    'display_switch': _('Display switcher'),
+    'display_both': _('Display both buttons'),
+    'display_unified': _('Display unified buttons'),
     'logic.use_color_for_variables': _("Use color for variables"),
     'logic.use_color_for_dummy_variables': _("Use color for dummy variables"),
     'logic.use_color_for_applied_properties': _("Use color for applied "
                                                 "properties"),
     'functionality.target_selected_by_default': _("Target selected by "
                                                   "default"),
-    'functionality.allow_proof_by_sorry': _("Allow proof by sorry"),
+    'functionality.allow_sorry': _("Allow proof by sorry"),
     'functionality.allow_implicit_use_of_definitions':
         _("Allow implicit use of definitions"),
     'functionality.automatic_intro_of_variables_and_hypotheses':
         _("Automatic intro of variables and hypotheses"),
-    'functionality.automatic_intro_of_exists':
-        _("Automatic intro of existence properties"),
-    'functionality.save_solved_exercises_for_autotest':
-        _("Save exercises for autotest"),
+    'functionality.automatic_use_of_exists':
+        _("Automatically destruct existence context properties"),
+    'functionality.automatic_use_of_and':
+        _("Automatic destruct context conjunctions"),
+    # 'functionality.save_solved_exercises_for_autotest':
+    #     _("Save exercises for autotest"),
+    'functionality.save_history_of_solved_exercises':
+        _("Save history when exercise is solved"),
     'functionality.auto_solve_inequalities_in_bounded_quantification':
         _("Try to silently prove ε>0 when applying '∀ε>0'"),
     'functionality.ask_to_prove_premises_of_implications':

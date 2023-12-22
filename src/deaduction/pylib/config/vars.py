@@ -69,7 +69,9 @@ else:
     print('path DOES NOT exist')
 
 if USER_CONFIG_FILE_PATH.exists():
-    __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+    # __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
+    with open(str(USER_CONFIG_FILE_PATH), 'rb') as f:
+        __dict_user.update(toml.loads(f.read().decode('utf-8')))
 
 
 def save():
@@ -77,7 +79,8 @@ def save():
     global __dict_user
 
     log.info(_("Saving configuration file"))
-    with open(str(USER_CONFIG_FILE_PATH), "w") as fhandle:
+    with open(str(USER_CONFIG_FILE_PATH),
+              mode="w", encoding='utf-8') as fhandle:
         toml.dump(__dict_user, fhandle)
 
 
@@ -129,6 +132,14 @@ def copy():
 def restore(initial_cvars):
     global __dict_user
     __dict_user = initial_cvars
+
+
+def update(new_settings: dict):
+    if new_settings:
+        for (key, value) in new_settings.items():
+            set(key, value)
+
+
 
 
 # Add os name; so this can be overridden in (user's) config.toml

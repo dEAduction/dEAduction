@@ -3,11 +3,12 @@ path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"
 context     = "letters/blue"
 
+
 [display]
 display_success_messages = true
 text_mode_in_chooser_window = true
 target_display_on_top = false
-depth_of_unfold_statements = 1
+depth_of_unfold_statements = 0
 show_lean_name_for_statements = false
 
 # Fonts sizes:
@@ -17,12 +18,12 @@ target_font_size = "20pt"
 statements_font_size = "13pt"
 tooltips_font_size = "12pt"
 proof_tree_font_size = "14pt"
-font_size_for_symbol_buttons = "12pt"
+font_size_for_symbol_buttons = "14pt"
 
 math_font_file = "latinmodern-math.otf"  # "" or "System fonts" for system fonts
 
 selection_color = "limegreen"
-symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦"
+symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM = "∧, ∨, ¬, ⇒, ⇔, ∀, ∃, =, ↦, +"
 use_symbols_for_logic_button = true
 short_buttons_line = true
 
@@ -42,14 +43,19 @@ color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
 color_for_highlight_in_proof_tree = "Yellow"
 
+show_saved_exercises = false
 # Any modification of the following must be echoed
-# in the replace_dubious_characters function in in math_display.utils
+# in the replace_dubious_characters function in math_display.utils
 dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 
 [windows.display]
 math_font_file = ""
 
 [logic]
+# "display_unified", "display_both", "display_switch"
+button_use_or_prove_mode = "display_both"
+# use_demo_mode_affect_line_1 = true
+# use_demo_mode_affect_line_2 = false
 do_not_name_dummy_vars_as_global_vars = true
 do_not_name_dummy_vars_as_dummy_vars = false
 do_not_name_dummy_vars_as_dummy_vars_in_one_prop = false
@@ -61,9 +67,17 @@ use_bounded_quantification_notation = true
 
 
 [functionality]
+# Beginner, Intermediata, Advanced, Expert,
 default_functionality_level = "Beginner"
-allow_proof_by_sorry = true
-automatic_intro_of_exists = true
+# Proof methods available default list:
+#proof_methods = ["case_based", "contraposition", "contradiction", "induction", "sorry"]
+allow_case_based = true
+allow_contraposition = true
+allow_contradiction = true
+allow_induction = true
+allow_sorry = true
+automatic_use_of_exists = true
+automatic_use_of_and = true
 target_selected_by_default = false
 allow_implicit_use_of_definitions = false
 auto_solve_inequalities_in_bounded_quantification = false
@@ -73,7 +87,9 @@ drag_statements_to_context = false
 drag_several_items = false
 ask_to_prove_premises_of_implications = true
 automatic_intro_of_variables_and_hypotheses = false
-save_solved_exercises_for_autotest = false
+save_history_of_solved_exercises = true
+max_recent_courses = 10
+show_recent_courses_only = false
 
 [i18n]
 available_languages = ["en", "fr_FR"]
@@ -86,9 +102,27 @@ display_level = "info"
 domains = [""]
 log_to_file = true
 
+[course]
+# Absolute path or relative to a Deaduction reference dir
+# (home, .deaduction, or lean_exercises_dir)
+preset_courses = ["Tutoriel.lean",
+    "Logique_propositionnelle.lean",
+    "Quantificateurs_et_nombres.lean",
+    "Logique_et_inegalites.lean",
+    "Ensembles_et_applications.lean",
+    "experimental/exercices_limite_continuite.lean"]
+recent_courses = []  # Absolute paths
+recent_courses_titles = []
+exercises_numbers = []
+
 [others]
+# 'automatic', 'normal', 'from_previous_proof_state':
+# Put 'automatic' for efficiency in metadata of exercises with heavy computations
+Lean_request_method = "normal"
+copy_autotests_dir = false
+desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.32"
+version_nb = "0.358"
 os = ""  # Let this to "" except for debugging
 
 #########################

@@ -28,6 +28,7 @@ This file is part of dEAduction.
 
 import logging
 from typing import Union
+from enum import IntEnum
 
 from deaduction.pylib.text        import tooltips
 # from deaduction.pylib.config.i18n import _
@@ -37,12 +38,14 @@ from deaduction.pylib.actions.utils import pre_process_lean_code
 from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
+                                      MissingCalculatorOutput,
+                                      CalculatorRequest,
                                       WrongUserInput,
                                       action,
-                                      CodeForLean,
-                                      apply_or)
+                                      CodeForLean)
+from deaduction.pylib.actions.logic import use_or
 
-from deaduction.pylib.mathobj import  MathObject
+from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.give_name import get_new_hyp
 
 from deaduction.pylib.math_display import new_objects, new_properties
@@ -58,6 +61,104 @@ global _
 #     proof_button_texts[key] = value
 
 
+class ProofMethods:
+    """
+    An instanceless class for recording user input for the proof_methods action.
+    The nb stored in user_input must refer to the complete list, not to the
+    local list of available proof methods, so that it is not dependent on
+    current settings.
+
+    To add the new proof method blabla:
+    add the function method_blabla() at the right place below with the
+    @add_to_proof_methods decorator,
+    update the pretty_names dict,
+    (update the functionality.proof_methods list in config.toml).
+    .
+    """
+
+    # Items may be added here, but order changes should be avoided
+    # (or propagated). Order should not affect UI.
+    # Nbs in user_input refer to index in this reference_list.
+    # Name of callable must be 'method_' + <name in list>
+    reference_list = ["case_based", "contraposition", "contradiction",
+                      "sorry", "induction"]
+    ordered_list = []
+    callables = []
+
+    @staticmethod
+    def pretty_names(name):
+        proof_methods_dic = {'case_based': _("Case-based reasoning"),
+                             'contraposition': _("Proof by contraposition"),
+                             'contradiction': _("Proof by contradiction"),
+                             'induction': _("Proof by induction"),
+                             'sorry': _("Admit current sub-goal!")}
+        return proof_methods_dic[name]
+
+    @classmethod
+    def local_list(cls):
+        """
+        List of available proof methods in the current settings context.
+        """
+        proof_methods = cvars.get('functionality.proof_methods',
+                                  default_value=cls.ordered_list)
+        local_methods = [m for m in proof_methods
+                         if cvars.get('functionality.allow_' + m)]
+
+        return local_methods
+
+    @classmethod
+    def choices(cls):
+        """
+        Return the list of possible choices, as a parameter for the
+        MissingParametersError exception.
+        e.g.
+                choices = [('1', _("Case-based reasoning")),
+                   ('2', _("Proof by contraposition")),
+                   ('3', _("Proof by contradiction"))]
+        """
+
+        l = cls.local_list()
+        choices = [(str(idx), cls.pretty_names(l[idx]))
+                   for idx in range(len(l))]
+        return choices
+
+    @classmethod
+    def local_to_absolute_nb(cls, nb):
+        """
+        Convert the index in the local list to the index of the same item in
+        the reference list, that should be stored in user_input.
+        """
+        name = cls.local_list()[nb]
+        idx = cls.reference_list.index(name)
+        return idx
+
+    @classmethod
+    def callable_method_from_name(cls, name):
+        for cal in cls.callables:
+            if cal.__name__.endswith(name):
+                return cal
+
+    @classmethod
+    def callable_from_abs_nb(cls, nb):
+        name = cls.reference_list[nb]
+        return cls.callable_method_from_name(name)
+
+
+def add_to_proof_methods() -> callable:
+    """
+    Decorator that add function to the ProofMethods lists.
+    """
+    
+    def proof_method(func):
+        if func not in ProofMethods.callables:
+            name = func.__name__[len('method_'):]
+            ProofMethods.ordered_list.append(name)
+            ProofMethods.callables.append(func)
+        return func
+
+    return proof_method
+
+
 @action()
 def action_proof_methods(proof_step) -> CodeForLean:
 
@@ -65,36 +166,43 @@ def action_proof_methods(proof_step) -> CodeForLean:
     # target_selected = proof_step.target_selected
     user_input = proof_step.user_input
 
+    # proof_methods = cvars.get('functionality.proof_methods',
+    #                           default_value=UserInput.default)
+
     # 1st call, choose proof method
     if not user_input:
-        choices = [('1', _("Case-based reasoning")),
-                   ('2', _("Proof by contraposition")),
-                   ('3', _("Proof by contradiction"))]
-        allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
-        if allow_proof_by_sorry:
-            choices.append(('4', _("Admit current sub-goal!")))
+        # choices = [('1', _("Case-based reasoning")),
+        #            ('2', _("Proof by contraposition")),
+        #            ('3', _("Proof by contradiction"))]
+        # allow_proof_by_sorry = cvars.get('functionality.allow_proof_by_sorry')
+        # if allow_proof_by_sorry:
+        #     choices.append(('4', _("Admit current sub-goal!")))
+        choices = ProofMethods.choices()
         raise MissingParametersError(InputType.Choice,
                                      choices,
-                                     title=_("Choose proof method"),
-                                     output=_("Which proof method?")
+                                     title=_("Proof methods"),
+                                     output=_("Which proof method?"),
+                                     converter=ProofMethods.local_to_absolute_nb
                                      )
     # 2nd call, call the adequate proof method. len(user_input) = 1.
     else:
-        method = user_input[0] + 1
-        if method == 1:
-            return method_cbr(proof_step, selected_objects, user_input)
-        if method == 2:
-            return method_contrapose(proof_step, selected_objects)
-        if method == 3:
-            return method_absurdum(proof_step, selected_objects)
-        if method == 4:
-            return method_sorry(proof_step, selected_objects)
-    raise WrongUserInput
+        method = ProofMethods.callable_from_abs_nb(user_input[0])
+        return method(proof_step, selected_objects, user_input)
+        # method = int(user_input[0]) + 1
+        # if method == 1:
+        #     return method_case_based(proof_step, selected_objects, user_input)
+        # if method == 2:
+        #     return method_contraposition(proof_step, selected_objects)
+        # if method == 3:
+        #     return method_contradiction(proof_step, selected_objects)
+        # if method == 4:
+        #     return method_sorry(proof_step, selected_objects)
 
 
-def method_cbr(proof_step,
-               selected_objects: [MathObject],
-               user_input: [str] = []) -> CodeForLean:
+@add_to_proof_methods()
+def method_case_based(proof_step,
+                      selected_objects: [MathObject],
+                      user_input=[]) -> CodeForLean:
     """
     Engage in a proof by cases.
     - If selection is empty, then ask the user to choose a property
@@ -107,32 +215,45 @@ def method_cbr(proof_step,
     if len(selected_objects) == 0:
         # NB: user_input[1] contains the needed property
         if len(user_input) == 1:
-            raise MissingParametersError(
-                 InputType.Text,
-                 title=_("cases"),
-                 output=_("Enter the property you want to discriminate on:")
-                                        )
+            # raise MissingParametersError(
+            #      InputType.Text,
+            #      title=_("cases"),
+            #      output=_("Enter the property you want to discriminate on:")
+            #                             )
+            raise MissingCalculatorOutput(CalculatorRequest.ProofByCases,
+                                          proof_step=proof_step)
+
+            # raise MissingParametersError(InputType.Calculator,
+            #                              title=_("Enter the property you want to discriminate on:"),
+            #                              target=MathObject.PROP)
+
         else:
-            h0 = pre_process_lean_code(user_input[1])
+            # h0 = pre_process_lean_code(user_input[1])
+            prop = user_input[1][0]
+            h0 = (prop.to_display(format_='lean')
+                  if isinstance(prop, MathObject) else prop)
+
             h1 = get_new_hyp(proof_step)
             h2 = get_new_hyp(proof_step)
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
             code.add_success_msg(_("Proof by cases"))
-            code.add_disjunction(h0, h1, h2)  # Strings, not MathObject
+            code.add_disjunction(prop, h1, h2)  # Strings, not MathObject
     else:
         prop = selected_objects[0]
         if not prop.is_or():
             error = _("Selected property is not a disjunction")
             raise WrongUserInput(error)
         else:
-            code = apply_or(proof_step, selected_objects, user_input)
+            code = use_or(proof_step, selected_objects, user_input)
 
     return code
 
 
-def method_contrapose(proof_step,
-                      selected_objects: [MathObject]) -> CodeForLean:
+@add_to_proof_methods()
+def method_contraposition(proof_step,
+                          selected_objects: [MathObject],
+                          user_input=None) -> CodeForLean:
     """
     If target is an implication, turn it to its contrapose.
     If a property P is selected, and target is Q, then assume (not Q) and
@@ -166,7 +287,10 @@ def method_contrapose(proof_step,
     raise WrongUserInput(error)
 
 
-def method_absurdum(proof_step, selected_objects: [MathObject]) -> CodeForLean:
+@add_to_proof_methods()
+def method_contradiction(proof_step,
+                         selected_objects: [MathObject],
+                         user_input=None) -> CodeForLean:
     """
     If no selection, engage in a proof by contradiction.
     """
@@ -180,7 +304,64 @@ def method_absurdum(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     raise WrongUserInput(error)
 
 
-def method_sorry(proof_step, selected_objects: [MathObject]) -> CodeForLean:
+@add_to_proof_methods()
+def method_induction(proof_step,
+                     selected_objects: [MathObject],
+                     user_input=None) -> CodeForLean:
+    """
+    Try to do a proof by induction.
+    """
+
+    implicit = False
+    target = proof_step.goal.target
+    if not target.is_for_all(implicit=True):
+        error = _("Proof by induction only applies to prove "
+                  "a universal property '∀n∈ℕ, P(n)'")
+        raise WrongUserInput(error)
+
+    if not target.is_for_all(is_math_type=False):
+        # Implicit "for all"
+        implicit = True
+        math_object = MathObject.last_rw_object
+    else:
+        math_object = target.math_type
+
+    math_type, var, body = math_object.children
+    if not var.is_nat():
+        if not implicit:
+            error = _(f"{var} is not a natural number") + ", " + \
+                    _("proof by induction does not apply")
+        raise WrongUserInput(error)
+
+    var_name = proof_step.goal.provide_good_name(math_type,
+                                                 var.preferred_letter())
+    # h = get_new_hyp(proof_step)
+    # code_s = f"intro {name}, induction {name} with {name} {h}"
+
+    # code_s = "apply induction.simple_induction"
+    # code = CodeForLean.from_string(code_s)
+    # code.add_success_msg(f"Proof by induction on {name}")
+
+    code = CodeForLean.empty_code()
+    if len(user_input) < 2:
+        choices = [('1', _('Base case')), ('2', _('Induction step'))]
+        raise MissingParametersError(
+            InputType.Choice,
+            choices,
+            title=_("Proof by induction"),
+            output=_("Which property to prove first?"))
+    elif user_input[1] == 0:
+        code = CodeForLean.induction(var_name)
+    elif user_input[1] == 1:
+        code = CodeForLean.induction(var_name).and_then('rotate')
+
+    return code
+
+
+@add_to_proof_methods()
+def method_sorry(proof_step,
+                 selected_objects: [MathObject],
+                 user_input=None) -> CodeForLean:
     """
     Close the current sub-goal by sending the 'sorry' code.
     """
@@ -288,27 +469,44 @@ def action_new_object(proof_step) -> CodeForLean:
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
-                                         title="+",
-                                         output=_("Name your object:"))
+                                         title="New object",
+                                         output=_("Give a name for your "
+                                                  "new object:"))
         elif len(user_input) == 2:
-            # Check name does not already exists
+            # Check name does not already exist
             name = pre_process_lean_code(user_input[1])
             names = [obj.display_name for obj in goal.context]
             if name in names:
                 user_input.pop()
                 output = _("This name already exists, please give a new name:")
                 raise MissingParametersError(InputType.Text,
-                                             title="+",
+                                             title="New object",
                                              output=output)
             else:  # Ask for new object
-                output = new_objects
-                raise MissingParametersError(InputType.Text,
-                                             title=_("Introduce a new object"),
-                                             output=output)
+                # output = new_objects
+                new_name = user_input[1]
+                raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
+                                              new_name=new_name,
+                                              proof_step=proof_step)
+                # raise MissingParametersError(InputType.Calculator,
+                #                              title=_("Introduce a new object"),
+                #                              target=None)
+                # raise MissingParametersError(InputType.Text,
+                #                                  title=_("Introduce a new object"),
+                #                                  output=output)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
-            new_hypo_name = get_new_hyp(proof_step)
-            new_object = pre_process_lean_code(user_input[2])
+            new_hypo_name = get_new_hyp(proof_step, name='Def')
+
+            # Process object from auto_step or from Calculator:
+            math_object = user_input[2][0]
+            # if isinstance(math_object, str):
+            #     math_object = MathObject(node="RAW_LEAN_CODE",
+            #                              info={'name': '(' + math_object + ')'},
+            #                              children=[],
+            #                              math_type=None)
+
+            new_object = math_object.to_display(format_='lean')
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
             codes = codes.and_then(f"have {new_hypo_name} : {name} = "
                                                      f"{new_object}")
@@ -323,32 +521,7 @@ def action_new_object(proof_step) -> CodeForLean:
     # (2) Choice = new sub-goal
     elif user_input[0] == 1:
         codes = introduce_new_subgoal(proof_step)
-        # sub_goal = None
-        # # (A) Sub-goal from selection
-        # if selected_objects:
-        #     premise = selected_objects[0].premise()
-        #     if premise:
-        #         # FIXME: make format_='lean' functional
-        #         sub_goal = premise.to_display(format_='lean')
-        #
-        # # (B) User enter sub-goal
-        # elif len(user_input) == 1:
-        #     output = new_properties
-        #     raise MissingParametersError(InputType.Text,
-        #                                  title=_("Introduce a new subgoal"),
-        #                                  output=output)
-        # elif len(user_input) == 2:
-        #     sub_goal = pre_process_lean_code(user_input[1])
-        #
-        # # (C) Code:
-        # if sub_goal:
-        #     new_hypo_name = get_new_hyp(proof_step)
-        #     codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-        #                                     f" ({sub_goal})")
-        #     codes.add_success_msg(_("New target will be added to the context "
-        #                             "after being proved"))
-        #     codes.add_subgoal(sub_goal)
-        #
+
     # (3) Choice = new function
     elif user_input[0] == 2:
         return introduce_fun(proof_step, selected_objects)

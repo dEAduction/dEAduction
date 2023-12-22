@@ -32,7 +32,7 @@ from PySide2.QtWidgets import (QFrame, QLayout,
 from PySide2.QtCore import Qt, QRect, QPoint, QTimer, Slot
 from PySide2.QtGui import QColor, QPainter, QPolygon, QPen, QBrush, QPainterPath
 
-from deaduction.dui.primitives import MathLabel
+from deaduction.dui.primitives import MathLabel, DisclosureTriangle
 import deaduction.pylib.config.vars as cvars
 
 global _
@@ -541,29 +541,29 @@ class HorizontalArrow(QWidget):
 #         self.toggle()
 
 
-class DisclosureTriangle(QToolButton):
-    """
-    A QToolButton that changes appearance and call a function when clicked.
-    """
-
-    def __init__(self, slot: callable, hidden=False):
-        super().__init__()
-        self.slot = slot
-        # self.setText("▷" if hidden else "▽")
-        self.hidden = hidden
-        self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.clicked.connect(self.toggle)
-
-    @Slot()
-    def toggle(self):
-        """
-        Modify self's appearance and call the slot function.
-        """
-        self.hidden = not self.hidden
-        self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
-        self.slot()
-
+# class DisclosureTriangle(QToolButton):
+#     """
+#     A QToolButton that changes appearance and call a function when clicked.
+#     """
+#
+#     def __init__(self, slot: callable, hidden=False):
+#         super().__init__()
+#         self.slot = slot
+#         # self.setText("▷" if hidden else "▽")
+#         self.hidden = hidden
+#         self.setArrowType(Qt.RightArrow if hidden else Qt.DownArrow)
+#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+#         self.clicked.connect(self.toggle)
+#
+#     @Slot()
+#     def toggle(self):
+#         """
+#         Modify self's appearance and call the slot function.
+#         """
+#         self.hidden = not self.hidden
+#         self.setArrowType(Qt.RightArrow if self.hidden else Qt.DownArrow)
+#         self.slot()
+#
 
 class VertBar(QFrame):
     """
@@ -582,7 +582,7 @@ class RawLabelMathObject(MathLabel):
     """
     Mother class for displaying a MathObject or a msg which is computed by
     the callable html_msg, which takes parameter use_color and bf.
-    This allows to disable self by setting use_color=False, or to highlight
+    This allows to disable self by setting use_color=False, or to activate_highlight
     it by setting bf=True.
     This QLabel may be highlighted, it can change its text dynamically thanks
     to its attribute html_msg which is a callable (and to the update_txt()
@@ -601,7 +601,7 @@ class RawLabelMathObject(MathLabel):
         then it is a callable with parameter use_color.
         """
         super().__init__()
-        self.set_font_size(cvars.get('display.proof_tree_font_size'))
+        # self.set_font_size(cvars.get('display.proof_tree_font_size'))
         assert math_object or html_msg
         self.html_msg = html_msg
         self.math_object = math_object
@@ -666,7 +666,7 @@ class RawLabelMathObject(MathLabel):
     def enterEvent(self, event):
         """
         If self display a ContextMathObject, call self.highlight_in_tree.
-        to highlight all related RawLabelMO in the proof tree widget.
+        to activate_highlight all related RawLabelMO in the proof tree widget.
         """
         super().enterEvent(event)
         if isinstance(self.math_object, ContextMathObject):
@@ -1352,7 +1352,7 @@ class TargetWidget(QWidget):
     def set_as_current_target(self, yes=True, blinking=True) \
             -> Optional[QWidget]:
         """
-        Set self as current target, i.e. highlight target in boldface and make
+        Set self as current target, i.e. activate_highlight target in boldface and make
         status_msg blinks. If blinking then return current_status_label,
         else return proof_title. The returned widget should be made visible in
         the ScrollArea.

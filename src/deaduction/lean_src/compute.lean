@@ -67,8 +67,7 @@ meta def make_ineq' : expr → expr → tactic unit
 
 meta def extract_gt : list expr → tactic (list (expr × expr × expr))
 /- Extract from list of expr the couples (H, a,b)
-where the expr H of type "a ≤ b" in is the list -/
--- match hypos with
+where the expr H of type "a ≤ b" is in the list -/
 | []                    := return []
 | (hypo :: less_hypos)  := do
     {
@@ -120,7 +119,7 @@ do
 
 meta def get_pos_from_pos_eq : tactic unit :=
 /- To be applied after "norm_num at *"
-    This tactic search in the hypotheses for two hypotheses of the for
+    This tactic search in the hypotheses for two hypotheses of the form
     a ≤ b  and a ≠ b
     and deduces
     a < b

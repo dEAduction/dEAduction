@@ -105,8 +105,12 @@ from deaduction.pylib.autotest import ( select_course,
 #                'deaduction.pylib.autotest',
 #                'LeanServer']
 
-log_domains = ['deaduction.pylib.autotest', 'deaduction.dui']
+# log_domains = ['deaduction.pylib.autotest', 'deaduction.dui']
+log_domains = ['deaduction.pylib.autotest', 'deaduction.dui',
+               'ServerInterface', 'HighLevelServerRequest']
+
 logger.configure(domains=log_domains, display_level="debug")
+
 log = logging.getLogger(__name__)
 
 arg_parser = argparse.ArgumentParser("Start deaduction in test mode")
@@ -195,15 +199,16 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
 def get_exercises_from_dir(dir_path: Path):
     test_course_files = [file for file in dir_path.iterdir()
                          if file.suffix == '.lean'
-                         and file.name.startswith('test')]
+                         and (file.name.startswith('test')
+                              or file.name.startswith('history'))]
 
-    test_course_files.sort(key = (lambda x: x.stat().st_mtime))
+    test_course_files.sort(key=(lambda x: x.stat().st_mtime))
 
     test_exercise_files = [file for file in dir_path.iterdir()
                            if file.suffix == '.pkl'
                            and file.name.startswith('test_exercise')]
 
-    test_exercise_files.sort(key = (lambda x: x.stat().st_mtime),
+    test_exercise_files.sort(key=(lambda x: x.stat().st_mtime),
                              reverse=True)
 
     nb_files = len(test_course_files) + len(test_exercise_files)
@@ -283,62 +288,6 @@ def get_exercises_from_course(course: Optional[Course],
 # Auto-testing an exercise #
 ############################
 
-# def find_selection(auto_step, emw):
-#     """
-#     Convert the data in auto_step.selection into MathObjects instances.
-#     This is used by the async auto_step function.
-#     """
-#     # TODO: deprecated
-#
-#     auto_selection = []
-#     success = True
-#     # First trial
-#     # TODO: make emw properties
-#     #  and function find_selection(AutoStep, prop, obj)
-#     # properties = [item.mathobject
-#     #               for item in emw.ecw.props_wgt.items]
-#     # objects = [item.mathobject
-#     #            for item in emw.ecw.objects_wgt.items]
-#     # goal = emw.servint.proof_state.goals[0]
-#     for name in auto_step.selection:
-#         selection = None
-#         # Not clear to me why deaduction may not have
-#         # finished constructing goal, but this happens.
-#         # So we give it a few more seconds to complete the
-#         # construction.
-#         t = time.time() + 5
-#         while not selection and time.time() < t:
-#             if name.startswith('@O'):
-#                 try:
-#                     selection = emw.objects[int(name[2:]) - 1]
-#                 except IndexError:
-#                     pass
-#             elif name.startswith('@P'):
-#                 try:
-#                     selection = emw.properties[int(name[2:]) - 1]
-#                 except IndexError:
-#                     pass
-#             else:
-#                 if name.startswith('@'):  # (unwanted @)
-#                     name = name[1:]
-#                 selection = emw.current_goal.math_object_from_name(name)
-#             # if not selection:
-#             #     # Next trial
-#             #     properties = [item.mathobject for item in
-#             #                   emw.ecw.props_wgt.items]
-#             #     objects = [item.mathobject for item in
-#             #                emw.ecw.objects_wgt.items]
-#             #     goal = emw.servint.proof_state.goals[0]
-#
-#         if selection:
-#             auto_selection.append(selection)
-#         else:
-#             log.debug("Bad selection in auto_step")
-#             success = False
-#             break
-#
-#     return auto_selection, success
-
 
 COLOR = {True: 'green', False: 'red', None: 'orange', "Bad msgs": 'orange'}
 
@@ -399,6 +348,7 @@ async def auto_test(wm: WindowManager):
             #######################################
             if emission.is_from(wm.coordinator.proof_step_updated) \
                     and steps_counter:
+                log.debug("Signal proof_step_updated received")
                 step = auto_steps[steps_counter-1]
                 report, step_success = emw.displayed_proof_step.compare(step)
                 if step_success is False:
@@ -446,15 +396,15 @@ async def auto_test(wm: WindowManager):
                     emw.close()
                     break
 
-                step.user_input = [int(item) if item.isdecimal() else item
-                                   for item in step.user_input]
+                # Modified in AutoStep.from_string()
+                # step.user_input = [int(item) if item.isdecimal() else item
+                #                    for item in step.user_input]
 
                 if test_window.step_by_step or \
-                    test_window.exercise_by_exercise and steps_counter == 1:
+                        test_window.exercise_by_exercise and steps_counter == 1:
                     test_window.unfreeze()
                 else:
                     test_window.process_next_step.emit()
-
 
             ################
             # Process step #
@@ -463,6 +413,7 @@ async def auto_test(wm: WindowManager):
                 test_window.freeze()
                 # For first step:
                 await wm.coordinator.server_task_started.wait()
+                await wm.coordinator.initial_proof_states_set.wait()
 
                 duration = test_window.slider.value()/10
                 success, msg = await emw.simulate_user_action(step,
@@ -550,14 +501,6 @@ async def main():
                 wm.nursery.start_soon(auto_test, wm)
 
                 async for emission in emissions.channel:
-                    # if emission.is_from(wm.proof_complete):
-                    #     test_window.display("Test complete -> next exercise",
-                    #                         color='blue')
-                    # if emission.is_from(test_window.process_next_exercise):
-                    #     test_window.display("Test interrupted -> next "
-                    #                         "exercise", color='blue')
-
-                    #if emission.is_from(test_window.process_next_exercise) \
                     if emission.is_from(wm.test_complete):
 
                         test_window.display(f"{len(wm.exercises)} "

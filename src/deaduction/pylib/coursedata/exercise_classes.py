@@ -29,13 +29,22 @@ This file is part of dEAduction.
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import logging
+from time import strftime
+from copy import      copy
 
 import deaduction.pylib.config.vars             as cvars
+
+from deaduction.pylib.text                  import (logic_buttons_line_1,
+                                                    logic_buttons_line_2,
+                                                    compute_buttons_line)
+import deaduction.pylib.text.text as text
+
 from deaduction.pylib.actions.actiondef     import Action
 import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils     import (find_suffix,
                                                    substitute_macros,
                                                    extract_list)
+from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
@@ -48,7 +57,110 @@ LOGIC_BUTTONS = deaduction.pylib.actions.logic.__actions__
 # e.g. key = action_and, value = corresponding instance of the class Action
 PROOF_BUTTONS = deaduction.pylib.actions.proofs.__actions__
 MAGIC_BUTTONS = deaduction.pylib.actions.magic.__actions__
+COMPUTE_BUTTONS = deaduction.pylib.actions.compute.__actions__
 
+
+@dataclass
+class StructuredContent:
+    """
+    A class to store the structured content of a Lean Statement.
+    """
+
+    first_line_nb: int
+    last_line_nb: int
+
+    name: str
+    hypotheses: str
+    conclusion: str
+    raw_metadata: Dict[str, str]
+    lean_code: str
+
+    course_file_content: str
+
+    skeleton = "lemma {} \n{}:=\n{}\nbegin\n{}\nend\n"
+
+    #  This must be coherent with Exercise.history_date():
+    # history_name_prefix = 'exercise.history_'
+    
+    @property
+    def metadata_str(self) -> str:
+        """
+        Format metadata dict for Lean files. Indent values if needed.
+        """
+
+        metadata_str = metadata_to_str(self.raw_metadata)
+
+        return '/- dEAduction\n' + metadata_str + '-/\n'
+
+    @property
+    def lemma_content(self) -> str:
+
+        # core_content = self.negated_core_content
+        # if not core_content:
+        core_content = f'{self.hypotheses} :\n{self.conclusion}'
+
+        skeleton = self.skeleton
+        content = skeleton.format(self.name,
+                                  core_content,
+                                  self.metadata_str,
+                                  comment(indent(self.lean_code))
+                                  )
+        # Remove double CR
+        while content.find('\n\n') != -1:
+            content = content.replace('\n\n', '\n')
+
+        return content
+
+    @classmethod
+    def new_content(cls, initial_content, additional_metadata, lean_code,
+                    version_nb):
+        """
+        Create a new StructuredContent instance by updating initial_content
+        with additional_metadata, and replacing code by lean_code.
+        Date is also included in metadata.
+        Name is modified by inserting version_nb at the end.
+        """
+
+        # Compute new name
+        new_name = initial_content.name + '_' + str(version_nb)
+
+        # Add date to metadata
+        date = strftime("%d%b%Hh%M")
+        additional_metadata['history_date'] = date
+
+        # New metadata
+        new_metadata = initial_content.raw_metadata.copy()
+        new_metadata.update(additional_metadata)
+
+        new_content = cls(initial_content.first_line_nb,
+                          initial_content.last_line_nb,
+                          new_name,
+                          initial_content.hypotheses,
+                          initial_content.conclusion,
+                          new_metadata, lean_code,
+                          initial_content.course_file_content)
+        return new_content
+
+    def content_with_lemma(self):
+        """
+        Compute the content of the history file, by adding lemma_content to
+        the course_file_content at line self.last_line_nb.
+        This method should be applied to a new_content.
+        """
+        content_lines = self.course_file_content.splitlines()
+
+        part_1 = '\n'.join(content_lines[:self.last_line_nb])
+        part_2 = self.lemma_content
+        part_3 = '\n'.join(content_lines[self.last_line_nb:])
+
+        history_file = part_1 + '\n\n' + part_2 + '\n' + part_3
+
+        return history_file
+
+    def has_identical_core_lemma_content(self, other):
+        return (self.hypotheses.strip(), self.conclusion.strip()) == \
+            (other.hypotheses.strip(), other.conclusion.strip())
+    
 
 @dataclass
 class Statement:
@@ -78,14 +190,17 @@ class Statement:
     course:                 Any             = None
     # the parent course
 
-    initial_proof_state:    Any             = None
+    _initial_proof_state:    Any             = None
     # this is filled when pre-processing
 
-    auto_steps: str                         = ''
-    auto_test: str                          = ''
-    __refined_auto_steps: Optional[AutoStep]= None
+    __negated_goal:         Any                     = None
 
-    info:                   Dict[str, Any]  = None
+    # auto_steps: str                         = ''
+    auto_test: str                                 = ''
+    __refined_auto_steps: Optional[List[AutoStep]] = None
+    _raw_metadata: Dict[str, str]                  = None
+
+    info:                   Dict[str, Any]         = None
     # Any other (non-essential) information
 
     # def __repr__(self):
@@ -130,11 +245,24 @@ class Statement:
         return attributes
 
     @property
+    def initial_proof_state(self):
+        return self._initial_proof_state
+
+    @initial_proof_state.setter
+    def initial_proof_state(self, ips):
+        self._initial_proof_state = ips
+
+    def to_math_object(self):
+        goal = self.goal()
+        math_object = goal.to_math_object() if goal else None
+        return math_object
+
+    @property
     def lean_short_name(self):
         """
         Keep only the last two parts, e.g.
         'set_theory.unions_and_intersections.exercise.union_distributive_inter'
-        -> # 'exercise.union_distributive_inter'
+        -> 'exercise.union_distributive_inter'
         """
         return '.'.join(self.lean_name.split('.')[-2:])
 
@@ -167,7 +295,8 @@ class Statement:
         """
         Return the ordered (chapter > section > …) list of sections pretty
         names corresponding to where self is in the lean file. If the
-        self.lean_name is 'rings_and_ideals.first_definitions.the_statement',
+        self.lean_name is
+        'rings_and_ideals.first_definitions.definition.the_statement',
         return ['Rings and ideals', 'First definitions']. Most of the time
         outline will be present_course.outline, where present_course is the
         instance of Course which initiated self.
@@ -205,13 +334,64 @@ class Statement:
         ugly_hierarchy = self.lean_name.split('.')[:-2]
         return ugly_hierarchy
 
-    def caption(self, is_exercise=False) -> str:
+    def open_namespace_str(self) -> str:
+        """
+        Return a string to be used for opening all namespaces.
+        e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        ->
+        namespace set_theory
+        namespace unions_and_intersections
+        """
+        namespaces = self.ugly_hierarchy()
+
+        beginning_of_file = ""
+        for namespace in namespaces:
+            beginning_of_file += "namespace " + namespace + "\n"
+        return beginning_of_file
+
+    def close_namespace_str(self) -> str:
+        """
+        Return a string to be used for closing all namespaces.
+        e.g.
+        'set_theory.unions_and_intersections.exercise.union_distributive_inter'
+        ->
+        end unions_and_intersections
+        end set_theory
+        """
+        namespaces = self.ugly_hierarchy()
+        end_of_file = ""
+        while namespaces:
+            namespace = namespaces.pop()
+            end_of_file += "end " + namespace + "\n"
+        return end_of_file
+
+    def open_read_only_namespace_str(self) -> str:
+        """
+        Return a string to be used for opening all read-only namespaces that
+        occurs prior to self in the course file.
+        e.g.
+        open set
+        open definitions
+        """
+        if not hasattr(self.course, "opened_namespace_lines"):
+            return ""
+        lines_dic = self.course.opened_namespace_lines
+        namespaces_lines = ["open " + key for key, value in lines_dic.items()
+                            if value < self.lean_begin_line_number]
+        open_namespaces = "\n".join(namespaces_lines)
+        return open_namespaces + '\n'
+
+    def caption(self, is_exercise=False, only_ips=True) -> str:
         """
         Return a string that shows a simplified version of the statement
         (e.g. to be displayed as a tooltip).
         """
         if not self.initial_proof_state:
-            text = self.lean_core_statement
+            if only_ips:
+                text = ""
+            else:
+                text = self.lean_core_statement
         else:
             goal = self.initial_proof_state.goals[0]
             # target = goal.target
@@ -220,7 +400,8 @@ class Statement:
             text = goal.to_tooltip(type_=type_)
             if cvars.get("functionality.allow_implicit_use_of_definitions"):
                 if isinstance(self, Definition) and self.implicit_use:
-                    text = '(' + _("implicit use allowed") + ')' + '\n' + text
+                    implicit = '<i>(' + _("implicit use allowed") + ')</i><br>'
+                    text = implicit + text
         return text
 
     @property
@@ -231,18 +412,20 @@ class Statement:
         if self.__refined_auto_steps:
             return self.__refined_auto_steps
 
-        if not self.auto_steps:
-            if not self.auto_test:
-                return ''
-            else:
-                self.auto_steps = self.auto_test
-        auto_steps = self.auto_steps.replace('\\n', ' ')
-        auto_steps_strings = auto_steps.split(',')
+        # if not self.auto_steps:
+        if not self.auto_test:
+            return ''
+        else:
+            auto_steps_strings = self.auto_test
+        auto_steps_strings = auto_steps_strings.replace('\\n', ' ')
+        auto_steps_strings = auto_steps_strings.split(',')
         auto_steps = []
         for string in auto_steps_strings:
-            if string is not None:
+            string = string.strip()
+            if string != '':
                 auto_steps.append(AutoStep.from_string(string))
-        auto_steps = [step for step in auto_steps if step]
+        # Remove None steps:
+        # auto_steps = [step for step in auto_steps if step]
         self.__refined_auto_steps = auto_steps
         return auto_steps
 
@@ -265,14 +448,14 @@ class Statement:
     def is_exercise(self):
         return isinstance(self, Exercise)
 
-    @property
-    def type(self):
-        if self.is_definition():
-            return _('definition')
-        elif self.is_theorem():
-            return _('theorem')
-        elif self.is_exercise():
-            return _('exercise')
+    # @property
+    # def type(self):
+    #     if self.is_definition():
+    #         return _('definition')
+    #     elif self.is_theorem():
+    #         return _('theorem')
+    #     elif self.is_exercise():
+    #         return _('exercise')
 
     @property
     def type_(self):
@@ -282,6 +465,18 @@ class Statement:
             return _('theorem')
         elif self.is_exercise():
             return _('exercise')
+
+    def goal(self):
+        ips = self.initial_proof_state
+        if ips:
+            return ips.goals[0]
+
+    def negated_goal(self):
+        if not self.__negated_goal:
+            goal = self.goal()
+            if goal:
+                self.__negated_goal = goal.negated_goal(goal)
+        return self.__negated_goal
 
 
 class Definition(Statement):
@@ -325,11 +520,14 @@ class Theorem(Statement):
     pass
 
 
+LEAN_CLASSICAL_LOGIC = "local attribute[instance] classical.prop_decidable\n"
+
+
 @dataclass
 class Exercise(Theorem):
     """
-    The class for storing exercises's info.
-    On top of the parent class info, the attributes stores
+    The class for storing exercises' info.
+    On top of the parent class, the attributes stores
     - the lists of buttons that will be available for this specific exercise
         (in each three categories, resp. logic, proof and magic buttons)
     - the list of statements that will be available for this specific exercise.
@@ -337,12 +535,83 @@ class Exercise(Theorem):
     available_logic:            List[Action]    = None
     available_magic:            List[Action]    = None
     available_proof:            List[Action]    = None
+    available_compute:          List[Action]    = None
     available_statements:       List[Statement] = None
+    # FIXME: not used:
     expected_vars_number:       Dict[str, int]  = None  # e.g. {'X': 3, 'A': 1}
-    # FIXME: not used
     info:                       Dict[str, Any]  = None
+    # This is True if the negation of the statement must be proved:
     negate_statement:           bool            = False
-    # This is True if the negation of the statement must be proved.
+    # If self is in a history file, then this points to the original exercise
+    # in the original course file:
+    original_exercise                           = None
+
+    non_pertinent_course_metadate = ('_raw_metadata', 'description',
+                                     'pretty_name')
+
+    # def __init__(self, **data: dict):
+    #     print('init exo')
+    #     for (key, value) in data.items():
+    #         print(str(key))
+    #         self.key = value
+
+    @property
+    def initial_proof_state(self):
+        if self.original_exercise:
+            return self.original_exercise.initial_proof_state
+        else:
+            return self._initial_proof_state
+
+    @initial_proof_state.setter
+    def initial_proof_state(self, ips):
+        self._initial_proof_state = ips
+
+    @property
+    def raw_metadata(self) -> Dict[str, str]:
+        """
+        This is the metadata dictionary reflecting the individual metadata of
+        self in the Lean course file.
+        """
+
+        if self._raw_metadata is None:
+            self._raw_metadata = dict()
+        # if self.negate_statement:
+        #     self._raw_metadata['negate_statement'] = '  True'
+            # lines += ['NegateStatement', '  True']
+        # return '\n'.join(lines)
+        return self._raw_metadata
+
+    @raw_metadata.setter
+    def raw_metadata(self, metadata):
+        self._raw_metadata = metadata
+
+    @property
+    def launch_in_history_mode(self):
+        """
+        If True, self should be launched in history mode,
+        with refined_auto_steps executed automatically.
+        """
+
+        return bool(self.refined_auto_steps)
+
+    @property
+    def structured_content(self) -> StructuredContent:
+        """
+        This data string structure contains the different parts of self's
+        statement in Lean code.
+        """
+        first_line_nb = self.lean_line
+        last_line_nb = self.lean_end_line_number
+        name = self.lean_short_name
+        hypo = self.lean_variables
+        conclusion = self.lean_core_statement
+        raw_metadata = self.raw_metadata
+        code = "todo\n"
+        file_content = self.course.file_content
+
+        return StructuredContent(first_line_nb, last_line_nb,
+                                 name, hypo, conclusion, raw_metadata,
+                                 code, file_content)
 
     @property
     def exercise_number(self) -> int:
@@ -403,7 +672,7 @@ class Exercise(Theorem):
         ###########################
         data['available_statements'] = extract_available_statements(data,
                                                                     statements)
-        names = [st.pretty_name for st in data['available_statements']]
+        # names = [st.pretty_name for st in data['available_statements']]
         # log.debug(f"Available statements: {names}")
 
         ########################
@@ -450,7 +719,39 @@ class Exercise(Theorem):
         #########################################
         # Finally construct the Exercise object #
         #########################################
-        return cls(**extract_data)
+        exercise = cls(**extract_data)
+        return exercise
+
+    def from_history_exercise(self):
+        # Copy original exercise to avoid altering attributes
+        exercise = copy(self.original_exercise)
+        exercise.auto_test = self.auto_test
+        exercise.negate_statement = self.negate_statement
+        exercise.raw_metadata = self.raw_metadata
+        return exercise
+
+    def update_cvars_from_metadata(self) -> dict:
+        """
+        Update cvars with entries in metadata['settings'], and return a
+        dictionary with the values that have been replaced.
+        """
+
+        raw_course_settings: str = self.course.metadata.get('settings')
+        more_vars: dict = vars_from_metadata(raw_course_settings)
+        raw_exercise_settings: str = self.raw_metadata.get('settings')
+        exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
+        more_vars.update(exercise_settings)
+
+        if more_vars:
+            old_vars = {key: cvars.get(key)
+                        for key in more_vars
+                        if cvars.get(key) != more_vars.get(key)}
+            cvars.update(more_vars)
+            return old_vars
+
+    @property
+    def is_open_question(self):
+        return self.info.get('open_question', False)
 
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
@@ -468,13 +769,6 @@ class Exercise(Theorem):
         index = statements.index(name)
         return statements[:index]
 
-    def is_last(self) -> bool:
-        """
-        Check if self is the last exercise in the statements list of
-        self.Course.
-        """
-        return self.next_exercise() is None
-
     def next_exercise(self):
         """
         Return next Exercise in the statements list of self.Course, or None
@@ -488,19 +782,309 @@ class Exercise(Theorem):
                 return statement
         return None
 
+    def is_last(self) -> bool:
+        """
+        Check if self is the last exercise in the statements list of
+        self.Course.
+        """
+        return self.next_exercise() is None
+
     @property
     def available_logic_1(self):
-        action_names = ["and", "or", "not", "implies", "iff"]
-        actions = [action for action in self.available_logic
-                   if action.name in action_names]
+        """
+        List of actions in self.available_logic whose name are in
+        logic_buttons_line_1. The order is that of logic_buttons_line_1.
+        """
+        # action_names = ["and", "or", "not", "implies", "iff"]
+        action_names = logic_buttons_line_1
+        actions = []
+        for name in action_names:
+            for action in self.available_logic:
+                if action.name in (name, name + '_prove', name + '_use'):
+                    actions.append(action)
+        return actions
+
+    @property
+    def available_logic_prove(self):
+        """
+        return the list of demo actions whose names are names of actions in
+        self.available_logic.
+        """
+        actions = [action for action in LOGIC_BUTTONS.values()
+                   if (action.name.startswith('prove_')
+                       and action.name[6:] in
+                       [action.name for action in self.available_logic_1])]
+        return actions
+
+    @property
+    def available_logic_use(self):
+        """
+        return the list of demo actions whose names are names of actions in
+        self.available_logic.
+        """
+        actions = [action for action in LOGIC_BUTTONS.values()
+                   if (action.name.startswith('use_')
+                       and action.name[4:] in
+                       [action.name for action in self.available_logic_1])]
         return actions
 
     @property
     def available_logic_2(self):
-        action_names = ["forall", "exists", "equal", "map"]
-        actions = [action for action in self.available_logic
-                   if action.name in action_names]
+        # action_names = ["forall", "exists", "equal", "map"]
+        """
+        List of actions in self.available_logic whose name are in
+        logic_buttons_line_2. The order is that of logic_buttons_line_2.
+        """
+        # action_names = ["and", "or", "not", "implies", "iff"]
+        action_names = logic_buttons_line_2
+        actions = []
+        for name in action_names:
+            for action in self.available_logic:
+                if action.name == name:
+                    actions.append(action)
         return actions
+
+    @property
+    def begin_metadata_line(self):
+        return self.info.get('begin_metadata_line')
+
+    @staticmethod
+    def analysis_code2(seq_num=0) -> str:
+        code = f"    targets_analysis2 {seq_num},\n" \
+               f"    all_goals {{hypo_analysis2 {seq_num}}},\n"
+        return code
+
+    def __begin_end_code(self, seq_num, code_lines: str) -> str:
+        """
+        Return a Lean code string containint code_lines in a begin/end block,
+        including hypo/targets analyses.
+        """
+        code_string = code_lines.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+
+        tabulation = "  "
+        code_lines = tabulation + code_lines
+        code_lines = code_lines.replace("\n", "\n" + tabulation)
+        analysis = self.analysis_code2(seq_num) if seq_num is not None else ""
+
+        code = "begin\n" \
+               + code_lines \
+               + analysis \
+               + "end\n"
+        return code
+
+    def file_contents_from_goal(self, goal=None, seq_num=None,
+                                code_lines="todo\n",
+                                additional_metadata=None):
+        """
+        Set the file content from goal and code. e.g.
+        import ...
+        namespace ...
+        open ...
+        lemma <exercise_name> <Lean content, e.g. (X: Type) : true> :=
+        <additional metadata>
+        begin
+            <some code>
+        end
+        """
+
+        if goal is None:
+            if self.initial_proof_state:
+                goal = self.initial_proof_state.goals[0]
+            else:
+                log.warning("Unable to get file_contents_from_goal")
+                return
+
+        seq_num_line = f"-- Seq num {seq_num}\n" if seq_num is not None else ""
+
+        # Metadata, e.g. AutoSteps
+        if additional_metadata:
+            metadata_lines = [key + '\n' + additional_metadata[key]
+                              for key in additional_metadata]
+            metadata_lines = '\n'.join(metadata_lines)
+            metadata_lines = '/- dEAduction\n' + metadata_lines + '-/\n'
+        else:
+            metadata_lines = ""
+
+        title = self.lean_name
+
+        file_content = seq_num_line \
+            + self.course.lean_import_course_preamble() \
+            + LEAN_CLASSICAL_LOGIC \
+            + "section course\n" \
+            + self.open_namespace_str() \
+            + self.open_read_only_namespace_str() \
+            + goal.to_lean_statement(title) \
+            + metadata_lines \
+            + self.__begin_end_code(seq_num, code_lines) \
+            + self.close_namespace_str() \
+            + "end course\n"
+        return file_content
+
+    def lean_file_afterword(self, seq_num=0) -> str:
+        # Construct short end of file by closing all open namespaces
+        end_of_file = "end\n"
+        end_of_file += self.close_namespace_str()
+        end_of_file += "end course"
+        lean_file_afterword = self.analysis_code2(seq_num) + end_of_file
+        return lean_file_afterword
+
+    #######################################
+    # Managing versions from history file #
+    #######################################
+    def __new_file_content(self, lean_code="todo ",
+                           additional_metadata=None,
+                           version_nb=1) -> str:
+        """
+        Insert additional metadata (e.g. AutoSteps) and code_lines
+        into self.course.file_content.
+        """
+
+        struct_content = self.structured_content
+        new_st_content = StructuredContent.new_content(struct_content,
+                                                       additional_metadata,
+                                                       lean_code, version_nb)
+        new_file_content = new_st_content.content_with_lemma()
+        return new_file_content
+
+    def history_date(self):
+        """
+        Return the date when this exercise was saved.
+        Pertinent only if self is from the history file.
+        """
+
+        # prefix = StructuredContent.history_name_prefix  # --> "exercise.history_"
+        # if self.lean_name.find(prefix) == -1:
+        #     return
+        # end_name = self.lean_name.split(prefix)[1]  # --> _<date>_<short_name>
+        # date = end_name.split('_')[0]
+        # print(f"date: {date}")
+        date = self.info.get('history_date')
+        return date
+
+    # def is_from_history_file(self):
+    #     """
+    #     True if self is an exercise as saved in history file.
+    #     """
+    #     tests = [self.course.is_history_file(),
+    #              self.history_date(),
+    #              self.auto_test]
+    #     return all(tests)
+
+    def is_solved_in_auto_test(self):
+        # txt = self.refined_auto_steps[-1].success_msg
+        # solved_txts = [text.proof_complete, _(text.proof_complete)]
+        # # solved_txts = [txt.replace(' ', '_') for txt in solved_txts]
+        # # print(solved_txts)
+        # test = any(txt.find(solved_txt) != -1
+        #            for solved_txt in solved_txts)
+        test = self.raw_metadata.get('all_goals_solved', False)
+        return test
+
+    def versions_saved_in_history_course(self) -> []:
+        """
+        Return the versions of self as saved in self.history_course().
+        """
+        return self.course.history_versions_from_exercise(self)
+
+    def has_versions_in_history_course(self):
+        """
+        True if at least one saved version of self in history_course.
+        """
+        return len(self.versions_saved_in_history_course()) > 0
+
+    def is_solved_in_history_course(self):
+        """
+        True if at least one version as saved in history_course has a
+        complete proof.
+        """
+        return any([exo.is_solved_in_auto_test()
+                    for exo in self.versions_saved_in_history_course()])
+
+    def is_copy_of(self, other) -> bool:
+        """
+        This is true if self is a copy of other (in a distinct file).
+        Name and core content are tested.
+        """
+        if not isinstance(other, Exercise):
+            return False
+        tests = [self.structured_content.has_identical_core_lemma_content(
+                 other.structured_content),
+                 self.lean_name == other.lean_name]
+        return all(tests)
+
+    def is_history_version_of(self, other):
+        """
+        True if self is a history version of other. Name and core content are
+        tested.
+        """
+        tests = [self.history_date(), self.auto_test,
+                 self.structured_content.has_identical_core_lemma_content(
+                 other.structured_content),
+                 self.lean_name.startswith(other.lean_name + '_')]
+        return all(tests)
+
+    def save_with_auto_steps(self, additional_metadata, lean_code):
+        """
+        Save current exercise with auto_steps in self.course's history file.
+        If the history file does not exist, create it with initial content
+        identical to self.course.file_content.
+        The exercise is saved just after the original exercise in the history
+        file.
+        """
+
+        path = self.course.abs_history_file_path
+
+        # (1) Take history file into account, if any
+        if self.course.history_course():
+            exercise = self.course.original_version_in_history_file(self)
+            if not exercise:
+                exercise = self
+        else:
+            exercise = self
+
+        # # (2) Negate statement?
+        # if self.negate_statement:
+        #     exercise.negate_statement = True
+
+        # (3) Compute new content
+        version_nb = len(self.versions_saved_in_history_course()) + 1
+        content = exercise.__new_file_content(lean_code, additional_metadata,
+                                              version_nb)
+
+        # (4) Save!
+        with open(path, mode='wt', encoding='utf-8') as output:
+            output.write(content)
+
+        # (5) Reload history_course to get new entry
+        self.course.set_history_course()
+
+    def delete_in_history_file(self):
+        """
+        Assuming self comes from a history file, delete the corresponding
+        entry. Beware that self is saved exercise, not original one.
+        """
+        path = self.course.relative_course_path.resolve()
+
+        first_line_nb = self.structured_content.first_line_nb
+        last_line_nb = self.structured_content.last_line_nb
+
+        content: str = self.course.file_content
+        content_lines = content.splitlines()
+        new_content_lines = (content_lines[:first_line_nb-1] +
+                             content_lines[last_line_nb:])
+        new_content = '\n'.join(new_content_lines)
+
+        # Save new content!
+        with open(path, mode='wt', encoding='utf-8') as output:
+            output.write(new_content)
+
+        # Reload history_course to remove deleted entry
+        # self.original_exercise.course.set_history_course()
 
 
 #############
@@ -582,13 +1166,14 @@ def extract_available_buttons(data: dict):
     the buttons specified in data.
 
     :param data: dict with pertinent info corresponding to keys
-    data[''available_logic],
-    data[''available_proof],
-    data[''available_magic].
+    data['available_logic'],
+    data['available_proof'],
+    data['available_magic'].
+    data['available_compute'].
 
     :return: no direct return, but modify the data dict.
     """
-    for action_type in ['logic', 'proof', 'magic']:
+    for action_type in ['logic', 'proof', 'magic', 'compute']:
         field_name = 'available_' + action_type
         default_field_name = 'default_' + field_name
         if field_name not in data.keys():
@@ -602,13 +1187,13 @@ def extract_available_buttons(data: dict):
         string = substitute_macros(data[field_name], data)
         # This is still a string with macro names that should either
         # be '$ALL' or in data.keys() with values in Action
-        action_callable = make_action_callable(action_type)
+        action_callable = make_action_from_name(action_type)
         # This is the function that computes Actions from names.
         # We can now compute the available_actions:
         data[field_name] = extract_list(string, data, action_callable)
 
 
-def make_action_callable(prefix) -> callable:
+def make_action_from_name(prefix) -> callable:
     """
     Construct the function corresponding to prefix
     :param prefix: one of logic, proof, magic
@@ -620,27 +1205,30 @@ def make_action_callable(prefix) -> callable:
         dictionary = PROOF_BUTTONS
     elif prefix == 'magic':
         dictionary = MAGIC_BUTTONS
+    elif prefix == 'compute':
+        dictionary = COMPUTE_BUTTONS
 
-    def action_callable(name: str) -> [Action]:
+    def action_from_name(name: str) -> [Action]:
         """
-        Return list of actions corresponding to name, as given by the
-        LOGIC_BUTTON dict
+        Return list of actions corresponding to name, and to prefix
+        ('logic', 'proof', 'magic'). name can also be $ALL, $NONE.
         e.g. 'and' -> [ LOGIC_BUTTONS['action_and'] ]
         '$ALL' -> LOGIC_BUTTONS
+        Does not include prove and use versions of actions.
         """
         # log.debug(f"searching Action {name}")
         if name in ['NONE', '$NONE']:
             return []
         if name in ['ALL', '$ALL']:
-            return dictionary.values()
+            return [action for action in dictionary.values()
+                    if not action.name.endswith('prove') and not
+                    action.name.endswith('use')]
         if not name.startswith("action_"):
             name = "action_" + name
-        action = None
-        if name in dictionary:
-            action = [dictionary[name]]
+        action = [dictionary[name]] if name in dictionary else None
         return action
 
-    return action_callable
+    return action_from_name
 
 
 def make_statement_callable(prefix: str, statements) -> callable:
@@ -691,13 +1279,61 @@ def make_statement_callable(prefix: str, statements) -> callable:
 
 def polish_data(data):
     """
-    Make some formal smoothing. BEware that capitalization modifies math
+    Make some formal smoothing. Beware that capitalization modifies math
     notations!
     """
     if 'description' in data:
         # data['description'] = data['description'].capitalize()
         if data['description'][-1].isalpha():
             data['description'] += '.'
+
+
+def indent(text: str) -> str:
+    """
+    Indent each line by 2 spaces.
+    """
+    lines = text.splitlines()
+    new_lines = [line if line.startswith('  ')
+                 else ' ' + line if line.startswith(' ')
+                 else '  ' + line
+                 for line in lines]
+    new_text = '\n'.join(new_lines)
+    return new_text
+
+
+def comment(text: str) -> str:
+    """
+    Comment each line by adding '# ".
+    """
+    lines = text.splitlines()
+    new_lines = [line if line.strip().startswith('--')
+                 else '-- ' + line for line in lines]
+    new_text = '\n'.join(new_lines)
+
+    new_text += '\n  todo'
+    return new_text
+
+
+def metadata_to_str(metadata: Dict[str, str]):
+    """
+    Format metadata dict for Lean files. Indent values if needed.
+    """
+    if not metadata:
+        return ""
+
+    metadata_str = ''
+    for key in metadata:
+        keys = key.split('_')
+        keys = [key.capitalize() if not key[0].isupper() else key
+                for key in keys]
+        capitalised_key = ''.join(keys)
+        # if not key[0].isupper():
+        #     key = key.capitalize()
+        metadata_str += capitalised_key + '\n'
+        value = str(metadata[key])
+        metadata_str += indent(value) + '\n'
+
+    return metadata_str
 
 
 if __name__ == "__main__":

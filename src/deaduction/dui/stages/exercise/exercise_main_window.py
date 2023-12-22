@@ -41,11 +41,12 @@ from PySide2.QtGui import QColor
 from PySide2.QtWidgets import (QMainWindow,
                                QMessageBox,
                                QAction)
-
+import deaduction.pylib.config.vars     as cvars
 from deaduction.pylib.coursedata        import  Exercise, UserAction
-from deaduction.pylib.mathobj           import (MathObject,
-                                                ProofStep)
-from deaduction.pylib.math_display.pattern_init import pattern_init
+from deaduction.pylib.mathobj           import MathObject
+from deaduction.pylib.proof_step        import ProofStep
+# from deaduction.pylib.math_display      import MathDisplay
+from deaduction.pylib.math_display.pattern_init import PatternInit
 
 from deaduction.dui.primitives          import deaduction_fonts
 
@@ -53,10 +54,10 @@ from deaduction.dui.elements            import (ActionButton,
                                                 LeanEditor,
                                                 StatementsTreeWidgetItem,
                                                 StatementsTreeWidgetNode,
-                                                MathObjectWidget,
+                                                # MathObjectWidget,
                                                 MathObjectWidgetItem,
                                                 MenuBar,
-                                                MenuBarAction,
+                                                # MenuBarAction,
                                                 ConfigMainWindow,
                                                 ProofOutlineWindow,
                                                 ProofTreeController,
@@ -65,6 +66,8 @@ from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
                                                 GlobalToolbar)
+
+# from deaduction.dui.stages.calculator import CalculatorController
 
 log = logging.getLogger(__name__)
 global _
@@ -133,6 +136,8 @@ class ExerciseMainWindow(QMainWindow):
     window_closed                = Signal()
     change_exercise              = Signal()
     ui_updated                   = Signal()
+    stop                         = Signal()
+    save_history                 = Signal()
 
     # User action signals:
     action_triggered             = Signal(ActionButton)
@@ -157,6 +162,7 @@ class ExerciseMainWindow(QMainWindow):
         self.current_goal         = None
         self.displayed_proof_step = None
         self.test_mode            = False
+        self.history_mode         = False
         self.automatic_action     = False
 
         # From inside
@@ -193,8 +199,9 @@ class ExerciseMainWindow(QMainWindow):
             self.exercise_toolbar.toggle_lean_editor_action
         self.help_window.action = \
             self.exercise_toolbar.toggle_help_action
-        if self.proof_tree_window.isVisible():
-            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+        # Fixme?
+        # if self.proof_tree_window.isVisible():
+        #     self.exercise_toolbar.toggle_proof_tree.setChecked(True)
 
         self.exercise_toolbar.redo_action.setEnabled(False)  # No history at beg
         self.exercise_toolbar.undo_action.setEnabled(False)  # same
@@ -214,6 +221,17 @@ class ExerciseMainWindow(QMainWindow):
             self.restoreGeometry(geometry)
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
+
+        # Proof tree visible: (this is a string!)
+        proof_tree_is_visible = (settings.value("emw/ShowProofTree") == "true")
+        ptv = settings.value("emw/ShowProofTree")
+        print(f"Proof tree was shown: {ptv}")
+        if not proof_tree_is_visible:
+            # print("hide")
+            self.proof_tree_window.hide()
+        else:
+            self.exercise_toolbar.toggle_proof_tree.setChecked(True)
+
         # proof_tree_is_visible = settings.value("emw/ShowProofTree")
         # if proof_tree_is_visible:
         #     print("Proof tree was shown")
@@ -250,7 +268,9 @@ class ExerciseMainWindow(QMainWindow):
                               ]),
                          self.exercise_toolbar.toggle_help_action,
                          self.exercise_toolbar.toggle_lean_editor_action,
-                         self.global_toolbar.change_exercise_action])
+                         self.global_toolbar.change_exercise_action,
+                          self.global_toolbar.save_history_action]
+                         )
 
         # ─────────────────────── Main Menu ─────────────────────── #
         outline = [menu_deaduction, menu_exercise]
@@ -259,12 +279,12 @@ class ExerciseMainWindow(QMainWindow):
 
     def __connect_signals(self):
         """
-        Connect all signals. Called at init. SOme signals are connected in
+        Connect all signals. Called at init. Some signals are connected in
         update_goal.
         """
         log.debug("EMW: connect signals")
         # Actions area
-        for action_button in self.ecw.actions_buttons:
+        for action_button in self.ecw.action_buttons:
             action_button.action_triggered.connect(self.action_triggered)
         self.ecw.statements_tree.itemClicked.connect(
                                             self.statement_triggered_filter)
@@ -329,10 +349,17 @@ class ExerciseMainWindow(QMainWindow):
                                                     self.change_exercise)
         self.global_toolbar.settings_action.triggered.connect(
                                                     self.open_config_window)
+        self.global_toolbar.stop.triggered.connect(self.stop)
+        self.global_toolbar.save_history_action.triggered.connect(
+            self.emit_save_history)
 
     def close_help_window(self):
         if self.help_window.isVisible():
             self.close_help_window_timer.start(200)
+
+    @Slot()
+    def emit_save_history(self):
+        self.save_history.emit()
 
     @Slot()
     def context_clicked(self):
@@ -348,13 +375,8 @@ class ExerciseMainWindow(QMainWindow):
 
         :param event: Some Qt mandatory thing.
         """
-        log.info("Closing ExerciseMainWindow")
 
-        # Close children
-        self.lean_editor.close()
-        self.proof_outline_window.close()
-        self.proof_tree_window.close()
-        self.help_window.close()
+        log.info("Closing ExerciseMainWindow")
 
         # Save window geometry
         # FIXME: does not work
@@ -364,8 +386,14 @@ class ExerciseMainWindow(QMainWindow):
         settings.setValue("emw/isMaximised", is_maximised)
         self.showNormal()
         settings.setValue("emw/Geometry", self.saveGeometry())
-        settings.setValue("emw/ShowProofTree",
-                          self.proof_tree_window.isVisible())
+        proof_tree_is_visible = self.proof_tree_window.isVisible()
+        # print(f"PTV: {proof_tree_is_visible}")
+        settings.setValue("emw/ShowProofTree", proof_tree_is_visible)
+        # Close children
+        self.lean_editor.close()
+        self.proof_outline_window.close()
+        self.proof_tree_window.close()
+        self.help_window.close()
 
         if self.close_coordinator:
             # Set up by Coordinator
@@ -396,7 +424,9 @@ class ExerciseMainWindow(QMainWindow):
     @Slot()
     def apply_new_settings(self, modified_settings):
         """
-        This is where UI is updated when preferences are modified.
+        This is where UI is updated when preferences are modified. Note that
+        only pertinent modified settings are transmitted, i.e. those
+        affecting UI.
         """
         log.debug("New settings: ")
         log.debug(modified_settings)
@@ -421,15 +451,21 @@ class ExerciseMainWindow(QMainWindow):
             elif setting == "display.target_display_on_top":
                 self.ecw.organise_main_layout()
             elif setting in (
-                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                    "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM",
                     'display.use_symbols_for_logic_button',
                     'display.font_size_for_symbol_buttons'):
                 self.ecw.set_font()
             elif setting == 'functionality.allow_implicit_use_of_definitions':
                 self.ecw.statements_tree.update_tooltips()
+            # elif setting == 'logic.button_use_or_prove_mode':
+            #     self.ecw.init_action_btns_layout()
+            #     self.ecw.set_action_gb()
             elif setting == "logic.use_bounded_quantification_notation":
-                pattern_init()
+                PatternInit.pattern_init()
                 update_ecw_display = True
+            # elif setting == "i18n.select_language":
+            #     MathDisplay.update_dict()
+            #     update_ecw_display = True
             else:  # Setting has not been handled, force update display
                 update_ecw_display = True
                 # break
@@ -580,37 +616,6 @@ class ExerciseMainWindow(QMainWindow):
         return [item.math_object for item in self.current_selection]
 
     # ─────────────────── Conversion methods ─────────────────── #
-
-    def button_from_string(self, string: str):
-        """
-        Search a button widget that match string.
-        Search successively in
-        - ActionButton,
-        - history buttons
-
-        :return: ActionButton or None
-        """
-        # FIXME: obsolete
-        # TODO: add search in context widgets.
-        button = self.ecw.action_button(string)
-        if button:
-            return button
-        history_buttons = {'undo': self.exercise_toolbar.undo_action,
-                           'redo': self.exercise_toolbar.redo_action,
-                           'rewind': self.exercise_toolbar.rewind,
-                           'go_to_end': self.exercise_toolbar.go_to_end}
-        if string.find('undo') != -1:
-            string = 'undo'
-        elif string.find('redo') != -1:
-            string = 'redo'
-        elif string.find('rewind') != -1:
-            string = 'rewind'
-        elif string.find('end') != -1:
-            string = 'go_to_end'
-        if string in history_buttons:
-            return history_buttons[string]
-        log.warning(f"No button found from {string}")
-
     def context_item_from_math_object(self, math_object) -> \
             MathObjectWidgetItem:
         """
@@ -818,6 +823,22 @@ class ExerciseMainWindow(QMainWindow):
         # self.help_window.set_math_object(item, target=True)
         # self.help_window.toggle(True)
 
+    def harmonize_buttons_and_user_action(self, user_action: UserAction):
+        """
+        Switch mode to prove or use mode according to user_action so that
+        the pertinent button is displayed.
+        """
+
+        name: str = user_action.button_name_adapted_to_mode()
+        if not name:  # Nothing to do
+            return
+
+        if cvars.get('logic.button_use_or_prove_mode') == 'display_switch':
+            switch_mode = self.ecw.switch_mode
+            prove_mode = (switch_mode == "prove")
+            if not name.endswith(switch_mode):
+                self.ecw.set_switch_mode(to_prove=not prove_mode)
+
     def simulate_selection(self,
                            selection:
                            [Union[MathObject, MathObjectWidgetItem]],
@@ -857,6 +878,10 @@ class ExerciseMainWindow(QMainWindow):
         when history_redo is executed, to keep all the following history.
         """
         log.debug("Simulating user action...")
+
+        # Adapt to prove/use current mode
+        self.harmonize_buttons_and_user_action(user_action)
+
         msg = ""
         msg += f"    -> selection = {user_action.selection}"
         selection = self.contextualised_selection(user_action.selection)
@@ -878,7 +903,7 @@ class ExerciseMainWindow(QMainWindow):
         self.simulate_selection(selection, target_selected)
         self.user_input = user_action.user_input
 
-        button = user_action.button_name
+        button = user_action.button_name_adapted_to_mode()
         statement_name = user_action.statement_name
         if button:
             msg += f"    -> click on button {button}"
@@ -907,22 +932,19 @@ class ExerciseMainWindow(QMainWindow):
         msg += "    ->(No button nor statement found)"
         return False, msg
 
-    async def simulate(self, proof_step: ProofStep, duration=0.4):
+    async def simulate_proof_step(self, proof_step: ProofStep, duration=0.4):
         """
         Simulate proof_step by selecting the selection and
         checking button or statement stored in proof_step. This is called
-        when redoing, but also when processing automatic actions, or testing.
+        when redoing.
         Note that the corresponding actions are NOT processed,
         since this would modify history of the lean_file which is not what
         we want when redoing.
         The method is asynchronous because we wait for the button blinking.
         """
 
-        user_action = UserAction.from_proof_step(proof_step)
-        # log.info("Simulating proof_step with:")
-        # print(user_action)
-        success, msg = await self.simulate_user_action(user_action, duration,
-                                                       execute_action=False)
+        await self.simulate_user_action(proof_step.user_action, duration,
+                                        execute_action=False)
     ##################
     ##################
     # Update methods #
@@ -939,8 +961,13 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_editor.code_set(lean_file_content)
 
     def display_current_goal_solved(self, delta):
+        """
+        Display a QMessageBox informing user that the current goal has been
+        solved.
+        """
         proof_step = self.lean_file.current_proof_step
         if proof_step.current_goal_number and not self.test_mode \
+                and not self.history_mode \
                 and self.lean_file.current_number_of_goals \
                 and not proof_step.is_error() \
                 and not proof_step.is_undo():

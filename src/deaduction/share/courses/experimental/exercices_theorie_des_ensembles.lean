@@ -2,32 +2,28 @@
 This is a d∃∀duction file providing exercises for basic set theory. French version.
 -/
 
-import data.set
+-- Lean standard imports
 import tactic
+-- import data.real.basic
 
--- dEAduction tactics
+
+-- dEAduction tactics and theorems
+-- structures2 and utils are vital
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
-import push_neg_once
+import push_neg_once    -- pushing negation just one step
+-- import induction     -- theorem for the induction proof method
+-- import compute_all   -- tactics for the compute buttons
 
 -- dEAduction definitions
 import set_definitions
 
--- General principles :
--- Type should be defined as parameters, in order to be implicit everywhere
--- other parameters are implicit in definitions, i.e. defined using '{}' (e.g. {A : set X} )
--- but explicit everywhere else, i.e. defined using '()' (e.g. (A : set X) )
--- each definition must be an iff statement or an equality
--- (since it will be called with 'rw' or 'symp_rw')
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
 
 -------------------------
 -- dEAduction METADATA --
 -------------------------
--- logic names ['and', 'or', 'negate', 'implicate', 'iff', 'forall', 'exists']
--- proofs names ['use_proof_methods', 'new_object', 'apply', 'assumption']
--- magic names ['compute']
--- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 /- dEAduction
 Title
@@ -38,6 +34,8 @@ Institution
     Université de France
 Description
     Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles.
+AvailableCompute
+    None
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -46,7 +44,7 @@ local attribute [instance] classical.prop_decidable
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
-parameters {X Y Z: Type}
+variables {X Y Z: Type}
 
 
 open set
@@ -69,7 +67,7 @@ PrettyName
 ------------------------
 -- COURSE DEFINITIONS --
 ------------------------
-lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
+lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, (x ∈ A) → x ∈ B :=
 /- dEAduction
 ImplicitUse
     True
@@ -460,7 +458,7 @@ PrettyName
     Définitions
 -/
 
-lemma definition.image_directe (y : Y) : y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
+lemma definition.image_directe (y : Y) :  y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
 begin
     todo
 end
@@ -605,7 +603,7 @@ begin
     todo
 end
 
-lemma exercices.image_reciproque.composition
+lemma exercise.image_reciproque.composition
 (C: set Z)
 :
 ((composition g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)
@@ -817,28 +815,29 @@ PrettyName
     (+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties
 -/
 begin
-    by_contradiction H14,
-    let A := {x | x ∉ f x}, have H15 : A = {x | x ∉ f x}, refl,
-    rw theorie_des_ensembles.applications_II.definitions.definition.surjectivite at H14,
-    have H16 := H14 A,
-    cases H16 with x H17,
-    cases (classical.em (x dans A)) with H22 H23,
-    {
-        have H22b: x ∉ A,
-        rw H15 at H22,
-        rw generalites.definition.ensemble_extension at H22,
-        rw H17, assumption,
-        contradiction,
-    },
-    {
-        have H22b: x ∈ A,
-        rw H15 at H23,
-        -- simp only[ensemble_extension] at H23,
-        rw generalites.definition.ensemble_extension at H23,
-        push_neg at H23,
-        rw H17, assumption,
-        contradiction
-    }
+    -- by_contradiction H14,
+    -- let A := {x | x ∉ f x}, have H15 : A = {x | x ∉ f x}, refl,
+    -- rw theorie_des_ensembles.applications_II.definitions.definition.surjectivite at H14,
+    -- have H16 := H14 A,
+    -- cases H16 with x H17,
+    -- cases (classical.em (x ∈ A)) with H22 H23,
+    -- {
+    --     have H22b: x ∉ A,
+    --     rw H15 at H22,
+    --     rw generalites.definition.ensemble_extension at H22,
+    --     rw H17, assumption,
+    --     contradiction,
+    -- },
+    -- {
+    --     have H22b: x ∈ A,
+    --     rw H15 at H23,
+    --     -- simp only[ensemble_extension] at H23,
+    --     rw generalites.definition.ensemble_extension at H23,
+    --     push_neg at H23,
+    --     rw H17, assumption,
+    --     contradiction
+    -- }
+    todo
 end
 
 

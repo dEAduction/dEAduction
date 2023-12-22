@@ -1,6 +1,6 @@
 """
 ############################################################
-# utils.py : utilitarian functions used in files in        #
+# high_level_request.py : utilitarian functions used in files in        #
 # the actions directory                                    #
 ############################################################
 This file mainly provides the CodeForLean class, which is an abstract
@@ -41,12 +41,22 @@ This file is part of dEAduction.
 """
 
 from dataclasses import dataclass
+from enum import IntEnum
 from typing import Any, Union, List, Optional
 from logging import getLogger
 
 from deaduction.pylib.utils import injective_union, intersection_list
 
 log = getLogger(__name__)
+
+global _
+
+# class CodeNature(IntEnum):
+#     """
+#     Different types of codes.
+#     """
+#
+#     induction = 0
 
 
 class LeanCombinator(str):
@@ -108,6 +118,20 @@ class SingleCode:
             return self.string.format(*names)
         else:
             return self.string
+
+
+    @classmethod
+    def apply_statement(cls, statement_name):
+        return cls(string = f"apply {statement_name}")
+
+# class ApplyStatement(SingleCode):
+#
+#     def __init__(self, statement_name):
+#         self.statement_name = statement_name
+#         super().__init__("")
+#
+#     def string(self):
+#         return f"apply {self.statement_name}"
 
 
 class CodeForLean:
@@ -250,14 +274,15 @@ class CodeForLean:
 
     @classmethod
     def or_else_from_list(cls,
-                          instructions: [],  # type : [ Union[CodeForLean,
-                          #                str, tuple] ]
+                          instructions: [],
                           error_msg: str = '',
                           global_success_msg: str = ""):
         """
         Create an or_else CodeForLean from a (list of) strings or CodeForLean
 
-        :param instructions: list of CodeForLean, str, or tuple.
+        @param instructions:  list of CodeForLean, str, or tuple.
+        @param global_success_msg
+        @param error_msg
         """
         return cls.from_list(instructions=instructions,
                              combinator=LeanCombinator.or_else,
@@ -299,7 +324,7 @@ class CodeForLean:
     def operator(self, operator):
         """
         Set the operator attribute of the first SingleCode in self.
-        @param operator: MathObject.
+        @param operator: Union[MathObject, Statement].
         """
         if self.is_or_else():
             for instruction in self.instructions:
@@ -441,7 +466,7 @@ class CodeForLean:
                            instructions=[self],
                            success_msg=success_msg)
 
-    def try_(self, success_msg=""):
+    def try_(self, try_succeed_msg="", try_fail_msg=""):
         """
         Turn self into
                             "self <|> skip",
@@ -452,12 +477,14 @@ class CodeForLean:
 
         :return: CodeForLean
         """
-        # if isinstance(self, str):
-        #     self_ = CodeForLean.from_string(self)
-        skip = CodeForLean.from_string("skip")
+
+        if try_succeed_msg:
+            self.add_success_msg(try_succeed_msg)
+        skip = CodeForLean.skip()
+        if try_fail_msg:
+            skip.add_success_msg(try_fail_msg)
         return CodeForLean(instructions=[self, skip],
-                           combinator=LeanCombinator.or_else,
-                           success_msg=success_msg)
+                           combinator=LeanCombinator.or_else)
 
     def solve1(self, success_msg=""):
         code = CodeForLean(instructions=[self],
@@ -465,12 +492,15 @@ class CodeForLean:
                            success_msg=success_msg)
         return code
 
-    def to_code(self, exclude_no_meta_vars=False) -> str:
+    def to_code(self, exclude_no_meta_vars=False,
+                exclude_skip=False) -> str:
         """
-        Format CodeForLean into a string which can be sent to Lean
+        Format CodeForLean into a string which can be sent to Lean.
+        No side-effects.
 
         :param exclude_no_meta_vars:    if True, 'no_meta_vars' instructions
                                         are discarded
+        :param exclude_skip:
         :return: a string understandable by the Lean parser
         """
 
@@ -478,6 +508,8 @@ class CodeForLean:
         if self.is_empty():
             return ""
         elif exclude_no_meta_vars and self.is_no_meta_vars():
+            return ""
+        elif exclude_skip and self.is_skip():
             return ""
         elif self.is_single_code():
             code = self.instructions[0].to_code()
@@ -489,12 +521,13 @@ class CodeForLean:
         elif self.is_and_then():
             strings = []
             for instruction in self.instructions:
-                string = instruction.to_code(exclude_no_meta_vars)
+                string = instruction.to_code(exclude_no_meta_vars,
+                                             exclude_skip)
                 if string:
                     strings.append(string)
             return ', '.join(strings)
         elif self.is_or_else():
-            strings = [child.to_code(exclude_no_meta_vars)
+            strings = [child.to_code(exclude_no_meta_vars, exclude_skip)
                        for child in self.instructions]
             strings = ['`[ ' + string + ']'
                        for string in strings if string != ""]
@@ -502,7 +535,8 @@ class CodeForLean:
         else:
             return self.combinator \
                 + " {" \
-                + self.instructions[0].to_code(exclude_no_meta_vars) \
+                + self.instructions[0].to_code(exclude_no_meta_vars,
+                                               exclude_skip) \
                 + " }"
 
     def add_trace_effective_code(self):
@@ -514,8 +548,8 @@ class CodeForLean:
         2) mark each "or_else" node with a node_number
         which will be used by the select_or_else method.
 
-        :return: two instances of CodeForLean, the first contains the trace
-        msgs, the second is self with marked or_else node.
+        :return: two instances of CodeForLean, the first is self with marked
+        or_else node, the second contains the trace msgs.
         """
 
         if self.is_single_code():
@@ -733,6 +767,10 @@ class CodeForLean:
         return (self.is_single_code() and
                 self.to_code() == NO_META_VARS.to_code())
 
+    def is_skip(self):
+        return (self.is_single_code() and
+                self.to_code() == SKIP.to_code())
+
     def add_used_properties(self, used_properties):
         """
         Add used properties to every single code instruction in self.
@@ -773,6 +811,10 @@ class CodeForLean:
                                     for ins in self.instructions])
 
         return up
+
+    @classmethod
+    def skip(cls):
+        return cls("skip")
 
     @classmethod
     def no_meta_vars(cls):
@@ -817,6 +859,78 @@ class CodeForLean:
         code = self.and_then(simp.try_())
         return code
 
+    @classmethod
+    def induction(cls, var_name):
+        ins = SingleCode.apply_statement("induction.simple_induction")
+        code = cls(instructions=[ins])
+        code.add_success_msg(_(f"Proof by induction on {var_name}"))
+        code.outcome_operator = _("Principle of induction")
+        return code
+
+    @classmethod
+    def have(cls, fresh_name, operator, arguments,
+             iff_direction='', explicit=True, nb_place_holders=0,
+             success_msg=None, error_msg=None):
+        """
+
+        @param fresh_name: str
+        @param operator: Union[MathObject, Statement]
+        @param arguments: [Union[MathObject, str]]
+
+        @param iff_direction: if operator is an iff then
+        specify the direction ('mp', 'mpr') of implication to be used.
+        @param explicit: use all implicit args for operator ('@')
+        @param nb_place_holders: number of preliminary place_holders ('_')
+
+        @param success_msg:
+        @param error_msg:
+
+        @return: CodeForLean
+        """
+
+        var = arguments[0]
+        var = var.add_leading_parentheses(var)
+        test = var.to_display(format_='lean')
+
+        op_name = '@' + operator.lean_name if explicit else operator.lean_name
+
+        arg_names = ['(' + arg + ')' if isinstance(arg, str)
+                     else
+                     arg.add_leading_parentheses(arg).to_display(format_='lean')
+                     for arg in arguments]
+        arg_names = (['_'] * nb_place_holders) + arg_names
+
+        if not iff_direction:
+            args = ' '.join(arg_names)
+            have = f'have {fresh_name} := {op_name} {args}'
+        else:
+            first_args = ' '.join(arg_names[:-1])
+            last_arg = arg_names[-1]
+            have = (f'have {fresh_name} := '
+                    f'({op_name} ' f'{first_args}).{iff_direction} {last_arg}')
+
+        code = CodeForLean(have)
+
+        if not success_msg:
+            success_msg = _("Property {} added to the context").format(fresh_name)
+        code.add_success_msg(success_msg)
+
+        if not error_msg:
+            error_msg = _("Unable to apply the selected property")
+        code.add_error_msg(error_msg)
+
+        code.operator = operator
+
+        return code
+
+
+# class Induction(CodeForLean):
+#
+#     def __init__(self, var_name):
+#         ins = ApplyStatement("induction.simple_induction")
+#         super().__init__(instructions=[ins])
+#         self.add_success_msg(f"Proof by induction on {var_name}")
+
 
 # _VAR_NB = 0
 # _FUN_NB = 0
@@ -847,6 +961,7 @@ class CodeForLean:
 
 
 NO_META_VARS = CodeForLean("no_meta_vars")
+SKIP = CodeForLean.from_string("skip")
 
 
 def get_effective_code_numbers(trace_effective_code: str) -> (int, int):
@@ -892,7 +1007,9 @@ if __name__ == '__main__':
     print(code_2.to_code())
 
     code_1 = CodeForLean.from_string("norm_num at *").solve1()
+
     code_2 = CodeForLean.from_string("compute_n 10")
+
     code_3 = (CodeForLean.from_string("norm_num at *").try_()).and_then(code_2)
     possible_code = code_1.or_else(code_3)
 

@@ -166,6 +166,28 @@ class DeaductionFonts:
              # Tooltips:
              f"ExerciseCentralWidget QToolTip"
              f"{{ font-size : {self.tooltips_font_size}pt; }}"
+             ####################
+             # Calculator sizes #
+             ####################
+             # Context:
+             # f"CalculatorTargets GoalWidget"
+             # f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             f"CalculatorTargets MathObjectWidget"
+             f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             f"CalculatorTargets TargetLabel"
+             f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             f"CalculatorTargets GoalTextWidget"
+             f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             f"CalculatorTargets MathTextWidget"
+             f"{{ font-size : {self.chooser_math_font_size}pt; }}"
+             # Target
+             f"CalculatorTargets CalculatorTarget MathTextWidget"
+             f"{{ font-size : {self.target_font_size}pt; }}"
+             ####################
+             # Proof Tree #
+             ####################
+             f"RawLabelMathObject"
+             f"{{ font-size : {cvars.get('display.proof_tree_font_size')}pt; }}"
              )
         return s
 

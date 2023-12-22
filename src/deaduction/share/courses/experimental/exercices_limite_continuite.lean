@@ -1,46 +1,44 @@
-import tactic
-import data.real.basic
--- import data.set
 /-
-- nom des variables dans la def de limite !
-- variables muettes = variables globales : bof
-- calcul avec abs : abs (l'-l) /2 >0 ??
-(x ≠ 0 → |x| >0)
-- ne pas ajouter l'inégalité au contexte si elle y est déjà !
-- 'dsimp only at h' effectue les beta-réduction : (λ x, f x) 37 = f 37
-- max : def et propriétés
-- utiliser specialize ??
-
+This is a d∃∀duction file providing exercises about limits and continuity.
 -/
 
+-- Lean standard imports
+import tactic
+import data.real.basic
 
 -- dEAduction tactics
-import structures2      -- hypo_analysis, targets_analysis
-import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute
-import push_neg_once    -- pushing negation just one step
+-- structures2 and utils are vital
+import deaduction_all_tactics
+-- import structures2      -- hypo_analysis, targets_analysis
+-- import utils            -- no_meta_vars
+-- import compute_all      -- Tactics for the compute buttons
+-- import push_neg_once    -- Pushing negation just one step
+-- import induction        -- Induction theorems
 
 -- dEAduction definitions
 import set_definitions
 import real_definitions
 
-
--- class real_number_subgroup (α : Type) := 
--- (subgroup : ((α = ℕ) ∨ (α = ℤ) ∨ (α = ℚ) ∨ (α = ℝ)) )
-
--- lemma real_number_subgroup_nat : (nat = ℕ) ∨ (nat = ℤ) ∨ (nat = ℚ) ∨ (nat = ℝ) :=
--- begin
---   left, refl,
--- end
-
--- instance : real_number_subgroup nat := ⟨real_number_subgroup_nat⟩ 
-
-
+-- Use classical logic
 local attribute [instance] classical.prop_decidable
 
+-------------------------
+-- dEAduction METADATA --
+-------------------------
+/- dEAduction
+Title
+    Limite et continuité
+Author
+    Frédéric Le Roux
+Institution
+    Université du monde
+Description
+    Des exercices sur les limites des suites
+    et la continuité des fonctions 
+-/
 
-/-- `l` is the limit of the sequence `a` of reals -/
+
+/-- Lots of definitions -/
 definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 
@@ -73,6 +71,13 @@ limit_function (λ x, f x) a (f a)
 definition continuous (f: ℝ → ℝ) : Prop :=
 ∀ a, continuous_at f a
 
+definition cauchy (u: ℕ → ℝ) : Prop :=
+∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
+
+definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
+∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
+(|x - y| < δ → |f x - f y | < ε)
+
 section course
 open tactic.interactive
 -- notation `|` x `|` := abs x
@@ -93,31 +98,48 @@ PrettyName
   Généralités
 -/
 
+lemma theorem.archimedien : ∀ x:ℝ, ∃ n:ℕ, x < n
+:=
+/- dEAduction
+PrettyName
+  ℝ est archimédien
+-/
+begin
+  todo
+end
+
+lemma definition.inverse (a:ℝ)
+(HP1: a ≠ 0):
+a⁻¹ = 1/a
+:=
+/- dEAduction
+PrettyName
+  Définition de la fonction "inverse"
+-/
+begin
+  todo
+end
+
+
+lemma theorem.inverse_decroissante (a b:ℝ)
+(HP1: a > 0) (HP2:b > 0):
+a < b → b⁻¹ < a⁻¹ 
+:=
+/- dEAduction
+PrettyName
+  La fonction "inverse" renverse les inégalités
+-/
+begin
+  todo
+end
+
+-- #check real.exists_floor
+
 /-
 abs_pos : 0 < |a| ↔ a ≠ 0
 abs_mul x y : |x * y| = |x| * |y|
 abs_add x y : |x + y| ≤ |x| + |y|
 -/
-
-/-
-Max :
-def
-max ≥ n et n'
-1) We will be using `max` a lot in this workshop. `max A B` is
-the max of `A` and `B`. `max` is a definition, not a theorem, so 
-that means that there will be an API associated with it, i.e. 
-a list of little theorems which make `max` possible to use.
-We just saw the two important theorems which we'll be using:
-`le_max_left A B : A ≤ max A B` and
-`le_max-right A B : B ≤ max A B`.
-There are other cool functions in the `max` API, for example
-`max_le : A ≤ C → B ≤ C → max A B ≤ C`. The easiest way to 
-find your way around the `max` API is to *guess* what the names
-of the theorems are! For example what do you think 
-`max A B < C ↔ A < C ∧ B < C` is called?
--/
-
-
 
 ----------------------------------
 namespace maximum
@@ -125,10 +147,16 @@ namespace maximum
 -- but allows to treat the cases of integers or rationals.
 variables {RealSubGroup : Type} [decidable_linear_order RealSubGroup] 
 
+lemma definition.max (a b c : RealSubGroup) :
+a = max b c ↔ (b ≤ a ∧ c ≤ a ∧ (a=b ∨ a=c))
+:=
+begin
+  todo
+end
+
 lemma theorem.ppe_max_gauche :
 ∀ a b : RealSubGroup, a ≤ max a b :=
 begin
-  -- targets_analysis,
   intros a b,
   -- hypo_analysis,
   -- norm_num, tautology,
@@ -164,38 +192,60 @@ end maximum
 
 namespace valeur_absolue
 variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup] 
--- [has_zero RealSubGroup]
 
--- A modifier : faire une classe "nombres" ?
-lemma theorem.valeur_absolue :
-∀ x : RealSubGroup,
-((0:RealSubGroup) ≤ x) → (abs x = x) and ((x ≤ 0) → (abs x = -x)) :=
+lemma definition.valeur_absolue
+(a b : RealSubGroup) :
+a = abs b ↔ (a ≥ 0 ∧ (a=b ∨ a=-b))
+:=
 begin
-  intro x, split, exact abs_of_nonneg, exact abs_of_nonpos,
+  todo
 end
 
-lemma theorem.majoration_valeur_absolue :
-∀ x r : RealSubGroup, (abs x < r) ↔ ((-r < x) ∧ (x < r))
+lemma theorem.valeur_absolue_de_positif
+(x : RealSubGroup) :
+((0 ≤ x) → (abs x = x)) :=
+/- dEAduction
+PrettyName
+  Valeur absolue d'un nombre positif
+-/
+begin
+  exact abs_of_nonneg,
+end
+
+lemma theorem.valeur_absolue_de_negatif
+(x : RealSubGroup) :
+((x ≤ 0) → (abs x = -x)) :=
+/- dEAduction
+PrettyName
+  Valeur absolue d'un nombre négatif
+-/
+begin
+  exact abs_of_nonpos,
+end
+
+lemma theorem.majoration_valeur_absolue
+(x r : RealSubGroup):
+(abs x < r) ↔ ((-r < x) ∧ (x < r))
 := 
 /- dEAduction
 PrettyName
   Majoration d'une valeur absolue
 -/
 begin
-  intros x r,
   exact abs_lt
 end
 
 
-lemma theorem.inegalite_triangulaire :
-∀ x y : RealSubGroup, |x + y| ≤ |x| + |y|
+lemma theorem.inegalite_triangulaire
+(x y : RealSubGroup):
+|x + y| ≤ |x| + |y|
 := 
 /- dEAduction
 PrettyName
   Inégalité triangulaire
 -/
 begin
-  intros x y, exact abs_add x y 
+  exact abs_add x y 
 end
 
 lemma theorem.valeur_absolue_produit :
@@ -212,8 +262,9 @@ end
 end valeur_absolue
 
 end generalites
-namespace suites
 
+
+namespace suites
 ------------------------------
 -- Définitions de la limite --
 ------------------------------
@@ -375,19 +426,56 @@ end definitions
 -----------------
 --  exercices  --
 -----------------
+
+namespace preliminaires
+/- dEAduction
+PrettyName
+  Un exercice préliminaire
+-/
+
+lemma exercise.plus_petit_que_tout_pos (x: ℝ):
+(∀ ε>0, x < ε) → x ≤ 0 :=
+/- dEAduction
+PrettyName
+  Plus petit que tout
+-/
+begin
+  todo
+end
+
+end preliminaires
+
 namespace exercices_suites_I
 /- dEAduction
 PrettyName
   Exercices sur les suites I
 -/
 
-open definitions
+-- open definitions
 
 -- --------------------------------------------------
+
+-- lemma exercise.limit_alt :
+-- not (converging_seq (λ n, (-1)^n))  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite -1, 1, -1, 1, ... ne converge pas.
+-- -/
+-- begin
+--   by_contradiction H1,
+--   cases H1 with l H2,
+--   have H4: (((1): @real)) > ((0): @real), rotate, have H5 := @H2 (((1): @real)) (H4), rotate 1, solve1 {norm_num at * },
+--   cases H5 with N H6,
+--   have H8: (((2): @nat) * N) ≥ N, rotate, have H9 := @H6 (((2): @nat) * N) (H8), rotate 1, solve1 {norm_num at *, compute_n 10 },
+--   simp only [] with simp_arith  at H9,
+--   have H10: (((-1: int) ^ (2 * N)) = 1),
+
+
+-- end
+
+
 -- namespace exemples
 
-
--- end exemples
 
 lemma exercise.limit_constante 
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
@@ -401,14 +489,43 @@ Description
   l'existence d'une limite.
 -/
 begin
---   rw definition.limit,
---   intros ε Hε,
---   use 0,
---   intros n H1,
---   rw H,
--- `[ solve1 {norm_num at * }, trace "EFFECTIVE CODE n°4.0"] <|> `[ `[ norm_num at *, trace "EFFECTIVE CODE n°5.0"] <|> `[ skip, trace "EFFECTIVE CODE n°5.1"], compute_n 10, trace "EFFECTIVE CODE n°4.1"],
   todo,
 end
+
+lemma exercise.limit_inverse :
+converging_seq (λ n, n⁻¹)  := 
+/- dEAduction
+PrettyName
+  (**) La suite des inverses des entiers est convergente.
+Description
+  Un exemple très simple de limite.
+  Savez-vous trouver le bon "N" ?
+-/
+begin
+  -- use (((0): @real)),
+  -- rw definitions.suites.definition.limit, intro ε, intro H1,
+  -- have H2 := @definitions.generalites.theorem.archimedien (((1): @real)/ε),
+  -- cases H2 with n H3,
+  -- use (n),
+  -- intro p, intro H5,
+  -- norm_num,
+  -- targets_analysis,
+  todo
+end
+
+-- lemma exercise.limit_racine :
+-- limit_plus_infinity  (λ n,  n^(1/2))  := 
+-- /- dEAduction
+-- PrettyName
+--   La suite des racines carrées des entiers tend vers l'infini.
+-- Description
+--   Un deuxième exemple, cette fois-ci avec une suite divergente.
+-- -/
+-- begin
+--   todo,
+-- end
+-- end exemples
+
 
 lemma exercise.croissante_non_majoree
 (u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
@@ -446,9 +563,8 @@ end
 
 lemma exercise.limite_inegalites
 (u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
-(H' : limit v l')
-(H'' : ∀n, u n ≤ v n ) :
-l ≤ l'
+(H' : limit v l'):
+(∀n, u n ≤ v n ) → l ≤ l'
 :=
 /- dEAduction
 PrettyName
@@ -460,25 +576,6 @@ Description
 -/
 begin
   todo,
-  -- contrapose H'' with H1,
-  -- push_neg,
-  -- push_neg at H1,
-  -- let e := (l-l')/2, have H2 : e = (l-l')/2, refl, no_meta_vars,
-  -- rw limit at H H',
-  -- have H3: (e:ℝ) > 0, rotate, have H4 := H e H3, rotate 1, rotate, rotate,
-  -- solve1 {norm_num at *, apply mul_pos, linarith only [H1], apply inv_pos.mpr, linarith},
-  -- have H5 := H' e H3,
-  -- cases H4 with n H6,
-  -- cases H5 with n' H7,
-  -- let n'' := max n n', have H8 : n'' = max n n', refl, no_meta_vars,
-  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  -- use n'',
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10,
-  -- cases H10 with H14 H15,
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H12,
-  -- cases H12 with H17 H18,
-  -- linarith only [H18, H14, H2],
 end
 
 end exercices_suites_I
@@ -536,38 +633,10 @@ Description
   Aide : il peut être judicieux d'utiliser le résultat
   d'un exercice précédent...
 -/
+
+
 begin
---   rw definitions.definition.limit,
--- rw definitions.definition.limit at H H',
--- intro ε, intro H1,
--- have H2 := H _ H1,
--- have H3 := H' _ H1,
--- cases H2 with n H4,
--- cases H3 with n' H5,
--- let x2 := max n n', have H7 : x2 = max n n', refl,
--- have H9 := @definitions.maximum.theorem.ppe_max_gauche,
--- have H10 := H9 n n',
--- -- norm_num at H10,
--- rw H7 at H10,
-  todo,
-  -- rw limit,
-  -- intro ε, intro H1,
-  -- rw limit at H H',
-  -- have H2: ((ε/2):ℝ) > 0, rotate, have H3 := H (ε/2) H2, rotate 1, solve1 {linarith only [H1] }, rotate,
-  -- have H4: ((ε/2):ℝ) > 0, rotate, have H5 := H' (ε/2) H4, rotate 1, solve1 {assumption}, rotate,
-  -- cases H3 with n H6,
-  -- cases H5 with n' H7,
-  -- use max n n',
-  -- intro n'', intro H8,
-  -- have H9: (n'':ℕ) ≥ n, rotate, have H10 := H6 n'' H9, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  -- have H11: (n'':ℕ) ≥ n', rotate, have H12 := H7 n'' H11, rotate 1, solve1 {norm_num at *, tautology }, rotate,
-  
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at H10 H12,
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue,
-  -- cases H12 with Ha Hb, cases H10 with Hc Hd,
-  -- split,
-  -- linarith only [Ha, Hc],
-  -- linarith only [Hb, Hc, Hd],
+  todo
 end
 
 lemma exercise.limite_unique
@@ -576,29 +645,12 @@ l = l'
 :=
 /- dEAduction
 PrettyName
-  (*) Unicité de la limite
+  Unicité de la limite (*)
+Description
+  Ici il peut être judicieux de raisonner par l'absurde,
+  et de traiter séparément les cas l < l' et l' < l 
 -/
 begin
-  -- by_contradiction,
-  -- wlog Hll': l < l',
-  -- -- exact lt_or_gt_of_ne a,
-  -- rotate,
-  -- set ε := (l'-l)/2 with Heps,
-  -- have Hpos: ε >0, rotate, -- by compute1,
-  -- specialize H ε Hpos, rotate 2,
-  -- rotate,
-  
-  -- cases H with N1,
-  -- specialize H' ε Hpos, cases H' with N2,
-  -- set n := max N1 N2 with Hn,
-  -- have HnsuppN1: n ≥ N1, from le_max_left N1 N2,
-  -- have ineq1 := H_h n HnsuppN1,
-  -- have HnsuppN2: n ≥ N2, from le_max_right N1 N2,
-  -- have ineq1 := H'_h n HnsuppN2,
-
-  -- -- sorry,  
-  -- todo,
-  -- todo,
   todo,
 end
 
@@ -611,7 +663,7 @@ limit v l
 :=
 /- dEAduction
 PrettyName
-  (**) Théorème des gendarmes
+  Théorème des gendarmes (*)
 -/
 begin
   todo,
@@ -668,16 +720,6 @@ Description
 -/
 begin
   todo,
-  -- have H2 := (H0 0) 1 _,
-  -- rcases H2 with ⟨δ, H3, H4⟩,
-  -- norm_num at H4,
-  -- rw H1 at H4,
-  -- use δ, split, rotate,
-  -- intros x x_del,
-  -- have H5 := H4 _ x_del,
-  -- rw generalites.valeur_absolue.theorem.majoration_valeur_absolue at *,
-  -- cases H5 with H5a H5b,
-  -- linarith only [H5a], linarith, assumption,
 end
 
 lemma exercise.composition_limite_fonction
@@ -692,11 +734,11 @@ Description
   Deux limites en hypothèse, une en conclusion...
 -/
 begin
-  todo,
+  todo
 end
 
 
-lemma exercise.composition_continuite (f: ℝ → ℝ) (g: ℝ → ℝ)
+lemma exercise.composition_continuite (f: ℝ →  ℝ) (g: ℝ → ℝ)
 (H: continuous f) (H': continuous g):
 continuous (composition g f) :=
 /- dEAduction
@@ -731,10 +773,6 @@ PrettyName
   Suites de Cauchy
 -/
 
-open definitions
-
-definition cauchy (u: ℕ → ℝ) : Prop :=
-∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
 
 lemma definition.suite_de_cauchy
 (u: ℕ → ℝ) :
@@ -750,41 +788,6 @@ begin
   refl,
 end
 
--- definition increasing (k: ℕ → ℕ) : Prop := 
--- ∀ n, (k n) > (k (n+1)) 
-
--- definition limit_value (u: ℕ → ℝ) (a: ℝ) : Prop :=
--- ∃ k: ℕ → ℕ, increasing k ∧ limit (λ n, (u (k n))) a
-
--- lemma definition.increasing (k: ℕ → ℕ): (increasing k) ↔
--- ∀ n, (k n) > (k (n+1)) :=
--- begin
---   refl,
--- end
-
--- lemma theorem.increasing_limit (k: ℕ → ℕ) (H: increasing k):
--- limit_plus_infinity (coe k) :=
--- begin
---   todo,
--- end
-
--- lemma definition.limit_value (u: ℕ → ℝ) (a: ℝ) :
--- limit_value u a ↔
--- ∃ k: ℕ → ℕ, increasing k ∧ limit (λ n, (u (k n))) a :=
--- begin
---   refl,
--- end
-
--- lemma exercise.limit_limit_value
---  (u: ℕ → ℝ) (a b: ℝ) (H1: limit u a) (H2: limit_value u b) :
---  b = a :=
--- /- dEAduction
--- PrettyName
---   Une suite convergence a une unique valeur d'adhérence
--- -/
--- begin
---   todo,
--- end
 
 lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ): 
 converging_seq u → cauchy u :=
@@ -794,52 +797,8 @@ PrettyName
 -/
 begin
   todo,
-  -- intro H,
-  -- rw converging_seq at H, cases H with x H,
-  -- have H := limit (λ n, (u n)^2)  (x^2)
 end
 
--- lemma theorem.cauchy_bounded (u: ℕ → ℝ): 
--- cauchy u → bounded_sequence u :=
--- /- dEAduction
--- PrettyName
---   Une suite de Cauchy est bornée
--- -/
--- begin
---   todo,
--- end
-
--- lemma theorem.bounded_limit_value (u: ℕ → ℝ): 
--- bounded_sequence u → ∃ a, limit_value u a :=
--- /- dEAduction
--- PrettyName
---   Une suite bornée a une valeur d'adhérence
--- -/
--- begin
---   todo,
--- end
-
--- lemma exercise.limit_value_cauchy_converge (u: ℕ → ℝ)
--- (H1: cauchy u) (H2: ∃ a, limit_value u a) :
--- converging_seq u  :=
--- /- dEAduction
--- PrettyName
---   Une suite de Cauchy ayant une valeur d'adhérence converge
--- -/
--- begin
---   todo,
--- end
-
--- lemma exercise.cauchy_converge (u: ℕ → ℝ)
--- (H1: cauchy u):
--- converging_seq u  :=
--- /- dEAduction
--- PrettyName
---   Toute suite de Cauchy converge
--- -/
--- begin
---   todo,
--- end
 
 end suites_de_Cauchy
 
@@ -849,10 +808,6 @@ namespace continuite_uniforme
 PrettyName
   Continuité uniforme
 -/
-
-definition uniformly_continuous (f: ℝ → ℝ) : Prop :=
-∀ ε>0, ∃ δ>0, ∀ x y: ℝ,
-(|x - y| < δ → |f x - f y | < ε)
 
 lemma definition.uniformly_continuous
 (f: ℝ → ℝ) : uniformly_continuous f ↔
@@ -879,8 +834,6 @@ PrettyName
 begin
   todo,
 end
-
-open suites_de_Cauchy
 
 lemma exercise.cauchy_uniformement_continue
 (u: ℕ → ℝ) (f: ℝ → ℝ)

@@ -5,7 +5,8 @@ To add a parameter for config:
 - add an entry to the relevant CONFIG sub-dictionary,
 - add an entry in config_window_text.PRETTY_NAMES for translation,
 - if relevant, add an entry in SETTINGS_AFFECTING_UI so that UI is updated
-when the value of the parameter is modified
+when the value of the parameter is modified. These modified settings are sent to
+the ExerciseMainWindow.apply_new_settings() method.
 - make sure that the parameter's value is taken into account on the spot
 when UI is updated.
 
@@ -59,12 +60,15 @@ from PySide2.QtWidgets import ( QApplication,
                                 QPushButton,
                                 QFileDialog,
                                 QMessageBox,
-                                QLabel)
+                                QLabel,
+                                QSizePolicy)
 
 from deaduction.pylib.config.i18n import init_i18n
 import deaduction.pylib.config.vars      as      cvars
 from deaduction.pylib                            import logger
 from deaduction.dui.primitives.font_config import deaduction_fonts
+
+from deaduction.pylib.math_display import MathDisplay
 
 from .config_window_text import PRETTY_NAMES
 
@@ -95,7 +99,7 @@ CONFIGS["Display"] = {
     'display.use_symbols_for_logic_button': (None, True, ""),
     'display.font_size_for_symbol_buttons': (None, True, ""),
     'display.dubious_characters': (None, True, ""),
-    'display.short_buttons_line': (None, True, ""),
+    'display.short_buttons_line': (None, False, ""),
     'display.color_for_selection': (None, True, "")
     # ('display.use_system_fonts', None, True),
     # ('display.use_system_fonts_for_maths', None, True),
@@ -112,6 +116,8 @@ CONFIGS["Display"] = {
 
 CONFIGS["Logic"] = {
     "display.display_success_messages": (None, True, ""),
+    # "logic.button_use_or_prove_mode": (['display_switch', 'display_both',
+    #                                     'display_unified'], True, ""),
     "logic.use_color_for_variables": (None, True,
         _("The variables of the context are displayed in color")),
     "logic.use_color_for_dummy_variables": (None, True,
@@ -124,12 +130,15 @@ CONFIGS["Logic"] = {
         _("Display properties using bounded quantification"))}
 
 CONFIGS['Functionalities'] = {
-    'functionality.allow_proof_by_sorry': (None, True,
+    'functionality.allow_sorry': (None, True,
         _("'Admit current sub-goal!' is available with the Proof methods "
           "button")),
-    'functionality.automatic_intro_of_exists': (None, True,
+    'functionality.automatic_use_of_exists': (None, True,
         _("When an existence property appears in the context, "
           "the ∃ button is operated automatically")),
+    'functionality.automatic_use_of_and': (None, True,
+        _("When a conjunction appears in the context, "
+          "the AND button is operated automatically")),
     'functionality.target_selected_by_default': (None, True,
         _("Buttons act on the target if no context object is selected")),
     'functionality.allow_implicit_use_of_definitions': (None, True,
@@ -161,7 +170,8 @@ CONFIGS['Functionalities'] = {
 PRE_DEFINED['Functionalities'] = {
     'selected_level': 'functionality.default_functionality_level',
     'Beginner': {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': False,
                  'functionality.allow_implicit_use_of_definitions': False,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': False,
@@ -172,7 +182,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.automatic_intro_of_variables_and_hypotheses': False
                  },
     'Intermediate': {'functionality.allow_proof_by_sorry': True,
-                     'functionality.automatic_intro_of_exists': True,
+                     'functionality.automatic_use_of_exists': True,
+                     'functionality.automatic_use_of_and': True,
                      'functionality.target_selected_by_default': True,
                      'functionality.allow_implicit_use_of_definitions': True,
                      'functionality.auto_solve_inequalities_in_bounded_quantification': True,
@@ -183,7 +194,8 @@ PRE_DEFINED['Functionalities'] = {
                      'functionality.automatic_intro_of_variables_and_hypotheses': False
                      },
     'Advanced': {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,
                  'functionality.allow_implicit_use_of_definitions': True,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': True,
@@ -194,7 +206,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.automatic_intro_of_variables_and_hypotheses': False
                  },
     'Expert':   {'functionality.allow_proof_by_sorry': True,
-                 'functionality.automatic_intro_of_exists': True,
+                 'functionality.automatic_use_of_exists': True,
+                 'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,
                  'functionality.allow_implicit_use_of_definitions': True,
                  'functionality.auto_solve_inequalities_in_bounded_quantification': True,
@@ -210,9 +223,12 @@ CONFIGS["Language"] = {"i18n.select_language": (["en", "fr_FR"], True, "")}
 
 CONFIGS["Advanced"] = {
     'others.course_directory': ('dir', True, ""),
+    'others.Lean_request_method': (['automatic', 'normal',
+                                    'from_previous_proof_state'], True, ''),
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
-    'functionality.save_solved_exercises_for_autotest': (None, True, "")}
+    # 'functionality.save_solved_exercises_for_autotest': (None, True, ""),
+    'functionality.save_history_of_solved_exercises': (None, False, "")}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # Fonts
@@ -229,7 +245,7 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          "logic.use_color_for_variables",
                          "logic.use_color_for_dummy_variables",
                          # Action buttons
-                         "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP",
+                         "symbols_AND_OR_NOT_IMPLIES_IFF_FORALL_EXISTS_EQUAL_MAP_SUM",
                          'display.use_symbols_for_logic_button',
                          'display.font_size_for_symbol_buttons',
                          'functionality.allow_implicit_use_of_definitions',
@@ -238,7 +254,8 @@ SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # 'logic.use_color_for_applied_properties',
                          # 'functionality.allow_proof_by_sorry',
                          "i18n.select_language",
-                         "logic.use_bounded_quantification_notation"
+                         "logic.use_bounded_quantification_notation",
+                         "logic.button_use_or_prove_mode"
                          ]
 
 
@@ -253,7 +270,7 @@ class ConfigMainWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.set_math_fonts_list()
-        self.setModal(True)
+        # self.setModal(True)
         self.__windows = []  # List of sub-windows, one for each tab
 
         self.setWindowTitle(_("Preferences"))
@@ -277,6 +294,7 @@ class ConfigMainWindow(QDialog):
                                       # QDialogButtonBox.Cancel)
         # button_box.setStandardButtons()
         self.ok_btn = button_box.addButton(QDialogButtonBox.Ok)
+        self.ok_btn.setDefault(True)
         self.cancel_btn = button_box.addButton(QDialogButtonBox.Cancel)
         self.apply_btn = button_box.addButton(QDialogButtonBox.Apply)
 
@@ -331,8 +349,9 @@ class ConfigMainWindow(QDialog):
         ##########################
         if "i18n.select_language" in self.modified_settings:
             init_i18n()  # UI needs to be updated
-            import deaduction.pylib.math_display.display_data
-            reload(deaduction.pylib.math_display.display_data)
+            # import deaduction.pylib.math_display.display_data
+            # reload(deaduction.pylib.math_display.display_data)
+            MathDisplay.update_dict()
 
         if 'logs.display_level' in self.modified_settings:
             display_level = self.modified_settings['logs.display_level']
@@ -409,6 +428,7 @@ class ConfigMainWindow(QDialog):
         if info:
             title = _("Wrong settings!")
             dialog = QMessageBox()
+            dialog.setWindowTitle('Settings)' + " — d∃∀duction")
             dialog.setText(title)
             dialog.setInformativeText(info)
             dialog.setIcon(QMessageBox.Warning)
@@ -531,6 +551,7 @@ class ConfigWindow(QDialog):
                 widget = QPushButton(_("Browse directories"), self)
                 widget.clicked.connect(self.browse_dir)
                 widget.setting = setting
+                widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
             # ───────── Case of choice into a list: combo box ─────────
             elif setting_list:
@@ -549,6 +570,7 @@ class ConfigWindow(QDialog):
                             setting_initial_value)
                         widget.setCurrentIndex(initial_index)
                 widget.currentIndexChanged.connect(self.combo_box_changed)
+                widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                 # widget.has_been_initialised = False
 
             # ───────── Case of bool: check box ─────────
@@ -715,7 +737,8 @@ class ConfigWindow(QDialog):
         if self.selected_level == "Free settings":
             # Unfreeze all, and that's all:
             for setting, toto in self.settings.items():
-                self.widgets[setting].setEnabled(True)
+                if setting in self.widgets:
+                    self.widgets[setting].setEnabled(True)
             return
 
         predefined_dict = self.predefined_settings_dict[self.selected_level]

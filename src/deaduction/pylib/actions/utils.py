@@ -1,6 +1,6 @@
 """
 ##########################################################
-# utils.py : somr utils for actions                      #
+# high_level_request.py : somr utils for actions                      #
 ##########################################################
 
 
@@ -94,6 +94,7 @@ lean_dic = {'epsilon': "ε",
 
 
 def pre_process_lean_code(lean_code: str) -> str:
+    # TODO: process '_' --> indices (or remove)
     # (During test it happens that lean_code is a number)
     if not isinstance(lean_code, str):
         return lean_code
@@ -101,3 +102,37 @@ def pre_process_lean_code(lean_code: str) -> str:
     for key in lean_dic:
         lean_code = lean_code.replace(key, lean_dic[key])
     return lean_code
+
+
+def extract_var(potential_var: MathObject) -> MathObject:
+    """
+    Try to extract objects (not prop) from properties. This is called in case
+    usr has selected, say, an equality, e.g. y = f(x), but really want to
+    select y.
+    """
+
+    if potential_var.is_equality():
+        # Removed: this may not be pertinent if not equality
+        # or potential_var.is_inequality(is_math_type=True)
+        #     or potential_var.is_belongs_or_included(is_math_type=True)):
+        return potential_var.math_type.children[0]
+    else:
+        return potential_var
+
+
+def get_fresh_name(letter='x', context=None):
+    """
+    Just provide the first name of the form x + <nb>
+    which is not a name in the context.
+    """
+
+    if not context:
+        return letter
+
+    names = [obj.display_name for obj in context]
+    idx = 0
+    while letter + str(idx) in names:
+        idx += 1
+
+    return letter + str(idx)
+

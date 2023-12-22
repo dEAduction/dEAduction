@@ -31,12 +31,15 @@ import logging
 import deaduction.pylib.config.vars as cvars
 
 # from deaduction.pylib.text                  import use, prove
-from deaduction.pylib.math_display.display_data import single_to_every
+from deaduction.pylib.math_display.display_data import MathDisplay
 import deaduction.pylib.text.help_msgs as help_msgs
 from deaduction.pylib.mathobj.math_object   import MathObject
 
 log = logging.getLogger(__name__)
 global _
+
+
+single_to_every = MathDisplay.single_to_every
 
 
 class ContextMathObject(MathObject):
@@ -156,7 +159,8 @@ class ContextMathObject(MathObject):
     #####################
     # Help msgs methods #
     #####################
-    def action_from_premise_and_operator(self, other: MathObject):
+    def action_from_premise_and_operator(self, other: MathObject,
+                                         button_names: [str] = None) -> [str]:
         """
         Return possible actions for premise = self and operator = other. This is
         used e.g. to determine which action could be triggered by a drag&drop
@@ -164,24 +168,24 @@ class ContextMathObject(MathObject):
         """
         operator = self
         premise = other
-        action = None
+        actions = []
 
         implicit = cvars.get("functionality.allow_implicit_use_of_definitions")
         if operator.is_function():
-            action = "map"
+            actions.append("map")
 
         if premise.math_type.is_prop():
             if operator.can_be_used_for_implication(implicit=implicit):
-                action = "implies"
-            else:
-                yes, subs = operator.can_be_used_for_substitution()
-                if yes:
-                    action = "equal"
-        else:
-            if operator.is_for_all(implicit=implicit):
-                action = "forall"
+                actions.append("use_implies")
+            yes, subs = operator.can_be_used_for_substitution()
+            if yes:
+                actions.append("equal")
+        if operator.is_for_all(implicit=implicit):
+            actions.append("use_forall")
 
-        return action
+        if button_names:
+            actions = [action for action in actions if action in button_names]
+        return actions
 
     def format_msg(self, raw_msg: str,
                    obj: Optional[MathObject] = None,
@@ -202,7 +206,7 @@ class ContextMathObject(MathObject):
 
         params: Dict[str, str] = dict()
         params['solving_obj'] = solving_obj
-        from deaduction.pylib.math_display import plural_types
+        # from deaduction.pylib.math_display import plural_types
         if not obj:
             obj = self.math_type
         children = obj.children
@@ -216,7 +220,7 @@ class ContextMathObject(MathObject):
             ch0_type = ch0.math_type_to_display(format_=format_,
                                                 text=True)
             utf8 = ch0.math_type_to_display(format_='utf8', text=True)
-            plural_type = plural_types(ch0_type, utf8)
+            plural_type = MathDisplay.plural_types(ch0_type, utf8)
             params['elements_of_ch0_type'] = (plural_type if plural_type else
                                               _('elements of') + ' ' + ch0_type)
             if len(children) > 1:
@@ -268,6 +272,13 @@ class ContextMathObject(MathObject):
                             "or_drag_to_equality": "",
                             "or_drag_premise": ""})
         format_dic.update(no_drag)
+
+        # Name of action buttons according to current prove/use mode
+        cbn = help_msgs.current_button_name
+        prove_use_dic = {prefix+key: cbn(prefix+key)
+                         for key in ('forall', 'exists', 'implies', 'and', 'or')
+                         for prefix in ('prove_', 'use_')}
+        format_dic.update(prove_use_dic)
 
         # Translate values
         translated_format_dic = {key: help_msgs.conc_n_trans(val) if val
@@ -427,3 +438,15 @@ class ContextMathObject(MathObject):
                                              on_target=False)
             msgs.insert(0, solving_msgs)
         return msgs
+
+    def to_lean_with_type(self) -> str:
+        """
+        Return object in Lean format with type, e.g.
+        'x: X'.
+        This string should be put between parentheses.
+        """
+        term = self.to_display(format_='lean')
+        type_ = self.math_type.to_display(format_='lean')
+        s = f"{term}: {type_}"
+        return s
+

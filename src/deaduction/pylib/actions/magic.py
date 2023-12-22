@@ -1,7 +1,5 @@
 """
-# magic.py : #ShortDescription #
-    
-    (#optionalLongDescription)
+ magic.py : magic actions
 
 Author(s)     : Frédéric Le Roux frederic.le-roux@imj-prg.fr
 Maintainer(s) : Frédéric Le Roux frederic.le-roux@imj-prg.fr
@@ -34,7 +32,9 @@ import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions.actiondef import action
 from deaduction.pylib.actions import (CodeForLean,
                                       WrongUserInput)
-from deaduction.pylib.mathobj import  MathObject
+from deaduction.pylib.mathobj import MathObject
+
+from deaduction.pylib.actions.compute_utils import unify_by_ring
 
 
 log = logging.getLogger("magic")
@@ -137,19 +137,68 @@ def context_obj_solving_target(proof_step):
     return rec_find_target_in_props(target, props)
 
 
+def rw_let_expr(goal) -> CodeForLean:
+    """
+    try {rw H} successively for all defining equalities H of let expr.
+    """
+    defining_eq = goal.defining_equalities()
+    code = CodeForLean.empty_code()
+    for eq in defining_eq:
+        more_code = CodeForLean.from_string(f"rw {eq} at *")
+        code = code.and_then(more_code.try_())
+    return code
+
+
+def norm_num_with_let_expr(goal) -> CodeForLean:
+    code1 = rw_let_expr(goal)
+    code2 = CodeForLean.from_string("norm_num at *").try_()
+    return code1.and_then(code2)
+
+
 #############
 # Raw codes #
 #############
 
-def compute(target) -> CodeForLean:
+def compute(proof_step) -> CodeForLean:
     """
-    Try to use tactics to solve numerical target, mainly by linear computing.
+    Try to use tactics to solve 1 numerical target, mainly by linear computing.
+    This is the expensive code. If this is modified, consider adapting the
+    SererInterface.__desirable_lean_rqst_fpps_method() method.
     """
-    code1 = CodeForLean.from_string("norm_num at *").solve1()
-    code2a = CodeForLean.from_string("compute_n 10")
-    code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
-    code2c = code2b.solve1()
-    possible_code = code1.or_else(code2c)
+
+    # selected_objects = proof_step.selection
+    goal = proof_step.goal
+    target = goal.target.math_type
+    # (1) just ring
+    code0 = CodeForLean.from_string("ring").solve1()
+    # code1 = CodeForLean.from_string("norm_num at *").solve1()
+
+    # (2) Just norm_num
+    code1 = norm_num_with_let_expr(goal).solve1()
+
+    possible_code = code0.or_else(code1)
+
+    # (3) Pre_unification with ring
+    # if len(selected_objects) == 1:
+    #     H = selected_objects[0].math_type
+    #     if H.is_prop():
+    #         target = goal.target.math_type
+    #         code2 = unify_by_ring(H, target)
+    #         if code2:
+    #             possible_code = possible_code.or_else(code2)
+    for hyp in goal.context_props:
+        code2 = unify_by_ring(hyp.math_type, target)
+        if code2:
+            possible_code = possible_code.or_else(code2.solve1())
+
+    # (4) Linear arithmetic
+    code10a = CodeForLean.from_string("compute_n 10")
+    # code2b = CodeForLean.from_string("norm_num at *").try_().and_then(code2a)
+    code10b = norm_num_with_let_expr(goal).and_then(code10a)
+    code10c = code10b.solve1()
+
+    possible_code = possible_code.or_else(code10c)
+
     return possible_code
 
 
@@ -216,7 +265,8 @@ def raw_solve_target(target, proof_step, selected_objects) -> CodeForLean:
     elif target.concerns_numbers():
         numbers_involved = True
     if numbers_involved:
-        more_code = compute(target)
+        # goal = proof_step.goal
+        more_code = compute(proof_step)
         code = code.or_else(more_code)
         log.debug(f"Compute: {code}")
 
@@ -470,8 +520,8 @@ def action_assumption(proof_step) -> CodeForLean:
 
     # (3) Turn code_tree into CodeForLean
     code = code_from_tree(modulated_tree, selected_objects, proof_step)
-    print("Code :")
-    print(code)
+    # print("Code :")
+    # print(code)
 
     # (4) Add global msg
     code.add_error_msg(_("I don't know how to conclude"))

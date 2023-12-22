@@ -29,8 +29,9 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-# import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.vars as cvars
 # from deaduction.pylib.math_display.utils import replace_dubious_characters
+from .tooltips import button_symbol
 
 
 # We do not want translation at init but on the spot
@@ -60,6 +61,36 @@ def _(msg):
 #         if an_object.find(key) != -1:
 #             every_object = an_object.replace(key, value)
 #             return every_object
+
+def current_button_name(name: str, mode='display_unified') -> str:
+    """
+    Return a phrase pointing at the actual button corresponding to name.
+    e.g. forall -> "the '∀' button", if mode == 'display_unified'
+                -> "the '∀' button in prove mode", if mode == 'display_switch'
+                -> "the 'prove ∀' button", if mode == 'display_both'
+    """
+    use_or_prove, name = name.split('_')
+
+    mode = cvars.get('logic.button_use_or_prove_mode')
+    symbol = button_symbol(name)
+    if name == 'or':
+        symbol = '∨' + ' (' + translate('OR') + ')'
+    elif name == 'and':
+        symbol = '∧' + ' (' + translate('AND') + ')'
+
+    current_name = ""
+    if mode == 'display_unified':
+        current_name = _("the '{}' button")
+    elif mode == 'display_switch' and use_or_prove == 'prove':
+        current_name = _("the '{}' button in prove mode")
+    elif mode == 'display_both' and use_or_prove == 'prove':
+        current_name = _("the 'prove {}' button")
+    elif mode == 'display_switch' and use_or_prove == 'use':
+        current_name = _("the '{}' button in use mode")
+    elif mode == 'display_both' and use_or_prove == 'use':
+        current_name = _("the 'use {}' button")
+    # Translate string, e.g. "the '{}' button", and then incorporate symbol
+    return tr(current_name).format(symbol)
 
 
 use = dict()
@@ -99,16 +130,15 @@ phrase = {"this_is": _("This is"),
 
 use["forall"] = (_("{this_is} a universal property, which tells something "
                    "about {every_element_of_type_}."),
-                 _("{to_use}, press the ∀ button after selecting "
+                 _("{to_use}, press {use_forall} after selecting "
                    "{an_element_of_type_}{or_drag_element_to_property}."),
                  _("{to_use}, you need {an_element_of_type_}. Is "
                    "there any in the context? If not, can you create some?"))
 
 
 prove["forall"] = (use["forall"][0],
-                   _("{to_start_proof}, press the ∀ "
-                     "button."),
-                   # _("Pressing the ∀ button will introduce an element of {"
+                   _("{to_start_proof}, press {prove_forall}."),
+                   # _("Pressing {prove_forall} will introduce an element of {"
                    #   "type_} in the context, and simplify the target.<br>"
                    _("It is generally a good idea to simplify the target as "
                      "much as possible by introducing all variables and "
@@ -119,29 +149,29 @@ use["implies"] = (_("{this_is} an implication, which asserts that some property"
                     "the <em>premise</em>, implies some other property "
                     "Q:<CENTER>{ch1},<CENTER>"
                     " the <em>conclusion</em>."),
-                  _("{to_use}, press the ⇒ button after selecting "
+                  _("{to_use}, press {use_implies} after selecting "
                     "another property which match the premise"
                     "{or_drag_premise}."),
                   _("{to_use}, you need property {ch0}. Does it "
                     "appear in the context?"))
 
 prove["implies"] = (use["implies"][0],
-                    _("{to_start_proof}, press the ⇒ button."),
+                    _("{to_start_proof}, press {prove_implies}."),
                     (prove['forall'][2],  # " ",
                      _('Note that an implication may also be proved by '
                        'contraposition (see the "Proof methods" button).')))
-# "Pressing the ⇒ button will introduce the premise in "
+# "Pressing {prove_implies} will introduce the premise in "
 #                       "the context, and the target will become the "
 #                       "conclusion.<br>"
 
 use["exists"] = (_("{this_is} an existential property, which asserts the "
                    "existence of {an_element_of_type_} satisfying a precise "
                    "property."),
-                 _("{to_use}, just press the ∃ button."),
+                 _("{to_use}, just press {use_exists}."),
                  "")
 
 prove["exists"] = (use["exists"][0],
-                   (_("{to_start_proof}, press the ∃ button "
+                   (_("{to_start_proof}, press {prove_exists} "
                       "after selecting {an_element_of_type_}."),  # " ",
                     _("Then you will have to prove that this element "
                         "satisfies the wanted property.")),
@@ -150,7 +180,7 @@ prove["exists"] = (use["exists"][0],
                      "create some?"))
 
 use["or"] = (_("{this_property_is} a disjunction."),
-             _("Press the ∨ (OR) button to engage in a proof by cases; you "
+             _("Press {use_or} to engage in a proof by cases; you "
                "will successively examine the case when {ch0} holds and the "
                "case when {ch1} holds."),
              (_("Would it help you to know which one of the two properties "
@@ -160,7 +190,7 @@ use["or"] = (_("{this_property_is} a disjunction."),
 
 
 prove["or"] = (use["or"][0],
-               _("Press the ∨ (OR) button to simplify the goal by deciding "
+               _("Press {prove_or} to simplify the goal by deciding "
                  "which one of the two properties you will prove. You may "
                  "forget about the other one!"),
                (_("Do you have enough information in the context to prove one "
@@ -171,12 +201,12 @@ prove["or"] = (use["or"][0],
                 "</li></ul>"))
 
 use["and"] = (_("{this_property_is} a conjunction."),
-              _("Press the ∧ (AND) button to separate both properties."),
+              _("Press {use_and} to separate both properties."),
               "")
 
 
 prove["and"] = (use["and"][0],
-                _("Press the ∧ (AND) button to prove separately and "
+                _("Press {prove_and} to prove separately and "
                   "successively each property."),
                 _("Note that you will have to prove <em> both </em> "
                   "properties, as opposed to disjunction for which you may "
@@ -205,7 +235,7 @@ use["iff"] = (_("{this_property_is} a logical equivalence."),
 prove["iff"] = (use["iff"][0],
                    _('Press the ⇔ ("IF AND ONLY IF") button, to split the '
                      'proof into the proofs of the direct and reverse '
-                     'implications. You may also use the ∧ (AND) button.'),
+                     'implications. You may also use {prove_and}.'),
                    "")
 
 use['equal'] = (_("{this_is} an equality between two {elements_of_ch0_type}."),
@@ -300,54 +330,12 @@ def get_help_msgs(key: str, target=False) -> []:
     return tr_msgs
 
 
-# use["unfold_implicit_def"] = _("To see this property explicitly as a {"
-#                                "prop_type}, you may apply definition {"
-#                                "def_name} by clicking on it in the Statements "
-#                                "area.")
-
 # TODO:
-#  - bounded quantification
-#  - Defs implicites qui sont des forall : suggérer aussi d'aller voir la déf
 #  - formule atomique à montrer (appartenance, inégalité, négation d'un truc
 #    élémentaire, etc)
 #  - elements (comment les utiliser ?)
 #  - This can also be used for substitution with the = / <=> button
 #    (or for implication with the => button).
 #  Et surtout, erreurs --> bouton aide
-
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
-#
-#
-# use = (_(""),
-#        _(""),
-#        _(""))
 
 

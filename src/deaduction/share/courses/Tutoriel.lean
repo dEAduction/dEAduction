@@ -34,8 +34,8 @@ Description
     les boutons logiques sont introduits progressivement.
 AvailableProof
     ALL -new_object
-AvailableMagic
-    assumption
+AvailableCompute
+    NONE
 -/
 
 
@@ -46,7 +46,7 @@ local attribute [instance] classical.prop_decidable
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
-parameters {X Y Z: Type}
+variables {X Y Z: Type}
 
 open set
 

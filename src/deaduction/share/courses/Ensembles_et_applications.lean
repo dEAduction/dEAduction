@@ -2,17 +2,24 @@
 This is a d∃∀duction file providing exercises for sets and maps. French version.
 -/
 
-import data.set
+-- Lean standard imports
 import tactic
+-- import data.real.basic
 
--- dEAduction tactics
+
+-- dEAduction tactics and theorems
+-- structures2 and utils are vital
 import structures2      -- hypo_analysis, targets_analysis
 import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
 import push_neg_once    -- pushing negation just one step
+-- import induction     -- theorem for the induction proof method
+-- import compute_all   -- tactics for the compute buttons
 
 -- dEAduction definitions
 import set_definitions
+
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
 
 -------------------------
 -- dEAduction METADATA --
@@ -31,8 +38,8 @@ Description
     cherchez un contre-exemple...
 AvailableProof
     proof_methods new_object
-AvailableMagic
-    assumption
+AvailableCompute
+    NONE
 AvailableExercises
   UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
   -image_de_image_reciproque_I -image_reciproque_de_image_II
@@ -42,14 +49,15 @@ AvailableDefinitions
   UNTIL_NOW -singleton -paire -identite -egalite_fonctions
 AvailableTheorems
   UNTIL_NOW -image_singleton -image_paire
+Settings
+    functionality.allow_induction --> false
 -/
 
-local attribute [instance] classical.prop_decidable
 ---------------------------------------------
 -- global parameters = implicit variables --
 ---------------------------------------------
 section course
-parameters {X Y Z: Type}
+variables {X Y Z: Type}
 
 
 open set
@@ -65,7 +73,7 @@ PrettyName
 
 namespace logique
 
-lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) and (Q → P)) :=
+lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
 /- dEAduction
 PrettyName
     Equivalence logique
@@ -108,7 +116,7 @@ begin
 end
 
 -- Unfortunately split cannot work
-lemma definition.double_inclusion (A A' : set X) :
+lemma definition.double_inclusion {A A' : set X} :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
 PrettyName
@@ -129,7 +137,7 @@ begin
 end
 
 lemma definition.ensemble_non_vide
-(A: set X) :
+{A: set X} :
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
@@ -142,7 +150,7 @@ end
 
 lemma definition.singleton
 {x x_0: X} :
-(x ∈  (sing x_0) ) ↔ x=x_0
+(x ∈ sing x_0) ↔ x=x_0
 :=
 begin
     refl,
@@ -150,7 +158,7 @@ end
 
 lemma definition.paire
 {x x_0 x_1: X} :
-(x ∈ (pair x_0 x_1) ) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ pair x_0 x_1) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,
@@ -199,7 +207,7 @@ namespace applications
 variables  {A A': set X}
 variables {f: X → Y} {B B': set Y}
 
-lemma definition.egalite_fonctions (f' : X → Y) :
+lemma definition.egalite_fonctions {f' : X → Y} :
 f = f' ↔ ∀ x, f x = f' x :=
 /- dEAduction
 PrettyName
@@ -210,7 +218,7 @@ begin
 end
 
 
-lemma definition.identite (f₀: X → X) :
+lemma definition.identite {f₀: X → X} :
 f₀ = Identite ↔ ∀ x, f₀ x = x :=
 /- dEAduction
 PrettyName
@@ -221,7 +229,7 @@ begin
 end
 
 
-lemma definition.image_directe (y : Y) :
+lemma definition.image_directe {y : Y} :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
 begin
@@ -236,7 +244,7 @@ begin
     todo
 end
 
-lemma definition.image_reciproque (x:X) :
+lemma definition.image_reciproque {x:X} :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
 :=
 begin
@@ -253,7 +261,7 @@ begin
 end
 
 lemma definition.injectivite :
-injective f ↔ ∀ x x' : X, (f x = f x' → x = x')
+injective f ↔ ∀ {x x' : X}, (f x = f x' → x = x')
 :=
 /- dEAduction
 PrettyName
@@ -280,7 +288,7 @@ end
 
 lemma theorem.image_singleton :
 ∀ {f: X→Y}, ∀{x_0: X},
- f '' (sing x_0) = sing (f(x_0))
+ f '' {x_0} = {f(x_0)}
 :=
 /- dEAduction
 PrettyName
@@ -352,7 +360,7 @@ ANCIEN SCHEMA :
 namespace composition_et_images
 
 lemma exercise.composition_image_directe
-(A: set X) : 
+{A: set X} : 
 (composition g f) '' A = g '' (f '' A)
 :=
 /- dEAduction
@@ -365,7 +373,7 @@ end
 
 
 lemma exercise.composition_image_reciproque
-(C: set Z) : 
+{C: set Z} : 
 (composition g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 /- dEAduction
@@ -746,7 +754,7 @@ AvailableTheorems
   UNTIL_NOW
 -/
 begin
-  todo
+    todo
 end
 
 lemma exercise.caracterisation_surjectivite :
@@ -905,14 +913,19 @@ PrettyName
   Image réciproque et inclusion (iii)
 -/
 begin
-  -- intros surj_f A B incl y y_dans_A,
-  -- have ex_x := surj_f y, cases ex_x with x eq,
-  -- have but: (x dans (set.preimage f A)),
-  -- todo, todo,
   todo
 end
 
 end injectivite_surjectivite_autres
+
+example
+  :
+ not(∀f: X→Y, ∀g: Y→Z, ∀A: set X, @composition X Y Z g f '' (A) = g '' (f '' (A)))
+:=
+begin
+  push_neg,
+  todo
+end
 
 end exercices
 

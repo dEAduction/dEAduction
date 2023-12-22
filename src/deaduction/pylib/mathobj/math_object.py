@@ -48,10 +48,14 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Any, Optional
-from copy import copy
+from copy import copy, deepcopy
 import logging
+from functools import partial
 
 import deaduction.pylib.config.vars as cvars
+
+from deaduction.pylib.math_display import MathList, MathDescendant
+
 
 log = logging.getLogger(__name__)
 global _
@@ -60,16 +64,19 @@ global _
 CONSTANT_IMPLICIT_ARGS = ("real.decidable_linear_order",)
 
 
-def allow_implicit_use(test: callable) -> callable:
+def allow_implicit_use(test_: callable) -> callable:
     """
     Modify the function test to allow implicit use of the definitions
     whose patterns are in MathObject.definition_patterns.
     'test' is typically 'is_and', 'is_or', 'is_forall', ...
+    And if an implicit definition is actually used, store it in
+    MathObject.last_used_implicit_definition.
     """
 
     def test_implicit(math_object,
                       is_math_type=False,
-                      implicit=False) -> bool:
+                      implicit=False,
+                      include_iff=False) -> bool:
         """
         Apply test to math_object.
 
@@ -77,6 +84,8 @@ def allow_implicit_use(test: callable) -> callable:
         """
         implicit = implicit and cvars.get(
             "functionality.allow_implicit_use_of_definitions")
+        test = (partial(test_, include_iff=include_iff) if include_iff
+                else test_)
         if not implicit:
             return test(math_object, is_math_type)
         elif test(math_object, is_math_type):
@@ -101,7 +110,10 @@ def allow_implicit_use(test: callable) -> callable:
                     if test(pattern_right, is_math_type=True):
                         definition = MathObject.implicit_definitions[index]
                         MathObject.last_used_implicit_definition = definition
-                        rw_math_object = pattern_right.apply_matching()
+                        metavars = pattern_left.metavars
+                        objects = pattern_left.metavar_objects
+                        rw_math_object = pattern_right.math_object_from_matching(
+                            metavars, objects)
                         MathObject.last_rw_object = rw_math_object
                         log.debug(f"Implicit definition: "
                                   f"{definition.pretty_name}")
@@ -124,9 +136,9 @@ class MathObject:
     instances of MathObject (except for the constant NO_MATH_TYPE)
     """
 
-    node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
-    info              : dict  # e.g. "name", "id", "pp_type"
-    children          : list  # List of MathObjects
+    _node              : str   # e.g. "LOCAL_CONSTANT", "FUNCTION", "QUANT_∀"
+    _info              : dict  # e.g. "name", "id", "pp_type"
+    _children          : list  # List of MathObjects
 
     Variables = {}  # Containing every element having an identifier,
     # i.e. global and bound variables, whose node is LOCAL_CONSTANT.
@@ -164,10 +176,10 @@ class MathObject:
         """
         Create a MathObject.
         """
-        self.node = node
-        self.info = info
-        self.math_type = math_type
-        self.children = children
+        self._node = node
+        self._info = info
+        self._children = children
+        self._math_type = math_type
 
         if self.has_bound_var():  # Set bound var math_type and parent
             # Every object here should have children matching this:
@@ -178,7 +190,8 @@ class MathObject:
 
         # ---------- APP(APP(1, 2, ...), n) --> APP(1, 2, ..., n) ---------- #
         # (i.e. uncurryfy)
-        if node == 'APPLICATION' and children[0].node == 'APPLICATION':
+        if (node == 'APPLICATION' and children and
+                children[0].node == 'APPLICATION'):
             self.children = self.children[0].children + [self.children[1]]
 
     def debug_repr(self, typ):
@@ -195,15 +208,52 @@ class MathObject:
     def __repr__(self):
         return self.debug_repr('MO')
 
-    @classmethod
-    def application(cls, function, var):
+    # def __str__(self):
+    #     return self.to_display(format_='lean')
+
+    @property
+    def node(self):
+        return self._node
+
+    @node.setter
+    def node(self, node):
+        self._node = node
+
+    @property
+    def info(self):
+        return self._info
+
+    @info.setter
+    def info(self, info):
+        self._info = info
+
+    @property
+    def children(self):
+        return self._children
+
+    @children.setter
+    def children(self, children):
+        self._children = children
+
+    @property
+    def math_type(self) -> Any:
         """
-        Construct a MathObject obtained by applying function to var.
+        This is a work-around to the impossibility of defining a class
+        recursively. Thus every instance of a MathObject has a math_type
+        which is a MathObject (and has a node, info dict, and children list)
+        The constant NO_MATH_TYPE is defined below, after the methods
         """
-        return cls(node="APPLICATION",
-                   info={},
-                   children=[function, var],
-                   math_type=function.math_type.children[1])
+        if self._math_type is None:
+            return self.NO_MATH_TYPE
+        else:
+            return self._math_type
+
+    @math_type.setter
+    def math_type(self, math_type: Any):
+        self._math_type = math_type
+
+    def is_no_math_type(self):
+        return self is self.NO_MATH_TYPE
 
     @classmethod
     def lambda_(cls, var, body, math_type):
@@ -261,13 +311,6 @@ class MathObject:
                     lam = MathObject.lambda_(var, body, child.math_type)
                     # Replace child by lambda with the same math_type
                     self.children[index] = lam
-
-    @classmethod
-    def FALSE(cls):
-        """
-        The constant FALSE as a MathObject.
-        """
-        return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
 
     @classmethod
     def add_numbers_set(cls, name: str):
@@ -332,10 +375,10 @@ class MathObject:
                 # (i) BoundVar case
                 name = info.get('name')
                 if name and name.endswith('.BoundVar'):
-                    if name == 'u.BoundVar':
-                        print("debug")
+                    # if name == 'u.BoundVar':
+                    #     print("debug")
                     # Remove suffix and create a BoundVar
-                    info['name'] = info['name'][:-len('.BoundVar')]
+                    # info['name'] = info['name'][:-len('.BoundVar')]
                     math_object = BoundVar(node=node,
                                            info=info,
                                            math_type=math_type,
@@ -366,27 +409,6 @@ class MathObject:
 
         return math_object
 
-# ----- math_type ----- #
-    @property
-    def math_type(self) -> Any:
-        """
-        This is a work-around to the impossibility of defining a class
-        recursively. Thus every instance of a MathObject has a math_type
-        which is a MathObject (and has a node, info dict, and children list)
-        The constant NO_MATH_TYPE is defined below, after the methods
-        """
-        if self._math_type is None:
-            return MathObject.NO_MATH_TYPE
-        else:
-            return self._math_type
-
-    @math_type.setter
-    def math_type(self, math_type: Any):
-        self._math_type = math_type
-
-    def is_no_math_type(self):
-        return self is self.NO_MATH_TYPE
-
     @classmethod
     def clear(cls):
         """Re-initialise various class variables, in particular the
@@ -407,6 +429,222 @@ class MathObject:
         other = MathObject(node=self.node, info=new_info,
                            children=self.children, math_type=self.math_type)
         return other
+
+    @classmethod
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
+        """
+        Return a deep copy of self. This should work for subclasses.
+        NB: constants, local constants (and bound vars) are NOT copied.
+        This is crucial for coherent bound var naming.
+        """
+
+        if original_bound_vars is None:
+            original_bound_vars = []
+        if copied_bound_vars is None:
+            copied_bound_vars = []
+
+        if self in original_bound_vars:
+            idx = original_bound_vars.index(self)
+            return copied_bound_vars[idx]
+
+        new_info = deepcopy(self.info)
+        math_type: cls = self.math_type
+        children: [cls] = self.children  # Real type could be different
+        new_math_type = (math_type if math_type.is_no_math_type()
+                         else math_type.deep_copy(math_type,
+                                                  original_bound_vars,
+                                                  copied_bound_vars))
+
+        new_children = [child.deep_copy(child,
+                                        original_bound_vars,
+                                        copied_bound_vars)
+                        for child in children]
+
+        new_math_object = cls(node=self.node, info=new_info,
+                              children=new_children, math_type=new_math_type)
+
+        if self.is_bound_var:
+            original_bound_vars.append(self)
+            copied_bound_vars.append(new_math_object)
+
+        return new_math_object
+
+    def constants_in_self(self):
+        """
+        Return the injective list of all CONSTANTs in self.
+        """
+
+        if self.is_constant():
+            return [self]
+
+        # if self.is_application():
+        #     nb_args = len(self.children) - 1
+        #     if nb_args > 0:
+        #         child = self.children[0]
+        #         if child.name == "max":
+        #             print(self)
+        #             print("type :")
+        #             print(child.math_type)
+        #             print(child.math_type.info)
+        #             print([c.info for c in child.math_type.children])
+        #             print([c.info for c in self.children])
+
+                    # print("other children:")
+                    # print(self.children[1])
+                    # print(self.children[1].info)
+                    # print(self.children[2])
+                    # print(self.children[1].info)
+        # elif self.is_application():
+        #     nb_args = len(self.children)-1
+        #     if nb_args > -1 and self.children[0].is_constant():
+        #         return [(self.children[0], nb_args)]
+
+        csts = []
+        for child in self.children:
+            for cst in child.constants_in_self():
+                if cst not in csts:
+                    csts.append(cst)
+        return csts
+
+##################################
+# Some particular instantiations #
+##################################
+    @classmethod
+    def application(cls, function, var):
+        """
+        Construct a MathObject obtained by applying function to var.
+        """
+        return cls(node="APPLICATION",
+                   info={},
+                   children=[function, var],
+                   math_type=function.math_type.children[1])
+
+    @classmethod
+    def FALSE(cls):
+        """
+        The constant FALSE as a MathObject.
+        """
+        return cls(node="PROP_FALSE", info={}, children=[], math_type="PROP")
+
+    @classmethod
+    def negate(cls, math_object):
+        """
+        Construct a new MathObject instance which stands for the negation of
+        math_object.
+        """
+        return cls(node="PROP_NOT",
+                   info={},
+                   children=[math_object],
+                   math_type=cls.PROP)
+
+    @classmethod
+    def forall(cls, old_var, body):
+        """
+        Construct a new MathObject instance which stands for a universal
+        property obtained by replacing old_var by a fresh boundvar in body.
+        """
+        var_type = old_var.math_type
+        new_var = BoundVar.from_math_type(var_type)
+        new_var.process_sequences_and_likes()
+        new_body = cls.substitute(old_var, new_var, body)
+        forall = cls(node="QUANT_∀",
+                     info={},
+                     children=[var_type, new_var, new_body],
+                     math_type=cls.PROP)
+        new_var.parent = forall
+        new_var.name_bound_var(old_var.name)
+        new_var.set_binder_info(old_var.binder_info)
+        # new_var.name_bound_var("Z")
+        return forall
+
+    @classmethod
+    def conjunction(cls, math_objects):
+        """
+        Construct the conjunction of a list of properties.
+        """
+        if not math_objects:
+            return
+        elif len(math_objects) == 1:
+            return math_objects[0]
+        else:
+            prop = math_objects.pop()
+            trail_conjunction = cls.conjunction(math_objects)
+            return cls(node="PROP_AND",
+                       info={},
+                       children=[prop, trail_conjunction],
+                       math_type=cls.PROP)
+
+    @classmethod
+    def implication(cls, premise, conclusion):
+        """
+        Construct an implication.
+        """
+        return cls(node="PROP_IMPLIES",
+                   info={},
+                   children=[premise, conclusion],
+                   math_type=cls.PROP)
+
+    @classmethod
+    def raw_lean_code(cls, code: str):
+        """
+        Return a fake MathObject to encapsulate a piece of pure string Lean
+        code.
+        """
+
+        # TODO: remove all obviously unnecessary parentheses
+
+        new_object = MathObject(node='RAW_LEAN_CODE',
+                                info={'name': '(' + code + ')'},
+                                children=[],
+                                math_type=None)
+        return new_object
+
+    @classmethod
+    def between_parentheses(cls, math_object):
+        """
+        Put math_object between parentheses.
+        """
+        new_object = MathObject(node='GENERIC_PARENTHESES',
+                                info={},
+                                children=[math_object],
+                                math_type=math_object.math_type)
+        return new_object
+
+    @classmethod
+    def add_leading_parentheses(cls, math_object):
+        """
+        Put math_object between parentheses if needed, i.e. if math_object
+        has children and is not already GENERIC_PARENTHESES or
+        RAW_LEAN_CODE. This is used to secure Lean object, e.g. before
+        passing them as arg to a univ prop.
+        """
+
+        node = math_object.node
+        tests = (bool(math_object.children),
+                 node != "GENERIC_PARENTHESES",
+                 node != "RAW_LEAN_CODE")
+
+        if all(tests):
+            new_object = MathObject(node='GENERIC_PARENTHESES',
+                                    info={},
+                                    children=[math_object],
+                                    math_type=math_object.math_type)
+            return new_object
+
+        else:
+            return math_object
+
+
+    @classmethod
+    def place_holder(cls):
+        """
+        A place holder ('_') for Lean code.
+        """
+        new_object = MathObject(node='PLACE_HOLDER',
+                                info={},
+                                children=[],
+                                math_type=None)
+        return new_object
 
 ######################
 # Bound vars methods #
@@ -509,32 +747,6 @@ class MathObject:
 
                 child.set_local_context(new_local_context)
 
-    # def is_unnamed(self):
-    #     return self.display_name == "NO NAME" \
-    #            or self.display_name == '*no_name*'
-
-    # def unnamed_bound_vars(self):
-    #     """
-    #     Only unnamed bound vars, tested by is_unnamed method.
-    #     """
-    #     return [var for var in self.bound_vars() if var.is_unnamed()]
-
-    # def remove_names_of_bound_vars(self, include_sequences=False):
-    #     """
-    #     Un-name dummy variables of propositions in self.
-    #     This excludes bound vars used to display lambdas, sequences and set
-    #     families.
-    #     @param include_sequences:
-    #     """
-    #
-    #     if self.node == "LOCAL_CONSTANT" and not include_sequences:
-    #         return
-    #     elif self.is_bound_var:
-    #         self.set_unnamed_bound_var()
-    #     else:
-    #         for child in self.children:
-    #             child.remove_names_of_bound_vars(include_sequences)
-
 #######################
 # Properties and like #
 #######################
@@ -543,8 +755,30 @@ class MathObject:
         return self.info.get('name')
 
     @property
+    def lean_name(self):
+        """
+        For compatibility with Statement.
+        """
+        return self.to_display(format_='lean')
+
+    @property
     def value(self):
         return self.info.get('value')
+
+    @value.setter
+    def value(self, new_value):
+        self.info['value'] = new_value
+
+    @property
+    def binder_info(self):
+        """
+        e.g. 'default', 'implicit' (i.e. this var should not be provided when
+        the statement is applied).
+        """
+        return self.info.get('binder_info')
+
+    def set_binder_info(self, binder_info):
+        self.info['binder_info'] = binder_info
 
     @property
     def display_name(self) -> str:
@@ -588,42 +822,6 @@ class MathObject:
         else:
             return '*no_name*'
 
-    # def nb_implicit_children(self):
-    #     """
-    #     e.g. APP(APP(...APP(x0,x1),...),xn) has (n+1) implicit children.
-    #     cf self.implicit_children().
-    #     """
-    #     if not self.is_application():
-    #         return 0
-    #
-    #     if self.children[0].is_application():
-    #         return 1 + self.children[0].nb_implicit_children()
-    #     else:
-    #         return 2
-    #
-    # def implicit_children(self, nb):
-    #     """
-    #     Only when self.is_application().
-    #     e.g. APP(APP(...APP(x0,x1),...),xn) is considered equivalent to
-    #          APP(x0, x1, ..., xn)
-    #     and x0, ... , xn are the (n+1) implicit children.
-    #     """
-    #     # FIXME: obsolete
-    #     if not self.is_application():
-    #         return None
-    #
-    #     # From now on self is_application(), and so has exactly 2 children
-    #     nb_children = self.nb_implicit_children()
-    #     if nb < 0:
-    #         nb = nb_children + nb
-    #
-    #     if nb == nb_children - 1:
-    #         return self.children[1]
-    #     elif nb_children == 2 and nb == 0:  # APP(x0, x1)
-    #         return self.children[0]
-    #     else:
-    #         return self.children[0].implicit_children(nb)
-
     def descendant(self, line_of_descent):
         """
         Return the MathObject corresponding to the line_of_descent
@@ -632,20 +830,25 @@ class MathObject:
         :param line_of_descent:     int or tuple or list
         :return:                    MathObject
         """
-        if type(line_of_descent) == int:
-            # if self.is_application():
-            #     return self.implicit_children(line_of_descent)
-            # else:
-            return self.children[line_of_descent]
 
-        child_number, *remaining = line_of_descent
-        if child_number >= len(self.children):
-            return None
-        child = self.children[child_number]
-        if not remaining:
-            return child
-        else:
-            return child.descendant(remaining)
+        if isinstance(line_of_descent, int):  # Including 0!!!
+            return self.children[line_of_descent]
+        elif not line_of_descent:
+            # e.g. empty tuple or list but not 0!
+            return self
+        elif (isinstance(line_of_descent, tuple)
+              or isinstance(line_of_descent, list)):
+            child_number, *remaining = line_of_descent
+            if not isinstance(child_number, int):
+                return self
+            if (child_number >= len(self.children)
+                    or child_number < -len(self.children)):
+                return None
+            child = self.children[child_number]
+            if not remaining:
+                return child
+            else:
+                return child.descendant(remaining)
 
     def give_name(self, name):
         self.info["name"] = name
@@ -671,6 +874,38 @@ class MathObject:
 
         WARNING: this should probably not be used for bound variables.
         """
+        return self.is_equal_to(other,
+                                remove_generic_paren=False,
+                                use_assigned_math_obj=False)
+
+    def is_equal_to(self, other,
+                    remove_generic_paren=False,
+                    use_assigned_math_obj=False) -> bool:
+
+        ##########################################################
+        # Mod out by generic_parentheses / assigned_math_objects #
+        ##########################################################
+        mo0 = self
+        mo1 = other
+        if use_assigned_math_obj:
+            if hasattr(self, 'assigned_math_object'):
+                if self.assigned_math_object:
+                    mo0 = self.assigned_math_object
+            if hasattr(other, 'assigned_math_object'):
+                if other.assigned_math_object:
+                    mo1 = other.assigned_math_object
+
+        if remove_generic_paren:
+            if mo0.node == "GENERIC_PARENTHESES":
+                mo0 = self.children[0]
+            elif mo1.node == "GENERIC_PARENTHESES":
+                mo1 = other.children[0]
+
+        if (mo0 is not self) or (mo1 is not other):
+            test = mo0.is_equal_to(mo1,
+                                   remove_generic_paren=remove_generic_paren,
+                                   use_assigned_math_obj=use_assigned_math_obj)
+            return test
 
         # Successively test for
         #                           nodes
@@ -696,8 +931,16 @@ class MathObject:
         if (self.node, self.is_bound_var, self.name, self.value) != \
                 (other.node, other.is_bound_var, other.name, other.value):
             return False
-        if self.math_type != other.math_type:
+
+        # Test math_types
+        mt0 = self.math_type
+        mt1 = other.math_type
+        test = mt0.is_equal_to(mt1,
+                               remove_generic_paren=remove_generic_paren,
+                               use_assigned_math_obj=use_assigned_math_obj)
+        if not test:
             return False
+
         # BoundVar has an __eq__() method
         # if self.is_bound_var:
         #     if self.bound_var_nb() != other.bound_var_nb():
@@ -730,8 +973,13 @@ class MathObject:
                 # log.debug(f"Comparing {self} and {other}")
                 # log.debug(f"Marking BV {bound_var_1, bound_var_2}")
 
-            for child0, child1 in zip(self.children, other.children):
-                if child0 != child1:
+            # Test children
+            for ch0, ch1 in zip(self.children, other.children):
+                test = ch0.is_equal_to(ch1,
+                                       remove_generic_paren=remove_generic_paren,
+                                       use_assigned_math_obj=use_assigned_math_obj)
+
+                if not test:
                     # if self.node == 'PROP_≥':
                     #     log.debug(f"Distinct child: {child0} ")
                     #     log.debug(f"and {child1}")
@@ -745,9 +993,25 @@ class MathObject:
 
             return equal
 
+    def is_in(self, others: [],
+              remove_generic_paren=False,
+              use_assigned_math_obj=False) -> bool:
+        """
+        True is self is in others, with the is_equal method instead of __eq__.
+        """
+
+        for other in others:
+            test = self.is_equal_to(other,
+                                    remove_generic_paren=remove_generic_paren,
+                                    use_assigned_math_obj=use_assigned_math_obj)
+            if test:
+                return True
+        return False
+
     def contains(self, other) -> int:
         """
-        Compute the number of copies of other contained in self.
+        Compute the number of copies of other contained in self,
+        recursively investigating self's children.
         """
 
         if self is self.NO_MATH_TYPE:  # NO_MATH_TYPE is equal to anything...
@@ -758,10 +1022,49 @@ class MathObject:
         else:
             for child in self.children:
                 test = child.contains(other)
-                if test:
-                    print("debug")
+                # if test:
+                #     print("debug")
 
             return sum([child.contains(other) for child in self.children])
+
+    def contains_including_types(self, other):
+        """
+        True if other recursively appears in self, including math_types.
+        """
+
+        if self is self.NO_MATH_TYPE:  # NO_MATH_TYPE is equal to anything...
+            return 0
+
+        if MathObject.__eq__(self, other):
+            return True
+        else:
+            if self.math_type.contains_including_types(other):
+                return True
+            for child in self.children:
+                if child.contains_including_types(other):
+                    return True
+            return False
+
+    @classmethod
+    def substitute(cls, old_var, new_var, math_object):
+        """
+        Return a new MathObject instance by replacing old_var by new_var inside
+        math_object. There is no side effect on math_object.
+        """
+        if math_object is old_var:
+            return new_var
+
+        elif math_object.contains(old_var):
+            new_children = [child.substitute(old_var, new_var, child)
+                            for child in math_object.children]
+
+            # Do we need to duplicate math_type here??
+            return cls(node=math_object.node,
+                       info=copy(math_object.info),
+                       children=new_children,
+                       math_type=math_object.math_type)
+        else:
+            return math_object
 
     def direction_for_substitution_in(self, other) -> str:
         """
@@ -789,10 +1092,16 @@ class MathObject:
         contain_right = other.contains(right)
         decision = {(False, False): '',
                     (True, False): '>',
-                    (False, True): '>',
+                    (False, True): '<',
                     (True, True): 'both'
                     }
         return decision[contain_left, contain_right]
+
+    def length(self):
+        """
+        Return the number of nodes in self.
+        """
+        return 1 + sum(child.length() for child in self.children)
 
 #######################
 # Tests for math_type #
@@ -813,7 +1122,7 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "PROP"
 
-    def is_type(self, is_math_type=False) -> bool:
+    def is_type(self, is_math_type=False, include_index_set=True) -> bool:
         """
         Test if (math_type of) self is a "universe".
         """
@@ -821,7 +1130,8 @@ class MathObject:
             math_type = self
         else:
             math_type = self.math_type
-        return math_type.node == "TYPE"
+        return (math_type.node == "TYPE" or
+                (include_index_set and math_type.node == "SET_INDEX"))
 
     def is_variable(self, is_math_type=False) -> bool:
         """
@@ -865,6 +1175,16 @@ class MathObject:
         else:
             return False
 
+    def is_suitable_for_app(self, is_math_type=False) -> bool:
+        """
+        Test if self may be the first argument of an application,
+        e.g. self is a function, a sequence or a set family.
+        """
+        tests = (self.is_function(is_math_type=is_math_type),
+                 self.is_sequence(is_math_type=is_math_type),
+                 self.is_set_family(is_math_type=is_math_type))
+        return any(tests)
+
     def is_set_family(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is "SET_FAMILY".
@@ -907,7 +1227,7 @@ class MathObject:
 
     def is_atomic_belong(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is a function.
+        Test if (math_type of) self is belongs.
         """
         if is_math_type:
             math_type = self
@@ -986,6 +1306,9 @@ class MathObject:
             math_type = self.math_type
         return math_type.node == "QUANT_∀"
 
+    def is_place_holder(self):
+        return self.node == 'PLACE_HOLDER'
+
     def implicit(self, test: callable):
         """
         Call the implicit version of test.
@@ -1013,6 +1336,132 @@ class MathObject:
             math_type = self.math_type
         return (math_type.is_exists(is_math_type=True)
                 or math_type.is_for_all(is_math_type=True))
+
+    def explicit_quant(self):
+        """
+        Return self if self is_forall or self is_exists,
+        of self after unfolding definition if self is implicitly so.
+        """
+        if (self.is_for_all(is_math_type=True, implicit=False)
+                or self.is_exists(is_math_type=True, implicit=False)):
+            return self
+        elif (self.is_for_all(is_math_type=True, implicit=True)
+                or self.is_exists(is_math_type=True, implicit=True)):
+            return self.last_rw_object
+
+    def type_of_explicit_quant(self):
+        quant = self.explicit_quant()
+        if quant:
+            return quant.children[0]
+
+    def body_of_explicit_quant(self):
+        quant = self.explicit_quant()
+        if quant:
+            return quant.children[2]
+
+    def bound_prop_n_actual_body_of_bounded_quant(self):
+        """
+        Check if math_object.math_type has the form
+        ∀ x:X, (x R ? ==>  Q)
+        where R is some relation, and if so return "x R ?" and Q.
+        """
+
+        explicit_self = self.explicit_quant()
+        if not explicit_self:
+            return
+
+        dummy_var = explicit_self.children[1]
+        body: MathObject = explicit_self.children[2]
+        if body.is_implication(is_math_type=True):
+            premise = body.children[0]
+            tests = (premise.is_inequality(is_math_type=True),
+                     premise.is_belongs_or_included(is_math_type=True))
+            if any(tests) and dummy_var == premise.children[0]:
+                conclusion = body.children[1]
+                return premise, conclusion
+
+    def types_n_vars_of_univ_prop(self, implicit_def=True,
+                                  jump_first_ineq=True):
+        """
+        If self is a universal property, either explicit or implicit,
+        extract the type of the variable, and the name in the explicit case.
+        In the explicit case, recursively extend the list in the case when
+        the body is again an explicit universal statement.
+        """
+
+        if not self.is_for_all(is_math_type=True, implicit=implicit_def):
+            return
+
+        types_n_vars = []
+        explicit_self = self.explicit_quant()
+        math_type = explicit_self.children[0]
+        dummy_var = explicit_self.children[1]
+        body: MathObject = explicit_self.children[2]
+
+        types_n_vars.append((math_type, dummy_var))
+
+        if jump_first_ineq:
+            test = self.bound_prop_n_actual_body_of_bounded_quant()
+            if test:
+                premise, new_body = test
+                if premise.is_inequality(is_math_type=True):
+                    body = new_body
+
+        more = body.types_n_vars_of_univ_prop(implicit_def=False,
+                                              jump_first_ineq=False)
+        if more:
+            types_n_vars.extend(more)
+
+        return types_n_vars
+
+        # # TODO: get iiiv from settings
+        # iiiv = include_initial_implicit_vars
+        # types_n_vars = []
+        # math_type = self.type_of_explicit_quant()
+        #
+        # # Get dummy_var name in case of explicit forall
+        # if self.is_for_all(is_math_type=True, implicit=False):
+        #     dummy_var = self.children[1]
+        # else:
+        #     dummy_var = None
+        #
+        # # Include var except dummy_var is implicit and if not iiiv
+        # if (not dummy_var
+        #         or dummy_var.binder_info != 'implicit'
+        #         or iiiv):
+        #     types_n_vars.append((math_type, dummy_var))
+        #
+        # # Always include implicit vars after an explicit one
+        # if dummy_var and dummy_var.binder_info != 'implicit':
+        #     iiiv = True
+        #
+        # if dummy_var:
+        #     body: MathObject = self.children[2]
+        #     more = body.types_n_vars_of_univ_prop(implicit_def=False,
+        #                                           include_initial_implicit_vars=iiiv)
+        #     if more:
+        #         types_n_vars.extend(more)
+        # if types_n_vars:
+        #     return types_n_vars
+
+    # def nb_initial_implicit_vars(self):
+    #     """
+    #     Return the number of implicit vars:
+    #      before first explicit
+    #     (or total nb if no explicit var).
+    #     """
+    #
+    #     types_n_vars = self.types_n_vars_of_univ_prop(
+    #         include_initial_implicit_vars=True)
+    #     nb = 0
+    #     for t, var in types_n_vars:
+    #         if not var:
+    #             break
+    #         elif var.binder_info != 'implicit':
+    #             break
+    #         else:
+    #             nb += 1
+    #     return nb
 
     def is_equality(self, is_math_type=False) -> bool:
         """
@@ -1097,6 +1546,35 @@ class MathObject:
     def is_number(self):
         return any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
 
+    def ring_expr(self) -> Optional[int]:
+        """
+        Test if self is a pure ring expr, i.e. consists only of numbers,
+        local constants, and operations + - * /.
+        If this is so, then return the nb of arithmetic operations in self.
+        If not, return False.
+        """
+
+        allowed_nodes = ['PARENTHESES', 'GENERIC_PARENTHESES', 'NUMBER',
+                         'LOCAL_CONSTANT']
+        ring_nodes = ['SUM', 'DIFFERENCE', 'MULT', 'DIV', 'POWER']
+
+        if self.node in ring_nodes + allowed_nodes:
+            tests = [child.ring_expr() for child in self.children]
+            if None in tests:
+                return False
+            else:
+                total_nb_op = sum(tests)
+                if self.node in ring_nodes:
+                    total_nb_op += 1
+                return total_nb_op
+
+        else:
+            return False
+
+        # if not (self.math_type.is_number()
+        #         or self.node in allowed_nodes):
+        # return 0
+
     def is_iff(self, is_math_type=False) -> bool:
         """
         Test if (math_type of) self is 'PROP_IFF'.
@@ -1123,8 +1601,8 @@ class MathObject:
 
     def body_of_negation(self):
         """
-        Assuming self is "not P", return P. Handle special cases of not
-        belong, not equal.
+        Assuming self is "not P", return a new MathObject equal to P. Handle
+        special cases of not belong, not equal.
         """
         body = None
         if self.node == "PROP_NOT":
@@ -1203,6 +1681,9 @@ class MathObject:
     def is_constant(self):
         return self.node == "CONSTANT"
 
+    def is_local_constant(self):
+        return self.node == "LOCAL_CONSTANT"
+
     def is_implicit_arg(self):
         if (self.node == "TYPE"
                 or (self.is_constant() and self.display_name in
@@ -1260,7 +1741,8 @@ class MathObject:
             return False, None
 
     @allow_implicit_use
-    def can_be_used_for_implication(self, is_math_type=False) -> bool:
+    def can_be_used_for_implication(self, is_math_type=False,
+                                    include_iff=False) -> bool:
         """
         Determines if a proposition can be used as a basis for implication,
         i.e. is of the form
@@ -1268,18 +1750,24 @@ class MathObject:
          with zero or more universal quantifiers at the beginning.
 
         This is a recursive function.
+
+        If include_iff is True, then iff are included. Nevertheless,
+        this will not work for implicit definitions, only true implication
+        will be detected.
         """
         if is_math_type:
             math_type = self
         else:
             math_type = self.math_type
-        if math_type.is_implication(is_math_type=True):
+        if (math_type.is_implication(is_math_type=True)
+                or (include_iff and math_type.is_iff(is_math_type=True))):
             return True
         elif math_type.is_for_all(is_math_type=True):
             # NB : ∀ var : type, body
             body = math_type.children[2]
             # Recursive call
-            return body.can_be_used_for_implication(is_math_type=True)
+            return body.can_be_used_for_implication(is_math_type=True,
+                                                    include_iff=include_iff)
         else:
             return False
 
@@ -1389,9 +1877,12 @@ class MathObject:
             if pattern_left.match(self):
                 definition = MathObject.implicit_definitions[index]
                 MathObject.last_used_implicit_definition = definition
-                rw_math_object = pattern_right.apply_matching()
+                rw_math_object = pattern_right.math_object_from_matching(
+                    metavars=pattern_left.metavars,
+                    metavars_objects=pattern_left.metavar_objects
+                )
                 rw_math_objects.append(rw_math_object)
-                name = MathObject.implicit_definitions[index].pretty_name
+                # name = MathObject.implicit_definitions[index].pretty_name
                 # log.debug(f"Implicit definition {name} "
                 #           f"--> {rw_math_object.to_display()}")
         return rw_math_objects
@@ -1434,7 +1925,8 @@ class MathObject:
         #         'SET_INTER+':
         #     print("inter")
         definitions = MathObject.definitions
-        matching_defs = [defi for defi in definitions if defi.match(math_type)]
+        matching_defs = [defi for defi in definitions
+                         if defi.match(math_type)]
         return matching_defs
 
     def glob_vars_when_proving(self):
@@ -1505,290 +1997,64 @@ class MathObject:
         vars.extend(more_vars)
         return vars
 
-    # ###############################
-    # # Collect the local variables #
-    # ###############################
-    # def extract_local_vars(self) -> list:
-    #     """
-    #     Recursively collect the list of variables used in the definition of
-    #     self (leaves of the tree). Here by definition, being a variable
-    #     means having an info["name"] which is not "NO NAME".
-    #     :return: list of MathObject instances
-    #     """
-    #     # TODO: change by testing if node == "LOCAL_CONSTANT"?
-    #     if "name" in self.info.keys() and self.info['name'] != 'NO NAME':
-    #         return [self]
-    #     local_vars = []
-    #     for child in self.children:
-    #         local_vars.extend(child.extract_local_vars())
-    #     return local_vars
-    #
-    # def extract_local_vars_names(self) -> List[str]:  # deprecated
-    #     """
-    #     Collect the list of names of variables used in the definition of self
-    #     (leaves of the tree)
-    #     """
-    #     return [math_obj.info["name"] for
-    #             math_obj in self.extract_local_vars()]
-
 ################################################
 # Display methods: implemented in math_display #
 ################################################
     def to_display(self, format_="html", text=False,
-                   use_color=True, bf=False, is_type=False) -> str:
+                   use_color=True, bf=False, is_type=False,
+                   used_in_proof=False) -> str:
         """
         This method is actually defined in math_display/new_display.
         """
-        return self
+        display = MathList.display(self, format_=format_, text=text,
+                                   use_color=use_color, bf=bf, is_type=is_type,
+                                   used_in_proof=used_in_proof)
+        return display
 
     def math_type_to_display(self, format_="html", text=False,
-                             is_math_type=False,
-                             used_in_proof=False) -> str:
+                             is_math_type=False, used_in_proof=False) -> str:
+
+        math_type = self if is_math_type else self.math_type
+        return math_type.to_display(format_, text=text, is_type=True,
+                                    used_in_proof=used_in_proof)
+
+    def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
         This method is actually defined in math_display/new_display.
         """
+        shape = MathList.latex_shape(self, is_type=is_type, text=text,
+                                     lean_format=lean_format)
+        return shape
+
+    def lean_shape(self, is_type=False, text=False, lean_format=True):
+        """
+        This method is actually defined in math_display/new_display.
+        """
+
+        shape = MathList.lean_shape(self)
+        return shape
+
+    def recursive_match(self, other, metavars, metavar_objects):
+        """
+        For compatibility with the PatternMathObject class.
+        """
+        return self == other
+
+    def to_math_object(self):
+        """
+        For compatibility.
+        """
         return self
-
-    # def raw_latex_shape(self, negate=False, text_depth=0):
-    #     """
-    #     e.g. if self is a MathObject whose node is 'PROP_EQUAL', this method
-    #     will return [0, " = ", 1].
-    #     """
-    #     # (1) Case of special shape from self and its first child:
-    #     # NB: here the structure do depend on text_depth
-    #     shape = raw_latex_shape_from_couple_of_nodes(self, text_depth)
-    #     if shape:
-    #         # NEGATION:
-    #         if negate:
-    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
-    #         # log.debug(f"Shape from couples: {shape}")
-    #
-    #     # (2) Generic case, in latex_from_node
-    #     elif self.node in latex_from_node:
-    #         shape = list(latex_from_node[self.node])
-    #
-    #         # NEGATION:
-    #         if negate:
-    #             shape = [" " + r'\not' + " ", r'\parentheses', shape]
-    #     # (3) Node not found in dictionaries: try specific methods
-    #     else:
-    #         shape = raw_latex_shape_from_specific_nodes(self, negate)
-    #
-    #     # log.debug(f"    --> Raw shape: {shape}")
-    #     return shape
-    #
-    # def to_abstract_string(self, text_depth=0) -> Union[list, str]:
-    #     """
-    #     Return an abstract string representing self, as a tree of string.
-    #
-    #     (1) First compute the shape, e.g. [0, " = ", 1].
-    #     (2) Then compute an "expanded latex shape", a tree of strings with
-    #     latex macro.
-    #     (3) if text_depth >0, replace some symbols by plain text.
-    #     """
-    #
-    #     # (1) Compute shape
-    #     shape = self.raw_latex_shape(negate=False, text_depth=text_depth)
-    #
-    #     # (2) Compute tree of strings
-    #     abstract_string = recursive_display(self, text_depth=text_depth,
-    #                                         shape=shape)
-    #
-    #     # (3) Replace some symbols by plain text:
-    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-    #
-    #     return abstract_string
-    #
-    # def to_display(self, format_="html", text_depth=0,
-    #                use_color=True, bf=False) -> str:
-    #     """
-    #     Return a displayable string version of self. First compute an
-    #     abstract_string (i.e. a tree version) taking text_depth into account,
-    #     then concatenate according to format_.
-    #
-    #     Note that nice display of negations is obtained in raw_latex_node
-    #     and recursive_display.
-    #
-    #     :param format_:     one of 'utf8', 'html', 'latex'
-    #     :param text_depth:  if >0, will try to replace symbols by plain text
-    #     for the upper branches of the MathObject tree
-    #     :param use_color: use colors in html format
-    #     :param bf: use boldface fonts in html format.
-    #     """
-    #     # TODO: the case when text_depth is >0 but not "infinity" has not
-    #     #  been tested.
-    #     # WARNING: if you make some changes here,
-    #     #   then you probably have to do the same changes in
-    #     #   ContextMathObject.math_type_to_display.
-    #
-    #     # (1) Tree of strings
-    #     abstract_string = self.to_abstract_string(text_depth)
-    #     log.debug(f"Abstract string: {abstract_string}")
-    #
-    #     # (2) Adapt to format_ and concatenate to get a string
-    #     display = abstract_string_to_string(abstract_string, format_,
-    #                                         use_color=use_color, bf=bf,
-    #                                         no_text=(text_depth <= 0))
-    #     return display
-    #
-    # def raw_latex_shape_of_math_type(self, text_depth=0):
-    #     ########################################################
-    #     # Special math_types for which display is not the same #
-    #     ########################################################
-    #     # math_type = self.math_type
-    #     math_type = self
-    #     if math_type.node == "SET":
-    #         shape = [r'\type_subset', 0]
-    #     elif math_type.node == "SEQUENCE":
-    #         shape = [r'\type_sequence', 1]
-    #     elif math_type.node == "SET_FAMILY":
-    #         shape = [r'\type_family_subset', 1]
-    #     elif hasattr(math_type, 'math_type') \
-    #             and hasattr(math_type.math_type, 'node') \
-    #             and math_type.math_type.node in ("TYPE", "SET")\
-    #             and math_type.node != 'TYPE'\
-    #             and math_type.node != 'FUNCTION':
-    #             # and math_type.info.get('name'):
-    #         # name = math_type.info["name"]
-    #         # FIXME: bad format for html, would need format_
-    #         name = math_type.to_display(text_depth=text_depth, format_='utf8')
-    #         shape = [r'\type_element', name]
-    #         # The "an" is to be removed for short display
-    #     elif math_type.is_N():
-    #         shape = [r'\type_N']
-    #     elif math_type.is_Z():
-    #         shape = [r'\type_Z']
-    #     elif math_type.is_Q():
-    #         shape = [r'\type_Q']
-    #     elif math_type.is_R():
-    #         shape = [r'\type_R']
-    #     else:  # Generic case: usual shape from math_object
-    #         shape = math_type.raw_latex_shape(text_depth=text_depth)
-    #
-    #     # log.debug(f"Raw shape of math type: {shape}")
-    #     return shape
-    #
-    # def math_type_to_abstract_string(self, text_depth=0):
-    #     """
-    #     cf to_abstract_string, but applied to self as a math_type.
-    #     :param text_depth:
-    #     :return:
-    #     """
-    #     shape = self.raw_latex_shape_of_math_type(text_depth=text_depth)
-    #     abstract_string = recursive_display(self,
-    #                                         shape=shape,
-    #                                         text_depth=text_depth)
-    #     log.debug(f"Abstract string of type: {abstract_string}")
-    #
-    #     # Replace some symbol by plain text:
-    #     abstract_string = shallow_latex_to_text(abstract_string, text_depth)
-    #
-    #     return abstract_string
-    #
-    # def math_type_to_display(self, format_="html", text_depth=0,
-    #                          is_math_type=False,
-    #                          used_in_proof=False) -> str:
-    #     """
-    #     cf MathObject.to_display, but applied to self as a math_type (if
-    #     is_math_type) or to self.math_type (if not is_math_type).
-    #     Lean format_ is not pertinent here.
-    #     """
-    #     log.debug(f"Displaying math_type: {self.display_name}...")
-    #
-    #     if is_math_type:
-    #         math_type = self
-    #     else:
-    #         math_type = self.math_type
-    #     abstract_string = math_type.math_type_to_abstract_string(text_depth)
-    #     if used_in_proof:
-    #         abstract_string = [r'\used_property'] + abstract_string
-    #     # Adapt to format_ and concatenate to get a string
-    #     display = abstract_string_to_string(abstract_string, format_,
-    #                                         no_text=(text_depth <= 0))
-    #
-    #     return display
-
-    # def __lambda_var_n_body(self):
-    #     """
-    #     Given a MathObject that codes for
-    #         a sequence u = (u_n)_{n in N}
-    #         or a set family E = {E_i, i in I}
-    #     (but maybe a lambda expression), returns the body, that corresponds to
-    #     "u_n" or "E_i".
-    #     """
-    #     if self.is_lambda(is_math_type=True):
-    #         body = self.children[2]
-    #         bound_var = self.children[1]
-    #         name_single_bound_var(bound_var)  # FIXME
-    #     else:
-    #         # NB: math_type is "SET FAMILY ( X, set Y)"
-    #         #   or "SEQUENCE( N, Y)
-    #         # Change type to avoid infinite recursion:
-    #         raw_version = self.duplicate()
-    #         bound_var_type = self.math_type.children[0]
-    #         bound_var = BoundVar.from_has_bound_var_parent(self)
-    #         math_type = self.math_type.children[1]
-    #         body = MathObject(node="APPLICATION",
-    #                           info={},
-    #                           children=[raw_version, bound_var],
-    #                           math_type=math_type)
-    #
-    #     name_single_bound_var(bound_var)
-    #     return bound_var, body
-
-    ##################
-    # Naming methods #
-    ##################
-
-    # def potential_types(self):
-    #     """
-    #
-    #     """
-    #     # TODO: add SETS if set names are used as hints (a for elements of A).
-    #     # cvars.get('display.use_set_name_as_hint_for_naming_elements')
-    #     # if self.is_bound_var:
-    #     #     return [self.math_type]
-    #     # if self.node in ['SET', 'TYPE']:
-    #     if self.node == 'TYPE':  # self
-    #         return [self]
-    #     else:
-    #         return sum([child.potential_types() for child in self.children], [])
-
-    # def name_hint_from_type(self) -> Optional[str]:
-    #     """
-    #     Return a hint for naming a variable whose type is self.
-    #     """
-    #     hint = None
-    #     # TODO: add 'SET' if display.use_set_name_as_hint_for_naming_elements
-    #     # (1) If self is a set, try to name its terms (elements) according to
-    #     # its name, e.g. X -> x.
-    #     if self.is_type():
-    #         if self.display_name.isalpha() and self.display_name[0].isupper():
-    #             hint = self.display_name[0].lower()
-    #
-    #     # (2) Names of sequences
-    #     if self.is_sequence():
-    #         seq_type = self.children[1]
-    #         if not seq_type.is_number():
-    #             hint = seq_type.name_hint_from_type()
-    #
-    #     # Standard hints
-    #     if not hint:
-    #         hint = 'A' if self.node.startswith('SET') \
-    #             else 'X' if self.is_type(is_math_type=True) \
-    #             else 'P' if self.is_prop(is_math_type=True) \
-    #             else 'f' if self.is_function(is_math_type=True) \
-    #             else 'u' if self.is_sequence(is_math_type=True) \
-    #             else 'n' if self.is_nat(is_math_type=True) \
-    #             else None  # else 'x'  # Or None?
-    #
-    #     return hint
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
                                      children=[],
                                      math_type=None)
+
+
+MathDescendant.NO_MATH_TYPE = MathObject.NO_MATH_TYPE
+
 
 MathObject.NO_MORE_GOALS = MathObject(node="NO_MORE_GOAL",
                                       info={},
@@ -1808,10 +2074,13 @@ MathObject.PROP = MathObject(node="PROP",
 
 class BoundVar(MathObject):
     is_bound_var = True  # Override MathObject attribute
-
+    is_unnamed = False
     untouched_bound_var_names = ["RealSubGroup", "_inst_1", "_inst_2", "inst_3"]
 
-    def __init__(self, node, info, children, math_type, parent):
+    identifier_nb = 0
+
+    def __init__(self, node, info, children, math_type,
+                 parent=None, deep_copy=False):
         """
         The local context is the list of BoundVar instances that are
         meaningful where self is introduced. In particular, self's name
@@ -1820,11 +2089,15 @@ class BoundVar(MathObject):
         """
         MathObject.__init__(self, node, info, children, math_type)
         self.parent = parent
-        self.is_unnamed = True
-        self.set_unnamed_bound_var()
-        if self.keep_lean_name():
-            self.name_bound_var(self.lean_name)
+
+        if not deep_copy:
+            self.is_unnamed = True
+            self.set_unnamed_bound_var()
+            if self.keep_lean_name():
+                self.name_bound_var(self.lean_name)
         self._local_context = []
+
+        self.set_id_nb()
 
     def __eq__(self, other):
         """
@@ -1855,6 +2128,25 @@ class BoundVar(MathObject):
     #     return cls(bound_var.node, bound_var.info, bound_var.children,
     #                math_type, parent=parent)
 
+    # @classmethod
+    # def deep_copy(cls, self):
+    #     """
+    #     We want to keep the name during the deep copy.
+    #     """
+    #     new_info = deepcopy(self.info)
+    #     math_type: cls = self.math_type
+    #     children: [cls] = self.children  # Real type could be different
+    #     new_math_type = (math_type if math_type.is_no_math_type()
+    #                      else math_type.deep_copy(math_type))
+    #
+    #     new_children = [child.deep_copy(child) for child in children]
+    #
+    #     new_bound_var = cls(node=self.node, info=new_info,
+    #                         children=new_children, math_type=new_math_type,
+    #                         deep_copy=True)
+    #     new_bound_var.is_unnamed = self.is_unnamed
+    #     return new_bound_var
+
     @classmethod
     def from_math_type(cls, math_type, parent=None):
         """
@@ -1872,6 +2164,25 @@ class BoundVar(MathObject):
                              parent=parent)
         return bound_var
 
+    def set_id_nb(self):
+        """
+        Set a unique identifier nb for self. This nb should be copied
+        identically when self is deep copied.
+        """
+        if not self.info.get('identifier_nb'):
+            BoundVar.identifier_nb += 1
+            self.info['identifier_nb'] = BoundVar.identifier_nb
+
+    def refer_to_the_same_bound_var(self, other):
+        """
+        True iff self and other have the same identifier nb.
+        """
+        if not isinstance(other, BoundVar):
+            return False
+        id_nb1 = self.info.get('identifier_nb')
+        id_nb2 = other.info.get('identifier_nb')
+        return id_nb1 and (id_nb1 == id_nb2)
+
     @property
     def name(self):
         # Fixme: make it an attribute
@@ -1879,11 +2190,15 @@ class BoundVar(MathObject):
 
     @property
     def lean_name(self):
-        return self.info.get('lean_name')
+        name = self.info.get('lean_name')
+        if not name:
+            name = self.info.get('name')
+        return name
 
     def keep_lean_name(self):
-        return (self.lean_name in self.untouched_bound_var_names
-                or self.lean_name.startswith("_inst_"))
+        if (self.lean_name in self.untouched_bound_var_names
+                or self.lean_name.startswith("_inst_")):
+            return True
 
     @property
     def local_context(self):
@@ -1936,6 +2251,10 @@ class BoundVar(MathObject):
     def set_unnamed_bound_var(self):
         # FIXME: suppress:
         lean_name = self.info.get('name', '')
+        if lean_name and lean_name.endswith('.BoundVar'):
+            # Remove suffix
+            lean_name = lean_name[:-len('.BoundVar')]
+
         if lean_name in ("NO NAME", '*no_name*'):
             lean_name = ''
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
@@ -1967,10 +2286,13 @@ class BoundVar(MathObject):
 # Methods for PatternMathObject #
 #################################
     def recursive_match(self, other, metavars, metavar_objects):
+        """
+        For compatibility with the PatternMathObject class.
+        """
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())
 
-    def apply_matching(self):
+    def math_object_from_matching(self, metavars=None, metavars_objects=None):
         """
         Juste return a copy of self.
         """

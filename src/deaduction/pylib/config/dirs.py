@@ -36,13 +36,15 @@ log = logging.getLogger(__name__)
 ############################################
 # Path objects
 ############################################
-pkg_dir  = (Path(__file__) / "../../../").resolve()
+pkg_dir = (Path(__file__) / "../../../").resolve()
 
 # Share paths
 share          = (pkg_dir / "share").resolve()
 icons          = (share / "graphical_resources" / "icons").resolve()
 courses        = (share / "courses").resolve()
 fonts          = (share / "fonts").resolve()
+pkg_tests_dir = (share / "autotests")
+lean_src_dir = (pkg_dir / "lean_src").resolve()
 
 # Home paths
 home     = Path.home()
@@ -50,17 +52,30 @@ if os.getenv("DEADUCTION_DEV_MODE", '0') == '1':
     local = (home / ".deaduction-dev").resolve()
 else:
     local = (home / ".deaduction").resolve()
+
+# Other paths
 journal        = (local / "deaduction_journal").resolve()
 test_exercises = (local / "test_exercises").resolve()
+history        = (local / "history").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
-lean_src_dir = (pkg_dir / "lean_src").resolve()
 usr_lean_src_dir = (local / "lean_src").resolve()
+usr_tests_dir = (local / "autotests")
 lean = local / "lean"
 mathlib = local / "mathlib"
 
 log_file = (local / "deaduction.log").resolve()
+
+
+os.chdir(home)
+
+
+def relative_to_home(absolute_path: Path):
+    # path = path.resolve()  # Absolute path
+    relative_path = Path(os.path.relpath(absolute_path,
+                                         start=Path.home().resolve()))
+    return relative_path
 
 
 ############################################
@@ -69,6 +84,7 @@ log_file = (local / "deaduction.log").resolve()
 def init():
     fs.check_dir(local, create=True)
     fs.check_dir(all_courses_ipf_dir, create=True)
-    fs.check_dir(journal)
-    fs.check_dir(test_exercises)
+    fs.check_dir(journal, create=True)
+    fs.check_dir(history, create=True)
+    fs.check_dir(test_exercises)  # FIXME
     fs.check_dir(usr_lean_exercises_dir, create=True)
