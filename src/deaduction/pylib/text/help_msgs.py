@@ -44,10 +44,16 @@ tr = _
 
 
 def translate(string):
+    """
+    This is a hack: we want to delay the translation until excution.
+    """
     return tr(string) if string else ""
 
 
 def _(msg):
+    """
+    This is a hack: we want to delay the translation until excution.
+    """
     return msg
 
 
@@ -115,6 +121,9 @@ phrase = {"this_is": _("This is"),
           "to_use_directly": _("To use this property directly"),
           "to_start_proof_directly": _("To start a proof of this property "
                                        "directly"),
+          "press": _("press"),
+          "pressing": _("pressing"),
+          "after_selecting_it": _("after selecting it"),
           "or_drag_element_to_property": (', ', _("or drag the element and "
                                                   "drop it onto the property")),
           "or_drag_premise": (', ', _("or drag the premise and drop it onto "
@@ -130,8 +139,8 @@ phrase = {"this_is": _("This is"),
 
 use["forall"] = (_("{this_is} a universal property, which tells something "
                    "about {every_element_of_type_}."),
-                 _("{to_use}, press {use_forall} after selecting "
-                   "{an_element_of_type_}{or_drag_element_to_property}."),
+                 "{to_use}, {press} {use_forall} {after_selecting_it}.",
+                 # "{an_element_of_type_}{or_drag_element_to_property}."),
                  _("{to_use}, you need {an_element_of_type_}. Is "
                    "there any in the context? If not, can you create some?"))
 
@@ -149,9 +158,12 @@ use["implies"] = (_("{this_is} an implication, which asserts that some property"
                     "the <em>premise</em>, implies some other property "
                     "Q:<CENTER>{ch1},<CENTER>"
                     " the <em>conclusion</em>."),
-                  _("{to_use}, press {use_implies} after selecting "
-                    "another property which match the premise"
-                    "{or_drag_premise}."),
+                  _("{to_use}, {press} {use_implies} {after_selecting_it}"
+                    " and another property which match the premise"
+                    + "{or_drag_premise}" + "." + "<p>" +
+                    "If the premise is not in the context, you can start "
+                    "proving it by selecting only this implication"
+                    " and {pressing} " + "{use_implies}" + "." + "</p>"),
                   _("{to_use}, you need property {ch0}. Does it "
                     "appear in the context?"))
 
@@ -171,10 +183,11 @@ use["exists"] = (_("{this_is} an existential property, which asserts the "
                  "")
 
 prove["exists"] = (use["exists"][0],
-                   (_("{to_start_proof}, press {prove_exists} "
-                      "after selecting {an_element_of_type_}."),  # " ",
-                    _("Then you will have to prove that this element "
-                        "satisfies the wanted property.")),
+                   _("{to_start_proof}, press {prove_exists} "
+                     "to enter an element that satisfies this property."),
+                   # "after selecting {an_element_of_type_}."),  # " ",
+                   #  _("Then you will have to prove that this element "
+                   #      "satisfies the wanted property.")),
                    _("Is there {an_element_of_type_} in the context? If this "
                      "is so, does it suits your needs? If not, how can you "
                      "create some?"))
