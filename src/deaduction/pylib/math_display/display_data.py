@@ -80,6 +80,21 @@ def display_value(mo):
 def math_type_for_lean(mo):
     if not mo.math_type.is_no_math_type():
         return [': ', mo.math_type]
+    else:
+        return ['']
+
+
+def math_type_of_child_for_lean(mo):
+    child = mo.children[0]
+    return math_type_for_lean(child)
+
+
+def set_of_math_type_of_child_for_lean(mo):
+    child = mo.children[0]
+    if not child.math_type.is_no_math_type():
+        return [': (set ', child.math_type, ')']
+    else:
+        return ['']
 
 
 def display_lean_value(mo):
@@ -248,7 +263,8 @@ class MathDisplay:
         # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
         "PROP_NOT": (r'\not', 0),
         "SET_EMPTY": ('(', r'\emptyset', math_type_for_lean, ')'),  # including ':'
-        "SET_EXTENSION1": ('(', 'singleton ', 0, ')'),
+        "SET_EXTENSION1": ('(', 'singleton ', 0, ')',
+                           set_of_math_type_of_child_for_lean),
         "SET_EXTENSION2": ('(', 'pair ', 0, ' ', 1, ')'),
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),

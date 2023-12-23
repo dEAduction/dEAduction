@@ -82,6 +82,17 @@ begin
   exact iff_def,
 end
 
+lemma theorem.disjonction_eqv_implication (P Q: Prop) :
+(P ∨ Q) ↔ ((not P) → Q)
+:= 
+/- dEAduction
+PrettyName
+    Disjonction sous forme d'implication
+-/
+begin
+  tautology,
+end
+
 end logique
 
 namespace definitions
@@ -150,7 +161,7 @@ end
 
 lemma definition.singleton
 {x x_0: X} :
-(x ∈ sing x_0) ↔ x=x_0
+(x ∈ ((singleton x_0): (set X))) ↔ x=x_0
 :=
 begin
     refl,
@@ -158,7 +169,7 @@ end
 
 lemma definition.paire
 {x x_0 x_1: X} :
-(x ∈ pair x_0 x_1) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ ((pair x_0 x_1): set X)) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,
