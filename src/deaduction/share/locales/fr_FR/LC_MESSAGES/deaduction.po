@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-12-23 11:18+0100\n"
-"PO-Revision-Date: 2023-12-23 11:18+0100\n"
+"POT-Creation-Date: 2023-12-23 12:03+0100\n"
+"PO-Revision-Date: 2023-12-23 12:04+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -57,7 +57,7 @@ msgstr "Bouton"
 #: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:728
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:341
-#: pylib/math_display/display_data.py:410 pylib/proof_tree/proof_tree.py:537
+#: pylib/math_display/display_data.py:411 pylib/proof_tree/proof_tree.py:537
 msgid ":"
 msgstr " :"
 
@@ -1897,7 +1897,7 @@ msgid "scientific calculator"
 msgstr "Calculatrice scientifique"
 
 #: pylib/math_display/app_pattern_data.py:117
-#: pylib/math_display/display_data.py:407
+#: pylib/math_display/display_data.py:408
 msgid "and"
 msgstr "et"
 
@@ -1992,385 +1992,390 @@ msgid "proposition"
 msgstr "proposition"
 
 #: pylib/math_display/display_data.py:365
+#: pylib/math_display/display_data.py:492
+msgid "propositions"
+msgstr "propositions"
+
+#: pylib/math_display/display_data.py:366
 msgid "set"
 msgstr "ensemble"
 
-#: pylib/math_display/display_data.py:366
+#: pylib/math_display/display_data.py:367
 msgid "metric space"
 msgstr "espace métrique"
 
-#: pylib/math_display/display_data.py:367
-#: pylib/math_display/display_data.py:376
+#: pylib/math_display/display_data.py:368
+#: pylib/math_display/display_data.py:377
 #: pylib/math_display/display_utils.py:54
 msgid "not"
 msgstr "non"
 
-#: pylib/math_display/display_data.py:386
+#: pylib/math_display/display_data.py:387
 msgid "subset of"
 msgstr "partie de"
 
-#: pylib/math_display/display_data.py:387
+#: pylib/math_display/display_data.py:388
 msgid "sequence in"
 msgstr "suite dans"
 
-#: pylib/math_display/display_data.py:388
+#: pylib/math_display/display_data.py:389
 msgid "family of subsets of"
 msgstr "famille de parties de"
 
-#: pylib/math_display/display_data.py:389
+#: pylib/math_display/display_data.py:390
 msgid "element of"
 msgstr "élément de"
 
-#: pylib/math_display/display_data.py:390
+#: pylib/math_display/display_data.py:391
 msgid "point of"
 msgstr "point de"
 
-#: pylib/math_display/display_data.py:391
+#: pylib/math_display/display_data.py:392
 msgid "non-negative integer"
 msgstr "entier positif ou nul"
 
-#: pylib/math_display/display_data.py:392
+#: pylib/math_display/display_data.py:393
 msgid "integer"
 msgstr "nombre entier"
 
-#: pylib/math_display/display_data.py:393
+#: pylib/math_display/display_data.py:394
 msgid "rational number"
 msgstr "nombre rationnel"
 
-#: pylib/math_display/display_data.py:394
+#: pylib/math_display/display_data.py:395
 msgid "real number"
 msgstr "nombre réel"
 
-#: pylib/math_display/display_data.py:408
+#: pylib/math_display/display_data.py:409
 msgid "or"
 msgstr "ou"
 
-#: pylib/math_display/display_data.py:409
+#: pylib/math_display/display_data.py:410
 msgid "if and only if"
 msgstr "si et seulement si"
 
-#: pylib/math_display/display_data.py:410
+#: pylib/math_display/display_data.py:411
 msgid "the negation of"
 msgstr "la négation de"
 
-#: pylib/math_display/display_data.py:411
+#: pylib/math_display/display_data.py:412
 msgid "if"
 msgstr "si"
 
-#: pylib/math_display/display_data.py:412
+#: pylib/math_display/display_data.py:413
 msgid "then"
 msgstr "alors"
 
-#: pylib/math_display/display_data.py:413
+#: pylib/math_display/display_data.py:414
 msgid "the set of subsets of"
 msgstr "l’ensemble des parties de"
 
-#: pylib/math_display/display_data.py:414
-#: pylib/math_display/display_data.py:490
-#: pylib/math_display/display_data.py:504
+#: pylib/math_display/display_data.py:415
+#: pylib/math_display/display_data.py:492
+#: pylib/math_display/display_data.py:506
 #: pylib/math_display/display_utils.py:50
 msgid "a proposition"
 msgstr "une proposition"
 
-#: pylib/math_display/display_data.py:415
-#: pylib/math_display/display_data.py:491
-#: pylib/math_display/display_data.py:505
+#: pylib/math_display/display_data.py:416
+msgid "the set of propositions"
+msgstr "l'ensemble des propositions"
+
+#: pylib/math_display/display_data.py:417
+#: pylib/math_display/display_data.py:493
+#: pylib/math_display/display_data.py:507
 msgid "a set"
 msgstr "un ensemble"
 
-#: pylib/math_display/display_data.py:416
+#: pylib/math_display/display_data.py:418
 msgid "a metric space"
 msgstr "un espace métrique"
 
-#: pylib/math_display/display_data.py:417
+#: pylib/math_display/display_data.py:419
 msgid "such that"
 msgstr "tel que"
 
-#: pylib/math_display/display_data.py:419
+#: pylib/math_display/display_data.py:421
 msgid "for every"
 msgstr "pour tout"
 
-#: pylib/math_display/display_data.py:420
+#: pylib/math_display/display_data.py:422
 msgid "for every subset {} of {}, {}"
 msgstr "pour toute partie {} de {}, {}"
 
-#: pylib/math_display/display_data.py:422
+#: pylib/math_display/display_data.py:424
 msgid "for every function {} from {} to {}, {}"
 msgstr "pour toute fonction {} de {} dans {}, {}"
 
-#: pylib/math_display/display_data.py:423
+#: pylib/math_display/display_data.py:425
 msgid "for every proposition {}, {}"
 msgstr "pour toute proposition {}, {}"
 
-#: pylib/math_display/display_data.py:426
+#: pylib/math_display/display_data.py:428
 msgid "there exists"
 msgstr "il existe"
 
-#: pylib/math_display/display_data.py:428
+#: pylib/math_display/display_data.py:430
 #: pylib/math_display/pattern_data.py:250
 msgid "there exists a subset {} of {} such that {}"
 msgstr "il existe une partie {} de {} telle que {}"
 
-#: pylib/math_display/display_data.py:430
+#: pylib/math_display/display_data.py:432
 #: pylib/math_display/pattern_data.py:253
 msgid "there exists a function {} from {} to {} such that {}"
 msgstr "il existe une fonction {} de {} dans {} telle que {}"
 
-#: pylib/math_display/display_data.py:433
+#: pylib/math_display/display_data.py:435
 #: pylib/math_display/pattern_data.py:256
 msgid "there exists a proposition {} such that {}"
 msgstr "il existe une proposition {} telle que {}"
 
-#: pylib/math_display/display_data.py:434
+#: pylib/math_display/display_data.py:436
 msgid "there exists a set {} such that {}"
 msgstr "il existe un ensemble {} tel que {}"
 
-#: pylib/math_display/display_data.py:436
+#: pylib/math_display/display_data.py:438
 msgid "there exists a unique"
 msgstr "il existe un unique"
 
-#: pylib/math_display/display_data.py:438
+#: pylib/math_display/display_data.py:440
 #: pylib/math_display/pattern_data.py:264
 msgid "there exists a unique subset {} of {} such that {}"
 msgstr "il existe une unique partie {} de {} telle que {}"
 
-#: pylib/math_display/display_data.py:440
+#: pylib/math_display/display_data.py:442
 #: pylib/math_display/pattern_data.py:268
 msgid "there exists a unique function {} from {} to {} such that {}"
 msgstr "il existe une unique fonction {} de {} dans {} telle que {}"
 
-#: pylib/math_display/display_data.py:442
+#: pylib/math_display/display_data.py:444
 msgid "there exists a unique proposition {} such that {}"
 msgstr "il existe une unique proposition {} telle que {}"
 
-#: pylib/math_display/display_data.py:444
+#: pylib/math_display/display_data.py:446
 msgid "there exists a unique set {} such that {}"
 msgstr "il existe un unique ensemble {} tel que {}"
 
-#: pylib/math_display/display_data.py:447
-#: pylib/math_display/display_data.py:448
+#: pylib/math_display/display_data.py:449
+#: pylib/math_display/display_data.py:450
 msgid "a function from"
 msgstr "une fonction de"
 
-#: pylib/math_display/display_data.py:449
-#: pylib/math_display/display_data.py:460
+#: pylib/math_display/display_data.py:451
+#: pylib/math_display/display_data.py:462
 msgid "a sequence in"
 msgstr "une suite dans"
 
-#: pylib/math_display/display_data.py:450
-#: pylib/math_display/display_data.py:455
+#: pylib/math_display/display_data.py:452
+#: pylib/math_display/display_data.py:457
 msgid "in"
 msgstr "dans"
 
-#: pylib/math_display/display_data.py:452
-#: pylib/math_display/display_data.py:453
 #: pylib/math_display/display_data.py:454
+#: pylib/math_display/display_data.py:455
 #: pylib/math_display/display_data.py:456
+#: pylib/math_display/display_data.py:458
 msgid "is"
 msgstr "est"
 
-#: pylib/math_display/display_data.py:457
+#: pylib/math_display/display_data.py:459
 msgid "is not"
 msgstr "n’est pas"
 
-#: pylib/math_display/display_data.py:459
+#: pylib/math_display/display_data.py:461
 msgid "a subset of"
 msgstr "une partie de"
 
-#: pylib/math_display/display_data.py:461
+#: pylib/math_display/display_data.py:463
 msgid "a family of subsets of"
 msgstr "une famille de parties de"
 
-#: pylib/math_display/display_data.py:462
+#: pylib/math_display/display_data.py:464
 msgid "an element of"
 msgstr "un élément de"
 
-#: pylib/math_display/display_data.py:463
+#: pylib/math_display/display_data.py:465
 msgid "a point of"
 msgstr "un point de"
-
-#: pylib/math_display/display_data.py:464
-#: pylib/math_display/display_data.py:496
-#: pylib/math_display/display_data.py:510
-msgid "a non-negative integer"
-msgstr "un entier positif ou nul"
-
-#: pylib/math_display/display_data.py:465
-#: pylib/math_display/display_data.py:497
-#: pylib/math_display/display_data.py:511
-msgid "an integer"
-msgstr "un entier"
 
 #: pylib/math_display/display_data.py:466
 #: pylib/math_display/display_data.py:498
 #: pylib/math_display/display_data.py:512
-msgid "a rational number"
-msgstr "un nombre rationnel"
+msgid "a non-negative integer"
+msgstr "un entier positif ou nul"
 
 #: pylib/math_display/display_data.py:467
 #: pylib/math_display/display_data.py:499
 #: pylib/math_display/display_data.py:513
+msgid "an integer"
+msgstr "un entier"
+
+#: pylib/math_display/display_data.py:468
+#: pylib/math_display/display_data.py:500
+#: pylib/math_display/display_data.py:514
+msgid "a rational number"
+msgstr "un nombre rationnel"
+
+#: pylib/math_display/display_data.py:469
+#: pylib/math_display/display_data.py:501
+#: pylib/math_display/display_data.py:515
 msgid "a real number"
 msgstr "un nombre réel"
 
-#: pylib/math_display/display_data.py:471
+#: pylib/math_display/display_data.py:473
 msgid "one"
 msgstr "un"
 
-#: pylib/math_display/display_data.py:472
+#: pylib/math_display/display_data.py:474
 msgid "two"
 msgstr "deux"
 
-#: pylib/math_display/display_data.py:473
+#: pylib/math_display/display_data.py:475
 msgid "three"
 msgstr "trois"
 
-#: pylib/math_display/display_data.py:474
+#: pylib/math_display/display_data.py:476
 msgid "four"
 msgstr "quatre"
 
-#: pylib/math_display/display_data.py:475
+#: pylib/math_display/display_data.py:477
 msgid "five"
 msgstr "cinq"
 
-#: pylib/math_display/display_data.py:476
+#: pylib/math_display/display_data.py:478
 msgid "six"
 msgstr "six"
 
-#: pylib/math_display/display_data.py:477
+#: pylib/math_display/display_data.py:479
 msgid "seven"
 msgstr "sept"
 
-#: pylib/math_display/display_data.py:478
+#: pylib/math_display/display_data.py:480
 msgid "eight"
 msgstr "huit"
 
-#: pylib/math_display/display_data.py:479
+#: pylib/math_display/display_data.py:481
 msgid "nine"
 msgstr "neuf"
 
-#: pylib/math_display/display_data.py:480
+#: pylib/math_display/display_data.py:482
 msgid "ten"
 msgstr "dix"
 
-#: pylib/math_display/display_data.py:489 pylib/proof_state/proof_state.py:1499
+#: pylib/math_display/display_data.py:491 pylib/proof_state/proof_state.py:1499
 #: pylib/proof_state/proof_state.py:1513
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
-#: pylib/math_display/display_data.py:489
+#: pylib/math_display/display_data.py:491
 msgid "Let {} be {} {}"
 msgstr "Soient {} {} {}"
 
-#: pylib/math_display/display_data.py:490
-msgid "propositions"
-msgstr "propositions"
-
-#: pylib/math_display/display_data.py:491
+#: pylib/math_display/display_data.py:493
 msgid "sets"
 msgstr "ensembles"
 
-#: pylib/math_display/display_data.py:492
-#: pylib/math_display/display_data.py:506
+#: pylib/math_display/display_data.py:494
+#: pylib/math_display/display_data.py:508
 #: pylib/math_display/display_utils.py:49
 msgid "a subset"
 msgstr "une partie"
 
-#: pylib/math_display/display_data.py:492
+#: pylib/math_display/display_data.py:494
 msgid "subsets"
 msgstr "parties"
 
-#: pylib/math_display/display_data.py:493
-#: pylib/math_display/display_data.py:507
+#: pylib/math_display/display_data.py:495
+#: pylib/math_display/display_data.py:509
 #: pylib/math_display/display_utils.py:48
 msgid "an element"
 msgstr "un élément"
 
-#: pylib/math_display/display_data.py:493
+#: pylib/math_display/display_data.py:495
 msgid "elements"
 msgstr "éléments"
 
-#: pylib/math_display/display_data.py:494
-#: pylib/math_display/display_data.py:508
+#: pylib/math_display/display_data.py:496
+#: pylib/math_display/display_data.py:510
 #: pylib/math_display/display_utils.py:47
 msgid "a function"
 msgstr "une fonction"
 
-#: pylib/math_display/display_data.py:494
+#: pylib/math_display/display_data.py:496
 msgid "functions"
 msgstr "fonctions"
 
-#: pylib/math_display/display_data.py:495
-#: pylib/math_display/display_data.py:509
+#: pylib/math_display/display_data.py:497
+#: pylib/math_display/display_data.py:511
 msgid "a sequence"
 msgstr "une suite"
 
-#: pylib/math_display/display_data.py:495
+#: pylib/math_display/display_data.py:497
 msgid "sequences"
 msgstr "suites"
 
-#: pylib/math_display/display_data.py:496
+#: pylib/math_display/display_data.py:498
 msgid "non-negative integers"
 msgstr "entiers positifs ou nuls"
 
-#: pylib/math_display/display_data.py:497
+#: pylib/math_display/display_data.py:499
 msgid "integers"
 msgstr "nombres entiers"
 
-#: pylib/math_display/display_data.py:498
+#: pylib/math_display/display_data.py:500
 msgid "rational numbers"
 msgstr "nombres rationnels"
 
-#: pylib/math_display/display_data.py:499
+#: pylib/math_display/display_data.py:501
 msgid "real numbers"
 msgstr "nombres réels"
 
-#: pylib/math_display/display_data.py:504
+#: pylib/math_display/display_data.py:506
 msgid "every proposition"
 msgstr "chaque proposition"
 
-#: pylib/math_display/display_data.py:505
+#: pylib/math_display/display_data.py:507
 msgid "every set"
 msgstr "chaque ensemble"
 
-#: pylib/math_display/display_data.py:506
+#: pylib/math_display/display_data.py:508
 msgid "every subset"
 msgstr "chaque sous-ensemble"
 
-#: pylib/math_display/display_data.py:507
+#: pylib/math_display/display_data.py:509
 msgid "every element"
 msgstr "chaque élément"
 
-#: pylib/math_display/display_data.py:508
+#: pylib/math_display/display_data.py:510
 msgid "every function"
 msgstr "chaque fonction"
 
-#: pylib/math_display/display_data.py:509
+#: pylib/math_display/display_data.py:511
 msgid "every sequence"
 msgstr "chaque suite"
 
-#: pylib/math_display/display_data.py:510
+#: pylib/math_display/display_data.py:512
 msgid "every non-negative integer"
 msgstr "tout entier positif ou nul"
 
-#: pylib/math_display/display_data.py:511
+#: pylib/math_display/display_data.py:513
 msgid "every integer"
 msgstr "tout nombre entier"
 
-#: pylib/math_display/display_data.py:512
+#: pylib/math_display/display_data.py:514
 msgid "every rational number"
 msgstr "tout nombre rationnel"
 
-#: pylib/math_display/display_data.py:513
+#: pylib/math_display/display_data.py:515
 msgid "every real number"
 msgstr "tout nombre réel"
 
-#: pylib/math_display/display_data.py:920
-#: pylib/math_display/display_data.py:930
+#: pylib/math_display/display_data.py:922
+#: pylib/math_display/display_data.py:932
 msgid "Examples of syntax:"
 msgstr "Exemples de syntaxe :"
 
-#: pylib/math_display/display_data.py:921
+#: pylib/math_display/display_data.py:923
 msgid ""
 "\n"
 "    x ∈ A ∩ B          --> x belongs (A cap B)\n"
@@ -2384,18 +2389,18 @@ msgstr ""
 "    A = ∅               —> A = vide\n"
 "    ∀x ∈ A ∩ A’, x ∈ A   —> forall x dans (A inter A’), x dans A "
 
-#: pylib/math_display/display_data.py:927
+#: pylib/math_display/display_data.py:929
 msgid "You can use the keywords and, or, not, implies, iff, forall, exists."
 msgstr ""
 "Vous pouvez utiliser les mots-clés et, ou, non, implique, ssi, forall, "
 "exists."
 
-#: pylib/math_display/display_data.py:928
-#: pylib/math_display/display_data.py:942
+#: pylib/math_display/display_data.py:930
+#: pylib/math_display/display_data.py:944
 msgid "In case of error, try with more parentheses."
 msgstr "En cas d’erreur, essayez avec plus de parenthèses."
 
-#: pylib/math_display/display_data.py:931
+#: pylib/math_display/display_data.py:933
 msgid ""
 "\n"
 "    A ∩ B           --> A cap B\n"
@@ -3754,9 +3759,6 @@ msgstr "Téléchargé depuis {} vers {}"
 
 #~ msgid "there exists a function"
 #~ msgstr "il existe une fonction"
-
-#~ msgid "there exists a proposition"
-#~ msgstr "il existe une proposition"
 
 #~ msgid "there exists a unique function"
 #~ msgstr "il existe une unique fonction"
