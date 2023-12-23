@@ -189,6 +189,10 @@ class ExerciseCentralWidget(QWidget):
         statements           = exercise.available_statements
         outline              = exercise.course.outline
         self.statements_tree = StatementsTreeWidget(statements, outline)
+        # The following prevents statements from begin nearly invisible
+        # when there are few ActionButtons (so action_btns_lyt is narrow)
+        if statements:
+            self.statements_tree.setMinimumWidth(400)
         StatementsTreeWidgetItem.from_name = dict()
 
         # ─────── Init goal (Context area and target) ────── #
