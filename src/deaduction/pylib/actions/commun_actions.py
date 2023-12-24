@@ -110,7 +110,7 @@ def rw_with_defi(definition, object_=None) -> CodeForLean:
     return code
 
 
-# TODO: move to MathObject
+# FIXME: obsolete
 def inequality_from_pattern_matching(math_object: MathObject,
                                      variable: MathObject) -> Optional[MathObject]:
     """
