@@ -40,6 +40,8 @@ from .exceptions import (InputType,
                          test_selection,
                          test_prove_use)
 
+from .synthetic_proof_step import SyntheticProofStepType, SyntheticProofStep
+
 from .code_for_lean import (LeanCombinator,
                             CodeForLean,
                             get_effective_code_numbers)

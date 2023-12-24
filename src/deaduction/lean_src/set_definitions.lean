@@ -11,7 +11,6 @@ def pair {X: Type} (x x': X) := ({x, x'}: set X)
 -- def set_family (I X : Type) := I → set X  -- defined in parser_analysis_definitions
 -- def index_set := Type
 
-
 def symmetric_difference {X : Type} (A B : set X) := (A ∪ B) \ (A ∩ B)
 
 notation A `Δ` B := symmetric_difference A B
