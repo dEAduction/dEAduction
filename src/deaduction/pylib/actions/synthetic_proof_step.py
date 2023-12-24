@@ -57,10 +57,14 @@ class SyntheticProofStep:
                  premises=None, operator=None, conclusions=None,
                  rw_operator=None):
         self.type_ = type_
-        self.premises = premises if isinstance(premises, list) else [premises]
         self.operator = operator
         self.rw_operator = rw_operator
         self.conclusions = conclusions
+
+        # FIXME         
+        #  [p for p in premises if not p.is_place_holder()]
+        premises = premises if isinstance(premises, list) else [premises]
+        self.premises = [p for p in premises if not p.is_place_holder()]
 
     def add_premises(self, premises):
         self.premises.extend(premises)
