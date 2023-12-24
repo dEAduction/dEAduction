@@ -752,7 +752,7 @@ begin
 end
 
 lemma exercise.test_apply_equality_equality_and_direction1
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -764,7 +764,7 @@ begin
 end
 
 lemma exercise.test_apply_equality_equality_and_direction2
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -775,7 +775,7 @@ begin
   todo
 end
 lemma exercise.test_apply_equality_equality_and_direction3
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -786,7 +786,7 @@ begin
   todo
 end
 lemma exercise.test_apply_equality_equality_and_direction4
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -845,8 +845,9 @@ lemma exercise.test_map_element_2
 ∃ y:Y, y= f(x') :=
 /- dEAduction
 AutoTest
-    f map x',
-    y exists
+    f map [ x' ],
+    y exists,
+    CQFD
 -/
 begin
   todo
