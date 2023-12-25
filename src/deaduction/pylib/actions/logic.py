@@ -57,6 +57,7 @@ This file is part of dEAduction.
 import logging
 from typing import Union, Optional
 
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions.commun_actions import (introduce_new_subgoal,
                                                      rw_with_defi,
                                                      use_forall,
@@ -130,16 +131,18 @@ def prove_forall(proof_step) -> CodeForLean:
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
 
-    if body.is_implication(is_math_type=True):
-        # If math_object has the form
-        # ∀ x:X, (x R ... ==> ...)
-        # where R is some inequality relation
-        # then introduce the inequality on top of x
-        premise = body.children[0]  # children (2,0)
-        if premise.is_inequality(is_math_type=True):
-            # FIXME: rather use automatic actions
-            h = get_new_hyp(proof_step)
-            possible_codes = possible_codes.and_then(f'intro {h}')
+    bounded_quant = cvars.get("logic.use_bounded_quantification_notation")
+    if bounded_quant:
+        if body.is_implication(is_math_type=True):
+            # If math_object has the form
+            # ∀ x:X, (x R ... ==> ...)
+            # where R is some inequality relation
+            # then introduce the inequality on top of x
+            premise = body.children[0]  # children (2,0)
+            if premise.is_bounded_quant_op(is_math_type=True):
+                # FIXME: rather use automatic actions
+                h = get_new_hyp(proof_step)
+                possible_codes = possible_codes.and_then(f'intro {h}')
 
     return possible_codes
 
