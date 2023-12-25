@@ -745,12 +745,8 @@ class ExerciseChooser(AbstractCoExChooser):
 class AbstractStartCoEx(QDialog):
     """
     The base class course and exercise chooser (inherits QDialog); it is
-    inherited by StartCoExStartup and
-    StartCoExExerciseFinished, which are the classes instanciated
-    elsewhere in the program. This abstract class was made because
-    StartCoExStartup and StartCoExExerciseFinished are
-    almost the same — this class could almost be instanciated as is
-    (e.g. StartCoExStartup definition is very small).
+    inherited by StartCoExStartup (hisotrically alslso by
+    StartCoExExerciseFinished).
 
     AbstractStartCoEx is divided in two main sub-widgets
     (presented in a QTabWidget): the course chooser
@@ -802,6 +798,10 @@ class AbstractStartCoEx(QDialog):
 
         super().__init__()
 
+        # Init dict statement --> item
+        StatementsTreeWidgetItem.from_lean_name = {}
+
+        self.exercise_chooser_from_course_path = dict()
         self.servint = servint
 
         settings = QSettings("deaduction")
@@ -817,7 +817,7 @@ class AbstractStartCoEx(QDialog):
         self.setMinimumWidth(450)
         self.setMinimumHeight(550)
 
-        yes = True if exercise else False
+        yes = False if exercise else True
         self.__course_chooser = CourseChooser(servint, select_first_item=yes)
         self.__exercise_chooser = QWidget()
 
@@ -927,6 +927,11 @@ class AbstractStartCoEx(QDialog):
         self.__delete_history_action.triggered.connect(self.__delete_history)
         self.__recent_courses_action.triggered.connect(
             self.__show_recent_courses)
+
+    # def show(self):
+    #     if self.course:
+    #         self.__toggle_history()
+    #     super().show()
 
     def closeEvent(self, event: QEvent):
         """
@@ -1130,12 +1135,28 @@ class AbstractStartCoEx(QDialog):
         """
         self.__tabwidget.setCurrentIndex(0)
 
+    def get_exercise_chooser_from_course(self, course):
+        """
+        Serach in the exercise_chooser_from_course_path dict if an
+        ExerciseChooser has already been set up for course.
+            - If so, return it;
+            - if not, create a new one.
+        """
+
+        ec_dic = self.exercise_chooser_from_course_path
+        course_path = course.abs_course_path
+        exercise_chooser = ec_dic.get(course_path)
+        if not exercise_chooser:
+            exercise_chooser = ExerciseChooser(course, self.servint)
+            ec_dic[course_path] = exercise_chooser
+        return exercise_chooser
+
     @Slot(Course, str)
     def __preview_exercises(self, course: Course):
         """
         This method is called when the user chose a course and the
         signal self.__course_chooser.course_chosen is emitted. It
-        instanciates an ExerciseChooser object for the corresponding
+        instantiates an ExerciseChooser object for the corresponding
         course, puts it in the second tab and activates the tab.
         Furthermore, this method connects the signal
         self.__exercise_chooser.exercise_previewed to the slot
@@ -1148,7 +1169,8 @@ class AbstractStartCoEx(QDialog):
         self.__start_ex_btn.setEnabled(False)
 
         # Tab 0 is course, 1 is exercise
-        self.__exercise_chooser = ExerciseChooser(course, self.servint)
+        # self.__exercise_chooser = ExerciseChooser(course, self.servint)
+        self.__exercise_chooser = self.get_exercise_chooser_from_course(course)
         self.__tabwidget.removeTab(1)
         self.__tabwidget.addTab(self.__exercise_chooser, _('Exercises'))
         self.__tabwidget.setTabEnabled(1, True)
@@ -1230,6 +1252,8 @@ class AbstractStartCoEx(QDialog):
             exercise.delete_in_history_file()
 
         # Reset history course since file has changed
+        # FIXME:
+        self.exercise_chooser_from_course_path.pop(self.course.abs_course_path)
         self.course.set_history_course()
         self.__preview_exercises(self.course)
         if exercise_to_display:
@@ -1254,6 +1278,8 @@ class AbstractStartCoEx(QDialog):
         """
 
         exercise = self.__exercise_chooser.exercise
+        # FIXME:
+        self.exercise_chooser_from_course_path.pop(self.course.abs_course_path)
 
         # (1) Check if exercise is from history file
         if exercise.history_date():
