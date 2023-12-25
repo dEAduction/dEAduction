@@ -587,7 +587,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
     def show_statements(self, statements, yes=True):
         """
-        Hide all the provided statements. Based on item_from_statement.
+        Show or hide all the provided statements. Based on item_from_statement.
         """
         tree_widget = self.__exercises_tree
         tree_widget.hide_statements(statements, not yes)
@@ -1059,10 +1059,14 @@ class AbstractStartCoEx(QDialog):
         __preview_exercises once self.__exercise_chooser has been set to
         an ExerciseChooser object.
         """
+
         if self.__exercise_chooser and self.__exercise_chooser.exercise and \
                 not self.disable_start_btn:
             start_btn = self.__start_ex_btn
-            start_btn.setEnabled(True)
+            if not self.exercises_tab_is_selected:
+                start_btn.setEnabled(False)
+            else:
+                start_btn.setEnabled(True)
             start_btn.setDefault(True)
             if self.__exercise_chooser.selected_exercise_is_from_history_file():
                 start_btn.setText(_('Load proof'))
@@ -1087,6 +1091,10 @@ class AbstractStartCoEx(QDialog):
     @property
     def courses_tab_is_selected(self):
         return self.__tabwidget.currentIndex() == 0
+
+    @property
+    def exercises_tab_is_selected(self):
+        return self.__tabwidget.currentIndex() == 1
 
     @Slot()
     def __current_tab_changed(self):
