@@ -28,6 +28,6 @@ This file is part of d∃∀duction.
 from .horizontal_line       import HorizontalLine
 # from .read_pkl_course       import read_pkl_course
 from .replace_widget_layout import replace_widget_layout, clear_layout
-from .set_selectable        import set_selectable
+# from .set_selectable        import set_selectable
 from.global_geometry        import global_geometry
 
