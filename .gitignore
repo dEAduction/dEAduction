@@ -41,6 +41,13 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Debian package
+debian/deaduction/
+debian/.debhelper
+debian/deaduction.substvars
+debian/debhelper-build-stamp
+debian/files
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -189,5 +196,5 @@ htmlcov/
 tags
 #Lean files
 _target/
-*.olean
+#*.olean
 #leanpkg.path
