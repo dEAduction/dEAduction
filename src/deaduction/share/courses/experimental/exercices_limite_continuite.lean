@@ -377,7 +377,7 @@ end suites
 namespace fonctions
 
 lemma definition.composition {X Y Z: Type} {f: X → Y} {g:Y → Z} {x:X}:
-set.composition g f x = g (f x)
+function.comp g f x = g (f x)
 :=
 begin
     todo,
@@ -740,7 +740,7 @@ end
 
 lemma exercise.composition_continuite (f: ℝ →  ℝ) (g: ℝ → ℝ)
 (H: continuous f) (H': continuous g):
-continuous (composition g f) :=
+continuous (function.comp g f) :=
 /- dEAduction
 PrettyName
   Continuité et composition
