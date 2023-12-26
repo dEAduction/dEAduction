@@ -110,6 +110,10 @@ def action_definition(proof_step) -> CodeForLean:
     Apply definition to rewrite selected object or target.
     If nothing is selected, add definition to the context.
     """
+
+    # FIXME!!!!
+    return action_theorem(proof_step)
+    
     target_selected = proof_step.target_selected
     definition = proof_step.statement
     selected_objects = proof_step.selection
