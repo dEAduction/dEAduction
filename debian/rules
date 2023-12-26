@@ -1,0 +1,45 @@
+#!/usr/bin/make -f
+export DESTDIR=$(CURDIR)/debian/deaduction/opt/deaduction
+export VERSION=$(shell dpkg-parsechangelog --show-field Version)
+
+%:
+	dh $@
+
+override_dh_install:
+
+	# Creating virtual environment
+	@python3 -m venv $(DESTDIR)
+
+	# Upgrading pip and setuptools
+	@VIRTUAL_ENV=$(DESTDIR) PATH=$(DESTDIR)/bin:$$PATH pip install pip setuptools --upgrade
+
+	# Installing deaduction
+	@VIRTUAL_ENV=$(DESTDIR) PATH=$(DESTDIR)/bin:$$PATH pip install .
+	
+	# Uninstalling pip and setuptools
+	@VIRTUAL_ENV=$(DESTDIR) PATH=$(DESTDIR)/bin:$$PATH pip uninstall pip setuptools -y
+	
+	# Deleting wheels
+	@rm -Rf $(DESTDIR)/share/python-wheels
+
+	# Deleting cache
+	@find $(DESTDIR) -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete
+
+	# Deleting files in bin
+	@find $(DESTDIR)/bin -type f -not -name python* -delete
+	
+	# Installing desktop file and icons
+	@dh_install src/deaduction/share/applications/deaduction.desktop usr/share/applications/
+	@dh_install src/deaduction/share/icons/deaduction.svg usr/share/icons/hicolor/scalable/apps/
+	@dh_install src/deaduction/share/icons/deaduction.png usr/share/icons/hicolor/128x128/apps/
+	
+	# Creating launcher
+	@dh_install src/deaduction/share/launcher/deaduction opt/deaduction/bin/
+	@sed -i 's|^python3|/opt/deaduction/bin/python3|g' $(DESTDIR)/bin/deaduction
+	@dh_link /opt/deaduction/bin/deaduction /usr/bin/deaduction
+
+override_dh_strip_nondeterminism:
+
+override_dh_strip:
+
+override_dh_shlibdeps:

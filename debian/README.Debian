@@ -1,0 +1,7 @@
+dEAduction for Debian
+=====================
+
+Ugly debian packaging rules for dEAduction. Install Python dependendencies
+at build time in a virtual environment (using wheels...), install dEAduction in the virtual
+environment and add launcher and icon. Lean and mathlib dependencies
+are included in the Python package deaduction.

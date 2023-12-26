@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=d∃∀duction
+Comment=Run dEAduction
+Exec=deaduction
+Terminal=false
+Type=Application
+Icon=deaduction
+StartupNotify=true
+StartupWMClass=_core.py
