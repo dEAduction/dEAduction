@@ -1467,8 +1467,8 @@ def apply_substitute(proof_step,
     right: MathObject = equality.children[1]
     left_display = left.to_display(format_="utf8")
     right_display = right.to_display(format_="utf8")
-    choices = [(left_display, f'Replace by {right_display}'),
-               (right_display, f'Replace by {left_display}')]
+    choices = [(left_display, _('Replace by {}').format(right_display)),
+               (right_display, _('Replace by {}').format(left_display))]
 
     if len(selected_objects) == 1:  # Substitution on target
         if len(user_input) > 0:  # Choice of direction has been made

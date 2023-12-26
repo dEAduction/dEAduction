@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-12-26 10:41+0100\n"
-"PO-Revision-Date: 2023-12-26 10:41+0100\n"
+"POT-Creation-Date: 2023-12-26 12:08+0100\n"
+"PO-Revision-Date: 2023-12-26 12:10+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -594,11 +594,11 @@ msgstr "Aperçu global de la preuve"
 msgid "(browsed)"
 msgstr "(navigué)"
 
-#: dui/primitives/buttons_dialog.py:86 dui/stages/exercise/Coordinator.py:1151
+#: dui/primitives/buttons_dialog.py:86 dui/stages/exercise/Coordinator.py:1162
 msgid "Yes"
 msgstr "Oui"
 
-#: dui/primitives/buttons_dialog.py:87 dui/stages/exercise/Coordinator.py:1152
+#: dui/primitives/buttons_dialog.py:87 dui/stages/exercise/Coordinator.py:1163
 msgid "No"
 msgstr "Non"
 
@@ -679,61 +679,65 @@ msgstr "Redémarrage du serveur"
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1147 pylib/actions/logic.py:646
+#: dui/stages/exercise/Coordinator.py:1155 pylib/actions/logic.py:646
 msgid "Prove premise?"
 msgstr "Démontrer la prémisse ?"
 
-#: dui/stages/exercise/Coordinator.py:1148
-msgid "Do you want to prove the premise \"{}\" as a new sub-goal?"
-msgstr "Voulez-vous démontrer la prémisse {}  ?"
+#: dui/stages/exercise/Coordinator.py:1157
+msgid ""
+"Do you want to prove the <b>premise</b><br><CENTER>{}</CENTER><br>as a new "
+"sub-goal?"
+msgstr ""
+"Voulez-vous démontrer la <b>prémisse</b><br><CENTER>{}</CENTER><br>en tant "
+"que nouveau but ?"
 
-#: dui/stages/exercise/Coordinator.py:1238 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1249 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1254
+#: dui/stages/exercise/Coordinator.py:1265
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1257
+#: dui/stages/exercise/Coordinator.py:1268
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1264
+#: dui/stages/exercise/Coordinator.py:1275
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1267
+#: dui/stages/exercise/Coordinator.py:1278
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1269
+#: dui/stages/exercise/Coordinator.py:1280
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1271 pylib/actions/logic.py:1218
+#: dui/stages/exercise/Coordinator.py:1282 pylib/actions/logic.py:1218
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1315
+#: dui/stages/exercise/Coordinator.py:1326
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1316
+#: dui/stages/exercise/Coordinator.py:1327
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1320
+#: dui/stages/exercise/Coordinator.py:1331
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1322
+#: dui/stages/exercise/Coordinator.py:1333
 #: dui/stages/exercise/_exercise_main_window_widgets.py:838
 #: dui/stages/exercise/_exercise_main_window_widgets.py:854
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1330
+#: dui/stages/exercise/Coordinator.py:1341
 msgid "Save history"
 msgstr "Sauver l'historique"
 
@@ -838,7 +842,7 @@ msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
 #: dui/stages/exercise/exercise_main_window.py:976
-#: pylib/proof_step/proof_step.py:754
+#: pylib/proof_step/proof_step.py:765
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
@@ -1578,6 +1582,10 @@ msgstr "Impossible de remplacer {} par {}"
 #: pylib/actions/logic.py:1421
 msgid "Unable to use {} to substitute in {}"
 msgstr "Impossible d’utiliser {} pour substituer dans {}"
+
+#: pylib/actions/logic.py:1470 pylib/actions/logic.py:1471
+msgid "Replace by {}"
+msgstr "Remplacer par {}"
 
 #: pylib/actions/logic.py:1491 pylib/actions/logic.py:1522
 msgid "Choose which expression you want to replace"
@@ -2750,19 +2758,19 @@ msgstr "Preuve du but intermédiaire"
 msgid "no message"
 msgstr "pas de message"
 
-#: pylib/proof_step/proof_step.py:714
+#: pylib/proof_step/proof_step.py:725
 msgid "ERROR:"
 msgstr "ERREUR :"
 
-#: pylib/proof_step/proof_step.py:718
+#: pylib/proof_step/proof_step.py:729
 msgid "Success:"
 msgstr "Succès :"
 
-#: pylib/proof_step/proof_step.py:758
+#: pylib/proof_step/proof_step.py:769
 msgid "(Current goal admitted)"
 msgstr "(But en cours admis)"
 
-#: pylib/proof_step/proof_step.py:762
+#: pylib/proof_step/proof_step.py:773
 msgid "Beginning of Proof"
 msgstr "Début de la preuve"
 
@@ -3064,10 +3072,8 @@ msgstr ""
 "vérifiée ?"
 
 #: pylib/text/help_msgs.py:200
-#, fuzzy
-#| msgid "If so, then you could consider engaging in a proof by cases."
 msgid "<p>If so, then you could consider engaging in a proof by cases.</p>"
-msgstr "Si oui, alors vous pourriez envisager une preuve par cas."
+msgstr "<p>Si oui, alors vous pourriez envisager une preuve par cas.</p>"
 
 #: pylib/text/help_msgs.py:205
 #, python-brace-format
@@ -3113,17 +3119,13 @@ msgstr ""
 "des deux propriétés."
 
 #: pylib/text/help_msgs.py:223
-#, fuzzy
-#| msgid ""
-#| "Note that you will have to prove <em> both </em> properties, as opposed "
-#| "to disjunction for which you may choose which property you prove."
 msgid ""
 "Note that you will have to prove <b> both </b> properties, as opposed to "
 "disjunction for which you may choose which property you prove."
 msgstr ""
-"Notez bien que vous devrez démontrer <em>les deux</em> propriétés, "
-"contrairement aux disjonctions pour lesquelles vous pouvez <em>choisir</em> "
-"la propriété à démontrer."
+"Notez bien que vous devrez démontrer <b>les deux</b> propriétés, "
+"contrairement aux disjonctions pour lesquelles vous pouvez <b>choisir</b> la "
+"propriété à démontrer."
 
 #: pylib/text/help_msgs.py:227
 #, python-brace-format
