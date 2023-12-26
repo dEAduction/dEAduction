@@ -266,6 +266,10 @@ class MathDisplay:
         "SET_EXTENSION1": ('(', 'singleton ', 0, ')',
                            set_of_math_type_of_child_for_lean),
         "SET_EXTENSION2": ('(', 'pair ', 0, ' ', 1, ')'),
+        "SET_INTENSION": (
+            r"\no_text", r'\{', 1, r':', 0, ' | ', 2, r'\}'),
+        "SET_INTENSION_EXT": (
+            r"\no_text", r'\{', 2, ' | ', 1, r':', 0, r'\}'),
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
@@ -273,7 +277,8 @@ class MathDisplay:
         "NUMBER": (display_lean_value, ),
         "RAW_LEAN_CODE": (display_name, ),
         # Beware to be coherent with definition statement:
-        'COMPOSITION': ('composition ', 0, ' ', 1),
+        # 'COMPOSITION': ('composition ', 0, ' ', 1),
+        'COMPOSITION': ('function.comp ', 0, ' ', 1),
         "POWER": ('', 0, [' ^ ', 1], '')
     }
     # (r'\{', 0, r'\}')
@@ -590,7 +595,7 @@ class MathDisplay:
                   {'POINT'},  # FIXME: DECIMAL?
                   {'COMPOSITION'},
                   {'APPLICATION'},
-                  {'INV'},
+                  {'INV', 'POWER', 'SQRT'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
                   {'MINUS'},

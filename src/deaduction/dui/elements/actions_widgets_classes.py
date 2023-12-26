@@ -779,8 +779,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.set_icon()
 
         self.from_lean_name[statement.lean_name] = self
-        if isinstance(statement, Exercise):
-            print(fr"New TreeWdgItem for statement {statement.lean_name}")
+        # if isinstance(statement, Exercise):
+        #     print(fr"New TreeWdgItem for statement {statement.lean_name}")
         # Set tooltips: tooltips are set when item is put in the QTReeWidget
         # so that is_exercise property has a meaning
         # self.set_tooltip()

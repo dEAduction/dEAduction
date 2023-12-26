@@ -140,12 +140,11 @@ def prove_forall(proof_step) -> CodeForLean:
             # then introduce the inequality on top of x
             premise = body.children[0]  # children (2,0)
             if premise.is_bounded_quant_op(is_math_type=True):
-                # FIXME: rather use automatic actions
+                # FIXME: rather use automatic actions?
                 h = get_new_hyp(proof_step)
                 possible_codes = possible_codes.and_then(f'intro {h}')
 
     return possible_codes
-
 
 
 @action()
