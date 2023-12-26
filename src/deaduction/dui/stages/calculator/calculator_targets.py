@@ -23,6 +23,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+import logging
 
 from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon
@@ -39,6 +40,7 @@ from deaduction.dui.primitives.base_math_widgets_styling import (
 from deaduction.dui.elements import GoalWidget
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
+log = logging.getLogger(__name__)
 global _
 
 
@@ -198,21 +200,24 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer.start()
 
         key = event.key()
-        # print(f"Key: {key}")
-        # print(f"Event: {event}")
-        if event.modifiers() & Qt.ControlModifier:
+        if int(event.modifiers()) & int(Qt.ControlModifier):
+            # print("CTRL")
             key += Qt.CTRL
             # print(key_sqc)
             # print(key_sqc == QKeySequence.Undo)
-        if event.modifiers() & Qt.ShiftModifier:
+        if int(event.modifiers()) & int(Qt.ShiftModifier):
+            # print("SHIFT")
             key += Qt.SHIFT
-        if event.modifiers() & Qt.AltModifier:
+        if int(event.modifiers()) & int(Qt.AltModifier):
+            # print("ALT")
             key += Qt.ALT
-        if event.modifiers() & Qt.MetaModifier:
+        if int(event.modifiers()) & int(Qt.MetaModifier):
+            # print("META")
             key += Qt.META
 
         key_sequence = QKeySequence(key)
         # print(key_sequence == QKeySequence.Undo)
+        # log.debug("Key event -> Trying Return and Space")
         if key_sequence == QKeySequence("Return"):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
         elif key_sequence == QKeySequence("Space"):
@@ -224,10 +229,12 @@ class CalculatorTarget(MathTextWidget):
         action = None
         bar = None
         # Navigation
+        # log.debug("Key event -> Trying nav")
         if key_sequence == QKeySequence.MoveToPreviousWord:
             bar = self.navigation_bar
             action = bar.beginning_action
         elif key_sequence == QKeySequence.MoveToPreviousChar:
+            print("<-")
             bar = self.navigation_bar
             action = bar.left_action
         elif key_sequence == QKeySequence.MoveToNextChar:
