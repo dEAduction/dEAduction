@@ -154,10 +154,9 @@ prove["forall"] = (use["forall"][0],
                      "hypotheses in the context."))
 
 use["implies"] = (_("{this_is} an implication, which asserts that some property"
-                    " P:<CENTER>{ch0},</CENTER>"
-                    "the <em>premise</em>, implies some other property "
-                    "Q:<CENTER>{ch1},<CENTER>"
-                    " the <em>conclusion</em>."),
+                    " P, the <b>premise</b>:<CENTER>{ch0},</CENTER>"
+                    " implies some other property Q, the <b>conclusion</b>:"
+                    "<CENTER>{ch1}.<CENTER>"),
                   _("{to_use}, {press} {use_implies} {after_selecting_it}"
                     " and another property which match the premise"
                     + "{or_drag_premise}" + "." + "<p>" +
@@ -198,8 +197,8 @@ use["or"] = (_("{this_property_is} a disjunction."),
                "case when {ch1} holds."),
              (_("Would it help you to know which one of the two properties "
                 "hold?"),  # + " " +
-              _("If so, then you could consider engaging in a proof by "
-                "cases.")))
+              _("<p>If so, then you could consider engaging in a proof by "
+                "cases.</p>")))
 
 
 prove["or"] = (use["or"][0],
@@ -221,7 +220,7 @@ use["and"] = (_("{this_property_is} a conjunction."),
 prove["and"] = (use["and"][0],
                 _("Press {prove_and} to prove separately and "
                   "successively each property."),
-                _("Note that you will have to prove <em> both </em> "
+                _("Note that you will have to prove <b> both </b> "
                   "properties, as opposed to disjunction for which you may "
                   "choose which property you prove."))
 
@@ -255,8 +254,8 @@ use['equal'] = (_("{this_is} an equality between two {elements_of_ch0_type}."),
                 (_('You may use this equality to substitute {ch0} for '
                    '{ch1}, or vice-versa, in the target or in some other '
                    'property of the context.'),
-                 _('To do this, press the "=" ( EQUAL) button after selecting'
-                   ' the other property{or_drag_to_equality}.')),
+                 _('<p>To do this, press the "=" ( EQUAL) button after selecting'
+                   ' the other property{or_drag_to_equality}.</p>')),
                 "")
 
 prove['equal'] = (use['equal'][0], "", "")
@@ -264,8 +263,8 @@ prove['equal'] = (use['equal'][0], "", "")
 use["function"] = (_("{this_is} a function from {ch0} to {ch1}."),
                    (_("You may apply this function to some element of {ch0}, "
                       "or to an equality between two elements of {ch0}."),
-                    _("For this, press the ↦ (MAP) button after selecting "
-                      "an element or an equality{or_drag_to_function}.")),
+                    _("<p>For this, press the ↦ (MAP) button after selecting "
+                      "an element or an equality{or_drag_to_function}.</p>")),
                    "")
 
 prove['belong'] = (_("{this_is} a belonging property."),
@@ -325,8 +324,10 @@ def conc_n_trans(msgs) -> str:
     """
     msgs is either s string, or a tuple of strings.
     """
-    msg = (" ".join([translate(msg) for msg in msgs])if isinstance(msgs, tuple)
-           else translate(msgs))
+
+    joining_str = ' '  # or '<br>' for line breaks
+    msg = (joining_str.join([translate(msg) for msg in msgs])
+           if isinstance(msgs, tuple) else translate(msgs))
     return msg
 
 
