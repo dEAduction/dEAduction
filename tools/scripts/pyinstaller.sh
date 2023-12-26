@@ -2,6 +2,8 @@
 ### Deaduction pyinstaller script
 echo "This is D∃∀DUCTION pyinstaller builder script"
 echo "It should be launched from the tools/scripts directory"
+echo "The app will be dEAduction/src/dist/__main__"
+echo "finger crossed!"
 ### Launch me from where I am,
 ### dEAduction/tools/scripts
 
