@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2023-12-26 12:08+0100\n"
-"PO-Revision-Date: 2023-12-26 12:10+0100\n"
+"POT-Creation-Date: 2023-12-27 16:54+0100\n"
+"PO-Revision-Date: 2023-12-27 16:55+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -72,14 +72,14 @@ msgstr "Mode Utiliser"
 #: dui/elements/actions_widgets_classes.py:409
 #: dui/elements/actions_widgets_classes.py:451
 #: dui/elements/actions_widgets_classes.py:665
-#: dui/stages/exercise/_exercise_main_window_widgets.py:313
+#: dui/stages/exercise/_exercise_main_window_widgets.py:330
 msgid "Prove:"
 msgstr "Démontrer :"
 
 #: dui/elements/actions_widgets_classes.py:410
 #: dui/elements/actions_widgets_classes.py:455
 #: dui/elements/actions_widgets_classes.py:666
-#: dui/stages/exercise/_exercise_main_window_widgets.py:314
+#: dui/stages/exercise/_exercise_main_window_widgets.py:331
 msgid "Use:"
 msgstr "Utiliser :"
 
@@ -211,7 +211,7 @@ msgstr ""
 "propriété universelle ou une implication"
 
 #: dui/elements/config_window.py:276
-#: dui/stages/exercise/exercise_main_window.py:257
+#: dui/stages/exercise/exercise_main_window.py:249
 msgid "Preferences"
 msgstr "Préférences"
 
@@ -490,7 +490,7 @@ msgid "Text mode"
 msgstr "Mode texte"
 
 #: dui/elements/help.py:59 dui/elements/help.py:148
-#: dui/stages/exercise/_exercise_main_window_widgets.py:623
+#: dui/stages/exercise/_exercise_main_window_widgets.py:640
 msgid "Help"
 msgstr "Aide"
 
@@ -510,21 +510,21 @@ msgstr "Voir la suggestion !"
 msgid "Help n°{}"
 msgstr "Aide n°{} "
 
-#: dui/elements/help.py:252
+#: dui/elements/help.py:253
 msgid "No object selected"
 msgstr "Pas d'objet sélectionné"
 
-#: dui/elements/help.py:254
+#: dui/elements/help.py:255
 msgid "Double click on context or target to get some help."
 msgstr ""
 "Double-cliquer sur le but ou sur un élément du contexte pour obtenir de "
 "l'aide."
 
-#: dui/elements/help.py:263
+#: dui/elements/help.py:264
 msgid "No help available on this object."
 msgstr "Aucune aide disponible sur cet objet."
 
-#: dui/elements/help.py:269
+#: dui/elements/help.py:270
 msgid "Hint:"
 msgstr "Suggestion :"
 
@@ -607,47 +607,47 @@ msgid "Yes or no?"
 msgstr "Oui ou non ?"
 
 #: dui/stages/calculator/calculator.py:126
-#: dui/stages/calculator/calculator_targets.py:65
+#: dui/stages/calculator/calculator_targets.py:67
 msgid "Undo all"
 msgstr "Tout annuler"
 
 #: dui/stages/calculator/calculator.py:129
-#: dui/stages/calculator/calculator_targets.py:68
+#: dui/stages/calculator/calculator_targets.py:70
 msgid "Undo"
 msgstr "Annuler"
 
 #: dui/stages/calculator/calculator.py:132
-#: dui/stages/calculator/calculator_targets.py:71
+#: dui/stages/calculator/calculator_targets.py:73
 msgid "Redo"
 msgstr "Rétablir"
 
 #: dui/stages/calculator/calculator.py:135
-#: dui/stages/calculator/calculator_targets.py:74
+#: dui/stages/calculator/calculator_targets.py:76
 msgid "Redo all"
 msgstr "Tout rétablir"
 
 #: dui/stages/calculator/calculator.py:168
-#: dui/stages/calculator/calculator_targets.py:107
+#: dui/stages/calculator/calculator_targets.py:109
 msgid "Go to beginning"
 msgstr "Aller au début"
 
 #: dui/stages/calculator/calculator.py:173
-#: dui/stages/calculator/calculator_targets.py:112
+#: dui/stages/calculator/calculator_targets.py:114
 msgid "Move left"
 msgstr "Aller à gauche"
 
 #: dui/stages/calculator/calculator.py:181
-#: dui/stages/calculator/calculator_targets.py:120
+#: dui/stages/calculator/calculator_targets.py:122
 msgid "Move right"
 msgstr "Aller à droite"
 
 #: dui/stages/calculator/calculator.py:185
-#: dui/stages/calculator/calculator_targets.py:124
+#: dui/stages/calculator/calculator_targets.py:126
 msgid "Go to end"
 msgstr "Aller à la fin"
 
 #: dui/stages/calculator/calculator.py:189
-#: dui/stages/calculator/calculator_targets.py:128
+#: dui/stages/calculator/calculator_targets.py:130
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
@@ -732,8 +732,8 @@ msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
 #: dui/stages/exercise/Coordinator.py:1333
-#: dui/stages/exercise/_exercise_main_window_widgets.py:838
-#: dui/stages/exercise/_exercise_main_window_widgets.py:854
+#: dui/stages/exercise/_exercise_main_window_widgets.py:855
+#: dui/stages/exercise/_exercise_main_window_widgets.py:871
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
@@ -741,112 +741,112 @@ msgstr "Changer d’exercice"
 msgid "Save history"
 msgstr "Sauver l'historique"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:164
-#: dui/stages/exercise/_exercise_main_window_widgets.py:258
-#: dui/stages/exercise/_exercise_main_window_widgets.py:493
+#: dui/stages/exercise/_exercise_main_window_widgets.py:160
+#: dui/stages/exercise/_exercise_main_window_widgets.py:269
+#: dui/stages/exercise/_exercise_main_window_widgets.py:510
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:316
+#: dui/stages/exercise/_exercise_main_window_widgets.py:333
 msgid "Compute (experimental):"
 msgstr "Calculer (expérimental) :"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:325
+#: dui/stages/exercise/_exercise_main_window_widgets.py:342
 msgid "Actions (logical rules and statements)"
 msgstr "Actions (règles logiques et énoncés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:491
+#: dui/stages/exercise/_exercise_main_window_widgets.py:508
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:651
+#: dui/stages/exercise/_exercise_main_window_widgets.py:668
 msgid "    Thinking"
 msgstr "    Je réfléchis"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:656
+#: dui/stages/exercise/_exercise_main_window_widgets.py:673
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:761
-#: dui/stages/exercise/_exercise_main_window_widgets.py:823
+#: dui/stages/exercise/_exercise_main_window_widgets.py:778
+#: dui/stages/exercise/_exercise_main_window_widgets.py:840
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:766
-#: dui/stages/exercise/_exercise_main_window_widgets.py:811
+#: dui/stages/exercise/_exercise_main_window_widgets.py:783
+#: dui/stages/exercise/_exercise_main_window_widgets.py:828
 msgid "Jump to beginning of proof"
 msgstr "Aller au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:769
-#: dui/stages/exercise/_exercise_main_window_widgets.py:812
+#: dui/stages/exercise/_exercise_main_window_widgets.py:786
+#: dui/stages/exercise/_exercise_main_window_widgets.py:829
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:772
-#: dui/stages/exercise/_exercise_main_window_widgets.py:813
+#: dui/stages/exercise/_exercise_main_window_widgets.py:789
+#: dui/stages/exercise/_exercise_main_window_widgets.py:830
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:775
-#: dui/stages/exercise/_exercise_main_window_widgets.py:814
+#: dui/stages/exercise/_exercise_main_window_widgets.py:792
+#: dui/stages/exercise/_exercise_main_window_widgets.py:831
 msgid "Jump to end of proof"
 msgstr ""
 "Aller à la fin\n"
 " de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:779
-#: dui/stages/exercise/_exercise_main_window_widgets.py:816
+#: dui/stages/exercise/_exercise_main_window_widgets.py:796
+#: dui/stages/exercise/_exercise_main_window_widgets.py:833
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:783
+#: dui/stages/exercise/_exercise_main_window_widgets.py:800
 msgid "Toggle proof global view"
 msgstr "Aperçu global de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:787
-#: dui/stages/exercise/_exercise_main_window_widgets.py:815
+#: dui/stages/exercise/_exercise_main_window_widgets.py:804
+#: dui/stages/exercise/_exercise_main_window_widgets.py:832
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:791
-#: dui/stages/exercise/_exercise_main_window_widgets.py:818
+#: dui/stages/exercise/_exercise_main_window_widgets.py:808
+#: dui/stages/exercise/_exercise_main_window_widgets.py:835
 msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:817
+#: dui/stages/exercise/_exercise_main_window_widgets.py:834
 msgid "Toggle proof tree"
 msgstr "Arbre de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:828
-#: dui/stages/exercise/_exercise_main_window_widgets.py:856
+#: dui/stages/exercise/_exercise_main_window_widgets.py:845
+#: dui/stages/exercise/_exercise_main_window_widgets.py:873
 msgid "Stop me from thinking!"
 msgstr "Arrêter la requête"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:833
-#: dui/stages/exercise/_exercise_main_window_widgets.py:855
+#: dui/stages/exercise/_exercise_main_window_widgets.py:850
+#: dui/stages/exercise/_exercise_main_window_widgets.py:872
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:841
-#: dui/stages/exercise/_exercise_main_window_widgets.py:857
+#: dui/stages/exercise/_exercise_main_window_widgets.py:858
+#: dui/stages/exercise/_exercise_main_window_widgets.py:874
 msgid "Save proof"
 msgstr "Sauvegarder la preuve"
 
-#: dui/stages/exercise/exercise_main_window.py:260
+#: dui/stages/exercise/exercise_main_window.py:252
 #: pylib/pre_processing/__main__.py:210 pylib/pre_processing/__main__.py:232
 msgid "Exercise"
 msgstr "Exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:261
+#: dui/stages/exercise/exercise_main_window.py:253
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:976
+#: dui/stages/exercise/exercise_main_window.py:970
 #: pylib/proof_step/proof_step.py:765
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:979
+#: dui/stages/exercise/exercise_main_window.py:973
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -1109,23 +1109,27 @@ msgstr "Sélectionner un seul objet"
 msgid "Triangular inequality {} added to the context"
 msgstr "Inégalité triangulaire {} ajoutée au contexte"
 
-#: pylib/actions/compute.py:300
+#: pylib/actions/compute.py:301 pylib/actions/logic.py:1414
+msgid "the target"
+msgstr "le but"
+
+#: pylib/actions/compute.py:302
 msgid "No absolute value found in {}"
 msgstr "Je n'ai pas trouvé de valeur absolue dans {}"
 
-#: pylib/actions/compute.py:322
+#: pylib/actions/compute.py:324
 msgid "Select only one object at a time"
 msgstr "Sélectionner un seul objet à la fois"
 
-#: pylib/actions/compute.py:331
+#: pylib/actions/compute.py:333
 msgid "Target simplified"
 msgstr "Le but a été simplifié"
 
-#: pylib/actions/compute.py:332
+#: pylib/actions/compute.py:334
 msgid "Property {} simplified"
 msgstr "La propriété {} a été simplifiée"
 
-#: pylib/actions/compute.py:334
+#: pylib/actions/compute.py:336
 msgid "Unable to simplify"
 msgstr "Je ne sais pas simplifier ceci"
 
@@ -1558,10 +1562,6 @@ msgstr "La propriété sélectionnée n’est pas un « si et seulement si » 
 #: pylib/actions/logic.py:1392
 msgid "Selected items should both be implications"
 msgstr "Les objets sélectionnés ne sont pas deux implications"
-
-#: pylib/actions/logic.py:1414
-msgid "the target"
-msgstr "le but"
 
 #: pylib/actions/logic.py:1416
 msgid "{} replaced by {}"
@@ -3569,6 +3569,18 @@ msgstr "Progression : {:03d}%"
 #: pylib/utils/filesystem.py:265
 msgid "Download from {} to {}"
 msgstr "Téléchargé depuis {} vers {}"
+
+#: share/applications/deaduction.desktop:4
+msgid "d∃∀duction"
+msgstr "d∃∀duction"
+
+#: share/applications/deaduction.desktop:5
+msgid "Run dEAduction"
+msgstr "Démarrer d∃∀duction"
+
+#: share/applications/deaduction.desktop:9
+msgid "deaduction"
+msgstr "d∃∀duction"
 
 #~ msgid "{to_use}, press {use_forall} {after_selecting_it}."
 #~ msgstr "{to_use}, {press} {use_forall} {after_selecting_it}."
