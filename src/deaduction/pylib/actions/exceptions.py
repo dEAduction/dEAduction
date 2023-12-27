@@ -73,13 +73,18 @@ class CalculatorRequest(IntEnum):
     """
     Class clarifying th type of request to the Calculator.
     """
+
     ApplyProperty = 0
-    ApplyStatement = 1
-    ProveExists = 2
-    StateSubGoal = 3
+    ApplyStatement = 10
+    ProveExists = 20
+
+    # Prop entry
+    StateSubGoal = 30
     EnterProp = 31
     ProofByCases = 32
-    DefineObject = 4
+
+    # Enter one object entry
+    DefineObject = 40
     EnterObject = 41
     ApplyFunction = 42
 

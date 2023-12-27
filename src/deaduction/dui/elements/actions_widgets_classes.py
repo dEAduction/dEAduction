@@ -754,7 +754,7 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
     :attribute statement Statement: The instance of the class (or child
         of) Statement associated to self.
     """
-    from_lean_name : dict = {}  # Statement.lean_name --> item
+    from_lean_name: dict = {}  # Statement.lean_name --> item
     # ! Must be updated to avoid pointing to deleted items !
 
     is_node = False
@@ -779,7 +779,8 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         self.set_icon()
 
         self.from_lean_name[statement.lean_name] = self
-
+        # if isinstance(statement, Exercise):
+        #     print(fr"New TreeWdgItem for statement {statement.lean_name}")
         # Set tooltips: tooltips are set when item is put in the QTReeWidget
         # so that is_exercise property has a meaning
         # self.set_tooltip()
@@ -1111,7 +1112,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         # TODO: get rid of self._init_tree ?
         # IMPORTANT: re-initialize StatementsTreeWidgetItem dictionary
-        StatementsTreeWidgetItem.from_lean_name = {}
+        # StatementsTreeWidgetItem.from_lean_name = {}
         super().__init__()
         self.setColumnCount(2 if is_exercise_list else 1)
 

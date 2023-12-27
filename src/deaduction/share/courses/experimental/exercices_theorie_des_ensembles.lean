@@ -469,7 +469,7 @@ begin
 end
 
 lemma definition.composition {x:X}:
-composition g f x = g (f x)
+function.comp g f x = g (f x)
 :=
 begin
     todo,
@@ -606,7 +606,7 @@ end
 lemma exercise.image_reciproque.composition
 (C: set Z)
 :
-((composition g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)
+((function.comp g f) )⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 begin
     todo
@@ -715,7 +715,7 @@ open applications_II.definitions
 lemma exercise.composition_injections
 (H1 : injective f) (H2 : injective g)
 :
-injective (composition g f)
+injective (function.comp g f)
 :=
 /- dEAduction
 PrettyName
@@ -727,7 +727,7 @@ end
 
 lemma exercise.composition_surjections
 (H1 : surjective f) (H2 : surjective g) :
-surjective (composition g f)
+surjective (function.comp g f)
 :=
 /- dEAduction
 PrettyName
@@ -738,7 +738,7 @@ begin
 end
 
 lemma exercise.injective_si_compo_injective
-(H1 : injective (composition g f)) :
+(H1 : injective (function.comp g f)) :
 injective f
 :=
 /- dEAduction
@@ -750,7 +750,7 @@ begin
 end
 
 lemma exercise.surjective_si_compo_surjective
-(H1 : surjective (composition g f)) :
+(H1 : surjective (function.comp g f)) :
 surjective g
 :=
 /- dEAduction
@@ -762,7 +762,7 @@ begin
 end
 
 lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
-∃ F: Y → X, (composition F f) = Identite :=
+∃ F: Y → X, (function.comp F f) = Identite :=
 /- dEAduction
 PrettyName
     (x) Injectivité et inverse à gauche
@@ -772,7 +772,7 @@ begin
 end
 
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
-∃ F: Y → X, (composition f F) = Identite :=
+∃ F: Y → X, (function.comp f F) = Identite :=
 /- dEAduction
 PrettyName
     (*) Surjectivité et inverse à droite
@@ -783,7 +783,7 @@ end
 
 lemma exercise.bijective_ssi_inverse :
 (bijective f) ↔ ∃ g : Y → X,
-composition g f = Identite ∧ composition f g  = Identite
+function.comp g f = Identite ∧ function.comp f g  = Identite
 :=
 /- dEAduction
 PrettyName
@@ -795,7 +795,7 @@ end
 
 lemma exercise.unicite_inverse :
 (bijective f) → exists_unique (λ g : Y → X,
-composition g f = Identite)
+function.comp g f = Identite)
 :=
 /- dEAduction
 PrettyName
@@ -1093,7 +1093,7 @@ end
 open applications_II.definitions
 lemma exercise.exercice_factorisation_I
 (g : Y → Z) (h: X → Z) :
-(∃ f: X → Y, h = (composition g f)) ↔ h '' set.univ ⊆ g '' set.univ
+(∃ f: X → Y, h = (function.comp g f)) ↔ h '' set.univ ⊆ g '' set.univ
 :=
 /- dEAduction
 PrettyName
@@ -1106,7 +1106,7 @@ end
 
 lemma exercise.exercice_factorisation_II
 (f : X → Y) (h: X → Z) :
-(∃ g: Y → Z, h = (composition g f)) ↔ (∀ x y, (f x = f y → h x = h y))
+(∃ g: Y → Z, h = (function.comp g f)) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
 /- dEAduction
 PrettyName
@@ -1120,7 +1120,7 @@ end
 -- TODO: ajouter exoset ficall.pdf exos (140 bijections) 141 142 146
 
 lemma exercise.injectivite_surjecivite_1 (f: X → Y) (g: Y → Z)
-(H1 : injective (composition g f)) (H2 : surjective f)
+(H1 : injective (function.comp g f)) (H2 : surjective f)
 :
 injective g
 :=
@@ -1133,7 +1133,7 @@ begin
 end
 
 lemma exercise.injectivite_surjecivite_2 (f: X → Y) (g: Y → Z)
-(H1 : surjective (composition g f)) (H2 : injective g)
+(H1 : surjective (function.comp g f)) (H2 : injective g)
 :
 surjective f
 :=
@@ -1149,7 +1149,7 @@ end
 
 lemma exercise.injectivite_categorielle
 (f: Y → Z):
-(injective f) → (∀X: Type, ∀ g h : X → Y, (composition f g) = (composition f h) → g = h)
+(injective f) → (∀X: Type, ∀ g h : X → Y, (function.comp f g) = (function.comp f h) → g = h)
 :=
 /- dEAduction
 PrettyName
@@ -1161,7 +1161,7 @@ end
 
 lemma exercise.surjectivite_categorielle
 (f: X → Y):
-(surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (composition g f ) = (composition h f ) → g = h)
+(surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (function.comp g f ) = (function.comp h f ) → g = h)
 :=
 /- dEAduction
 PrettyName

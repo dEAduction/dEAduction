@@ -30,11 +30,11 @@ import logging
 from typing import Optional, Union
 
 import deaduction.pylib.config.vars as cvars
-from deaduction.pylib.actions import (InputType,
-                                      MissingParametersError,
-                                      CalculatorRequest,
+from deaduction.pylib.actions import (CalculatorRequest,
                                       MissingCalculatorOutput,
-                                      CodeForLean)
+                                      CodeForLean,
+                                      SyntheticProofStep,
+                                      SyntheticProofStepType)
 
 from deaduction.pylib.config.request_method import from_previous_state_method
 from deaduction.pylib.actions.utils import extract_var
@@ -110,7 +110,7 @@ def rw_with_defi(definition, object_=None) -> CodeForLean:
     return code
 
 
-# TODO: move to MathObject
+# FIXME: obsolete
 def inequality_from_pattern_matching(math_object: MathObject,
                                      variable: MathObject) -> Optional[MathObject]:
     """
@@ -283,13 +283,14 @@ def use_forall_with_ineq(proof_step, arguments,
     code = CodeForLean.empty_code()
 
     # (1) Try to prove inequality
-    if inequality.is_in(math_types,
-                        remove_generic_paren=True,
-                        use_assigned_math_obj=True):
+    idx = inequality.is_in(math_types,
+                           remove_generic_paren=True,
+                           use_assigned_math_obj=True)
+    if idx is not False:
         # Check if inequality is in context
         ineq_in_ctxt = True
-        index = math_types.index(inequality)
-        context_inequality = goal.context[index]
+        # index = math_types.index(inequality)
+        context_inequality = goal.context[idx]
         used_inequalities.append(context_inequality)
         # inequality will be passed to the "have" tactics:
         variables.append(context_inequality)
@@ -366,7 +367,7 @@ def use_forall_with_ineq(proof_step, arguments,
                              format(new_hypo_name))
     # In any case:
     code.add_used_properties(proof_step.selection)
-
+    code.operator = universal_property_or_statement
     return code
 
 
@@ -397,18 +398,30 @@ def use_forall(proof_step, arguments: [MathObject],
     simple_code = have_new_property(universal_property_or_statement, arguments,
                                     new_hypo_name,
                                     no_more_place_holder=no_more_place_holder)
-    simple_code.add_used_properties(selected_objects)
+
+    # Add SyntheticProofStep data:
+    if isinstance(universal_property_or_statement, MathObject):
+        sps_type = SyntheticProofStepType.ApplyUnivProp
+    else:
+        sps_type = SyntheticProofStepType.ApplyUnivStatement
+    sps = SyntheticProofStep(type_=sps_type,
+                             operator=universal_property_or_statement,
+                             premises=arguments)
+    simple_code.synthetic_proof_step = sps
 
     universal_property = universal_property_or_statement.to_math_object()
 
-    inequality = inequality_from_pattern_matching(universal_property,
-                                                  arguments[0])
+    # Bounded quantification?
+    # inequality = inequality_from_pattern_matching(universal_property,
+    #                                               arguments[0])
 
+    inequality = universal_property.bounded_quant(arguments[0])
     # (Case 1) No inequality to solve
-    if not inequality or not cvars.get(
-        "functionality.auto_solve_inequalities_in_bounded_quantification",
-            False):
-        return simple_code
+    auto_solve = cvars.get("functionality.auto_solve_inequalities_"
+                           "in_bounded_quantification", False)
+    if not inequality or not auto_solve:
+        code = simple_code
+        # return simple_code
 
     # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
     else:
@@ -416,8 +429,14 @@ def use_forall(proof_step, arguments: [MathObject],
                                             universal_property_or_statement,
                                             inequality, new_hypo_name,
                                             no_place_holder=no_more_place_holder)
+        sps2 = SyntheticProofStep(type_=sps_type,
+                                  operator=universal_property_or_statement,
+                                  premises=arguments + [inequality])
+        complex_code.synthetic_proof_step = sps2
         code = complex_code.or_else(simple_code)
-        return code
+
+    code.add_used_properties(selected_objects)
+    return code
 
 
 # def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:

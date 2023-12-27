@@ -42,7 +42,7 @@ def set_selectable(self: QTreeWidgetItem, yes: bool = True):
     """
 
     if yes:
-        self.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        self.setFlags(int(Qt.ItemIsEnabled) | int(Qt.ItemIsSelectable))
     else:
         self.setFlags(Qt.ItemIsEnabled)
 

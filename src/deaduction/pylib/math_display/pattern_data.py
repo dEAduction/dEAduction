@@ -298,6 +298,8 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=MetricSpace": (r'\metric_space',),
     "CONSTANT/name=EspaceTopologique": (r'\topological_space',),
     "CONSTANT/name=TypePair": (r'{0, 1}',),
+    "FUNCTION(?0, PROP)":
+        (r'\function_from', (0,), r'\to', r'\propositions'),
     "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
     "CONSTANT/name=ℕ": (r'\type_N', ),  # TODO: test!!
     "CONSTANT/name=ℤ": (r'\type_Z',),

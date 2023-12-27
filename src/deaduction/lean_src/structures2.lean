@@ -149,8 +149,8 @@ match e with
     end
 | `(index_set) := return ("SET_INDEX", [])
 | `(set_family %%I %%X) := return ("SET_FAMILY", [I, X])
-| `(%%f ∘ %%g) := return ("COMPOSITION", [f, g])
-| `(set.composition %%f %%g) := return ("COMPOSITION", [f, g])
+-- | `(%%f ∘ %%g) := return ("COMPOSITION", [f, g])
+| `(function.comp %%f %%g) := return ("COMPOSITION", [f, g])
 -- | `(seq %%X) := return ("SEQUENCE", [X])
 | (pi name binder type body) := do
     let is_arr := is_arrow e,

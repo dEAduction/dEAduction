@@ -1123,6 +1123,14 @@ class Coordinator(QObject):
         # (3) Check automatic intro of hypos' premises
         ask_auto_premises = cvars.get(
             "functionality.ask_to_prove_premises_of_implications", True)
+
+        # Do not ask when destructing an iff:
+        if pps.is_destruct_iff():
+            for prop in goal.context_props:
+                premise = prop.premise()  # None if prop is not an implication
+                if premise:
+                    prop.turn_off_auto_action()  # No more asking for this one
+
         for prop in goal.context_props:
             premise = prop.premise()  # None if prop is not an implication
             if premise and prop.allow_auto_action:
@@ -1145,9 +1153,12 @@ class Coordinator(QObject):
                 elif ask_auto_premises:
                     msg_box = QMessageBox()  # title=
                     msg_box.setWindowTitle(_("Prove premise?"))
-                    msg_box.setText(_('Do you want to prove the premise "{}" '
-                                      'as a new sub-goal?')
-                                    .format(premise.to_display(format_='utf8')))
+                    msg_box.setTextFormat(Qt.RichText)
+                    msg = (_('Do you want to prove the <b>premise</b>'
+                             '<br><CENTER>{}</CENTER><br>'
+                             'as a new sub-goal?').
+                           format(premise.to_display(format_='html')))
+                    msg_box.setText(msg)
                     msg_box.addButton(_('Yes'), QMessageBox.YesRole)
                     no_button = msg_box.addButton(_('No'), QMessageBox.NoRole)
                     msg_box.exec_()
@@ -1576,7 +1587,7 @@ class Coordinator(QObject):
         elif not (self.previous_proof_step.is_history_move()
                   or self.previous_proof_step.is_error()
                   or self.test_mode):
-            if not self.proof_step.history_nb == 0:
+            if not (self.proof_step.history_nb == 0 or no_more_goals):
                 self.__process_automatic_actions(proof_state.goals[0])
 
         self.emw.ui_updated.emit()  # For testing

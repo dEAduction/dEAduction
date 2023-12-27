@@ -291,7 +291,7 @@ lemma exercise.test_introduce_new_function
 ∃ g: (X → Y), ∀ x:X, P(x,g(x)) :=
 /- dEAduction
 AutoTest
-    H new_object [ 2 ],
+    H new_object 2,
     @O4 ∃,
     CQFD
 -/

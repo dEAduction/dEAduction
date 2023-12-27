@@ -47,7 +47,7 @@ This file is part of dEAduction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from copy import copy, deepcopy
 import logging
 from functools import partial
@@ -168,6 +168,9 @@ class MathObject:
     last_rw_object                = None
 
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
+    BOUNDED_QUANT_OPERATORS = ("PROP_BELONGS", "PROP_INCLUDED",
+                               "PROP_EQUAL_NOT", "PROP_NOT_BELONGS") \
+                              + INEQUALITIES
 
 #######################
 # Fundamental methods #
@@ -882,6 +885,9 @@ class MathObject:
                     remove_generic_paren=False,
                     use_assigned_math_obj=False) -> bool:
 
+        if self.name == 'H':
+            print("toto")
+
         ##########################################################
         # Mod out by generic_parentheses / assigned_math_objects #
         ##########################################################
@@ -995,17 +1001,20 @@ class MathObject:
 
     def is_in(self, others: [],
               remove_generic_paren=False,
-              use_assigned_math_obj=False) -> bool:
+              use_assigned_math_obj=False) -> Union[int, bool]:
         """
         True is self is in others, with the is_equal method instead of __eq__.
         """
 
+        idx = 0
         for other in others:
             test = self.is_equal_to(other,
                                     remove_generic_paren=remove_generic_paren,
                                     use_assigned_math_obj=use_assigned_math_obj)
             if test:
-                return True
+                return idx
+            idx += 1
+
         return False
 
     def contains(self, other) -> int:
@@ -1503,6 +1512,42 @@ class MathObject:
         else:
             math_type = self.math_type
         return math_type.node in self.INEQUALITIES
+
+    def is_bounded_quant_op(self, is_math_type=False) -> bool:
+        """
+        Test if (math_type of) self is an inequality.
+        """
+        if is_math_type:
+            math_type = self
+        else:
+            math_type = self.math_type
+        return math_type.node in self.BOUNDED_QUANT_OPERATORS
+
+    def bounded_quant(self, variable):
+        """
+        Check if math_object has the form
+                ∀ x:X, (x R ... ==> ...)
+        where R is some binary relation, and if this statement may be
+        applied to variable. If so, return inequality with x replaced by
+        variable.
+        """
+
+        math_object = self
+        p_n_b = math_object.bound_prop_n_actual_body_of_bounded_quant()
+        if not p_n_b:
+            return
+        inequality, body = p_n_b
+        if inequality.node not in self.BOUNDED_QUANT_OPERATORS:
+            return
+        # child = inequality.children[0]
+        # if child != variable:
+        #     return
+        children = [variable, inequality.children[1]]
+        new_inequality = MathObject(node=inequality.node,
+                                    info = {},
+                                    children = children,
+                                    math_type = inequality.math_type)
+        return new_inequality
 
     def is_instance(self) -> bool:
         """
@@ -2044,7 +2089,7 @@ class MathObject:
         """
         For compatibility.
         """
-        return self
+        return self.math_type
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
@@ -2098,6 +2143,14 @@ class BoundVar(MathObject):
         self._local_context = []
 
         self.set_id_nb()
+
+    def is_equal_to(self, other,
+                    remove_generic_paren=False,
+                    use_assigned_math_obj=False) -> bool:
+        """
+        For compatibility with MathObject.is_equal_to().
+        """
+        return self == other
 
     def __eq__(self, other):
         """

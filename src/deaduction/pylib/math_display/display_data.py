@@ -80,6 +80,21 @@ def display_value(mo):
 def math_type_for_lean(mo):
     if not mo.math_type.is_no_math_type():
         return [': ', mo.math_type]
+    else:
+        return ['']
+
+
+def math_type_of_child_for_lean(mo):
+    child = mo.children[0]
+    return math_type_for_lean(child)
+
+
+def set_of_math_type_of_child_for_lean(mo):
+    child = mo.children[0]
+    if not child.math_type.is_no_math_type():
+        return [': (set ', child.math_type, ')']
+    else:
+        return ['']
 
 
 def display_lean_value(mo):
@@ -248,8 +263,13 @@ class MathDisplay:
         # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
         "PROP_NOT": (r'\not', 0),
         "SET_EMPTY": ('(', r'\emptyset', math_type_for_lean, ')'),  # including ':'
-        "SET_EXTENSION1": ('(', 'singleton ', 0, ')'),
+        "SET_EXTENSION1": ('(', 'singleton ', 0, ')',
+                           set_of_math_type_of_child_for_lean),
         "SET_EXTENSION2": ('(', 'pair ', 0, ' ', 1, ')'),
+        "SET_INTENSION": (
+            r"\no_text", r'\{', 1, r':', 0, ' | ', 2, r'\}'),
+        "SET_INTENSION_EXT": (
+            r"\no_text", r'\{', 2, ' | ', 1, r':', 0, r'\}'),
         "SET_UNION+": ("set.Union", "(", 0, ")"),
         "SET_INTER+": ("set.Inter", "(", 0, ")"),
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
@@ -257,7 +277,8 @@ class MathDisplay:
         "NUMBER": (display_lean_value, ),
         "RAW_LEAN_CODE": (display_name, ),
         # Beware to be coherent with definition statement:
-        'COMPOSITION': ('composition ', 0, ' ', 1),
+        # 'COMPOSITION': ('composition ', 0, ' ', 1),
+        'COMPOSITION': ('function.comp ', 0, ' ', 1),
         "POWER": ('', 0, [' ^ ', 1], '')
     }
     # (r'\{', 0, r'\}')
@@ -362,6 +383,7 @@ class MathDisplay:
             r'\]': ']',
             r'\false': _("Contradiction"),
             r'\proposition': _("proposition"),
+            r'\propositions': "{" + _("propositions") + "}",
             r'\set': _("set"),
             r'\metric_space': _('metric space'),
             r'\not': " " + _("not") + " ",
@@ -412,6 +434,7 @@ class MathDisplay:
             r'\Rightarrow': _("then"),
             r'\set_of_subsets': _("the set of subsets of") + " ",
             r'\proposition': _("a proposition"),
+            r'\propositions': _("the set of propositions"),
             r'\set': _("a set"),
             r'\metric_space': _('a metric space'),
             r'\such_that': " " + _("such that") + " ",
@@ -572,7 +595,7 @@ class MathDisplay:
                   {'POINT'},  # FIXME: DECIMAL?
                   {'COMPOSITION'},
                   {'APPLICATION'},
-                  {'INV'},
+                  {'INV', 'POWER', 'SQRT'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
                   {'MINUS'},

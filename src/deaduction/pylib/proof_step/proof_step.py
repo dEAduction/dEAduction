@@ -500,6 +500,11 @@ class ProofStep:
             return self.selection[0]
 
     @property
+    def synthetic_proof_step(self):
+        code = self.effective_code if self.effective_code else self.lean_code
+        return code.synthetic_proof_step
+
+    @property
     def operator(self):
         code = self.effective_code if self.effective_code else self.lean_code
         return code.operator
@@ -592,6 +597,17 @@ class ProofStep:
 
     def is_iff(self):
         return self.button_name == "iff"
+
+    def is_destruct_iff(self):
+        """
+        True if an iff context prop has been destroyed.
+        """
+
+        if not self.is_iff():
+            return False
+        if len(self.selection) != 1:
+            return False
+        return self.selection[0].is_iff()
 
     def is_equal(self):
         return self.button_name == "equal"

@@ -152,9 +152,10 @@ class HelpWindow(QDialog):
         if nb <= 9:
             flags = self.windowFlags() | Qt.Dialog
             self.setWindowFlags(flags)
-        # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
-        # FIXME: this is for python 3.11
-        # self.setWindowFlags |= Qt.Dialog
+        else:
+            # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
+            # FIXME: this is for python 3.11
+            self.setWindowFlags |= Qt.Dialog
         # self.main_txt, self.detailed_txt, self.hint = None, None, None
         self.msgs_list = []
         self.main_texts = []

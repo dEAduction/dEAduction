@@ -32,6 +32,7 @@ from deaduction.dui.elements.proof_tree.proof_tree_widget import \
      ContextWidget, PureContextWGB, EmptyWGB, GoalSolvedWGB,
      TargetSubstitutionWGB, IntroWGB, IntroImpliesWGB)
 
+from deaduction.pylib.actions import SyntheticProofStepType
 from deaduction.pylib.proof_tree import ProofTree
 
 global _
@@ -76,8 +77,19 @@ def widget_goal_block(parent_widget: Optional[WidgetGoalBlock],
     pure_context = goal_node.is_pure_context
     context_rw = goal_node.is_context_substitution
     target_rw = goal_node.is_target_substitution
+    sps = goal_node.parent.synthetic_proof_step
 
-    if pure_context:
+    # TODO: replace all tests using SyntheticProofStepType
+    if sps:
+        if sps.type_ in (SyntheticProofStepType.ApplyUnivStatement,
+                         SyntheticProofStepType.ApplyUnivProp):
+            premises = sps.premises
+            operator = sps.operator
+            wgb = PureContextWGB(parent_widget, goal_node,
+                                 premises, operator, conclusions=new_context)
+            log.debug("Pure context WGB created")
+
+    elif pure_context:
         premises, operator, conclusions = pure_context
         # assert conclusions
         wgb = PureContextWGB(parent_widget, goal_node,

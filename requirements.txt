@@ -1,7 +1,6 @@
 PySide2>=5.13.2
 pytest>=5.4.3
-pytest-cov>=2.10.0
-qtrio==0.7.0
+qtrio>=0.5.1
 diff-match-patch>=20200713
 parsimonious>=0.8.1
 trio>=0.16.0

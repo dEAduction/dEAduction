@@ -88,6 +88,7 @@ class SingleCode:
 
     """
     def __init__(self, string: str, used_properties=None,
+                 synthetic_proof_step = None,
                  operator=None, rw_item=None, outcome_operator=None):
         self.string = string
         if used_properties is None:
@@ -95,6 +96,8 @@ class SingleCode:
         if not isinstance(used_properties, list):
             used_properties = [used_properties]
         self.used_properties = used_properties
+
+        self.synthetic_proof_step = synthetic_proof_step
         self.operator = operator
         self.rw_item = rw_item
         self.outcome_operator = outcome_operator
@@ -119,10 +122,9 @@ class SingleCode:
         else:
             return self.string
 
-
     @classmethod
     def apply_statement(cls, statement_name):
-        return cls(string = f"apply {statement_name}")
+        return cls(string=f"apply {statement_name}")
 
 # class ApplyStatement(SingleCode):
 #
@@ -303,6 +305,35 @@ class CodeForLean:
                              combinator=LeanCombinator.and_then,
                              error_msg=error_msg,
                              global_success_msg=global_success_msg)
+
+    @property
+    def synthetic_proof_step(self):
+        """
+        Return the operator attribute of the first SingleCode found in self.
+        """
+        if not self.instructions:
+            return None
+        if self.combinator is LeanCombinator.and_then:
+            # Return first synthetic_proof_step in instructions
+            for instruction in self.instructions:
+                if instruction.synthetic_proof_step:
+                    return instruction.synthetic_proof_step
+        else:
+            synthetic_proof_step = self.instructions[0].synthetic_proof_step
+            return synthetic_proof_step
+
+    @synthetic_proof_step.setter
+    def synthetic_proof_step(self, synthetic_proof_step):
+        """
+        Set the synthetic_proof_step attribute of the first SingleCode in self.
+        @param synthetic_proof_step: SyntheticProofStep
+        """
+        if self.is_or_else():
+            for instruction in self.instructions:
+                instruction.synthetic_proof_step = synthetic_proof_step
+        elif self.instructions:
+            instruction = self.instructions[0]
+            instruction.synthetic_proof_step = synthetic_proof_step
 
     @property
     def operator(self):

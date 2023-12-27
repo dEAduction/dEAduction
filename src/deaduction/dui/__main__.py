@@ -569,7 +569,7 @@ class WindowManager(QObject):
             # Show window
             self.chooser_window.show()
         else:
-            # If hidden (by 'esc' kay)
+            # If hidden (by 'esc' key)
             if self.chooser_window.isHidden():
                 self.chooser_window.show()
 

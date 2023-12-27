@@ -90,7 +90,7 @@ AutoTest
     assumption success=But_en_cours_atteint,
     implies success=Propriété_H7_ajoutée_au_contexte,
     forall success=Objet_ε_ajouté_au_contexte,
-    @P1 forall ε/2 success=Propriété_H10_ajoutée_au_contexte,
+    @P1 forall [ ε/2 ] success=Propriété_H10_ajoutée_au_contexte,
     @P4 exists success=Nouvel_objet_n_vérifiant_la_propriété_H11,
     @O4 exists success=Il_reste_à_démontrer_que_n_convient,
     forall success=Objet_n'_ajouté_au_contexte,

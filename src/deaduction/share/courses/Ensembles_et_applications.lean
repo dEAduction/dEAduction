@@ -82,6 +82,17 @@ begin
   exact iff_def,
 end
 
+lemma theorem.disjonction_eqv_implication (P Q: Prop) :
+(P ∨ Q) ↔ ((not P) → Q)
+:= 
+/- dEAduction
+PrettyName
+    Disjonction sous forme d'implication
+-/
+begin
+  tautology,
+end
+
 end logique
 
 namespace definitions
@@ -150,7 +161,7 @@ end
 
 lemma definition.singleton
 {x x_0: X} :
-(x ∈ sing x_0) ↔ x=x_0
+(x ∈ ((singleton x_0): (set X))) ↔ x=x_0
 :=
 begin
     refl,
@@ -158,7 +169,7 @@ end
 
 lemma definition.paire
 {x x_0 x_1: X} :
-(x ∈ pair x_0 x_1) ↔ (x=x_0 ∨ x=x_1)
+(x ∈ ((pair x_0 x_1): set X)) ↔ (x=x_0 ∨ x=x_1)
 :=
 begin
     refl,
@@ -233,7 +244,7 @@ lemma definition.image_directe {y : Y} :
 y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y
 :=
 begin
-    todo
+    refl,
 end
 
 lemma exercise.image_directe :
@@ -248,16 +259,16 @@ lemma definition.image_reciproque {x:X} :
 x ∈ f  ⁻¹' B ↔ f(x) ∈ B
 :=
 begin
-    todo
+    refl,
 end
 
 variables (g : Y → Z)
 
 lemma definition.composition {x:X}:
-composition g f x = g (f x)
+function.comp g f x = g (f x)
 :=
 begin
-    todo,
+    refl,
 end
 
 lemma definition.injectivite :
@@ -361,7 +372,7 @@ namespace composition_et_images
 
 lemma exercise.composition_image_directe
 {A: set X} : 
-(composition g f) '' A = g '' (f '' A)
+(function.comp g f) '' A = g '' (f '' A)
 :=
 /- dEAduction
 PrettyName
@@ -374,7 +385,7 @@ end
 
 lemma exercise.composition_image_reciproque
 {C: set Z} : 
-(composition g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
+(function.comp g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 /- dEAduction
 PrettyName
@@ -541,7 +552,7 @@ PrettyName
 lemma exercise.composition_injections
 (H1 : injective f) (H2 : injective g)
 :
-injective (composition g f)
+injective (function.comp g f)
 :=
 /- dEAduction
 PrettyName
@@ -553,7 +564,7 @@ end
 
 lemma exercise.composition_surjections
 (H1 : surjective f) (H2 : surjective g) :
-surjective (composition g f)
+surjective (function.comp g f)
 :=
 /- dEAduction
 PrettyName
@@ -564,7 +575,7 @@ begin
 end
 
 lemma exercise.injective_si_compo_injective_I
-(H1 : injective (composition g f)) :
+(H1 : injective (function.comp g f)) :
 injective g
 :=
 /- dEAduction
@@ -576,7 +587,7 @@ begin
 end
 
 lemma exercise.injective_si_compo_injective_II
-(H1 : injective (composition g f)) :
+(H1 : injective (function.comp g f)) :
 injective f
 :=
 /- dEAduction
@@ -588,7 +599,7 @@ begin
 end
 
 lemma exercise.surjective_si_compo_surjective_I
-(H1 : surjective (composition g f)) :
+(H1 : surjective (function.comp g f)) :
 surjective g
 :=
 /- dEAduction
@@ -600,7 +611,7 @@ begin
 end
 
 lemma exercise.surjective_si_coompo_surjective_II
-(H1 : surjective (composition g f)) :
+(H1 : surjective (function.comp g f)) :
 surjective f
 :=
 /- dEAduction
@@ -827,7 +838,7 @@ PrettyName
 -/
  
 lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
-(H1 : injective (composition g f)) (H2 : surjective f)
+(H1 : injective (function.comp g f)) (H2 : surjective f)
 :
 injective g
 :=
@@ -846,7 +857,7 @@ end
 -- NB: naming a bound var with '__' suffix forces use of its name
 lemma exercise.injectivite_categorielle
 (f: Y → Z):
-(injective f) → (∀X__: Type, ∀ g h : X__ → Y, (composition f g) = (composition f h) → g = h)
+(injective f) → (∀X__: Type, ∀ g h : X__ → Y, (function.comp f g) = (function.comp f h) → g = h)
 :=
 /- dEAduction
 PrettyName
@@ -862,7 +873,7 @@ end
 
 lemma exercise.surjectivite_categorielle
 (f: X → Y):
-(surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (composition g f ) = (composition h f ) → g = h)
+(surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (function.comp g f ) = (function.comp h f ) → g = h)
 :=
 /- dEAduction
 PrettyName
@@ -877,7 +888,7 @@ begin
 end
 
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
-∃ F: Y → X, (composition f F) = Identite :=
+∃ F: Y → X, (function.comp f F) = Identite :=
 /- dEAduction
 PrettyName
     (*) Surjectivité et inverse à droite
@@ -920,7 +931,7 @@ end injectivite_surjectivite_autres
 
 example
   :
- not(∀f: X→Y, ∀g: Y→Z, ∀A: set X, @composition X Y Z g f '' (A) = g '' (f '' (A)))
+ not(∀f: X→Y, ∀g: Y→Z, ∀A: set X, @function.comp X Y Z g f '' (A) = g '' (f '' (A)))
 :=
 begin
   push_neg,

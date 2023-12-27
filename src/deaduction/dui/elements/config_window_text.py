@@ -108,5 +108,6 @@ PRETTY_NAMES = {
     "Intermediate": _("Intermediate"),
     "Expert": _("Expert"),
     "logic.use_bounded_quantification_notation":
-        _("Denote ∀x>0, ... instead of ∀x∈ℝ, (x>0 ⇒ ...)")
+        _("Bounded quantification: denote ∀x>0, ... instead of ∀x∈ℝ, (x>0 ⇒ "
+          "...)")
 }
