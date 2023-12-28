@@ -727,23 +727,19 @@ class ServerInterface(QObject):
 
     async def code_replace(self, task, label, proof_step):
         """
-        TODO
-        @param task:
-        @param label:
-        @param old_code:
-        @param new_code:
-        @return:
+        Replace a piece of code in the lean_file.
+        This is used when instantiating jokers.
         """
 
-        request = ProofStepRequest(task=task,
-                                   proof_step=proof_step,
-                                   exercise=self.__exercise_current,
-                                   lean_file=self.lean_file,
-                                   from_previous_proof_state_method=False)
         # FIXME: find info in proof_step.code_for_lean
+
         old = ""
         new = ""
-        self.lean_file.replace(label, old, new)
+        self.lean_file.replace(old, new)
+        request = LeanCodeProofStepRequest(task=task,
+                                           proof_step=proof_step,
+                                           exercise=self.__exercise_current,
+                                           lean_file=self.lean_file)
 
         await self.__get_response_for_request(request=request)
 

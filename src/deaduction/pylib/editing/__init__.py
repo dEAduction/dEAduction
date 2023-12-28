@@ -229,6 +229,21 @@ class VirtualFile:
     ################################
     # Actions
     ################################
+    def replace(self, old, new):
+        """
+        In the current text, replace first occurence of old with new.
+        """
+        current_pos = self.current_pos
+        next_txt = self.__txt.replace(old, new, 1)
+        # Improve: this assume that cursor is after old in the text.
+        current_pos += (len(new) - len(old))
+        self.state_add('code_replace', next_txt, current_pos)
+        self.state_info_attach(replaced_text=(old, new))
+
+    def replace_entry_containing(self, old_piece_of_code, new_code):
+        old_code = self.find_first_insertion_of(old_piece_of_code)
+        self.replace(old_code, new_code)
+
     def insert(self, label, add_txt, move_cursor=True):
         """
         Inserts text at cursor position, and update cursor position.
@@ -246,17 +261,6 @@ class VirtualFile:
 
         self.state_add(label, next_txt, current_pos)
         self.state_info_attach(inserted_text=add_txt)
-
-    def replace(self, old, new):
-        """
-        In the current text, replace first occurence of old with new.
-        """
-        current_pos = self.current_pos
-        next_txt = self.__txt.replace(old, new, 1)
-        # Improve: this assume that cursor is after old in the text.
-        current_pos += (len(new) - len(old))
-        self.state_add('code_replace', next_txt, current_pos)
-        self.state_info_attach(replaced_text=(old, new))
 
     def set_code(self, code):
         """
