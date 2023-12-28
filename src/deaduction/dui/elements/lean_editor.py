@@ -56,8 +56,12 @@ class LeanEditor(QWidget):
         self.send_btn.clicked.connect(self.editor_send_lean)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
+        # Error console
+        settings = QSettings("deaduction")
+        hidden_str = settings.value("lean_editor/errors_hidden")
+        hidden = False if hidden_str == 'false' else True
         self.error_console = DisclosureGroupBox(title="Lean error messages",
-                                                hidden=True)
+                                                hidden=hidden)
         self.error_edit = QPlainTextEdit()
 
         error_lyt = QVBoxLayout()
@@ -77,21 +81,25 @@ class LeanEditor(QWidget):
         self.error_console.title_widget.clicked.connect(self.on_hide_errors)
         # TODO: enable code sent?
         self.send_btn.setEnabled(False)
-        self.set_geometry()
+        QTimer.singleShot(0, self.restore_geometry)
 
-    def set_geometry(self, geometry=None):
-        """
-        Restore saved geometry if any, but adapt height to content.
-        """
+        # self.set_geometry()
+
+    def restore_geometry(self):
         settings = QSettings("deaduction")
         value = settings.value("lean_editor/geometry")
         if value:
             self.restoreGeometry(value)
-        elif geometry:
-            self.setGeometry(geometry)
-        hidden = settings.value("lean_editor/errors_hidden")
-        if not hidden:
-            self.on_hide_errors()
+
+    # def set_geometry(self):
+    #     """
+    #     Restore saved geometry if any, but adapt height to content.
+    #     """
+    #     settings = QSettings("deaduction")
+    #     hidden = settings.value("lean_editor/errors_hidden")
+    #     if not hidden:
+    #         self.on_hide_errors()
+    #     QTimer.singleShot(0, self.restore_geometry)
 
     def closeEvent(self, event):
         # Save window geometry
