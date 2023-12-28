@@ -920,7 +920,7 @@ class Coordinator(QObject):
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = self.emw.user_input
 
-                # Update lean_file and call Lean server
+                # Call Lean server
                 self.lean_code_sent = lean_code
                 log.debug(f'--(raw)--> {lean_code.to_code()}')
                 # previous_proof_state = self.proof_step.proof_state

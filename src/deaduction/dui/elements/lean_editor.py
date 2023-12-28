@@ -30,9 +30,9 @@ This file is part of d∃∀duction.
 
 from PySide2.QtCore import (Qt, Signal, Slot, QTimer, QSettings)
 from PySide2.QtWidgets import (QHBoxLayout, QPlainTextEdit, QPushButton,
-                               QVBoxLayout, QSizePolicy, QWidget)
+                               QVBoxLayout, QWidget)
 
-from deaduction.dui.primitives import DisclosureGroupBox
+from deaduction.dui.primitives import DisclosureTitleWidget
 
 global _
 
@@ -59,28 +59,33 @@ class LeanEditor(QWidget):
         # Error console
         settings = QSettings("deaduction")
         hidden_str = settings.value("lean_editor/errors_hidden")
-        hidden = False if hidden_str == 'false' else True
-        self.error_console = DisclosureGroupBox(title="Lean error messages",
-                                                hidden=hidden)
-        self.error_edit = QPlainTextEdit()
+        self.error_hidden = False if hidden_str == 'false' else True
 
-        error_lyt = QVBoxLayout()
-        error_lyt.addWidget(self.error_edit)
-        self.error_console.group_bx.setLayout(error_lyt)
+        self.error_title = DisclosureTitleWidget(title="Lean error messages",
+                                                 hidden=self.error_hidden)
+        self.error_edit = QPlainTextEdit()
+        if self.error_hidden:
+            self.error_edit.hide()
 
         # Layouts
         main_layout = QVBoxLayout()
         btn_layout = QHBoxLayout()
         main_layout.addWidget(self.editor)
+        
+        # Send code button
         btn_layout.addStretch()
         btn_layout.addWidget(self.send_btn)
-        main_layout.addLayout(btn_layout)
-        main_layout.addWidget(self.error_console)
+        # TODO: enable
+        # main_layout.addLayout(btn_layout)
+        main_layout.addWidget(self.error_title)
+        main_layout.addWidget(self.error_edit)
         self.setLayout(main_layout)
 
-        self.error_console.title_widget.clicked.connect(self.on_hide_errors)
+        self.error_title.clicked.connect(self.on_hide_errors)
+
         # TODO: enable code sent?
         self.send_btn.setEnabled(False)
+
         QTimer.singleShot(0, self.restore_geometry)
 
         # self.set_geometry()
@@ -91,16 +96,6 @@ class LeanEditor(QWidget):
         if value:
             self.restoreGeometry(value)
 
-    # def set_geometry(self):
-    #     """
-    #     Restore saved geometry if any, but adapt height to content.
-    #     """
-    #     settings = QSettings("deaduction")
-    #     hidden = settings.value("lean_editor/errors_hidden")
-    #     if not hidden:
-    #         self.on_hide_errors()
-    #     QTimer.singleShot(0, self.restore_geometry)
-
     def closeEvent(self, event):
         # Save window geometry
         # if not self.error_console.hidden:
@@ -108,7 +103,7 @@ class LeanEditor(QWidget):
         settings = QSettings("deaduction")
         settings.setValue("lean_editor/geometry", self.saveGeometry())
         settings.setValue("lean_editor/errors_hidden",
-                          self.error_console.hidden)
+                          self.error_hidden)
         self.action.setChecked(False)
         self.hide()
         event.accept()
@@ -127,8 +122,13 @@ class LeanEditor(QWidget):
 
     @Slot()
     def on_hide_errors(self):
+        self.error_hidden = not self.error_hidden
         self.fix_editor_size()
-        self.error_console.set_hidden()
+        self.error_title.set_hidden(self.error_hidden)
+        if self.error_hidden:
+            self.error_edit.hide()
+        else:
+            self.error_edit.show()
 
     def code_get(self):
         return self.editor.toPlainText()
