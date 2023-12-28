@@ -1242,6 +1242,9 @@ class Coordinator(QObject):
     #     self.servint.history_replace(effective_lean_code)
 
     def __process_failed_request_error(self, errors):
+
+        self.lean_editor.set_error_msg(errors)
+        
         lean_code = self.proof_step.lean_code
         if lean_code and lean_code.error_msg:
             self.proof_step.error_msg = lean_code.error_msg
