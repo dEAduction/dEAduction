@@ -885,9 +885,6 @@ class MathObject:
                     remove_generic_paren=False,
                     use_assigned_math_obj=False) -> bool:
 
-        if self.name == 'H':
-            print("toto")
-
         ##########################################################
         # Mod out by generic_parentheses / assigned_math_objects #
         ##########################################################
