@@ -6,6 +6,9 @@ set -u
 # https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
 # execute with:
 # /bin/bash -c "$(curl -L https://raw.githubusercontent.com/dEAduction/dEAduction/master/deaduction_install.sh)"
+echo "Make sure you run this script under bash with sudo access,"
+echo "e.g. sudo bash ./deaduction_install.sh"
+
 
 # String formatters
 tty_mkbold() { tty_escape "1;$1"; }
