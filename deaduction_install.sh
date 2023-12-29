@@ -343,8 +343,11 @@ cd dEAduction
 # and store it in deaduction_launcher.sh
 
 if [[ $UBUNTU_DEBIAN == 1 ]] ; then
-
+  ###### deaduction_launcher content ######
   echo -e "#!/bin/bash
+
+  echo \"Make sure you run this script with bash,\"
+  echo \"e.g. bash ./deaduction_launcher.sh\"
 
   # Necessary for envconfig_user:
   export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
@@ -356,6 +359,7 @@ if [[ $UBUNTU_DEBIAN == 1 ]] ; then
   cd src/deaduction
 
   $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+  ###### end of content ######
 
   warn "Since you are on Ubuntu or Debian, We will now run the following commands:"
   ohai "apt install python3-venv python3-pip"
@@ -376,7 +380,11 @@ if [[ $UBUNTU_DEBIAN == 1 ]] ; then
   apt install python3-setuptools
 
 else
+  ###### deaduction_launcher content ######
   echo -e "#!/bin/bash
+
+  echo \"Make sure you run this script with bash,\"
+  echo \"e.g. bash ./deaduction_launcher.sh\"
 
   # Necessary for envconfig_user:
   export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
@@ -388,6 +396,7 @@ else
   cd src/deaduction
 
   $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+  ###### end of content ######
 fi
 
 chmod u+x ../deaduction_launcher.sh
