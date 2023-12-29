@@ -66,7 +66,7 @@ have_sudo_access() {
 
   if [[ -z "${HOMEBREW_ON_LINUX-}" ]] && [[ "${HAVE_SUDO_ACCESS}" -ne 0 ]]
   then
-    abort "Need sudo access on macOS (e.g. the user ${USER} needs to be an Administrator)!"
+    abort "Need sudo access (e.g. the user ${USER} needs to be an Administrator)!"
   fi
 
   return "${HAVE_SUDO_ACCESS}"
@@ -151,7 +151,6 @@ if [[ "$CPU" == "arm64" ]]; then
   echo "see e.g. https://www.wisdomgeek.com/development/installing-intel-based-packages-using-homebrew-on-the-m1-mac/"
   echo "and specifically https://leanprover-community.github.io/archive/stream/113489-new-members/topic/M1.20macs.html"
 fi
-
 
 ##########
 # PYTHON #
@@ -251,73 +250,89 @@ if [ $DEADUCTION_ON_LINUX == 0 ]; then
       finally run this script again..."
   fi
 fi
-#######
-# git #
-#######
-if which git &> /dev/null; then
-  ohai "Found git"
-  FOUND_GIT=1
-else
-  warning "git not found: see https://git-scm .com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed"
-  FOUND_GIT=0
-  # TODO: handle git installation
-  echo "If you want to use git to keep deaduction up-to-date,"
-  echo "stop this script and install git, then launch this script again"
-fi
 
-if [ $FOUND_GIT == 1 ]; then
-  echo "Do you want to use git to install deaduction? (y/n)"
-  echo "(This is necessary for developers, and convenient for frequent updating)"
-  read RESPONSE
-  if [ "$RESPONSE" == "y" ]; then
-    WITH_GIT=1
-  elif [ "$RESPONSE" == "n" ]; then
-    WITH_GIT=0
-  else
-    abort "Wrong answer. Try again."
-  fi
-fi
-
-# TODO: choose location
-# TODO: tester si curl existe?
-
+################################
+# dEAduction dir already here? #
+################################
 if [ -d dEAduction ]; then
   echo "Directory dEAduction already exists,"
   echo "we will assume it contains dEAduction sources"
   echo "(If this is not the case then remove this directory and restart this script)"
   continue ">>>>> Proceed with install? (y/n)"
+  DOWNLOADED=1
 else
-  ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
-  echo "in the current directory."
-  continue ">>>>> Proceed with download? (y/n)"
+  DOWNLOADED=0
 fi
 
-############
-# DOWNLOAD #
-############
-if [ $WITH_GIT == 0 ]; then
-  echo "Downloading zip archive..."
-  mkdir tmp
-  curl -L https://github.com/dEAduction/dEAduction/zipball/master/ --output tmp/deaduction.zip
-  # Test zip archive
-  if unzip -t tmp/deaduction.zip > /dev/null; then
-    echo "(Zip archive is OK)";
+
+#######
+# git #
+#######
+if [ $DOWNLOADED == 0 ]; then
+  if which git &> /dev/null; then
+    ohai "Found git"
+    FOUND_GIT=1
   else
-    abort "Corrupted zip archive. Try again."
+    warning "git not found: see https://git-scm .com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed"
+    FOUND_GIT=0
+    # TODO: handle git installation
+    echo "If you want to use git to keep deaduction up-to-date,"
+    echo "stop this script and install git, then launch this script again"
   fi
-  echo "Unzipping..."
-  # Dirty solution to get dir name
-  DIR_NAME=$(unzip -l tmp/deaduction.zip | head -n5 | tail -n1 | awk '{print $4}')
-  unzip tmp/deaduction.zip
-  rm tmp/deaduction.zip
-  mv $DIR_NAME dEAduction
-else
-  echo "Downloading with git..."
-  git clone https://github.com/dEAduction/dEAduction.git
+
+  if [ $FOUND_GIT == 1 ]; then
+    echo "Do you want to use git to install deaduction? (y/n)"
+    echo "(This is necessary for developers, and convenient for frequent updating)"
+    read RESPONSE
+    if [ "$RESPONSE" == "y" ]; then
+      WITH_GIT=1
+    elif [ "$RESPONSE" == "n" ]; then
+      WITH_GIT=0
+    else
+      abort "Wrong answer. Try again."
+    fi
+  fi
+
+  # TODO: choose location
+  # TODO: tester si curl existe?
+
+ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
+echo "in the current directory."
+continue ">>>>> Proceed with download? (y/n)"
+
+  ############
+  # DOWNLOAD #
+  ############
+  if [ $WITH_GIT == 0 ]; then
+    echo "Downloading zip archive..."
+    mkdir tmp
+    curl -L https://github.com/dEAduction/dEAduction/zipball/master/ --output tmp/deaduction.zip
+    # Test zip archive
+    if unzip -t tmp/deaduction.zip > /dev/null; then
+      echo "(Zip archive is OK)";
+    else
+      abort "Corrupted zip archive. Try again."
+    fi
+    echo "Unzipping..."
+    # Dirty solution to get dir name
+    DIR_NAME=$(unzip -l tmp/deaduction.zip | head -n5 | tail -n1 | awk '{print $4}')
+    unzip tmp/deaduction.zip
+    rm tmp/deaduction.zip
+    mv $DIR_NAME dEAduction
+  else
+    echo "Downloading with git..."
+    git clone https://github.com/dEAduction/dEAduction.git
+  fi
 fi
+
 
 # Deaduction content has been extracted to directory dEAduction
+echo "Daeduction sources have been extracted in the directory dEAduction."
 cd dEAduction
+
+
+# Need sudo access from now on
+have_sudo_access
 
 #########################
 # WRITING LAUNCH SCRIPT #
