@@ -281,9 +281,16 @@ fi
 # TODO: choose location
 # TODO: tester si curl existe?
 
+if [ -d dEAduction ]; then
+  echo "Directory dEAduction already exists,"
+  echo "we will assume it contains dEAduction sources"
+  echo "(If this is not the case then remove this directory and restart this script)"
+  continue ">>>>> Proceed with install? (y/n)"
+else
   ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
   echo "in the current directory."
   continue ">>>>> Proceed with download? (y/n)"
+fi
 
 ############
 # DOWNLOAD #
