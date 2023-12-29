@@ -327,12 +327,11 @@ fi
 
 
 # Deaduction content has been extracted to directory dEAduction
-echo "Daeduction sources have been extracted in the directory dEAduction."
+echo "Deaduction sources have been extracted in the directory dEAduction."
 cd dEAduction
 
 
 # Need sudo access from now on
-have_sudo_access
 
 #########################
 # WRITING LAUNCH SCRIPT #
@@ -358,17 +357,20 @@ if [[ $UBUNTU_DEBIAN == 1 ]] ; then
   warn "Since you are on Ubuntu or Debian, We will now run the following commands:"
   ohai "apt install python3-venv python3-pip"
   ohai "pip3 install --upgrade setuptools"
-  ohai "apt install python3-setuptools"
+  ohai "(or apt install python3-setuptools)"
   continue ">>>>> Proceed? (y/n)"
 
   ohai "apt install python3-venv python3-pip"
   execute "apt" "install" "python3-venv" "python3-pip"
 
+  echo "We try both commands for installing setuptools:"
   ohai "pip3 install --upgrade setuptools"
-  execute "pip3" "install" --upgrade" setuptools"
+  #  execute "pip3" "install" --upgrade" setuptools"
+  pip3 install --upgrade setuptools
 
   ohai "apt install python3-setuptools"
-  execute "apt" "install" "python3-setuptools"
+  #  execute "apt" "install" "python3-setuptools"
+  apt install python3-setuptools
 
 else
   echo -e "#!/bin/bash
