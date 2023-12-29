@@ -237,14 +237,18 @@ class ProofTreeController:
     building of the ProofTree will continue.
     """
     def __init__(self):
+        self.disabled = False
         self.proof_tree: Optional[ProofTree] = None
         self.proof_tree_window = ProofTreeWindow()
+
+    def set_enabled(self, yes=True):
+        self.disabled = not yes
 
     def set_proof_tree(self, proof_tree: ProofTree):
         self.proof_tree = proof_tree
         # proof_tree.set_truncate_mode(True)
 
-    def enable(self, till_step_nb):
+    def __enable(self, till_step_nb):
         """
         Enable all WGB until a given goal_nb, disabled the others.
         Disabled WGB will be displayed in light grey. This is used when usr
@@ -253,7 +257,7 @@ class ProofTreeController:
         main_block = self.proof_tree_window.main_block
         main_block.enable_recursively(till_step_nb=till_step_nb)
 
-    def is_at_end(self):
+    def __is_at_end(self):
         return self.proof_tree.is_at_end()
 
     def update(self):
@@ -263,6 +267,10 @@ class ProofTreeController:
         that reflects the GoalNodes of the proof tree. Then these new widgets
         are inserted by the update_display method.
         """
+
+        if self.disabled:
+            return
+
         ptw = self.proof_tree_window
         if not self.proof_tree.root_node:
             return
@@ -280,7 +288,7 @@ class ProofTreeController:
         # deleted if usr starts a new branch from here
         proof_step_nb = self.proof_tree.next_proof_step_nb
         # log.debug(f"Enabling till {proof_step_nb-1}")
-        self.enable(till_step_nb=(proof_step_nb-1 if proof_step_nb is not None
+        self.__enable(till_step_nb=(proof_step_nb-1 if proof_step_nb is not None
                                   else 10000000))
         # log.info("Updating display")
 
@@ -292,7 +300,7 @@ class ProofTreeController:
         # (4) Set current target:
         goal_nb = current_goal_node.goal_nb
         # log.info(f"Setting current target, current goal nb {goal_nb}...")
-        wdg = ptw.set_current_target(goal_nb, blinking=self.is_at_end())
+        wdg = ptw.set_current_target(goal_nb, blinking=self.__is_at_end())
         if wdg:
             # print("Ensuring visible")
             ptw.make_visible(wdg)
@@ -302,7 +310,7 @@ class ProofTreeController:
         #     log.debug(f"Current status_msg for gn1 is "
         #               f"{wgb.status_msg()}")
 
-    def wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
+    def __wgb_from_goal_nb(self, goal_nb: int, from_wgb=None) -> \
             WidgetGoalBlock:
         """
         For debugging.
@@ -313,7 +321,7 @@ class ProofTreeController:
         if from_wgb.goal_nb == goal_nb:
             return from_wgb
         for child in from_wgb.logical_children:
-            wgb = self.wgb_from_goal_nb(goal_nb, from_wgb=child)
+            wgb = self.__wgb_from_goal_nb(goal_nb, from_wgb=child)
             if wgb:
                 return wgb
 

@@ -761,6 +761,9 @@ class Coordinator(QObject):
         self.lean_file.goto(history_nb)
         self.process_history_move()
 
+    def update_lean_editor(self):
+        self.lean_editor.code_set(self.lean_file.inner_contents)
+
     def process_history_move(self):
         """
         This method is called after lean_file has been updated according to
@@ -785,6 +788,7 @@ class Coordinator(QObject):
 
         # ─────── Update UI ─────── #
         log.info("** Updating UI **")
+        self.update_lean_editor()
         self.unfreeze()
         if self.proof_step.is_error():  # Should not happen?!
             self.emw.update_goal(None)
@@ -916,7 +920,7 @@ class Coordinator(QObject):
                 self.proof_step.lean_code = lean_code
                 self.proof_step.user_input = self.emw.user_input
 
-                # Update lean_file and call Lean server
+                # Call Lean server
                 self.lean_code_sent = lean_code
                 log.debug(f'--(raw)--> {lean_code.to_code()}')
                 # previous_proof_state = self.proof_step.proof_state
@@ -1242,6 +1246,9 @@ class Coordinator(QObject):
     #     self.servint.history_replace(effective_lean_code)
 
     def __process_failed_request_error(self, errors):
+
+        self.lean_editor.set_error_msg(errors)
+
         lean_code = self.proof_step.lean_code
         if lean_code and lean_code.error_msg:
             self.proof_step.error_msg = lean_code.error_msg

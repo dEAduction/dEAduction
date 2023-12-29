@@ -424,6 +424,20 @@ class ProofStepRequest(HighLevelServerRequest):
         return analysis_complete and effective_code_complete
 
 
+class LeanCodeProofStepRequest(ProofStepRequest):
+
+    def __init__(self, task, proof_step=None, exercise=None, lean_file=None):
+        ProofStepRequest.__init__(self, task, proof_step=proof_step,
+                                  exercise=exercise, lean_file=lean_file,
+                                  from_previous_proof_state_method=False)
+
+        self.task = task
+        self.request_type = 'LeanCodeProofStep'
+
+    def compute_code_string(self):
+        return
+
+
 class ExerciseRequest(ProofStepRequest):
     """
     A request to initialise an exercise in Lean.

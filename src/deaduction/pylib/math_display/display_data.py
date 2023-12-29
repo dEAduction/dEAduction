@@ -596,9 +596,9 @@ class MathDisplay:
                   {'COMPOSITION'},
                   {'APPLICATION'},
                   {'INV', 'POWER', 'SQRT'},
+                  {'MINUS'},
                   {'MULT', 'DIV'},
                   {'SUM', 'DIFFERENCE'},
-                  {'MINUS'},
                   {'PROP_EQUAL', 'PROP_<', 'PROP_>', 'PROP_≤', 'PROP_≥'},
                   # {'CLOSE_PARENTHESIS', 'OPEN_PARENTHESIS'}
                   ]

@@ -25,7 +25,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import (QSizePolicy, QToolButton, QLabel)
+from PySide2.QtWidgets import (QSizePolicy, QToolButton, QLabel, QWidget,
+                               QVBoxLayout, QGroupBox)
 from PySide2.QtCore import Qt, Slot, Signal
 
 
@@ -94,5 +95,35 @@ class DisclosureTitleWidget(QLabel):
         self.clicked.emit()
 
 
+class DisclosureGroupBox(QWidget):
+    """
+    A group box with a title and a disclosure triangle.
+    """
 
+    def __init__(self, title, hidden=False):
+        super().__init__()
 
+        self.title_widget = DisclosureTitleWidget(title, hidden=hidden)
+        self.group_bx = QGroupBox()
+        main_lyt = QVBoxLayout()
+        main_lyt.setSpacing(0)
+        main_lyt.setContentsMargins(0, 0, 0, 0)
+
+        main_lyt.addWidget(self.title_widget)
+        main_lyt.addWidget(self.group_bx)
+        self.setLayout(main_lyt)
+
+        if hidden:
+            self.group_bx.hide()
+
+    @property
+    def hidden(self):
+        return self.title_widget.hidden
+
+    @Slot()
+    def set_hidden(self, hidden=None):
+        self.title_widget.set_hidden(hidden)
+        if self.hidden:
+            self.group_bx.hide()
+        else:
+            self.group_bx.show()

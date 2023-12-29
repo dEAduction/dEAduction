@@ -28,14 +28,12 @@ This file is part of d∃∀duction.
 """
 
 
-from PySide2.QtCore import (    Qt,
-                                Signal,
-                                Slot)
-from PySide2.QtWidgets import ( QHBoxLayout,
-                                QPlainTextEdit,
-                                QPushButton,
-                                QVBoxLayout,
-                                QWidget)
+from PySide2.QtCore import (Qt, Signal, Slot, QTimer, QSettings)
+from PySide2.QtWidgets import (QHBoxLayout, QPlainTextEdit, QPushButton,
+                               QVBoxLayout, QWidget)
+
+from deaduction.dui.primitives import DisclosureTitleWidget
+
 global _
 
 
@@ -52,43 +50,102 @@ class LeanEditor(QWidget):
         super().__init__()
         self.setWindowTitle(_('Code sent to Lean') + " — d∃∀duction")
         self.editor = QPlainTextEdit()
+        # self.editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.send_btn = QPushButton(_('Send to L∃∀N'))
 
         self.send_btn.clicked.connect(self.editor_send_lean)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
 
+        # Error console
+        settings = QSettings("deaduction")
+        hidden_str = settings.value("lean_editor/errors_hidden")
+        self.error_hidden = False if hidden_str == 'false' else True
+
+        self.error_title = DisclosureTitleWidget(title="Lean error messages",
+                                                 hidden=self.error_hidden)
+        self.error_edit = QPlainTextEdit()
+        if self.error_hidden:
+            self.error_edit.hide()
+
         # Layouts
         main_layout = QVBoxLayout()
         btn_layout = QHBoxLayout()
         main_layout.addWidget(self.editor)
+        
+        # Send code button
         btn_layout.addStretch()
         btn_layout.addWidget(self.send_btn)
-        main_layout.addLayout(btn_layout)
+        # TODO: enable
+        # main_layout.addLayout(btn_layout)
+        main_layout.addWidget(self.error_title)
+        main_layout.addWidget(self.error_edit)
         self.setLayout(main_layout)
+
+        self.error_title.clicked.connect(self.on_hide_errors)
 
         # TODO: enable code sent?
         self.send_btn.setEnabled(False)
 
-    ###########
-    # Methods #
-    ###########
+        QTimer.singleShot(0, self.restore_geometry)
+
+        # self.set_geometry()
+
+    def restore_geometry(self):
+        settings = QSettings("deaduction")
+        value = settings.value("lean_editor/geometry")
+        if value:
+            self.restoreGeometry(value)
 
     def closeEvent(self, event):
-        event.accept()
+        # Save window geometry
+        # if not self.error_console.hidden:
+        #     self.on_hide_errors()
+        settings = QSettings("deaduction")
+        settings.setValue("lean_editor/geometry", self.saveGeometry())
+        settings.setValue("lean_editor/errors_hidden",
+                          self.error_hidden)
         self.action.setChecked(False)
         self.hide()
+        event.accept()
+
+    def fix_editor_size(self):
+        self.editor.setFixedHeight(self.editor.height())
+        self.editor.setFixedWidth(self.editor.width())
+        QTimer.singleShot(0, self.resize_me)
+
+    def resize_me(self):
+        self.adjustSize()
+        self.editor.setMaximumWidth(0)
+        self.editor.setMaximumHeight(0)
+        self.editor.setMaximumHeight(16777215)
+        self.editor.setMaximumWidth(16777215)
+
+    @Slot()
+    def on_hide_errors(self):
+        self.error_hidden = not self.error_hidden
+        self.fix_editor_size()
+        self.error_title.set_hidden(self.error_hidden)
+        if self.error_hidden:
+            self.error_edit.hide()
+        else:
+            self.error_edit.show()
 
     def code_get(self):
         return self.editor.toPlainText()
 
-    #########
-    # Slots #
-    #########
-
     @Slot(str)
     def code_set(self, code: str):
+        """
+        Set code and clear errors.
+        """
         self.editor.setPlainText(code)
-    
+        self.error_edit.setPlainText("")
+
     @Slot()
     def toggle(self):
         self.setVisible(not self.isVisible())
+
+    def set_error_msg(self, errors: []):
+        text = '\n'.join([error.text for error in errors])
+        self.error_edit.setPlainText(text)
+

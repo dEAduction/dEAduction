@@ -52,6 +52,7 @@ import deaduction.pylib.server.exceptions as exceptions
 from deaduction.pylib.server.high_level_request import (HighLevelServerRequest,
                                                         InitialProofStateRequest,
                                                         ProofStepRequest,
+                                                        LeanCodeProofStepRequest,
                                                         ExerciseRequest)
 
 from deaduction.pylib.config.request_method import from_previous_state_method
@@ -726,23 +727,19 @@ class ServerInterface(QObject):
 
     async def code_replace(self, task, label, proof_step):
         """
-        TODO
-        @param task:
-        @param label:
-        @param old_code:
-        @param new_code:
-        @return:
+        Replace a piece of code in the lean_file.
+        This is used when instantiating jokers.
         """
 
-        request = ProofStepRequest(task=task,
-                                   proof_step=proof_step,
-                                   exercise=self.__exercise_current,
-                                   lean_file=self.lean_file,
-                                   from_previous_proof_state_method=False)
         # FIXME: find info in proof_step.code_for_lean
+
         old = ""
         new = ""
-        self.lean_file.replace(label, old, new)
+        self.lean_file.replace(old, new)
+        request = LeanCodeProofStepRequest(task=task,
+                                           proof_step=proof_step,
+                                           exercise=self.__exercise_current,
+                                           lean_file=self.lean_file)
 
         await self.__get_response_for_request(request=request)
 
@@ -766,28 +763,31 @@ class ServerInterface(QObject):
         await self.__get_response_for_request(request=request)
         self.__desirable_lean_rqst_fpps_method()
 
-    async def code_set(self, task, label: str, code: str):
+    async def code_set(self, task, label: str, code: str,
+                       proof_step):
         """
         Sets the code for the current exercise. This is supposed to be called
         when user sets code using the Lean console, but this functionality
         is not activated right now because it f... up the history.
         """
-        # FIXME: This is not functional. Adapt HighLevelLeanRequest to this
-        #  case
 
-        self.__previous_proof_state = None
-
-        self.log.info("Code sent to Lean: " + code)
+        # Ensure code ends with ",\n"
+        code = code.strip('\n ')
         if not code.endswith(","):
             code += ","
+        code += "\n"
 
-        if not code.endswith("\n"):
-            code += "\n"
+        self.log.info("Code sent to Lean: " + code)
 
-        self.lean_file.state_add(label, code)
+        # New entry in the LeanFile
+        self.lean_file.set_code(code)
 
-        # request = ...
-        await self.__get_response_for_request()
+        request = LeanCodeProofStepRequest(task=task,
+                                           proof_step=proof_step,
+                                           exercise=self.__exercise_current,
+                                           lean_file=self.lean_file)
+
+        await self.__get_response_for_request(request=request)
 
     def history_replace(self, code: CodeForLean):
         """
