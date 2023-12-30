@@ -310,6 +310,30 @@ begin
   todo
 end
 
+lemma exercise.test_use_or_as_impliesI
+(P Q : Prop) (H1: not P) (H2: P ∨ Q):
+Q :=
+/- dEAduction
+AutoTest
+    @P1 @P2 use_or success=Propriété_H3_ajoutée_au_contexte,
+    assumption success=La_preuve_est_terminée_!,
+-/
+begin
+  todo
+end
+
+lemma exercise.test_use_or_as_impliesII
+(P Q : Prop) (H1: not Q) (H2: P ∨ Q):
+P :=
+/- dEAduction
+AutoTest
+    @P1 @P2 use_or success=Propriété_H3_ajoutée_au_contexte,
+    assumption success=La_preuve_est_terminée_!,
+-/
+begin
+  todo
+end
+
 end test_or
 
 -----------
@@ -479,7 +503,7 @@ begin
   todo
 end
 
-lemma exercise.prove_premise
+lemma exercise.test_prove_premise
 (P Q : Prop) (H2: Q → P) :
 Q ∧ P :=
 /- dEAduction
@@ -493,7 +517,7 @@ begin
   todo
 end
 
-lemma exercise.prove_premise_iff
+lemma exercise.test_prove_premise_iff
 (P Q : Prop) (H2: Q ↔ P) :
 Q ∧ P :=
 /- dEAduction
@@ -783,7 +807,7 @@ begin
 end
 
 lemma exercise.test_apply_equality_equality_and_direction1
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -795,7 +819,7 @@ begin
 end
 
 lemma exercise.test_apply_equality_equality_and_direction2
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -806,7 +830,7 @@ begin
   todo
 end
 lemma exercise.test_apply_equality_equality_and_direction3
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -817,7 +841,7 @@ begin
   todo
 end
 lemma exercise.test_apply_equality_equality_and_direction4
-(x y z : X) (f: X → Y) (H: x = y) (H': x = y):
+(x y z : X) (f: X → Y) (H: x = y) (H': y = x):
 x = z :=
 /- dEAduction
 AutoTest
@@ -876,7 +900,7 @@ lemma exercise.test_map_element_2
 ∃ y:Y, y= f(x') :=
 /- dEAduction
 AutoTest
-    f map x',
+    f map [ x' ],
     y exists
 -/
 begin

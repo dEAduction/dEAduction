@@ -163,7 +163,7 @@ lemma exercise.test_implicit_inclusion
 PrettyName
     Transitivité de l'inclusion
 AutoTest
-    →, @P1 ∧, ∀, →,
+    →, @P1 ∧, ∀,
     @P3 @P1 →, @P4 @P2 →,
     CQFD 
 -/

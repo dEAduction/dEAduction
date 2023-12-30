@@ -171,13 +171,6 @@ lemma exercise.inclusion_transitive
 /- dEAduction
 PrettyName
     Transitivité de l'inclusion
-AutoTest
-    →, definition.inclusion, ∀, →,
-    @P1 ∧,
-    @P2 @P3 definition.inclusion,
-    @P1 @P2 →,
-    @P4 @P3 →,
-    CQFD
 -/
 begin
     intro H1,
@@ -201,14 +194,27 @@ end generalites
 namespace tests_statements
 
 
-lemma exercise.test_definition
+lemma exercise.test_definition_context
 (A B : set X)  (H1: A ⊆ B) :
 A ⊆ B 
 :=
 /- dEAduction
 AutoTest
     H1 definition.inclusion success=H1,
-    definition.inclusion success=appliquée_au_but,
+    target definition.inclusion success=appliquée_au_but,
+    CQFD
+-/
+begin
+  todo
+end
+
+lemma exercise.test_definition_calculator
+(A B : set X)  (H1: A ⊆ B) :
+A ⊆ B 
+:=
+/- dEAduction
+AutoTest
+    definition.inclusion [ _ A B ],
     CQFD
 -/
 begin
