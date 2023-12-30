@@ -919,12 +919,12 @@ class CodeForLean:
         @return: CodeForLean
         """
 
-        var = arguments[0]
-        var = var.add_leading_parentheses(var)
+        # var = arguments[0]
+        # var = var.add_leading_parentheses(var)
         # test = var.to_display(format_='lean')
 
-        if not isinstance(operator, str):
-            op_name = operator.lean_name
+        op_name = (operator if isinstance(operator, str)
+                   else operator.lean_name)
         op_name = '@' + op_name if explicit else op_name
 
         arg_names = ['(' + arg + ')' if isinstance(arg, str)

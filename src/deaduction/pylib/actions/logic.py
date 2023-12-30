@@ -1033,8 +1033,8 @@ def use_or_as_implies(proof_step, selected_objects):
     "P or Q" and "not P" or "not Q", get Q or P.
     """
 
-    assert len(selected_objects) >= 2
-    [hyp0, hyp1] = selected_objects[0:1]
+    assert len(selected_objects) == 2
+    [hyp0, hyp1] = selected_objects
     if hyp1.is_or(implicit=True):
         hyp1, hyp0 = hyp0, hyp1
     elif not hyp0.is_or(implicit=True):
@@ -1046,7 +1046,7 @@ def use_or_as_implies(proof_step, selected_objects):
     error_msg = _("I do not know how to use disjunction {} with {}").format(
         hyp0.name, hyp1.name)
     success_msg = _("Property {} added to the context").format(H3)
-    code1 = CodeForLean.have(fresh_name=H3, operator="or.resolve_right",
+    code1 = CodeForLean.have(fresh_name=H3, operator="or.resolve_left",
                              arguments=[hyp0, hyp1],
                              explicit=False)
     code2 = CodeForLean.have(fresh_name=H3, operator="or.resolve_right",
