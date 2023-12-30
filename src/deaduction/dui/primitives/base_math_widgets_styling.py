@@ -211,12 +211,15 @@ class GoalTextWidget(MathTextWidget):
     """
     def __init__(self, goal, to_prove=False, open_problem=False):
         super().__init__()
-
+        self.set_goal(goal, to_prove, open_problem)
         # self.__text_wgt.setFont(self.math_fonts)
+
+    def set_goal(self, goal, to_prove=False, open_problem=False):
         text = goal.goal_to_text(format_="html",
                                  text_mode=True,
                                  to_prove=to_prove,
                                  open_problem=open_problem)
         self.setHtml(text)
+
 
 

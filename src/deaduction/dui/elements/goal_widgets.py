@@ -122,6 +122,12 @@ class GoalMathWidget(QWidget):
         self.setLayout(friendly_wgt_lyt)
         friendly_wgt_lyt.setContentsMargins(0, 0, 0, 0)
 
+    def set_goal(self, goal, to_prove=False, open_problem=False):
+        # TODO
+        target = goal.target
+        objects = goal.context_objects
+        properties = goal.context_props
+
 
 class GoalWidget(QWidget):
     """
