@@ -905,7 +905,7 @@ class CodeForLean:
         """
 
         @param fresh_name: str
-        @param operator: Union[MathObject, Statement]
+        @param operator: Union[MathObject, Statement, str]
         @param arguments: [Union[MathObject, str]]
 
         @param iff_direction: if operator is an iff then
@@ -921,9 +921,11 @@ class CodeForLean:
 
         var = arguments[0]
         var = var.add_leading_parentheses(var)
-        test = var.to_display(format_='lean')
+        # test = var.to_display(format_='lean')
 
-        op_name = '@' + operator.lean_name if explicit else operator.lean_name
+        if not isinstance(operator, str):
+            op_name = operator.lean_name
+        op_name = '@' + op_name if explicit else op_name
 
         arg_names = ['(' + arg + ')' if isinstance(arg, str)
                      else
@@ -950,7 +952,8 @@ class CodeForLean:
             error_msg = _("Unable to apply the selected property")
         code.add_error_msg(error_msg)
 
-        code.operator = operator
+        if not isinstance(operator, str):
+            code.operator = operator
 
         return code
 

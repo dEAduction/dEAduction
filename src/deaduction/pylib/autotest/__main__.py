@@ -187,6 +187,9 @@ def coex_from_argv() -> (Optional[Path], Course, Exercise, bool):
             all_from_this_one = True
         log.debug('Searching course and exercise...')
         course, exercise = select_exercise(course_path, exercise_like)
+        if not exercise:
+            log.warning(f"No exercise found matching {exercise_like}")
+
     elif exercise_like:
         exercise = exercise_from_pkl(exercise_like, dir_path)
         dir_path = None
