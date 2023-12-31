@@ -123,7 +123,7 @@ exercises_numbers = []
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':
 # Put 'automatic' for efficiency in metadata of exercises with heavy computations
-Lean_request_method = "normal"
+Lean_request_method = "from_previous_proof_state"
 copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
