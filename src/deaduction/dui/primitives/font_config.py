@@ -286,7 +286,7 @@ class DeaductionFonts:
 
     @staticmethod
     def background_color():
-        return cvars.get("display.selection_color", "limegreen")
+        return cvars.get("display.color_for_selection", "limegreen")
 
 
 deaduction_fonts = DeaductionFonts()

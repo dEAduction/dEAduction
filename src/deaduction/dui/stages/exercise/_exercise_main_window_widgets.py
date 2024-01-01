@@ -233,6 +233,10 @@ class ExerciseCentralWidget(QWidget):
         # self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
         #                                 QSizePolicy.Preferred)
 
+        # Fonts
+        self.deaduction_fonts = deaduction_fonts
+        self.set_font()
+
         # ───────────── Put widgets in layouts ───────────── #
         # Context-action lyt #
         self.__vertical_splitter = QSplitter(Qt.Horizontal)
@@ -249,9 +253,6 @@ class ExerciseCentralWidget(QWidget):
         self.organise_main_layout()  # Decide which one is on top
         self.setLayout(self.__main_lyt)
 
-        # Fonts
-        self.deaduction_fonts = deaduction_fonts
-        self.set_font()
 
         # Drag and drop
         self.set_drag_and_drop_config()

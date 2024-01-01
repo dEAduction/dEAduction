@@ -37,7 +37,7 @@ def highlight_color():
 
 
 def selection_color():
-    return cvars.get("display.selection_color")
+    return cvars.get("display.color_for_selection")
 
 
 def color_dummy_variables():
