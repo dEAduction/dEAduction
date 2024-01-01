@@ -51,6 +51,7 @@ dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
 [windows.display]
 math_font_file = ""
 
+
 [logic]
 # "display_unified", "display_both", "display_switch"
 button_use_or_prove_mode = "display_both"
@@ -91,16 +92,6 @@ save_history_of_solved_exercises = true
 max_recent_courses = 10
 show_recent_courses_only = false
 
-[i18n]
-available_languages = ["en", "fr_FR"]
-select_language = "no_language"
-
-
-[logs]
-save_journal = false
-display_level = "info"
-domains = [""]
-log_to_file = true
 
 [course]
 # Absolute path or relative to a Deaduction reference dir
@@ -119,6 +110,21 @@ preset_courses = ["Tutoriels/Tutoriel.lean",
 recent_courses = []  # Absolute paths
 recent_courses_titles = []
 exercises_numbers = []
+
+[dialogs]
+calculator_intro = true
+
+[i18n]
+available_languages = ["en", "fr_FR"]
+select_language = "no_language"
+
+
+[logs]
+save_journal = false
+display_level = "info"
+domains = [""]
+log_to_file = true
+
 
 [others]
 # 'automatic', 'normal', 'from_previous_proof_state':
