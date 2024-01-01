@@ -36,6 +36,10 @@ def highlight_color():
     return "yellow"
 
 
+def selection_color():
+    return cvars.get("display.selection_color")
+
+
 def color_dummy_variables():
     return (cvars.get('display.color_for_dummy_variables', None)
             if cvars.get('logic.use_color_for_dummy_variables', True)
@@ -73,11 +77,12 @@ class AbstractMathHtmlText:
     """
 
     def __init__(self, use_color=True, font_size=None, text_mode=False,
-                 activate_highlight=False):
+                 activate_highlight=False, activate_selection=False):
         self.use_color = use_color
         self.font_size = font_size  # FIXME: not used
         self.text_mode = text_mode
         self.activate_highlight = activate_highlight
+        self.activate_selection = activate_selection
 
     def set_use_color(self, yes=True):
         self.use_color = yes
@@ -92,6 +97,9 @@ class AbstractMathHtmlText:
 
     def set_highlight(self, yes=True):
         self.activate_highlight = yes
+
+    def set_selection(self, yes=True):
+        self.activate_selection = yes
 
     def math_font_style(self):
         fonts_name = deaduction_fonts.math_fonts_name
@@ -133,11 +141,18 @@ class AbstractMathHtmlText:
             style = ""
         return style
 
+    def selection_style(self):
+        if self.activate_selection:
+            style = f".selection {{ background-color: {selection_color()} }}"
+        else:
+            style = ""
+        return style
+
     @property
     def html_style(self):
         style = ("<style> " + self.text_font_style()
                  + self.math_font_style() + self.color_styles()
-                 + self.highlight_style()
+                 + self.highlight_style() + self.selection_style()
                  + "</style>")
         return style
 
@@ -164,6 +179,7 @@ class MathLabel(QLabel, AbstractMathHtmlText):
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight()
+        self.set_selection()
 
     def setText(self, text: str):
         super().setText(self.html_style + self.preamble + text + self.postamble)
@@ -179,6 +195,7 @@ class MathItem(QStandardItem, AbstractMathHtmlText):
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight()
+        self.set_selection()
 
     def setText(self, text: str):
         super().setText(self.html_style + '<div>' + text + '</div>')
@@ -194,6 +211,7 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
         self.set_text_mode(False)
         self.set_font_size(None)
         self.set_highlight(False)
+        self.set_selection(False)
         # self.setReadOnly(True)
         if text:
             self.setHtml(text)
