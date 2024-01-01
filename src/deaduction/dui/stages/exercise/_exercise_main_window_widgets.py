@@ -149,21 +149,32 @@ class ExerciseCentralWidget(QWidget):
         self.exercise = exercise
 
         # ───────────── Init layouts and boxes ───────────── #
-        # I wish none of these were class atributes, but we need at
-        # least self.__main_lyt and self.__context_lyt in the method
-        # self.update_goal.
 
-        self.__main_lyt     = QVBoxLayout()
-        self.__context_lyt  = QVBoxLayout()
+        self.__main_lyt = QVBoxLayout()
+        self.__context_lyt = QVBoxLayout()
         self.__context_actions_lyt = QHBoxLayout()
-        self.__actions_lyt         = QVBoxLayout()
-        # self.__action_buttons_widgets_dict = dict()
-        self.__action_btns_lyt     = None  # init by init_action_layout
+        self.__actions_lyt = QVBoxLayout()
+        self.__action_btns_lyt = None  # init by init_action_layout
 
         # self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
         context_title = _('Context (objects and properties)')
         self.__actions_gb = None
         self.__context_gb = QGroupBox(context_title)
+
+        # ──────────────── Init Context area ─────────────── #
+        self.objects_wgt = MathObjectWidget()
+        self.props_wgt = MathObjectWidget()
+        self.props_wgt.is_props_wdg = True
+        for wdg in (self.objects_wgt, self.props_wgt):
+            wdg.context_selection = self.context_selection
+            wdg.clear_context_selection = self.clear_context_selection
+
+        self.splitter = True
+        self.__context_splitter = QSplitter(Qt.Vertical)
+        self.init_context_layout()
+        self.__context_gb.setLayout(self.__context_lyt)
+        self.__context_gb.setSizePolicy(QSizePolicy.Maximum,
+                                        QSizePolicy.Preferred)
 
         # ──────────────── Init Actions area ─────────────── #
         # Action buttons
@@ -192,28 +203,16 @@ class ExerciseCentralWidget(QWidget):
         # The following prevents statements from begin nearly invisible
         # when there are few ActionButtons (so action_btns_lyt is narrow)
         if statements:
-            self.statements_tree.setMinimumWidth(400)
+            self.statements_tree.setMinimumWidth(300)
         StatementsTreeWidgetItem.from_name = dict()
+        self.set_actions_gb()
+        self.__actions_gb.setSizePolicy(QSizePolicy.Minimum,
+                                        QSizePolicy.Preferred)
 
         # ─────── Init goal (Context area and target) ────── #
         MathObjectWidgetItem.from_math_object = dict()
-        self.target_wgt   = TargetWidget()
+        self.target_wgt = TargetWidget()
         self.current_goal = None
-        self.objects_wgt  = MathObjectWidget()
-        self.props_wgt    = MathObjectWidget()
-        self.props_wgt.is_props_wdg = True
-        for wdg in (self.objects_wgt, self.props_wgt):
-            wdg.context_selection = self.context_selection
-            wdg.clear_context_selection = self.clear_context_selection
-
-        # ───────────── Put widgets in layouts ───────────── #
-
-        # Context
-        self.splitter = True
-        self.__context_splitter = QSplitter(Qt.Vertical)
-        self.init_context_layout()
-        self.__context_gb.setLayout(self.__context_lyt)
-
         # Size policies:
         #       - Context should be able to expand at will, since properties
         #       arbitrarily long
@@ -226,13 +225,25 @@ class ExerciseCentralWidget(QWidget):
 
         # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
 
-        self.__context_actions_lyt.addWidget(self.__context_gb)
-        self.set_actions_gb()
-        self.__context_actions_lyt.addWidget(self.__actions_gb)
-        self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
-                                        QSizePolicy.Preferred)
-        self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
-                                        QSizePolicy.Preferred)
+        # self.__context_actions_lyt.addWidget(self.__context_gb)
+        # self.set_actions_gb()
+        # self.__context_actions_lyt.addWidget(self.__actions_gb)
+        # self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
+        #                                 QSizePolicy.Preferred)
+        # self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
+        #                                 QSizePolicy.Preferred)
+
+        # ───────────── Put widgets in layouts ───────────── #
+        # Context-action lyt #
+        self.__vertical_splitter = QSplitter(Qt.Horizontal)
+        self.__vertical_splitter.setChildrenCollapsible(False)
+        self.__vertical_splitter.setSizePolicy(QSizePolicy.Expanding,
+                                               QSizePolicy.Expanding)
+        self.__vertical_splitter.addWidget(self.__context_gb)
+        self.__vertical_splitter.addWidget(self.__actions_gb)
+        self.__vertical_splitter.setStretchFactor(0, 3)
+        self.__vertical_splitter.setStretchFactor(1, 1)
+        self.__context_actions_lyt.addWidget(self.__vertical_splitter)
 
         # Set main layout
         self.organise_main_layout()  # Decide which one is on top
@@ -256,6 +267,12 @@ class ExerciseCentralWidget(QWidget):
             self.__context_lyt.addWidget(self.props_wgt)
 
         self.__context_gb.setTitle(_('Context (objects and properties)'))
+
+    def splitter_state(self):
+        return self.__vertical_splitter.saveState()
+
+    def set_splitter_state(self, state):
+        self.__vertical_splitter.restoreState(state)
 
     def set_switch_mode(self, to_prove=True):
         return self.__action_btns_lyt.set_switch_mode(to_prove)
@@ -285,7 +302,7 @@ class ExerciseCentralWidget(QWidget):
             for action_buttons_widget in self.__action_buttons_lines:
                 self.__action_btns_lyt.removeWidget(action_buttons_widget)
 
-        exercise = self.exercise
+        # exercise = self.exercise
         mode = cvars.get('logic.button_use_or_prove_mode')
 
         # if exercise.prove_use_mode_set_by_exercise():
@@ -301,7 +318,7 @@ class ExerciseCentralWidget(QWidget):
                           self.__logic_2_btns,
                           self.__magic_proof_btns]
         else:  # mode == "display_both" or "display_switch"
-            dpu = True
+            # dpu = True
             prove_wdg = self.__prove_btns
             use_wdg = self.__use_btns
             other_wdgs = [self.__logic_2_btns,
