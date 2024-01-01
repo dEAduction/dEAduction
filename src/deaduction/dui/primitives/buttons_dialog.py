@@ -59,6 +59,8 @@ class ButtonsDialog(QDialog):
                              chosen button
         """
         super(ButtonsDialog, self).__init__(parent)
+        if not title:
+            title = "d∃∀duction"
         self.setWindowTitle(title)
 
         self.output = output

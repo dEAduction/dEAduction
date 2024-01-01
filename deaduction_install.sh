@@ -6,6 +6,9 @@ set -u
 # https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
 # execute with:
 # /bin/bash -c "$(curl -L https://raw.githubusercontent.com/dEAduction/dEAduction/master/deaduction_install.sh)"
+echo "Make sure you run this script under bash with sudo access,"
+echo "e.g. sudo bash ./deaduction_install.sh"
+
 
 # String formatters
 tty_mkbold() { tty_escape "1;$1"; }
@@ -66,7 +69,7 @@ have_sudo_access() {
 
   if [[ -z "${HOMEBREW_ON_LINUX-}" ]] && [[ "${HAVE_SUDO_ACCESS}" -ne 0 ]]
   then
-    abort "Need sudo access on macOS (e.g. the user ${USER} needs to be an Administrator)!"
+    abort "Need sudo access (e.g. the user ${USER} needs to be an Administrator)!"
   fi
 
   return "${HAVE_SUDO_ACCESS}"
@@ -151,7 +154,6 @@ if [[ "$CPU" == "arm64" ]]; then
   echo "see e.g. https://www.wisdomgeek.com/development/installing-intel-based-packages-using-homebrew-on-the-m1-mac/"
   echo "and specifically https://leanprover-community.github.io/archive/stream/113489-new-members/topic/M1.20macs.html"
 fi
-
 
 ##########
 # PYTHON #
@@ -251,66 +253,88 @@ if [ $DEADUCTION_ON_LINUX == 0 ]; then
       finally run this script again..."
   fi
 fi
+
+################################
+# dEAduction dir already here? #
+################################
+if [ -d dEAduction ]; then
+  echo "Directory dEAduction already exists,"
+  echo "we will assume it contains dEAduction sources"
+  echo "(If this is not the case then remove this directory and restart this script)"
+  continue ">>>>> Proceed with install? (y/n)"
+  DOWNLOADED=1
+else
+  DOWNLOADED=0
+fi
+
+
 #######
 # git #
 #######
-if which git &> /dev/null; then
-  ohai "Found git"
-  FOUND_GIT=1
-else
-  warning "git not found: see https://git-scm .com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed"
-  FOUND_GIT=0
-  # TODO: handle git installation
-  echo "If you want to use git to keep deaduction up-to-date,"
-  echo "stop this script and install git, then launch this script again"
-fi
-
-if [ $FOUND_GIT == 1 ]; then
-  echo "Do you want to use git to install deaduction? (y/n)"
-  echo "(This is necessary for developers, and convenient for frequent updating)"
-  read RESPONSE
-  if [ "$RESPONSE" == "y" ]; then
-    WITH_GIT=1
-  elif [ "$RESPONSE" == "n" ]; then
-    WITH_GIT=0
+if [ $DOWNLOADED == 0 ]; then
+  if which git &> /dev/null; then
+    ohai "Found git"
+    FOUND_GIT=1
   else
-    abort "Wrong answer. Try again."
+    warning "git not found: see https://git-scm .com/book/fr/v2/D%C3%A9marrage-rapide-Installation-de-Git if needed"
+    FOUND_GIT=0
+    # TODO: handle git installation
+    echo "If you want to use git to keep deaduction up-to-date,"
+    echo "stop this script and install git, then launch this script again"
+  fi
+
+  if [ $FOUND_GIT == 1 ]; then
+    echo "Do you want to use git to install deaduction? (y/n)"
+    echo "(This is necessary for developers, and convenient for frequent updating)"
+    read RESPONSE
+    if [ "$RESPONSE" == "y" ]; then
+      WITH_GIT=1
+    elif [ "$RESPONSE" == "n" ]; then
+      WITH_GIT=0
+    else
+      abort "Wrong answer. Try again."
+    fi
+  fi
+
+  # TODO: choose location
+  # TODO: tester si curl existe?
+
+ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
+echo "in the current directory."
+continue ">>>>> Proceed with download? (y/n)"
+
+  ############
+  # DOWNLOAD #
+  ############
+  if [ $WITH_GIT == 0 ]; then
+    echo "Downloading zip archive..."
+    mkdir tmp
+    curl -L https://github.com/dEAduction/dEAduction/zipball/master/ --output tmp/deaduction.zip
+    # Test zip archive
+    if unzip -t tmp/deaduction.zip > /dev/null; then
+      echo "(Zip archive is OK)";
+    else
+      abort "Corrupted zip archive. Try again."
+    fi
+    echo "Unzipping..."
+    # Dirty solution to get dir name
+    DIR_NAME=$(unzip -l tmp/deaduction.zip | head -n5 | tail -n1 | awk '{print $4}')
+    unzip tmp/deaduction.zip
+    rm tmp/deaduction.zip
+    mv $DIR_NAME dEAduction
+  else
+    echo "Downloading with git..."
+    git clone https://github.com/dEAduction/dEAduction.git
   fi
 fi
 
-# TODO: choose location
-# TODO: tester si curl existe?
-
-  ohai "Deaduction will be installed inside a directory named 'dEAduction/'"
-  echo "in the current directory."
-  continue ">>>>> Proceed with download? (y/n)"
-
-############
-# DOWNLOAD #
-############
-if [ $WITH_GIT == 0 ]; then
-  echo "Downloading zip archive..."
-  mkdir tmp
-  curl -L https://github.com/dEAduction/dEAduction/zipball/master/ --output tmp/deaduction.zip
-  # Test zip archive
-  if unzip -t tmp/deaduction.zip > /dev/null; then
-    echo "(Zip archive is OK)";
-  else
-    abort "Corrupted zip archive. Try again."
-  fi
-  echo "Unzipping..."
-  # Dirty solution to get dir name
-  DIR_NAME=$(unzip -l tmp/deaduction.zip | head -n5 | tail -n1 | awk '{print $4}')
-  unzip tmp/deaduction.zip
-  rm tmp/deaduction.zip
-  mv $DIR_NAME dEAduction
-else
-  echo "Downloading with git..."
-  git clone https://github.com/dEAduction/dEAduction.git
-fi
 
 # Deaduction content has been extracted to directory dEAduction
+echo "Deaduction sources have been extracted in the directory dEAduction."
 cd dEAduction
+
+
+# Need sudo access from now on
 
 #########################
 # WRITING LAUNCH SCRIPT #
@@ -319,8 +343,11 @@ cd dEAduction
 # and store it in deaduction_launcher.sh
 
 if [[ $UBUNTU_DEBIAN == 1 ]] ; then
-
+  ###### deaduction_launcher content ######
   echo -e "#!/bin/bash
+
+  echo \"Make sure you run this script with bash,\"
+  echo \"e.g. bash ./deaduction_launcher.sh\"
 
   # Necessary for envconfig_user:
   export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
@@ -332,24 +359,32 @@ if [[ $UBUNTU_DEBIAN == 1 ]] ; then
   cd src/deaduction
 
   $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+  ###### end of content ######
 
   warn "Since you are on Ubuntu or Debian, We will now run the following commands:"
   ohai "apt install python3-venv python3-pip"
   ohai "pip3 install --upgrade setuptools"
-  ohai "apt install python3-setuptools"
+  ohai "(or apt install python3-setuptools)"
   continue ">>>>> Proceed? (y/n)"
 
   ohai "apt install python3-venv python3-pip"
   execute "apt" "install" "python3-venv" "python3-pip"
 
+  echo "We try both commands for installing setuptools:"
   ohai "pip3 install --upgrade setuptools"
-  execute "pip3" "install" --upgrade" setuptools"
+  #  execute "pip3" "install" --upgrade" setuptools"
+  pip3 install --upgrade setuptools
 
   ohai "apt install python3-setuptools"
-  execute "apt" "install" "python3-setuptools"
+  #  execute "apt" "install" "python3-setuptools"
+  apt install python3-setuptools
 
 else
+  ###### deaduction_launcher content ######
   echo -e "#!/bin/bash
+
+  echo \"Make sure you run this script with bash,\"
+  echo \"e.g. bash ./deaduction_launcher.sh\"
 
   # Necessary for envconfig_user:
   export PYTHON_FOR_DEADUCTION=$PYTHON_FOR_DEADUCTION
@@ -361,6 +396,7 @@ else
   cd src/deaduction
 
   $PYTHON_FOR_DEADUCTION -m dui" > ../deaduction_launcher.sh
+  ###### end of content ######
 fi
 
 chmod u+x ../deaduction_launcher.sh

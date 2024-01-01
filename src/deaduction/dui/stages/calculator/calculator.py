@@ -67,6 +67,7 @@ from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
                                QCheckBox, QGroupBox, QSpacerItem)
 
 import deaduction.pylib.config.dirs as cdirs
+import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import MissingCalculatorOutput
 
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
@@ -82,7 +83,8 @@ from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject
                                                          CalculatorPatternLines)
 
 # from deaduction.dui.primitives.base_math_widgets_styling import MathTextWidget
-from deaduction.dui.primitives import DisclosureTitleWidget
+from deaduction.dui.primitives import (DisclosureTitleWidget,
+                                       DeaductionTutorialDialog)
 
 from deaduction.dui.stages.calculator.calculator_targets import (
     CalculatorTarget, CalculatorTargets)
@@ -364,6 +366,7 @@ class CalculatorAllButtons(QWidget):
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
         super().__init__()
         self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
         self.setWindowTitle(_("Logical Calculator") + " — d∃∀duction")
         # self.setFocusPolicy(Qt.NoFocus)  --> Buttons cannot be clicked!
         self.buttons_groups = []
@@ -778,6 +781,21 @@ class CalculatorController:
         self.__init_histories()
         self.__init_targets()
         self.set_target_and_update_ui()
+
+        QTimer.singleShot(0, self.__show_intro)
+
+    @staticmethod
+    def __show_intro():
+        cname = "dialogs.calculator_intro"
+        if cvars.get(cname):
+            text = _("Use the Logical Calculator to fill-in the form. "
+                     "Please note the yellow selection: when you click a "
+                     "calculator button, the corresponding operator will "
+                     "apply to the selection. Use the left and right arrows "
+                     "to modify the selection.")
+            calc_intro_box = DeaductionTutorialDialog(config_name=cname,
+                                                      text=text)
+            calc_intro_box.exec()
 
     @classmethod
     def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,

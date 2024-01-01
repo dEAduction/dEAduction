@@ -1,29 +1,26 @@
-
-import tactic
-import data.real.basic
 /-
-- nom des variables dans la def de limite !
-- variables muettes = variables globales : bof
-- calcul avec abs : abs (l'-l) /2 >0 ??
-(x ≠ 0 → |x| >0)
-- ne pas ajouter l'inégalité au contexte si elle y est déjà !
-- 'dsimp only at h' effectue les beta-réduction : (λ x, f x) 37 = f 37
-- max : def et propriétés
-- utiliser specialize ??
-
+This is a d∃∀duction file providing exercises about limits and continuity.
 -/
 
+-- Lean standard imports
+import tactic
+import data.real.basic
 
 -- dEAduction tactics
-import structures2      -- hypo_analysis, targets_analysis
-import utils            -- no_meta_vars
-import user_notations   -- notations that can be used in deaduction UI for a new object
-import compute
-import push_neg_once
+-- structures2 and utils are vital
+import deaduction_all_tactics
+-- import structures2      -- hypo_analysis, targets_analysis
+-- import utils            -- no_meta_vars
+-- import compute_all      -- Tactics for the compute buttons
+-- import push_neg_once    -- Pushing negation just one step
+-- import induction        -- Induction theorems
 
 -- dEAduction definitions
--- import set_definitions
+import set_definitions
 import real_definitions
+
+-- Use classical logic
+local attribute [instance] classical.prop_decidable
 
 definition limit (u : ℕ → ℝ) (l : ℝ) : Prop :=
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε

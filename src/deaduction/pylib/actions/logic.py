@@ -595,6 +595,40 @@ def use_implies_to_hyp(proof_step,
     return code
 
 
+def implies_with_iff(proof_step):
+    """
+    Assuming an iff has been selected with the use-implies button,
+    ask usr to choose a direction in order to prove the premise.
+    """
+
+    goal = proof_step.goal
+    user_input = proof_step.user_input
+    iff = proof_step.selection[0]
+    [P, Q] = iff.math_type.children
+    props = [p.math_type for p in goal.context_props] + [goal.target.math_type]
+    if P in props or Q in props:
+        raise WrongUserInput(error=_("You need to select another property "
+                                     "in order to use one direction of this "
+                                     "equivalence"))
+
+    if not user_input:
+        msg = _("To use this equivalence, you first have to prove one of both "
+                "properties")
+        raw_msg = _('Prove {} as a premise')
+        msg0 = raw_msg.format(P.to_display(format_='utf8'))
+        msg1 = raw_msg.format(Q.to_display(format_='utf8'))
+        choices = [('1', msg0), ('2', msg1)]
+        raise MissingParametersError(
+            InputType.Choice,
+            choices=choices,
+            title=_("Prove premise?"),
+            output=msg)
+    elif user_input[0] == 0:
+        return introduce_new_subgoal(proof_step, P)
+    elif user_input[0] == 1:
+        return introduce_new_subgoal(proof_step, Q)
+
+
 def implies_hyp(proof_step):
     """
     This method is called when user press implies with exactly one selected
@@ -605,6 +639,11 @@ def implies_hyp(proof_step):
     """
 
     implication = proof_step.selection[0]
+
+    # Case of an iff
+    if implication.is_iff():
+        return implies_with_iff(proof_step)
+
     # (0) Determine if implication is a universal implication, or a True
     #     implication (maybe implicit)
     universal_implication = False
@@ -650,7 +689,7 @@ def implies_hyp(proof_step):
         if premise and isinstance(premise, MathObject):
             return introduce_new_subgoal(proof_step, premise)
         else:
-            error_msg = _("I do not know what to do")
+            error_msg = _("We cannot use an implication without a premise")
             raise WrongUserInput(error_msg)
 
 
@@ -704,7 +743,7 @@ def action_implies(proof_step, prove=True, use=True) -> CodeForLean:
     if len(selected_objects) == 1 and use:
         # Try to apply an implication, but no other prop selected
         if not selected_objects[0].can_be_used_for_implication(implicit=True,
-           include_iff=False):
+           include_iff=True):
             raise WrongUserInput(
                 error=_("Selected property is not an implication 'P ⇒ Q'"))
         else:
@@ -988,6 +1027,37 @@ def use_or(proof_step,
     return code
 
 
+def use_or_as_implies(proof_step, selected_objects):
+    """
+    Assuming usr has selected two properties, if these properties are
+    "P or Q" and "not P" or "not Q", get Q or P.
+    """
+
+    assert len(selected_objects) == 2
+    [hyp0, hyp1] = selected_objects
+    if hyp1.is_or(implicit=True):
+        hyp1, hyp0 = hyp0, hyp1
+    elif not hyp0.is_or(implicit=True):
+        error_msg = _("None of the hypotheses if a disjunction 'P OR Q'")
+        raise WrongUserInput(error_msg)
+
+    # From now on hyp0 is a disjunction
+    H3 = get_new_hyp(proof_step)
+    error_msg = _("I do not know how to use disjunction {} with {}").format(
+        hyp0.name, hyp1.name)
+    success_msg = _("Property {} added to the context").format(H3)
+    code1 = CodeForLean.have(fresh_name=H3, operator="or.resolve_left",
+                             arguments=[hyp0, hyp1],
+                             explicit=False)
+    code2 = CodeForLean.have(fresh_name=H3, operator="or.resolve_right",
+                             arguments=[hyp0, hyp1],
+                             explicit=False)
+    code = code1.or_else(code2)
+    code.add_error_msg(error_msg)
+    code.add_success_msg(success_msg)
+    return code
+
+
 def prove_or_on_hyp(proof_step,
                     selected_property: [MathObject],
                     user_input: [str] = None) -> CodeForLean:
@@ -1104,9 +1174,10 @@ def action_or(proof_step, prove=True, use=True) -> CodeForLean:
                 raise WrongUseModeInput(prop=prop_type)
             return prove_or_on_hyp(proof_step, selected_objects, user_input)
     elif len(selected_objects) == 2:
-        if not prove:
-            raise WrongUseModeInput(prop=prop_type)
-        return prove_or_on_hyp(proof_step, selected_objects, user_input)
+        if use:
+            return use_or_as_implies(proof_step, selected_objects)
+        elif prove:
+            return prove_or_on_hyp(proof_step, selected_objects, user_input)
     else:  # More than 2 selected objects
         raise WrongUserInput(error=_("Does not apply to more than two "
                                      "properties"))

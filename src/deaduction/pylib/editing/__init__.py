@@ -229,6 +229,21 @@ class VirtualFile:
     ################################
     # Actions
     ################################
+    def replace(self, old, new):
+        """
+        In the current text, replace first occurence of old with new.
+        """
+        current_pos = self.current_pos
+        next_txt = self.__txt.replace(old, new, 1)
+        # Improve: this assume that cursor is after old in the text.
+        current_pos += (len(new) - len(old))
+        self.state_add('code_replace', next_txt, current_pos)
+        self.state_info_attach(replaced_text=(old, new))
+
+    def replace_entry_containing(self, old_piece_of_code, new_code):
+        old_code = self.find_first_insertion_of(old_piece_of_code)
+        self.replace(old_code, new_code)
+
     def insert(self, label, add_txt, move_cursor=True):
         """
         Inserts text at cursor position, and update cursor position.
@@ -239,8 +254,7 @@ class VirtualFile:
         """
 
         current_pos = self.current_pos
-        next_txt = self.__txt[:current_pos] \
-            + add_txt              \
+        next_txt = self.__txt[:current_pos] + add_txt
 
         if move_cursor:
             current_pos += len(add_txt)
@@ -248,16 +262,14 @@ class VirtualFile:
         self.state_add(label, next_txt, current_pos)
         self.state_info_attach(inserted_text=add_txt)
 
-    def replace(self, label, old, new):
+    def set_code(self, code):
         """
-        In the current text, replace first occurence of old with new.
+        Set code from scratch (independently of previous content)
+        and put cursor to end.
         """
-        current_pos = self.current_pos
-        next_txt = self.__txt.replace(old, new, 1)
-        # Improve: this assume that cursor is after old in the text.
-        current_pos += (len(new) - len(old))
-        self.state_add(label, next_txt, current_pos)
-        self.state_info_attach(replaced_text=(old, new))
+        label = 'code_set'
+        current_pos = len(code)
+        self.state_add(label, code, current_pos=current_pos)
 
     def state_add(self,
                   label: str, next_txt: str,

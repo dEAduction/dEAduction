@@ -502,7 +502,8 @@ class ProofStep:
     @property
     def synthetic_proof_step(self):
         code = self.effective_code if self.effective_code else self.lean_code
-        return code.synthetic_proof_step
+        if code:
+            return code.synthetic_proof_step
 
     @property
     def operator(self):

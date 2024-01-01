@@ -317,6 +317,10 @@ inter = SetTheoryNode("SET_INTER",
 union = SetTheoryNode("SET_UNION",
                       'SET_UNION: SET(?2)(?0: SET(?2), ?1: SET(?2))',
                       (0, r" \cup ", 1))
+diff = SetTheoryNode("SET_DIFF",
+                     'SET_DIFF: SET(?2)(?0: SET(?2), ?1: SET(?2))',
+                     (0, r" \backslash ", 1))
+diff.set_shortcut(r'\diff')
 empty = SetTheoryNode("SET_EMPTY",
                       'SET_EMPTY()',
                       (r"\emptyset",)

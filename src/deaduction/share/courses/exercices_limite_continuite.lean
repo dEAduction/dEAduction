@@ -108,30 +108,30 @@ begin
   todo
 end
 
-lemma definition.inverse (a:ℝ)
-(HP1: a ≠ 0):
-a⁻¹ = 1/a
-:=
-/- dEAduction
-PrettyName
-  Définition de la fonction "inverse"
--/
-begin
-  todo
-end
+-- lemma definition.inverse (a:ℝ)
+-- (HP1: a ≠ 0):
+-- a⁻¹ = 1/a
+-- :=
+-- /- dEAduction
+-- PrettyName
+--   Définition de la fonction "inverse"
+-- -/
+-- begin
+--   todo
+-- end
 
 
-lemma theorem.inverse_decroissante (a b:ℝ)
-(HP1: a > 0) (HP2:b > 0):
-a < b → b⁻¹ < a⁻¹ 
-:=
-/- dEAduction
-PrettyName
-  La fonction "inverse" renverse les inégalités
--/
-begin
-  todo
-end
+-- lemma theorem.inverse_decroissante (a b:ℝ)
+-- (HP1: a > 0) (HP2:b > 0):
+-- a < b → b⁻¹ < a⁻¹ 
+-- :=
+-- /- dEAduction
+-- PrettyName
+--   La fonction "inverse" renverse les inégalités
+-- -/
+-- begin
+--   todo
+-- end
 
 -- #check real.exists_floor
 
@@ -492,26 +492,18 @@ begin
   todo,
 end
 
-lemma exercise.limit_inverse :
-converging_seq (λ n, n⁻¹)  := 
-/- dEAduction
-PrettyName
-  (**) La suite des inverses des entiers est convergente.
-Description
-  Un exemple très simple de limite.
-  Savez-vous trouver le bon "N" ?
--/
-begin
-  -- use (((0): @real)),
-  -- rw definitions.suites.definition.limit, intro ε, intro H1,
-  -- have H2 := @definitions.generalites.theorem.archimedien (((1): @real)/ε),
-  -- cases H2 with n H3,
-  -- use (n),
-  -- intro p, intro H5,
-  -- norm_num,
-  -- targets_analysis,
-  todo
-end
+-- lemma exercise.limit_inverse :
+-- converging_seq (λ n, n⁻¹)  := 
+-- /- dEAduction
+-- PrettyName
+--   (**) La suite des inverses des entiers est convergente.
+-- Description
+--   Un exemple très simple de limite.
+--   Savez-vous trouver le bon "N" ?
+-- -/
+-- begin
+--   todo
+-- end
 
 -- lemma exercise.limit_racine :
 -- limit_plus_infinity  (λ n,  n^(1/2))  := 
