@@ -222,6 +222,8 @@ class ExerciseMainWindow(QMainWindow):
             # if maximised:  # FIXME: Does not work on Linux?!
             # self.showMaximized()
 
+        self.ecw.set_splitter_state(settings.value("vertical_splitter"))
+
         # Proof tree visible: (this is a string!)
         proof_tree_is_visible = (settings.value("emw/ShowProofTree") == "true")
         ptv = settings.value("emw/ShowProofTree")
@@ -232,17 +234,7 @@ class ExerciseMainWindow(QMainWindow):
         else:
             self.exercise_toolbar.toggle_proof_tree.setChecked(True)
 
-        # proof_tree_is_visible = settings.value("emw/ShowProofTree")
-        # if proof_tree_is_visible:
-        #     print("Proof tree was shown")
-        #     QTimer.singleShot(500,
-        #                       self.exercise_toolbar.toggle_proof_tree.toggle)
-            # self.exercise_toolbar.toggle_proof_tree.toggle()
-            # self.exercise_toolbar.toggle_proof_tree.setChecked(True)
         self.close_coordinator = None  # Method set up by Coordinator
-
-        # 1s to allow correct geometry(?) Does not work
-        # QTimer.singleShot(1000, self.__init_help_window)
         self.freeze()  # Wait for data before allowing user actions.
 
     #######################
@@ -389,6 +381,8 @@ class ExerciseMainWindow(QMainWindow):
         proof_tree_is_visible = self.proof_tree_window.isVisible()
         # print(f"PTV: {proof_tree_is_visible}")
         settings.setValue("emw/ShowProofTree", proof_tree_is_visible)
+        settings.setValue("vertical_splitter", self.ecw.splitter_state())
+
         # Close children
         self.lean_editor.close()
         self.proof_outline_window.close()

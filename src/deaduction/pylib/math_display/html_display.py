@@ -117,7 +117,7 @@ style_wrapper_dic = {r'\bf': ('<b>', '</b>'),
                                           '</font>'),
                      r'\used_property': ("<font class='used_prop'>", '</font>'),
                      # r'\color': ("<font style='color:{};'>", '</font>')
-                     r'\marked': ("<font class='highlight'>", '</font>'),
+                     r'\marked': ("<font class='selection'>", '</font>'),
                      r'\text': ("<font class='text'>", '</font>')
 }
 

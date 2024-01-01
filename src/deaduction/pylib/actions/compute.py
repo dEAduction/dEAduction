@@ -297,6 +297,8 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
 
     msg = _("Triangular inequality {} added to the context").format(new_hyp)
     code.add_success_msg(msg)
+    if location == "target":
+        location = _("the target")
     code.add_error_msg(_("No absolute value found in {}").format(location))
     # code.add_used_properties(selected_objects) BOF
     return code

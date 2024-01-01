@@ -152,7 +152,7 @@ class CalculatorTarget(MathTextWidget):
 
     def __init__(self):
         super().__init__()
-        self.set_highlight(True)
+        self.set_selection(True)
 
         self.setFixedHeight(50)  # fixme
         # self.setReadOnly(True)
