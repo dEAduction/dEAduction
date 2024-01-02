@@ -441,11 +441,21 @@ begin
     todo
 end
 
+lemma auxiliary_definition.ensemble_non_vide
+(A: set X) :
+(not (A = ∅) ) ↔ ∃ x : X, x ∈ A
+:=
+begin
+    todo
+end
+
 lemma definition.ensemble_non_vide
 (A: set X) :
 ((A ≠ ∅) ) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
+AuxiliaryDefinitions
+  auxiliary_definition.ensemble_non_vide
 ImplicitUse
   True
 -/
