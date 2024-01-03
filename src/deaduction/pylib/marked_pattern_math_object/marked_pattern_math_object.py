@@ -1550,7 +1550,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         pmo_display = new_pmo.to_display(format_='utf8')
         log.debug(f"Trying to insert {pmo_display} at {mvar}")
-        log.debug(f"left/right of cursor = {left, right}")
+        # log.debug(f"left/right of cursor = {left, right}")
         # log.debug(f"Parent mvar = {parent_mvar}")
 
         ######################
@@ -1574,16 +1574,16 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         ##################
         # Last test: new_pmo match mvar?
         mvar.clear_assignment()
-        log.debug(f"Last test: try to match {pmo_display} with {mvar}")
+        # log.debug(f"Last test: try to match {pmo_display} with {mvar}")
         match_mvar_test = mvar.match(new_pmo, successive_matching=True)
         if not match_mvar_test:
             if not check_types:
                 assignments.append((mvar, new_pmo))
-                log.debug("--> failed, assign anyway")
+                # log.debug("--> failed, assign anyway")
             else:
                 return False
-        else:
-            log.debug("-->match!")
+        # else:
+        #     log.debug("-->match!")
 
         # Insertion succeeded:
         # Assign all mvars that have been matched in this method:
@@ -1671,13 +1671,13 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             if not left_children:
                 continue
             child = left_children[0]
-            log.debug(f"Try to match {math_object} with {child}")
+            # log.debug(f"Try to match {math_object} with {child}")
             if child.is_metavar and child.match(math_object):
                 new_pmo = app_pattern.deep_copy(app_pattern)
                 left_children, _, _ = new_pmo.partionned_children()
                 if not left_children:
                     continue
-                log.debug("--> matched, assigning")
+                # log.debug("--> matched, assigning")
                 child = left_children[0]
                 child.match(math_object)
                 child.assign_matched_metavars()
@@ -1726,12 +1726,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 continue
             child0, child1 = children[0], children[1]
             child0.clear_cls_metavars()
-            log.debug(f"Try to match {math_object} with {child0}")
+            # log.debug(f"Try to match {math_object} with {child0}")
             if child0.match(math_object, first_of_successive=True):
-                log.debug("-->matched")
-                log.debug(f"Try to match {argument} with {child1}")
+                # log.debug("-->matched")
+                # log.debug(f"Try to match {argument} with {child1}")
                 if child1.match(argument, successive_matching=True):
-                    log.debug("-->matched")
+                    # log.debug("-->matched")
 
                     # l_children, c_children, r_children = new_pmo.partionned_children()
                     # if (not l_children) or (not c_children + r_children):
@@ -1742,12 +1742,12 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     child1.assign_matched_metavars()
                     child1.adjust_type_of_assigned_math_object()
                     mvar.assigned_math_object = None
-                    log.debug(f"Try to match {new_pmo} with {mvar}")
+                    # log.debug(f"Try to match {new_pmo} with {mvar}")
                     if mvar.match(new_pmo):
-                        log.debug("-->matched")
+                        # log.debug("-->matched")
                         mvar.assign_matched_metavars()
                     else:
-                        log.debug("-->failed, assign anyway")
+                        # log.debug("-->failed, assign anyway")
                         mvar.assigned_math_object = new_pmo
                     return mvar
 
@@ -1828,7 +1828,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         a generic node. Currently this is just used to allow composite numbers.
         """
 
-        log.debug("Trying to insert a generic node")
+        # log.debug("Trying to insert a generic node")
         new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         new_nb = self.insert_number(new_pmo)
