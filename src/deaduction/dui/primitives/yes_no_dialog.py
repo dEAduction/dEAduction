@@ -152,4 +152,5 @@ class DeaductionTutorialDialog(DeaductionDialog):
 
     def dismiss(self):
         cvars.set(self.config_name, False)
+        cvars.save_single_key(self.config_name)
 
