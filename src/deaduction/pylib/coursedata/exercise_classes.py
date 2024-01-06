@@ -478,14 +478,6 @@ class Statement:
                 self.__negated_goal = goal.negated_goal(goal)
         return self.__negated_goal
 
-
-class Definition(Statement):
-    # def __init__(self, **data):
-    #     implicit_use = data.pop('implicit_use') if 'implicit_use' in data \
-    #                    else False
-    #     super().__init__(self, **data)
-    #     self.implicit_use_activated = implicit_use
-
     @property
     def auxiliary_definitions(self):
         aux_def = self.info.get('auxiliary_definitions')
@@ -493,6 +485,14 @@ class Definition(Statement):
             return []
         else:
             return aux_def.split()
+
+
+class Definition(Statement):
+    # def __init__(self, **data):
+    #     implicit_use = data.pop('implicit_use') if 'implicit_use' in data \
+    #                    else False
+    #     super().__init__(self, **data)
+    #     self.implicit_use_activated = implicit_use
 
     @property
     def implicit_use(self):
