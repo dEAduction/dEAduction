@@ -62,8 +62,12 @@ all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
 usr_lean_src_dir = (local / "lean_src").resolve()
 usr_tests_dir = (local / "autotests")
-lean = local / "lean"
-mathlib = local / "mathlib"
+local_lean = local / "lean"
+local_mathlib = local / "mathlib"
+# NB: lean and mathlib actual path are available as
+# lean_path = inst.packages["lean"].path
+# mathlib_path = inst.packages["mathlib"].path
+# where inst is the lean.installation module
 
 log_file = (local / "deaduction.log").resolve()
 
