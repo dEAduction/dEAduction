@@ -340,8 +340,8 @@ def erase_lean():
     """
     Erase Lean and Mathlib. For debugging only.
     """
-    lean_dir = cdirs.lean
-    mathlib_dir = cdirs.mathlib
+    lean_dir = cdirs.local_lean
+    mathlib_dir = cdirs.local_mathlib
     if lean_dir.exists():
         log.debug("Erasing Lean")
         rmtree(str(lean_dir), ignore_errors=True)
