@@ -84,14 +84,16 @@ def remove_leading_parentheses(math_list: list):
             remove_leading_parentheses(math_list)
 
 
-def add_parentheses(math_list: list, depth=1, lean_format=False):
+def add_parentheses(math_list: list, depth=1, lean_format=False,
+                    pretty_parentheses=True):
     """
     Search for the \\parentheses macro and replace it by a pair of
-    parentheses. Remove redundant parentheses, i.e.
-    ((...)) or parentheses at depth 0.
+    parentheses.
+    If pretty_parentheses is True, then remove redundant parentheses,
+    i.e. ((...)) or parentheses at depth 0.
     """
     # Remove unnecessary leading parentheses #
-    if depth == 0 and not lean_format:
+    if pretty_parentheses and depth == 0 and not lean_format:
         remove_leading_parentheses(math_list)
 
     for index in range(len(math_list) - 1):
@@ -101,7 +103,9 @@ def add_parentheses(math_list: list, depth=1, lean_format=False):
                 math_list[index] = math_list.string("(")
             else:
                 math_list[index] = paren.replace_string(paren, "(")
-            if index == len(math_list)-2 and isinstance(math_list[-1], list):
+            # Remove double parentheses
+            if (pretty_parentheses and index == len(math_list)-2
+                    and isinstance(math_list[-1], list)):
                 remove_leading_parentheses(math_list[-1])
 
             if not hasattr(paren, 'replace_string'):
@@ -110,7 +114,8 @@ def add_parentheses(math_list: list, depth=1, lean_format=False):
                 math_list.append(paren.replace_string(paren, ")"))
 
 
-def recursive_utf8_display(math_list, depth, lean_format=False):
+def recursive_utf8_display(math_list, depth, lean_format=False,
+                           pretty_parentheses=True):
     """
     Use the following tags as first child:
     - \sub, \super for subscript/superscript
@@ -144,15 +149,17 @@ def recursive_utf8_display(math_list, depth, lean_format=False):
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
                   r'\text', r'\no_text', r'\marked'):
         math_list.pop(0)
-
-    add_parentheses(math_list, depth, lean_format=lean_format)
+    
+    add_parentheses(math_list, depth, pretty_parentheses=pretty_parentheses)
 
     # Recursively format children
     idx = 0
     for child in math_list:
         if child:
-            formatted_child = recursive_utf8_display(child, depth + 1,
-                                                     lean_format=lean_format)
+            formatted_child = recursive_utf8_display(
+                                         child, depth + 1,
+                                         lean_format=lean_format,
+                                         pretty_parentheses=pretty_parentheses)
             math_list[idx] = formatted_child
         idx += 1
 
@@ -173,7 +180,7 @@ def recursive_utf8_display(math_list, depth, lean_format=False):
     return math_list
 
 
-def utf8_display(math_list, depth=0):
+def utf8_display(math_list, depth=0, pretty_parentheses=True):
     """
     Return a utf8 version of the string represented by abstract_string,
     which is a tree of string.
@@ -182,17 +189,19 @@ def utf8_display(math_list, depth=0):
     # if abstract_string is None:
     #     return ""
 
-    recursive_utf8_display(math_list, depth)
+    recursive_utf8_display(math_list, depth,
+                           pretty_parentheses=pretty_parentheses)
 
     # return math_list
 
 
-def lean_display(math_list: list):
+def lean_display(math_list: list, pretty_parentheses=True):
     """
     Just remove formatters.
     """
 
-    recursive_utf8_display(math_list, depth=0, lean_format=True)
+    recursive_utf8_display(math_list, depth=0, lean_format=True,
+                           pretty_parentheses=pretty_parentheses)
 
 # def lean_display(math_list, depth=0):
 #     """

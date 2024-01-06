@@ -1054,7 +1054,8 @@ class CalculatorController:
         if self.lean_mode:
             text = self.target.to_display(format_='lean')
         else:
-            text = self.target.to_display(format_='html')
+            text = self.target.to_display(format_='html',
+                                          pretty_parentheses=False)
         return text
 
     @property
@@ -1062,7 +1063,8 @@ class CalculatorController:
         if self.lean_mode:
             text = self.current_target.to_display(format_='lean')
         else:
-            text = self.current_target.to_display(format_='html')
+            text = self.current_target.to_display(format_='html',
+                                                  pretty_parentheses=False)
         return text
 
     @property
@@ -1500,18 +1502,17 @@ class CalculatorController:
         self.math_cursor.go_to_end()
         self.set_target_and_update_ui()
 
-    @Slot()
-    def move_to_next_unassigned(self):
-        success = self.target.move_right_to_next_unassigned()
-        if success:
-            self.calculator_ui.set_html(self.html_target)
-            self.set_target_and_update_ui()
+    # @Slot()
+    # def move_to_next_unassigned(self):
+    #     success = self.target.move_right_to_next_unassigned()
+    #     if success:
+    #         self.set_target_and_update_ui()
 
-    @Slot()
-    def move_to_previous_unassigned(self):
-        success = self.target.move_left_to_previous_unassigned()
-        if success:
-            self.set_target_and_update_ui()
+    # @Slot()
+    # def move_to_previous_unassigned(self):
+    #     success = self.target.move_left_to_previous_unassigned()
+    #     if success:
+    #         self.set_target_and_update_ui()
 
     # @Slot()
     # def move_up(self):

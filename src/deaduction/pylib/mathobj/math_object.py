@@ -2044,21 +2044,25 @@ class MathObject:
 ################################################
     def to_display(self, format_="html", text=False,
                    use_color=True, bf=False, is_type=False,
-                   used_in_proof=False) -> str:
+                   used_in_proof=False,
+                   pretty_parentheses=True) -> str:
         """
         This method is actually defined in math_display/new_display.
         """
         display = MathList.display(self, format_=format_, text=text,
                                    use_color=use_color, bf=bf, is_type=is_type,
-                                   used_in_proof=used_in_proof)
+                                   used_in_proof=used_in_proof,
+                                   pretty_parentheses=pretty_parentheses)
         return display
 
     def math_type_to_display(self, format_="html", text=False,
-                             is_math_type=False, used_in_proof=False) -> str:
+                             is_math_type=False, used_in_proof=False,
+                             pretty_parentheses=True) -> str:
 
         math_type = self if is_math_type else self.math_type
         return math_type.to_display(format_, text=text, is_type=True,
-                                    used_in_proof=used_in_proof)
+                                    used_in_proof=used_in_proof,
+                                    pretty_parentheses=pretty_parentheses)
 
     def latex_shape(self, is_type=False, text=False, lean_format=False):
         """
