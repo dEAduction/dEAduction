@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-01-01 09:32+0100\n"
-"PO-Revision-Date: 2024-01-01 09:33+0100\n"
+"POT-Creation-Date: 2024-01-06 21:44+0100\n"
+"PO-Revision-Date: 2024-01-06 21:45+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -673,14 +673,14 @@ msgstr "Entrer"
 
 #: dui/stages/calculator/calculator.py:791
 msgid ""
-"Use the Logical Calculator to fill-in the form. Please note the yellow "
+"Use the Logical Calculator to fill-in the form. Please note the green "
 "selection: when you click a calculator button, the corresponding operator "
 "will apply to the selection. Use the left and right arrows to modify the "
 "selection."
 msgstr ""
 "Utilisez la Calculatrice Logique pour remplir le formulaire. Notez la "
-"sélection en jaune : quand vous cliquez sur un bouton de la calculatrice, "
-"l'opérateur correspondant s'appliquera à la sélection. Utilisez les flèches "
+"sélection en vert : quand vous cliquez sur un bouton de la calculatrice, "
+"l'opérateur correspondant s'applique à la sélection. Utilisez les flèches "
 "gauche et droite pour modifier la sélection."
 
 #: dui/stages/calculator/calculator_button.py:153
@@ -1275,63 +1275,63 @@ msgstr "Sélectionner au moins un objet, une propriété ou bien le but"
 msgid "I do not know what to do with this selection"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: pylib/actions/generic.py:53
+#: pylib/actions/generic.py:55
 msgid "Definition applied to target"
 msgstr "Définition appliquée au but"
 
-#: pylib/actions/generic.py:54
+#: pylib/actions/generic.py:56
 msgid "Definition applied to"
 msgstr "Définition appliquée à"
 
-#: pylib/actions/generic.py:56
+#: pylib/actions/generic.py:58
 msgid "Theorem applied to target"
 msgstr "Théorème appliqué au but"
 
-#: pylib/actions/generic.py:57
+#: pylib/actions/generic.py:59
 msgid "Theorem applied to"
 msgstr "Théorème appliqué à"
 
-#: pylib/actions/generic.py:59
+#: pylib/actions/generic.py:61
 msgid "Exercise applied to target"
 msgstr "Exercice appliqué au but"
 
-#: pylib/actions/generic.py:60
+#: pylib/actions/generic.py:62
 msgid "Exercise applied to"
 msgstr "Exercice appliqué à"
 
-#: pylib/actions/generic.py:98
+#: pylib/actions/generic.py:104
 msgid "Definition added to the context"
 msgstr "Définition ajoutée au contexte"
 
-#: pylib/actions/generic.py:100
+#: pylib/actions/generic.py:106
 msgid "Theorem added to the context"
 msgstr "Théorème ajouté au contexte"
 
-#: pylib/actions/generic.py:102
+#: pylib/actions/generic.py:108
 msgid "Exercise added to the context"
 msgstr "Exercice ajouté au contexte"
 
-#: pylib/actions/generic.py:131
+#: pylib/actions/generic.py:137
 msgid "Unable to apply definition"
 msgstr "La définition n’a pas pu être appliquée"
 
-#: pylib/actions/generic.py:168
+#: pylib/actions/generic.py:174
 msgid "Target replaced by applying theorem"
 msgstr "Le but a été remplacé en appliquant le théorème"
 
-#: pylib/actions/generic.py:180
+#: pylib/actions/generic.py:186
 msgid "Target replaced by applying theorem to "
 msgstr "Le but a été remplacé en appliquant le théorème à "
 
-#: pylib/actions/generic.py:198
+#: pylib/actions/generic.py:204
 msgid "Theorem"
 msgstr "Théorème"
 
-#: pylib/actions/generic.py:198
+#: pylib/actions/generic.py:204
 msgid "applied to"
 msgstr "appliqué à"
 
-#: pylib/actions/generic.py:206
+#: pylib/actions/generic.py:212
 msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
@@ -1871,13 +1871,18 @@ msgstr "Echec dans la vérification du paquet {}: {}"
 msgid "No package {} found in configuration"
 msgstr "Paquet {} non trouvé dans la configuration"
 
-#: pylib/config/vars.py:81
+#: pylib/config/vars.py:98
+msgid "Could not get config value: "
+msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
+
+#: pylib/config/vars.py:137
 msgid "Saving configuration file"
 msgstr "Sauvegarde du fichier de configuration"
 
-#: pylib/config/vars.py:108
-msgid "Could not get config value: "
-msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
+#: pylib/config/vars.py:161
+#, python-brace-format
+msgid "Saving {key}:{value} in config file"
+msgstr "Sauvegarde de {key}:{value} dans le fichier config"
 
 #: pylib/coursedata/auto_steps.py:326 pylib/coursedata/auto_steps.py:335
 msgid "target"

@@ -789,7 +789,7 @@ class CalculatorController:
         cname = "dialogs.calculator_intro"
         if cvars.get(cname):
             text = _("Use the Logical Calculator to fill-in the form. "
-                     "Please note the yellow selection: when you click a "
+                     "Please note the green selection: when you click a "
                      "calculator button, the corresponding operator will "
                      "apply to the selection. Use the left and right arrows "
                      "to modify the selection.")
