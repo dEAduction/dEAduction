@@ -58,8 +58,9 @@ class MathCursor:
 
     def __init__(self, root_math_object, cursor_math_object, go_to_end=True):
         self.math_list = MathList.complete_latex_shape(
-            math_object=root_math_object,
-            format_='html')
+                                                math_object=root_math_object,
+                                                format_='html',
+                                                pretty_parentheses=False)
         self.math_list = self.math_list.remove_formatters()
         self.target_math_object = root_math_object
 

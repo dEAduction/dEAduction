@@ -381,7 +381,7 @@ def language_check():
         cvars.set('i18n.select_language', selected_language)
         deaduction.pylib.config.i18n.init_i18n()
         if ok:
-            cvars.save()  # Do not ask next time!
+            cvars.save_single_key('i18n.select_language')  # Do not ask next time!
 
 
 def copy_lean_files_to_home():

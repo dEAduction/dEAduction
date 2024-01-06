@@ -74,16 +74,6 @@ if USER_CONFIG_FILE_PATH.exists():
         __dict_user.update(toml.loads(f.read().decode('utf-8')))
 
 
-def save():
-    global __dict_factory
-    global __dict_user
-
-    log.info(_("Saving configuration file"))
-    with open(str(USER_CONFIG_FILE_PATH),
-              mode="w", encoding='utf-8') as fhandle:
-        toml.dump(__dict_user, fhandle)
-
-
 def get(k: str, default_value=None):
     """
     Return the wanted setting variable. dot get style,
@@ -140,6 +130,38 @@ def update(new_settings: dict):
             set(key, value)
 
 
+def save():
+    global __dict_factory
+    global __dict_user
+
+    log.info(_("Saving configuration file"))
+    with open(str(USER_CONFIG_FILE_PATH),
+              mode="w", encoding='utf-8') as fhandle:
+        toml.dump(__dict_user, fhandle)
+
+
+def save_single_key(key):
+    """
+    Add to the current USER_CONFIG_FILE_PATH a single entry.
+    Does not affect the current __dict_user!
+    """
+
+    value = get(key)
+    global __dict_user
+    tmp_dict_user = dict()
+
+    # Read usr config file
+    with open(str(USER_CONFIG_FILE_PATH), 'rb') as f:
+        tmp_dict_user.update(toml.loads(f.read().decode('utf-8')))
+
+    # Add entry to be saved
+    udict.dotset(tmp_dict_user, key, value, if_not_exists=False)
+
+    # Save new dict
+    log.debug(_(f"Saving {key}:{value} in config file"))
+    with open(str(USER_CONFIG_FILE_PATH),
+              mode="w", encoding='utf-8') as fhandle:
+        toml.dump(tmp_dict_user, fhandle)
 
 
 # Add os name; so this can be overridden in (user's) config.toml

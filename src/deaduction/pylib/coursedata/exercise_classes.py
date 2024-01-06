@@ -487,6 +487,14 @@ class Definition(Statement):
     #     self.implicit_use_activated = implicit_use
 
     @property
+    def auxiliary_definitions(self):
+        aux_def = self.info.get('auxiliary_definitions')
+        if not aux_def:
+            return []
+        else:
+            return aux_def.split()
+
+    @property
     def implicit_use(self):
         if 'implicit_use' in self.info and self.info['implicit_use']:
             return True

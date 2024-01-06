@@ -163,7 +163,8 @@ def html_display_single_string(string):
 
 
 def recursive_html_display(math_list: Union[list, str], depth,
-                           use_color=True, no_text=False) -> []:
+                           use_color=True, no_text=False,
+                           pretty_parentheses=True) -> []:
     """
     Use the following tags as first child:
     - \\sub, \\super for subscript/superscript
@@ -175,6 +176,7 @@ def recursive_html_display(math_list: Union[list, str], depth,
     :param use_color: if True, allow the use of color. This parameter is set to
                       False when the whole text should be grey.
     :param no_text: if True, only math fonts are used.
+    :param pretty_parentheses: if True, remove unnecessary parentheses couples.
     """
 
     # if math_list is None:
@@ -201,14 +203,16 @@ def recursive_html_display(math_list: Union[list, str], depth,
             use_color = False
 
     # Handle "\parentheses":
-    add_parentheses(math_list, depth)
+    add_parentheses(math_list, depth, pretty_parentheses=pretty_parentheses)
 
     # Format children
     idx = 0
     for child in math_list:
         if child:
             formatted_child = recursive_html_display(child, depth + 1,
-                                                     use_color, no_text)
+                                                     use_color,
+                                                     no_text,
+                                                     pretty_parentheses)
             math_list[idx] = formatted_child
         idx += 1
 
@@ -224,7 +228,8 @@ def recursive_html_display(math_list: Union[list, str], depth,
 def html_display(math_list, depth=0,
                  use_color=True,
                  bf=False,
-                 no_text=False):
+                 no_text=False,
+                 pretty_parentheses=True):
     """
     Return a html version of the string represented by abstract_string,
     which is a tree of string.
@@ -232,7 +237,8 @@ def html_display(math_list, depth=0,
 
     # TODO: take tex_depth into account
     recursive_html_display(math_list, depth, use_color=use_color,
-                           no_text=no_text)
+                           no_text=no_text,
+                           pretty_parentheses=pretty_parentheses)
 
     # Boldface?
     if bf:

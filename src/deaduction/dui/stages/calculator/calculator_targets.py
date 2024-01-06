@@ -144,7 +144,7 @@ class CalculatorTarget(MathTextWidget):
     display the MathObject (or more precisely, MarkedPatternMathObject) that
     usr is building. Note that the text from kbd is not processed by the
     super class QTextEdit, unless Calculator is in Lean mode. Instead,
-    kbd events are intercepted and serve as shorcuts from buttons. All input
+    kbd events are intercepted and serve as shortcuts from buttons. All input
     come from the buttons.
     """
 
@@ -152,6 +152,10 @@ class CalculatorTarget(MathTextWidget):
 
     def __init__(self):
         super().__init__()
+
+        # Double default cursor width
+        self.setCursorWidth(self.cursorWidth()*2)
+
         self.set_selection(True)
 
         self.setFixedHeight(50)  # fixme

@@ -1054,7 +1054,8 @@ class CalculatorController:
         if self.lean_mode:
             text = self.target.to_display(format_='lean')
         else:
-            text = self.target.to_display(format_='html')
+            text = self.target.to_display(format_='html',
+                                          pretty_parentheses=False)
         return text
 
     @property
@@ -1062,7 +1063,8 @@ class CalculatorController:
         if self.lean_mode:
             text = self.current_target.to_display(format_='lean')
         else:
-            text = self.current_target.to_display(format_='html')
+            text = self.current_target.to_display(format_='html',
+                                                  pretty_parentheses=False)
         return text
 
     @property
@@ -1335,6 +1337,7 @@ class CalculatorController:
         beforehand the pattern APP(g, ?) for every context function g.
         """
 
+        log.debug(f"Action: insert {pattern_s}")
         if not isinstance(pattern_s, list):
             pattern_s = [pattern_s]
 
@@ -1351,10 +1354,10 @@ class CalculatorController:
         new_target.set_math_cursor(go_to_end=False)
         new_target.math_cursor.set_cursor_at_the_same_position_as(
             self.target.math_cursor)
-        assert (new_target.math_cursor.cursor_address ==
-                self.target.math_cursor.cursor_address)
-        assert (new_target.math_cursor.cursor_is_after ==
-                self.target.math_cursor.cursor_is_after)
+        # assert (new_target.math_cursor.cursor_address ==
+        #         self.target.math_cursor.cursor_address)
+        # assert (new_target.math_cursor.cursor_is_after ==
+        #         self.target.math_cursor.cursor_is_after)
         # print("Target, new target ordered descendants:")
         # print(self.target.ordered_descendants(include_cursor=True))
         # print(new_target.ordered_descendants(include_cursor=True))
@@ -1423,6 +1426,7 @@ class CalculatorController:
 
     @Slot()
     def delete(self):
+        log.debug("Action: delete")
         new_target = self.target.deep_copy(self.target)
         # FIXME: record element previous to marked, and go_to that element
         #  after deletion
@@ -1446,23 +1450,27 @@ class CalculatorController:
 
     @Slot()
     def history_undo(self):
+        log.debug("Action: Undo")
         if self.history_idx > 0:
             self.history_idx -= 1
             self.after_history_move()
 
     @Slot()
     def history_redo(self):
+        log.debug("Action: Redo")
         if self.history_idx < len(self.history) - 1:
             self.history_idx += 1
             self.after_history_move()
 
     @Slot()
     def history_to_beginning(self):
+        log.debug("Action: Undo all")
         self.history_idx = 0
         self.after_history_move()
 
     @Slot()
     def history_to_end(self):
+        log.debug("Action: Redo all")
         self.history_idx = len(self.history) - 1
         self.after_history_move()
 
@@ -1472,36 +1480,39 @@ class CalculatorController:
 
     @Slot()
     def move_right(self):
+        log.debug("Action: Move right")
         self.math_cursor.increase_pos()
         self.set_target_and_update_ui()
 
     @Slot()
     def move_left(self):
+        log.debug("Action: Move left")
         self.math_cursor.decrease_pos()
         self.set_target_and_update_ui()
 
     @Slot()
     def go_to_beginning(self):
+        log.debug("Action: go to beginning")
         self.math_cursor.go_to_beginning()
         self.set_target_and_update_ui()
 
     @Slot()
     def go_to_end(self):
+        log.debug("Action: go to end")
         self.math_cursor.go_to_end()
         self.set_target_and_update_ui()
 
-    @Slot()
-    def move_to_next_unassigned(self):
-        success = self.target.move_right_to_next_unassigned()
-        if success:
-            self.calculator_ui.set_html(self.html_target)
-            self.set_target_and_update_ui()
+    # @Slot()
+    # def move_to_next_unassigned(self):
+    #     success = self.target.move_right_to_next_unassigned()
+    #     if success:
+    #         self.set_target_and_update_ui()
 
-    @Slot()
-    def move_to_previous_unassigned(self):
-        success = self.target.move_left_to_previous_unassigned()
-        if success:
-            self.set_target_and_update_ui()
+    # @Slot()
+    # def move_to_previous_unassigned(self):
+    #     success = self.target.move_left_to_previous_unassigned()
+    #     if success:
+    #         self.set_target_and_update_ui()
 
     # @Slot()
     # def move_up(self):

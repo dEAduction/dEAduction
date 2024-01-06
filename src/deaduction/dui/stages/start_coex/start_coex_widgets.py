@@ -42,6 +42,7 @@ from typing  import  (Dict,
                       Optional)
 
 from PySide2.QtCore    import (Qt,
+                               QTimer,
                                Signal,
                                Slot,
                                QEvent,
@@ -75,6 +76,7 @@ from deaduction.dui.elements.start_coex_widget_classes import ChooseExerciseWidg
 
 from deaduction.dui.utils           import (replace_widget_layout,
                                             HorizontalLine)
+from deaduction.dui.primitives import DeaductionTutorialDialog
 from deaduction.pylib.config.course import  add_to_recent_courses
 from deaduction.pylib.coursedata    import (Course,
                                             Exercise)
@@ -1337,6 +1339,27 @@ class StartCoExStartup(AbstractStartCoEx):
                          exercise=exercise,
                          servint=servint)
 
+        QTimer.singleShot(0, self.__show_intro)
+
+    @staticmethod
+    def __show_intro():
+        text = None
+        cname = "dialogs.chooser_intro"
+        cname2 = "dialogs.chooser_intro_2"
+        if cvars.get(cname):
+            config_name = cname
+            text = _("Welcome to the d∃∀duction file and exercise selector. "
+                     "Select a file in the 'Files' tab, then select your "
+                     "exercise in the 'Exercises' tab.")
+
+        elif cvars.get(cname2):
+            config_name = cname2
+            text = _("Use the toolbar to display recent files and saved "
+                     "exercises.")
+        if text:
+            calc_intro_box = DeaductionTutorialDialog(config_name=config_name,
+                                                      text=text)
+            calc_intro_box.exec()
 
 # class StartCoExExerciseFinished(AbstractStartCoEx):
 #     """

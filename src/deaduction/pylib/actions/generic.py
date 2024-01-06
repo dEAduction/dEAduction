@@ -38,15 +38,17 @@ global _
 
 
 def rw_using_statement(goal,  # Goal,
-                       selected_objects, statement) -> CodeForLean:
+                       selected_objects,
+                       statement) -> CodeForLean:
     """
     Return codes trying to use statement for rewriting. This should be
     reserved to iff or equalities. This function is called by
     action_definition, and by action_theorem in case the theorem is an iff
     statement.
     """
-    codes = CodeForLean.empty_code()
-    defi = statement.lean_name
+
+    # defi = statement.lean_name
+    defi_names = [statement.lean_name] + statement.auxiliary_definitions
     arguments = ''
     # statement_type = statement.type.capitalize()
     if statement.is_definition():
@@ -59,22 +61,26 @@ def rw_using_statement(goal,  # Goal,
         target_msg = _('Exercise applied to target')
         context_msg = _('Exercise applied to')
 
+    raw_codes = []
     if len(selected_objects) == 0:
-        codes = codes.or_else(f'rw {defi}')
-        codes = codes.or_else(f'simp_rw {defi}')
-        codes = codes.or_else(f'rw <- {defi}')
-        codes = codes.or_else(f'simp_rw <- {defi}')
+        for defi in defi_names:
+            raw_codes.extend([f'rw {defi}',
+                              f'simp_rw {defi}',
+                              f'rw <- {defi}',
+                              f'simp_rw <- {defi}'])
+        codes = CodeForLean.or_else_from_list(raw_codes)
         codes.add_success_msg(target_msg)
 
     else:
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
-
+        for defi in defi_names:
+            raw_codes.extend([f'rw {defi} at {arguments}',
+                              f'simp_rw {defi} at {arguments}',
+                              f'rw <- {defi} at {arguments}',
+                              f'simp_rw <- {defi} at {arguments}'])
+        codes = CodeForLean.or_else_from_list(raw_codes)
         context_msg += ' ' + arguments
-        codes = codes.or_else(f'rw {defi} at {arguments}')
-        codes = codes.or_else(f'simp_rw {defi} at {arguments}')
-        codes = codes.or_else(f'rw <- {defi} at {arguments}')
-        codes = codes.or_else(f'simp_rw <- {defi} at {arguments}')
         codes.add_success_msg(context_msg)
 
     codes.rw_item = statement  # (statement.type_, statement.pretty_name)
@@ -256,6 +262,13 @@ def action_theorem(proof_step) -> CodeForLean:
     code = use_forall(proof_step, arguments,
                       universal_property_or_statement=theorem,
                       no_more_place_holder=True)
+    
+    # Apply auxiliary statements    
+    # aux_codes = [use_forall(proof_step, arguments,
+    #                         universal_property_or_statement=aux_theorem,
+    #                         no_more_place_holder=True)
+    #              for aux_theorem in theorem.auxiliary_statements]
+    # code = code.or_else_from_list([code] + aux_codes)
     return code
 
 

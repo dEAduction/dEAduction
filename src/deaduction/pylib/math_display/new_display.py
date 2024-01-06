@@ -652,7 +652,12 @@ class MathList(list, MathDescendant):
             return self
         else:
             child_idx, *further_descendant = position
-            assert len(self) > child_idx
+            try:
+                assert len(self) > child_idx
+            except AssertionError:
+                log.warning("MathList.item_for_address: child_idx >= len(self)")
+                print(child_idx)
+                print(self)
             try:
                 item = self[child_idx].item_for_address(further_descendant)
                 return item
@@ -1018,7 +1023,7 @@ class MathList(list, MathDescendant):
         self.insert(0, MathString.marked_object)
 
     def adapt_to_format_(self, format_, use_color=True, bf=False,
-                         no_text=False):
+                         no_text=False, pretty_parentheses=True):
         """
         Adapt self to the format specified by self.format_.
         """
@@ -1035,12 +1040,13 @@ class MathList(list, MathDescendant):
                              "'utf8', 'html'")
         # (2) Format
         if format_ == 'html':
-            html_display(self, use_color=use_color, bf=bf, no_text=no_text)
+            html_display(self, use_color=use_color, bf=bf, no_text=no_text,
+                         pretty_parentheses=pretty_parentheses)
 
         elif format_ == 'utf8':  # or format_ == 'lean':
-            utf8_display(self)
+            utf8_display(self, pretty_parentheses=pretty_parentheses)
         elif format_ == 'lean':
-            lean_display(self)
+            lean_display(self, pretty_parentheses=pretty_parentheses)
 
         # Put here general hygiene, and remove to_string
         if format_ in ('utf8', 'html'):
@@ -1051,13 +1057,13 @@ class MathList(list, MathDescendant):
         self.cut_spaces()
 
         if format_ == 'lean':
-
             self.remove_formatters(warning=(format_ != 'lean'))
 
     @classmethod
     def complete_latex_shape(cls, math_object, format_="html", text=False,
                              use_color=True, bf=False, is_type=False,
-                             used_in_proof=False):
+                             used_in_proof=False,
+                             pretty_parentheses=True):
 
         lean_format = (format_ == "lean")
 
@@ -1079,14 +1085,16 @@ class MathList(list, MathDescendant):
         # shape.adapt_to_format_(use_color=use_color, bf=bf)
         # (4) Format into a displayable string
         shape.adapt_to_format_(format_, use_color=use_color, bf=bf,
-                               no_text=not text)
+                               no_text=not text,
+                               pretty_parentheses=pretty_parentheses)
 
         return shape
 
     @classmethod
     def display(cls, math_object, format_="html", text=False,
                 use_color=True, bf=False, is_type=False,
-                used_in_proof=False) -> str:
+                used_in_proof=False,
+                pretty_parentheses=True) -> str:
         """
         Method to display MathObject on screen.
         Note that it cannot be put in MathObject module, due to import problem
@@ -1094,7 +1102,8 @@ class MathList(list, MathDescendant):
         """
 
         shape = cls.complete_latex_shape(math_object, format_, text, use_color,
-                                         bf, is_type, used_in_proof)
+                                         bf, is_type, used_in_proof,
+                                         pretty_parentheses=pretty_parentheses)
 
         # (5) And joint everything!
         display = shape.to_string()

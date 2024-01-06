@@ -168,6 +168,8 @@ def add_to_recent_courses(course_path: Path,
     cvars.set("course.exercise_numbers"     , exercises_numbers)
 
     # Save config file
-    cvars.save()
+    cvars.save_single_key("course.recent_courses")
+    cvars.save_single_key("course.recent_courses_titles")
+    cvars.save_single_key("course.exercise_numbers")
 
 
