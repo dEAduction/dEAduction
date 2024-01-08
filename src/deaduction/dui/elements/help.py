@@ -149,12 +149,12 @@ class HelpWindow(QDialog):
         # Window stay on top of parent:
 
         nb = version_info[1]
-        if nb <= 9:
+        if nb <= 10:
             flags = self.windowFlags() | Qt.Dialog
             self.setWindowFlags(flags)
         else:
             # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
-            # FIXME: this is for python 3.11
+            # FIXME: this is for python > 3.10
             self.setWindowFlags |= Qt.Dialog
         # self.main_txt, self.detailed_txt, self.hint = None, None, None
         self.msgs_list = []
