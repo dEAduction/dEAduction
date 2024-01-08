@@ -151,8 +151,9 @@ def save_single_key(key):
     tmp_dict_user = dict()
 
     # Read usr config file
-    with open(str(USER_CONFIG_FILE_PATH), 'rb') as f:
-        tmp_dict_user.update(toml.loads(f.read().decode('utf-8')))
+    if USER_CONFIG_FILE_PATH.exists():
+        with open(str(USER_CONFIG_FILE_PATH), 'rb') as f:
+            tmp_dict_user.update(toml.loads(f.read().decode('utf-8')))
 
     # Add entry to be saved
     udict.dotset(tmp_dict_user, key, value, if_not_exists=False)
