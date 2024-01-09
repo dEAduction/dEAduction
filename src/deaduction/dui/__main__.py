@@ -577,13 +577,53 @@ class WindowManager(QObject):
             self.chooser_window.raise_()
             self.chooser_window.activateWindow()
 
+    def check_course_file(self, course) -> bool:
+        """
+        Check that course file name will not raise an import error.
+        """
+        path = course.abs_course_path
+        lean_env = self.servint.lean_env
+        other = lean_env.other_file_with_same_name(abs_path=path)
+        if other and not other.parent == cdirs.tmp_exercises_dir:
+            dialog = QMessageBox()  # title=_('File selector')
+            dialog.setWindowTitle(_('Ambiguous name ') + '— d∃∀duction')
+            txt = _("File has the same name as \n{}.").format(other)
+            txt += _("\nChange the name of one of the two files and try again.")
+            det_txt = _("This will raise an import error from Lean. "
+                        "If you insist on not changing names, then go to the "
+                        "settings window, select the advanced tab and set "
+                        "the Lean requests method to 'Normal'.")
+            dialog.setDetailedText(det_txt)
+            dialog.setText(txt)
+            dialog.setIcon(QMessageBox.Warning)
+            ok_btn = dialog.addButton(QMessageBox.Ok)
+            abort_btn = dialog.addButton(QMessageBox.Cancel)
+            show_dtls_btn = dialog.buttons()[0]
+            show_dtls_btn.setText(_("Show details") + "...")
+            abort_btn.setText(_("Cancel"))
+            ok_btn.setText(_("Proceed anyway"))
+            dialog.exec_()
+            if dialog.clickedButton() != ok_btn:
+                return False
+
+        lean_env.check_file_path(abs_path=path)
+        return True
+
     @Slot()
     def start_exercise(self, exercise):
         """
         Just a front-end to the solve_exercise method.
         """
+
         # TODO: might be merged with solve_exercise, no more async
         #  but cf tests
+
+        # Check course file
+        if not self.check_course_file(exercise.course):
+            return
+
+        # log.debug("Exercise chosen, closing window")
+        self.chooser_window.close()
         self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
@@ -594,6 +634,7 @@ class WindowManager(QObject):
                 self.exercise_window.close()
             except RuntimeError:
                 pass
+
         # Do start exercise!
         self.solve_exercise()
 
@@ -621,8 +662,7 @@ class WindowManager(QObject):
         - setting test_mode,
         - connecting proof_no_goal signal to test_complete.
         """
-        # FIXME: adapt to new methods!!
-        # TODO: box for cancelling auto_test (reprendre la main)
+
         log.debug(f"Preparing {self.exercise.pretty_name} for test")
 
         # Start exercise window and test window

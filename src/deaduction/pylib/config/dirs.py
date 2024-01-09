@@ -60,6 +60,7 @@ history        = (local / "history").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()
+tmp_exercises_dir = (usr_lean_exercises_dir / "tmp").resolve()
 usr_lean_src_dir = (local / "lean_src").resolve()
 usr_tests_dir = (local / "autotests")
 local_lean = local / "lean"
@@ -92,3 +93,4 @@ def init():
     fs.check_dir(history, create=True)
     fs.check_dir(test_exercises)  # FIXME
     fs.check_dir(usr_lean_exercises_dir, create=True)
+    fs.check_dir(tmp_exercises_dir, create=True)

@@ -30,7 +30,8 @@ This file is part of d∃∀duction.
 import deaduction.pylib.config.dirs      as cdirs
 import deaduction.pylib.utils.filesystem as fs
 
-from   pathlib import Path
+from pathlib import Path
+from shutil import copy
 
 
 class LeanEnvironment:
@@ -44,8 +45,7 @@ class LeanEnvironment:
         self.mathlib_path = inst.packages["mathlib"].path
         self.leanpkg_path_dir = cdirs.local
 
-    @property
-    def absolute_lean_libs(self):
+    def absolute_lean_libs(self) -> [Path]:
         """
         Construct path information to be put in leanpkg.path file.
         """
@@ -63,15 +63,16 @@ class LeanEnvironment:
 
         return paths
 
-    @property
-    def lean_libs(self):
+    def lean_libs(self, additional_abs_path=None):
         """
         Construct path information to be put in leanpkg.path file.
         If possible, relative paths are used, relative to dst_path.
         Note that Lean for Windows does not accept absolute paths.
         """
 
-        abs_paths = self.absolute_lean_libs
+        abs_paths = self.absolute_lean_libs()
+        if additional_abs_path:
+            abs_paths.append(additional_abs_path)
         rel_paths = []
         for path in abs_paths:
             # From Python3.9 use is_relative_to()
@@ -93,7 +94,7 @@ class LeanEnvironment:
         """
         return (self.lean_path / "bin" / "lean").resolve()
 
-    def write_lean_path(self):
+    def write_lean_path(self, additional_abs_path=None):
         """
         Writes the leanpkg.path file content to the file path
         self.leanpkg_path_dir. Note that the paths in the leanpkg.path file
@@ -103,5 +104,47 @@ class LeanEnvironment:
         dst_path = self.leanpkg_path_dir / "leanpkg.path"
 
         with open(str(fs.path_helper(dst_path)), "w") as fhandle:
-            for pp in self.lean_libs:
+            for pp in self.lean_libs(additional_abs_path=additional_abs_path):
                 print(f"path {str(pp)}", file=fhandle)
+
+    def all_lean_exercises_files(self):
+        """
+        Return the list fo lean files in all dirs of the lean_path.
+        """
+
+        files = []
+        for directory in self.lean_libs():
+            files.extend(directory.glob('*.lean'))
+        return files
+
+    def other_file_with_same_name(self, abs_path: Path):
+        """
+        Return True if a file in self.all_lean_exercises_files(), distinct
+        from abs_path, has the same name.
+        """
+
+        name = abs_path.name
+        for other in self.all_lean_exercises_files():
+            if name == other.name and other != abs_path:
+                return other
+
+    def is_in_leanpath(self, abs_path) -> bool:
+        """
+        Return True if abs_path points to a file accessible to Lean.
+        """
+
+        new_dir = (abs_path if abs_path.is_dir()
+                   else abs_path.parent)
+
+        return new_dir in self.absolute_lean_libs()
+
+    def check_file_path(self, abs_path):
+        """
+        If abs_path is not in one of the directories in the leanpath,
+        then copy file in cdirs.tmp_exercises_dir.
+        """
+        if not self.is_in_leanpath(abs_path):
+            new_file = cdirs.tmp_exercises_dir / abs_path.name
+            copy(abs_path, new_file)
+
+
