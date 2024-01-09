@@ -48,6 +48,7 @@ class GoalTextWidget(MathTextWidget):
                  to_prove=False, open_problem=False,
                  apply_statement=False):
         super().__init__()
+        self.setReadOnly(True)
 
         if goal:
             text = goal.goal_to_text(format_="html",
