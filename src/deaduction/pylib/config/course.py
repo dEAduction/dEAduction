@@ -52,7 +52,7 @@ def real_path_relative_to_home(path):
 def absolute_real_path(path):
     """
     Try to find a file from path, and return real path to this file relative
-    to home dir. IF nothing is found, then return None.
+    to home dir. If nothing is found, then return None.
     """
 
     directories = [path, cdirs.local / path, cdirs.home / path,

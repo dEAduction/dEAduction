@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-01-06 21:44+0100\n"
-"PO-Revision-Date: 2024-01-06 21:45+0100\n"
+"POT-Creation-Date: 2024-01-09 23:25+0100\n"
+"PO-Revision-Date: 2024-01-09 23:25+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -46,6 +46,48 @@ msgstr ""
 #: dui/__main__.py:268
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
+
+#: dui/__main__.py:589
+msgid "Ambiguous name "
+msgstr "Nom ambigu "
+
+#: dui/__main__.py:590
+msgid ""
+"File has the same name as \n"
+"{}."
+msgstr ""
+"Il existe un autre fichier du même nom :\n"
+"{}."
+
+#: dui/__main__.py:591
+msgid ""
+"\n"
+"Change the name of one of the two files and try again."
+msgstr ""
+"\n"
+"Modifier le nom du fichier, et réessayer."
+
+#: dui/__main__.py:592
+msgid ""
+"This will raise an import error from Lean. If you insist on not changing "
+"names, then go to the settings window, select the advanced tab and set the "
+"Lean requests method to 'Normal'."
+msgstr ""
+"Ceci va provoquer une erreur d'importation de Lean. Si vous ne voulez pas "
+"modifier le nom du fichier, choisissez la méthode de requête Lean 'Normale' "
+"dans l'onglet avancé des préférences."
+
+#: dui/__main__.py:602 dui/elements/proof_outline_widget.py:307
+msgid "Show details"
+msgstr "Détails"
+
+#: dui/__main__.py:603 dui/elements/config_window.py:302
+msgid "Cancel"
+msgstr "Annuler"
+
+#: dui/__main__.py:604
+msgid "Proceed anyway"
+msgstr "Commencer l'exercice"
 
 #: dui/elements/actions_widgets_classes.py:202
 msgid "Button"
@@ -93,7 +135,7 @@ msgstr "étapes"
 
 #: dui/elements/actions_widgets_classes.py:1151
 #: dui/stages/start_coex/start_coex_widgets.py:845
-#: dui/stages/start_coex/start_coex_widgets.py:1177
+#: dui/stages/start_coex/start_coex_widgets.py:1187
 msgid "Exercises"
 msgstr "Exercices"
 
@@ -222,10 +264,6 @@ msgstr "Sauvegarder les préférences"
 #: dui/elements/config_window.py:301
 msgid "Ok"
 msgstr "Ok"
-
-#: dui/elements/config_window.py:302
-msgid "Cancel"
-msgstr "Annuler"
 
 #: dui/elements/config_window.py:303
 msgid "Apply"
@@ -464,27 +502,27 @@ msgstr "But"
 msgid " ({} pending)"
 msgstr " ({} en attente)"
 
-#: dui/elements/goal_widgets.py:97
+#: dui/elements/goal_widgets.py:98
 msgid "Objects:"
 msgstr "Objets :"
 
-#: dui/elements/goal_widgets.py:98
+#: dui/elements/goal_widgets.py:99
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/elements/goal_widgets.py:116 pylib/proof_state/proof_state.py:1268
+#: dui/elements/goal_widgets.py:117 pylib/proof_state/proof_state.py:1268
 msgid "True or False:"
 msgstr "Vrai ou faux :"
 
-#: dui/elements/goal_widgets.py:117
+#: dui/elements/goal_widgets.py:118
 msgid "Target:"
 msgstr "But :"
 
-#: dui/elements/goal_widgets.py:118
+#: dui/elements/goal_widgets.py:119
 msgid "Conclusion"
 msgstr "Conclusion"
 
-#: dui/elements/goal_widgets.py:144
+#: dui/elements/goal_widgets.py:145
 #: dui/stages/start_coex/start_coex_widgets.py:632
 msgid "Text mode"
 msgstr "Mode texte"
@@ -555,10 +593,6 @@ msgstr "Liste des étapes de la preuve"
 #: dui/elements/proof_outline_widget.py:306
 msgid "Expand all"
 msgstr "Tout déplier"
-
-#: dui/elements/proof_outline_widget.py:307
-msgid "Show details"
-msgstr "Détails"
 
 #: dui/elements/proof_outline_widget.py:309
 msgid "Move to selected step"
@@ -945,7 +979,7 @@ msgid "(saved proof)"
 msgstr "(sauvegarde)"
 
 #: dui/stages/start_coex/start_coex_widgets.py:834
-#: dui/stages/start_coex/start_coex_widgets.py:1081
+#: dui/stages/start_coex/start_coex_widgets.py:1091
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
@@ -953,57 +987,57 @@ msgstr "Commencer la preuve"
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:904
+#: dui/stages/start_coex/start_coex_widgets.py:909
 msgid "Show only recent files"
 msgstr "Afficher seulement les fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:912
+#: dui/stages/start_coex/start_coex_widgets.py:917
 msgid "Show saved proofs"
 msgstr "Afficher les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:919
+#: dui/stages/start_coex/start_coex_widgets.py:924
 msgid "Delete saved proofs"
 msgstr "Effacer les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1079
+#: dui/stages/start_coex/start_coex_widgets.py:1089
 msgid "Load proof"
 msgstr "Charger la démonstration"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1213
+#: dui/stages/start_coex/start_coex_widgets.py:1223
 msgid "Deleting all saved proofs?"
 msgstr "Effacer toutes les sauvegardes ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1215
+#: dui/stages/start_coex/start_coex_widgets.py:1225
 msgid ""
 "This will delete ALL saved proofs for this file. Are you sure about this?"
 msgstr ""
 "Ceci effacera TOUTES les sauvegarde pour ce fichier. Est-ce bien ce que vous "
 "voulez ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1219
+#: dui/stages/start_coex/start_coex_widgets.py:1229
 msgid "Deleting all saved proofs"
 msgstr "Effacer toutes les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1221
+#: dui/stages/start_coex/start_coex_widgets.py:1231
 msgid ""
 "This will delete ALL saved proofs for this exercise. Are you sure about this?"
 msgstr ""
 "Ceci effacera TOUTES les sauvegarde pour cet exercice. Est-ce bien ce que "
 "vous voulez ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1225
+#: dui/stages/start_coex/start_coex_widgets.py:1235
 msgid "Deleting a saved proof"
 msgstr "Effacer une sauvegarde"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1226
+#: dui/stages/start_coex/start_coex_widgets.py:1236
 msgid "Do you want to delete this saved proof?"
 msgstr "Voulez-vous effacer cette sauvegarde ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1336
+#: dui/stages/start_coex/start_coex_widgets.py:1350
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1351
+#: dui/stages/start_coex/start_coex_widgets.py:1365
 msgid ""
 "Welcome to the d∃∀duction file and exercise selector. Select a file in the "
 "'Files' tab, then select your exercise in the 'Exercises' tab."
@@ -1012,26 +1046,26 @@ msgstr ""
 "Choisissez un fichier dans l'onglet \"Fichiers\", puis un exercice dans "
 "l'onglet \"Exercices\"."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1357
+#: dui/stages/start_coex/start_coex_widgets.py:1371
 msgid "Use the toolbar to display recent files and saved exercises."
 msgstr ""
 "Utilisez la barre d'outils pour afficher les fichiers récents et les "
 "exercices sauvegardés."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1427
+#: dui/stages/start_coex/start_coex_widgets.py:1441
 #: pylib/proof_state/proof_state.py:1284
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1431
+#: dui/stages/start_coex/start_coex_widgets.py:1445
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1436
+#: dui/stages/start_coex/start_coex_widgets.py:1450
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1437
+#: dui/stages/start_coex/start_coex_widgets.py:1451
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -1879,7 +1913,7 @@ msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
 msgid "Saving configuration file"
 msgstr "Sauvegarde du fichier de configuration"
 
-#: pylib/config/vars.py:161
+#: pylib/config/vars.py:162
 #, python-brace-format
 msgid "Saving {key}:{value} in config file"
 msgstr "Sauvegarde de {key}:{value} dans le fichier config"
@@ -3649,6 +3683,9 @@ msgstr "Démarrer d∃∀duction"
 msgid "deaduction"
 msgstr "deaduction"
 
+#~ msgid "Show details..."
+#~ msgstr "Détails…"
+
 #~ msgid "Yes or no?"
 #~ msgstr "Oui ou non ?"
 
@@ -3933,9 +3970,6 @@ msgstr "deaduction"
 
 #~ msgid "The conjunctions are not both implications"
 #~ msgstr "Les conjonctions ne sont pas des implications"
-
-#~ msgid "Show details..."
-#~ msgstr "Détails…"
 
 #~ msgid "Course"
 #~ msgstr "Cours"
