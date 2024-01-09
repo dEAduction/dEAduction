@@ -898,6 +898,11 @@ class AbstractStartCoEx(QDialog):
         icons_base_dir = cvars.get("icons.path")
         icons_dir = fs.path_helper(icons_base_dir)
 
+        # Tab action
+        self.__change_tab_action = QAction("Change tab")
+        self.__change_tab_action.setShortcut(QKeySequence.NextChild)
+        self.__change_tab_action.triggered.connect(self.change_tab)
+
         # Courses actions
         self.__recent_courses_action = QAction(
             QIcon(str((icons_dir / 'icons8-history-folder-96.png').resolve())),
@@ -934,6 +939,11 @@ class AbstractStartCoEx(QDialog):
     #     if self.course:
     #         self.__toggle_history()
     #     super().show()
+
+    @Slot()
+    def change_tab(self):
+        tab = self.__tabwidget
+        tab.setCurrentIndex(1 - tab.currentIndex())
 
     def closeEvent(self, event: QEvent):
         """
@@ -1281,7 +1291,10 @@ class AbstractStartCoEx(QDialog):
 
         exercise = self.__exercise_chooser.exercise
         # FIXME:
-        self.exercise_chooser_from_course_path.pop(self.course.abs_course_path)
+        if (self.course.abs_course_path in
+                self.exercise_chooser_from_course_path):
+            self.exercise_chooser_from_course_path.pop(
+                self.course.abs_course_path)
 
         # (1) Check if exercise is from history file
         if exercise.history_date():
@@ -1307,8 +1320,9 @@ class AbstractStartCoEx(QDialog):
 
         # Send exercise_chosen signal and close dialog
         self.exercise_chosen.emit(exercise)
-        # log.debug("Exercise chosen, closing window")
-        self.close()  # Fuck you and I'll see you tomorrow!
+        # Moved to __main__.WindowManager:
+        # # log.debug("Exercise chosen, closing window")
+        # self.close()  # Fuck you and I'll see you tomorrow!
 
 
 class StartCoExStartup(AbstractStartCoEx):
