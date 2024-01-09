@@ -35,6 +35,7 @@ This file is part of d∃∀duction.
 """
 
 import sys
+from os import environ
 import logging
 from functools import partial
 from pathlib import   Path
@@ -474,6 +475,8 @@ class CourseChooser(AbstractCoExChooser):
                               str(cdirs.usr_lean_exercises_dir.resolve()))
         # directory = str(cdirs.home.resolve())
         dialog = QFileDialog(directory=directory)
+        if 'SNAP' in environ:
+            dialog.setOption(QFileDialog.DontUseNativeDialog)
         dialog.setFileMode(QFileDialog.ExistingFile)
         dialog.setNameFilter('*.lean')
 
