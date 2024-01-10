@@ -91,9 +91,12 @@ def add_parentheses(math_list: list, depth=1, lean_format=False,
     parentheses.
     If pretty_parentheses is True, then remove redundant parentheses,
     i.e. ((...)) or parentheses at depth 0.
+    NB: we DO NOT remove the first leading parentheses if lean_format=True,
+    since these are vital for Lean code: e.g.
+    H e/2 --> error, right code is H (e/2).
     """
     # Remove unnecessary leading parentheses #
-    if pretty_parentheses and depth == 0 and not lean_format:
+    if pretty_parentheses and (depth == 0) and (not lean_format):
         remove_leading_parentheses(math_list)
 
     for index in range(len(math_list) - 1):
@@ -150,7 +153,8 @@ def recursive_utf8_display(math_list, depth, lean_format=False,
                   r'\text', r'\no_text', r'\marked'):
         math_list.pop(0)
     
-    add_parentheses(math_list, depth, pretty_parentheses=pretty_parentheses)
+    add_parentheses(math_list, depth, lean_format=lean_format,
+                    pretty_parentheses=pretty_parentheses)
 
     # Recursively format children
     idx = 0
