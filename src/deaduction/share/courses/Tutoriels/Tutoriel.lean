@@ -39,12 +39,28 @@ Description
     Ce fichier contient quelques exercices faciles et progressifs de théorie élémentaire
     des ensembles. Il peut être utilisé comme tutoriel pour d∃∀duction ; en particulier,
     les boutons logiques sont introduits progressivement.
+DefaultAvailableLogic
+    ALL -not -exists -map -equal -iff
 AvailableProof
     ALL -new_object
 AvailableCompute
     NONE
+Settings
+    functionality.allow_induction --> false
 -/
 
+/- Notes for exercise makers.
+
+List of buttons
+AvailableLogic
+    forall exists implies and or
+    map equal iff not
+AvailableProof
+    proof_methods new_object
+AvailableCompute
+    sum transitivity commute associativity
+    triangular_inequality simplify
+-/
 
 ---------------------------------------------
 -- global parameters = implicit variables --
@@ -78,17 +94,17 @@ begin
     exact iff.rfl,
 end
 
-lemma definition.egalite_deux_ensembles {A A' : set X} :
-(A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
-/- dEAduction
-PrettyName
-    Egalité de deux ensembles
-ImplicitUse
-    False
--/
-begin
-     exact set.ext_iff,
-end
+-- lemma definition.egalite_deux_ensembles {A A' : set X} :
+-- (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
+-- /- dEAduction
+-- PrettyName
+--     Egalité de deux ensembles
+-- ImplicitUse
+--     False
+-- -/
+-- begin
+--      exact set.ext_iff,
+-- end
 
 
 lemma definition.double_inclusion (A A' : set X) :
@@ -242,7 +258,10 @@ A ⊆ B ↔ A ∩ B = A
 PrettyName
     Exercice bilan
 Description
+    Dans cet exercice, deux nouveaux boutons apparaissent.
     On peut utiliser une égalité pour remplacer l'un des termes par l'autre.
+AvailableLogic
+    ALL -not -exists -map
 -/
 begin
     todo
