@@ -1299,7 +1299,7 @@ class Coordinator(QObject):
 
         else:
             # Resent the whole code
-            self.__init_exercise()
+            self.nursery.start_soon(self.__init_exercise)
 
     def set_fireworks(self):
         """
