@@ -90,7 +90,6 @@ Description
     Découverte du connecteur NON, pour transformer le But.
 AvailableLogic
     not
-    
 AvailableMagic
     assumption
 -/
