@@ -5,6 +5,10 @@ export VERSION=$(shell dpkg-parsechangelog --show-field Version)
 %:
 	dh $@
 
+clean:
+	dh clean
+	@rm -Rf $(CURDIR)/build
+
 override_dh_install:
 
 	# Creating virtual environment

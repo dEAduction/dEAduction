@@ -1,5 +1,11 @@
-deaduction (20231226) UNRELEASED; urgency=medium
+deaduction (0.3.99) UNRELEASED; urgency=medium
 
-  * Provisional version 0.39 for debugging
+  * Provisional version for 2023-2024 S2 at Jussieu 
 
- -- Julien Guillod <julien.guillod@sorbonne-universite.fr>  Fri, 26 Dec 2023 15:49:00 +0100
+ -- Julien Guillod <julien.guillod@sorbonne-universite.fr>  Thu, 11 Jan 2024 12:03:16 +0100
+
+deaduction (20230111) unstable; urgency=medium
+
+  * Version installed on 11 Jan 2023 for 2022-2023 S2 at Jussieu
+
+ -- Julien Guillod <julien.guillod@sorbonne-universite.fr>  Wed, 11 Jan 2023 15:51:58 +0100
