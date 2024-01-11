@@ -956,6 +956,7 @@ class Coordinator(QObject):
 
             except WrongUserInput as error:
                 self.process_wrong_user_input(error)
+                break
 
             except SelectDefaultTarget:
                 self.emw.process_target_click()

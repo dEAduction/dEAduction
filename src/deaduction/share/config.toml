@@ -91,6 +91,7 @@ automatic_intro_of_variables_and_hypotheses = false
 save_history_of_solved_exercises = true
 max_recent_courses = 10
 show_recent_courses_only = false
+calculator_available = true
 
 
 [course]
@@ -136,7 +137,7 @@ Lean_request_method = "from_previous_proof_state"
 copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3.99"
+version_nb = "0.3.9900"
 os = ""  # Let this to "" except for debugging
 
 #########################

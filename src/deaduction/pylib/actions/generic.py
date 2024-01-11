@@ -252,9 +252,11 @@ def action_theorem(proof_step) -> CodeForLean:
 
     # Apply universal statement
     if not proof_step.user_input:
+        msg = _("Select at least one property")
         raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
                                       proof_step=proof_step,
-                                      statement=theorem)
+                                      statement=theorem,
+                                      msg_if_no_calculator=msg)
 
     arguments = [arg if arg.is_place_holder()
                  else arg.between_parentheses(arg)

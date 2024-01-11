@@ -97,6 +97,8 @@ PRETTY_NAMES = {
         _("Try to silently prove ε>0 when applying '∀ε>0'"),
     'functionality.ask_to_prove_premises_of_implications':
         _("Ask to prove 'P' when 'P ⇒ Q' in context"),
+    'functionality.calculator_available':
+        _("Logical calculator"),
     'logs.save_journal': _("Save journal"),
     'display.dubious_characters': replace_missing,
     'display.short_buttons_line': _('Split logic buttons into two lines'),

@@ -35,6 +35,8 @@ Institution
 Description
     Des exercices sur les limites des suites
     et la continuité des fonctions 
+Settings
+    functionality.calculator_available --> true
 -/
 
 

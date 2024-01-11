@@ -45,6 +45,8 @@ AvailableCompute
     NONE
 Display
    estquotiententier --> ( -2, " / ", -1, " est entier") 
+Settings
+    functionality.calculator_available --> true
 -/
 
 ---------------------------------------------
