@@ -196,9 +196,11 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
         else:
             universal_property = selected_objects[0]
             if not user_input:
+                msg = _("Select one object to apply the property")
                 raise MissingCalculatorOutput(CalculatorRequest.ApplyProperty,
                                               proof_step=proof_step,
-                                              prop=universal_property)
+                                              prop=universal_property,
+                                              msg_if_no_calculator=msg)
 
             arguments = [arg if arg.is_place_holder()
                          else arg.between_parentheses(arg)
@@ -415,9 +417,11 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             # raise MissingParametersError(InputType.Calculator,
             #                              title=_("Prove an existential property"),
             #                              target=input_target)
+            msg = _("Select one object to prove existence")
             raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
                                           proof_step=proof_step,
-                                          prop=proof_step.goal.target)
+                                          prop=proof_step.goal.target,
+                                          msg_if_no_calculator=msg)
 
         else:  # user_input contains Calculator output
             return prove_exists(proof_step, user_input[0][0])

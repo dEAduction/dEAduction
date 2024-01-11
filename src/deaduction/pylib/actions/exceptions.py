@@ -106,7 +106,8 @@ class MissingCalculatorOutput(MissingParametersError):
                  prop=None,
                  statement=None,
                  new_name=None,
-                 object_of_requested_math_type=None):
+                 object_of_requested_math_type=None,
+                 msg_if_no_calculator=None):
         """
         @param request_type:
         @param proof_step:
@@ -123,6 +124,17 @@ class MissingCalculatorOutput(MissingParametersError):
         self.statement = statement
         self.name = new_name
         self.object_of_requested_math_type = object_of_requested_math_type
+        if msg_if_no_calculator:
+            self.msg_if_no_calculator = msg_if_no_calculator
+        else:
+            self.msg_if_no_calculator = _("Missing selection")
+        self.msg_if_no_calculator += " " + _("(the logical calculator is not "
+                                             "activated)")
+
+        # Raise WrongUserInput if no calc available
+        calc_available = cvars.get("functionality.calculator_available")
+        if not calc_available:
+            raise WrongUserInput(self.msg_if_no_calculator)
 
         if self.request_type is CalculatorRequest.ApplyProperty:
             # self.prop = prop

@@ -39,6 +39,8 @@ AvailableProof
     NONE
 AvailableCompute
     NONE
+Settings
+    functionality.calculator_available --> false
 -/
 
 ---------------------------------------------

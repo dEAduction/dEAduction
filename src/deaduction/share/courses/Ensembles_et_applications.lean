@@ -51,6 +51,7 @@ AvailableTheorems
   UNTIL_NOW -image_singleton -image_paire
 Settings
     functionality.allow_induction --> false
+    functionality.calculator_available --> true
 -/
 
 ---------------------------------------------

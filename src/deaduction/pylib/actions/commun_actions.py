@@ -71,8 +71,10 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
         # raise MissingParametersError(InputType.Text,
         #                              title=_("Introduce a new subgoal"),
         #                              output=output)
+        msg = _("Action not available")
         raise MissingCalculatorOutput(CalculatorRequest.StateSubGoal,
-                                      proof_step=proof_step)
+                                      proof_step=proof_step,
+                                      msg_if_no_calculator=msg)
         # raise MissingParametersError(InputType.Calculator,
         #                              title=_("Introduce a new subgoal"),
         #                              target=MathObject.PROP)  # FIXME

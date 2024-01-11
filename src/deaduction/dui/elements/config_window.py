@@ -165,6 +165,8 @@ CONFIGS['Functionalities'] = {
     'functionality.automatic_intro_of_variables_and_hypotheses': (None, True,
         _("The ∀ and ⇒ buttons are operated automatically when the "
           "target is a universal property or an implication")),
+    # 'functionality.calculator_available': (None, True,
+    #    _("Open the logical calculator to enter composite objects")),
 }
 
 PRE_DEFINED['Functionalities'] = {
@@ -179,7 +181,9 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.drag_context_to_statements': False,
                  'functionality.drag_statements_to_context': False,
                  'functionality.ask_to_prove_premises_of_implications': True,
-                 'functionality.automatic_intro_of_variables_and_hypotheses': False
+                 'functionality.automatic_intro_of_variables_and_hypotheses':
+                     False,
+                 # 'functionality.calculator_available': False
                  },
     'Intermediate': {'functionality.allow_proof_by_sorry': True,
                      'functionality.automatic_use_of_exists': True,
@@ -191,7 +195,8 @@ PRE_DEFINED['Functionalities'] = {
                      'functionality.drag_context_to_statements': False,
                      'functionality.drag_statements_to_context': False,
                      'functionality.ask_to_prove_premises_of_implications': True,
-                     'functionality.automatic_intro_of_variables_and_hypotheses': False
+                     'functionality.automatic_intro_of_variables_and_hypotheses': False,
+                     # 'functionality.calculator_available': True
                      },
     'Advanced': {'functionality.allow_proof_by_sorry': True,
                  'functionality.automatic_use_of_exists': True,
@@ -203,7 +208,9 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.drag_context_to_statements': True,
                  'functionality.drag_statements_to_context': True,
                  'functionality.ask_to_prove_premises_of_implications': True,
-                 'functionality.automatic_intro_of_variables_and_hypotheses': False
+                 'functionality.automatic_intro_of_variables_and_hypotheses':
+                     False,
+                 # 'functionality.calculator_available': True
                  },
     'Expert':   {'functionality.allow_proof_by_sorry': True,
                  'functionality.automatic_use_of_exists': True,
@@ -215,7 +222,9 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.drag_context_to_statements': True,
                  'functionality.drag_statements_to_context': True,
                  'functionality.ask_to_prove_premises_of_implications': False,
-                 'functionality.automatic_intro_of_variables_and_hypotheses': True
+                 'functionality.automatic_intro_of_variables_and_hypotheses':
+                     True,
+                 # 'functionality.calculator_available': True
                  }
 }
 
@@ -228,7 +237,10 @@ CONFIGS["Advanced"] = {
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
     # 'functionality.save_solved_exercises_for_autotest': (None, True, ""),
-    'functionality.save_history_of_solved_exercises': (None, False, "")}
+    'functionality.save_history_of_solved_exercises': (None, False, ""),
+    'functionality.calculator_available': (None, True,
+       _("Open the logical calculator to enter composite objects")),
+}
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",
                          # Fonts

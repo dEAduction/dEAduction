@@ -47,6 +47,7 @@ AvailableCompute
     NONE
 Settings
     functionality.allow_induction --> false
+    functionality.calculator_available --> false
 -/
 
 /- Notes for exercise makers.

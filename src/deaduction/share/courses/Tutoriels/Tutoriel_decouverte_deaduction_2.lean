@@ -41,6 +41,8 @@ DefaultAvailableMagic
     Assumption
 AvailableCompute
     NONE
+Settings
+    functionality.calculator_available --> true
 -/
 
 ---------------------------------------------
