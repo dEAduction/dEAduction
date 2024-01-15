@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-01-11 06:32+0100\n"
-"PO-Revision-Date: 2024-01-11 06:33+0100\n"
+"POT-Creation-Date: 2024-01-15 16:50+0100\n"
+"PO-Revision-Date: 2024-01-15 16:51+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -81,7 +81,7 @@ msgstr ""
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/__main__.py:603 dui/elements/config_window.py:311
+#: dui/__main__.py:603 dui/elements/config_window.py:314
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -94,7 +94,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:202
-#: dui/elements/config_window.py:556
+#: dui/elements/config_window.py:559
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:731
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -252,40 +252,40 @@ msgstr ""
 "Les boutons ∀ et ⇒ sont automatiquement actionnés lorsque le but est une "
 "propriété universelle ou une implication"
 
-#: dui/elements/config_window.py:169
+#: dui/elements/config_window.py:242
 msgid "Open the logical calculator to enter composite objects"
 msgstr "Ouvrir la calculatrice logique pour entrer des objets composites"
 
-#: dui/elements/config_window.py:285
+#: dui/elements/config_window.py:288
 #: dui/stages/exercise/exercise_main_window.py:249
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:296
+#: dui/elements/config_window.py:299
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:310
+#: dui/elements/config_window.py:313
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:312
+#: dui/elements/config_window.py:315
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:438
+#: dui/elements/config_window.py:441
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:527
+#: dui/elements/config_window.py:530
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:560
+#: dui/elements/config_window.py:563
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:783
+#: dui/elements/config_window.py:786
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
 "Caractères manquants : entrer exactement {} groupes de caractères séparés "
@@ -900,12 +900,16 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:970
+#: dui/stages/exercise/exercise_main_window.py:969
+msgid "Current target solved"
+msgstr "But en cours atteint"
+
+#: dui/stages/exercise/exercise_main_window.py:971
 #: pylib/proof_step/proof_step.py:766
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:973
+#: dui/stages/exercise/exercise_main_window.py:974
 msgid "goals solved!"
 msgstr "buts atteints !"
 

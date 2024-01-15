@@ -966,12 +966,13 @@ class ExerciseMainWindow(QMainWindow):
                 and not proof_step.is_error() \
                 and not proof_step.is_undo():
             log.info(f"Current goal solved!")
+            title = _('Current target solved') + " — d∃∀duction"
             if delta == -1:
                 message = _('Current goal solved')
             else:  # Several goals solved at once ??
                 nb = str(-delta)
                 message = nb + ' ' + _('goals solved!')
-            QMessageBox.information(self, '', message, QMessageBox.Ok)
+            QMessageBox.information(self, title, message, QMessageBox.Ok)
 
     def manage_msgs(self, proof_step):
         """
