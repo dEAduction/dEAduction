@@ -1291,7 +1291,9 @@ class Coordinator(QObject):
 
     def abort_process(self):
         log.debug("Aborting process")
-        if self.lean_file and not self.servint.lean_file.history_at_beginning:
+        print(self.lean_file.history_length)
+        # if self.lean_file and not self.servint.lean_file.history_at_beginning:
+        if self.lean_file and self.lean_file.has_history():
             # Abort and go back to last goal
             self.lean_file.delete()
             self.unfreeze()
