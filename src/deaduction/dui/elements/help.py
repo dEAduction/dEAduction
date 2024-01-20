@@ -149,7 +149,7 @@ class HelpWindow(QDialog):
         # Window stay on top of parent:
 
         nb = version_info[1]
-        if nb <= 10:
+        if nb <= 9:
             flags = self.windowFlags() | Qt.Dialog
             self.setWindowFlags(flags)
         else:
