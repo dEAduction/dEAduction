@@ -111,8 +111,8 @@ def set_logger():
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
-                       # 'HighLevelServerRequest',
-                       # 'ServerQueue',
+                       'HighLevelServerRequest',
+                       'ServerQueue',
                        # 'lean',
                        # Includes Coordinator, start_coex:
                        'deaduction.dui.stages',

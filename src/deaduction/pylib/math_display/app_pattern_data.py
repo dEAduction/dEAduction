@@ -423,14 +423,14 @@ class PatternMathDisplay:
     @classmethod
     def latex_negation_shape_for_predicate(cls, name):
         """
-        e.g.         "converging_seq": ((-1, ), r'\text_is', _(" converging")).
+        e.g.   "converging_seq": ((-1, ), r'\text_is_not', _(" converging")).
         """
 
         display = cls.special_latex_shapes.get(name)
         if display:
             if r'\text_is' in display:
-                display_not = (r'\text_is_not' if item == r'\text_is'
-                               else item for item in display)
+                display_not = [r'\text_is_not' if item == r'\text_is'
+                               else item for item in display]
                 return display_not
             else:
                 return

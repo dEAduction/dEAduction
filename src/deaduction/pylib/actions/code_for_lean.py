@@ -112,6 +112,15 @@ class SingleCode:
         string = "SingleCode(" + ", ".join(attributes) + ")"
         return string
 
+    def copy(self):
+        other = SingleCode(string=self.string,
+                           used_properties=self.used_properties,
+                           synthetic_proof_step=self.synthetic_proof_step,
+                           operator=self.operator,
+                           rw_item=self.rw_item,
+                           outcome_operator=self.outcome_operator)
+        return other
+
     def to_code(self) -> str:
         """
         Return the code to be sent to Lean.
@@ -151,6 +160,7 @@ class CodeForLean:
         term, of type SingleCode
         - else all terms in the instructions list are of type CodeForLean.
     """
+
     instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
     combinator:   str = LeanCombinator.single_code
     error_msg:    str = ""
@@ -216,6 +226,20 @@ class CodeForLean:
     #         attributes.append(key + "=" + attribute)
     #     string = "CodeForLean(" + ", ".join(attributes) + ")"
     #     return string
+
+    def copy(self):
+        instructions = [instruction.copy() for instruction in self.instructions]
+        other = CodeForLean(instructions=instructions,
+                            combinator=self.combinator,
+                            error_msg=self.error_msg,
+                            success_msg=self.success_msg,
+                            conjunction=self.conjunction,
+                            disjunction=self.disjunction,
+                            subgoal=self.subgoal,
+                            or_else_node_number=self.or_else_node_number,
+                            or_else_node_counter=self.or_else_node_counter)
+
+        return other
 
     @classmethod
     def empty_code(cls, error_msg: str = ''):
@@ -309,7 +333,8 @@ class CodeForLean:
     @property
     def synthetic_proof_step(self):
         """
-        Return the operator attribute of the first SingleCode found in self.
+        Return the synthetic_proof_step attribute of the first SingleCode
+        found in self.
         """
         if not self.instructions:
             return None
