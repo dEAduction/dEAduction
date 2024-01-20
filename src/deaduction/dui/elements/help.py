@@ -154,7 +154,7 @@ class HelpWindow(QDialog):
             self.setWindowFlags(flags)
         else:
             # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
-            # FIXME: this is for python > 3.10
+            # FIXME: this is for python >= 3.10
             self.setWindowFlags |= Qt.Dialog
         # self.main_txt, self.detailed_txt, self.hint = None, None, None
         self.msgs_list = []
