@@ -124,6 +124,9 @@ class MissingCalculatorOutput(MissingParametersError):
         self.statement = statement
         self.name = new_name
         self.object_of_requested_math_type = object_of_requested_math_type
+        self.explicit_math_type_of_prop = None
+        self.set_explicit_math_type_of_prop()
+
         if msg_if_no_calculator:
             self.msg_if_no_calculator = msg_if_no_calculator
         else:
@@ -203,23 +206,33 @@ class MissingCalculatorOutput(MissingParametersError):
                                    CalculatorRequest.ProofByCases):
             return self.MathObject.PROP
 
-    def explicit_math_type_of_prop(self):
+    def set_explicit_math_type_of_prop(self):
         """
-        Return prop.math_type, or its explicit version if it ias an implicit
-        universal prop.
+        Return prop.math_type, or its explicit version if it is an implicit
+        universal or existential prop.
         """
         if self.prop and self.prop.math_type:
-            return self.prop.math_type.explicit_quant()
+            if (self.prop.is_for_all(implicit=False)
+                    or self.prop.is_exists(implicit=False)):
+                self.explicit_math_type_of_prop = self.prop.math_type
+            else:
+                prop = self.prop.math_type.explicit_quant()
+                goal = self.proof_step.goal
+                # Fixme, this is too much:
+                # prop.unname_all_bound_vars()
+                goal.recursive_name_all_bound_vars(prop)
+                self.explicit_math_type_of_prop = prop
 
     def extract_types_n_vars(self):
 
         # (1) Get all initial universal dummy vars
         if self.request_type is CalculatorRequest.ApplyProperty:
-            math_object = self.prop.math_type
+            math_object = self.explicit_math_type_of_prop
         elif self.request_type is CalculatorRequest.ApplyStatement:
             math_object = self.statement.to_math_object()
         else:
             return []
+
         types_n_vars = math_object.types_n_vars_of_univ_prop()
         if not types_n_vars:
             return None
@@ -279,8 +292,7 @@ class MissingCalculatorOutput(MissingParametersError):
                 types.append(math_type)
                 titles.append(title)
         if self.request_type is CalculatorRequest.ProveExists:
-            target = self.prop.math_type
-            explicit_type = target.explicit_quant()
+            explicit_type = self.explicit_math_type_of_prop
             if explicit_type:
                 math_type, var, body = explicit_type.children
                 types = [math_type]
