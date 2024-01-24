@@ -111,7 +111,7 @@ def configure(display_level: str = "debug",
     root.addHandler(sh)
 
     if filename:
-        fh = logging.FileHandler(filename)
+        fh = logging.FileHandler(filename, encoding="utf-8")
         fh.setLevel(logging.DEBUG)
         root.addHandler(fh)
 
