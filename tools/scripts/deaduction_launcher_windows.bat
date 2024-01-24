@@ -15,7 +15,7 @@ REM TODO: do this only first time (by checking if dir already exists)
 python3 -m venv deaduction_venv
 
 REM Activate virtual environment
-deaduction_venv\Scripts\activate.bat
+call deaduction_venv\Scripts\activate
 
 REM Check packages requirements
 REM First time only
