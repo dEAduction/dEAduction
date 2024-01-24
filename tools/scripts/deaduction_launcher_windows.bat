@@ -4,7 +4,7 @@ REM Replace the following by the path to deaduction directory:
 set deaductiondir=C:%HOMEPATH%\Documents\dEAduction
 
 REM Go to the Deaduction directory
-cd %deaduction_dir%
+cd %deaductiondir%
 
 REM *******************
 REM Virtual environment
