@@ -102,7 +102,9 @@ def allow_implicit_use(test_: callable) -> callable:
                 # Test right term if self match pattern
                 pattern = definition_patterns[index]
                 pattern_left = pattern.children[0]
+                # pattern_right = pattern.deep_copy(pattern.children[1])
                 pattern_right = pattern.children[1]
+                pattern_right.unname_all_bound_vars()
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
                       f"...)")
@@ -437,8 +439,13 @@ class MathObject:
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         """
         Return a deep copy of self. This should work for subclasses.
-        NB: constants, local constants (and bound vars) are NOT copied.
-        This is crucial for coherent bound var naming.
+        NB: in the copied object, original bound vars must be duplicated only
+        once, and all occurrences of a given bound var must be replaced by
+        the same object. This is the purpose
+        of the original_bound_vars and copied_bound_vars lists.
+        This is crucial for coherent bound var naming: if the name of the
+        bound var is modified then this modification must apply to all the
+        other occurrences.
         """
 
         if original_bound_vars is None:
@@ -2092,6 +2099,13 @@ class MathObject:
         """
         return self.math_type
 
+    def unname_all_bound_vars(self):
+        """
+        This method modify self recursively to remove all bound var names.
+        """
+        for child in self.children:
+            child.unname_all_bound_vars()
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
@@ -2316,6 +2330,12 @@ class BoundVar(MathObject):
                     'bound_var_nb': -1}
         self.info.update(new_info)
         self.is_unnamed = True
+
+    def unname_all_bound_vars(self):
+        """
+        For compatibility with the parent MathObject class.
+        """
+        self.set_unnamed_bound_var()
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')

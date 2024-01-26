@@ -718,7 +718,7 @@ class Goal:
                                               isolated=isolated)
                 child.name_bound_var(name)
 
-    def __recursive_name_all_bound_vars(self, p: MathObject,
+    def recursive_name_all_bound_vars(self, p: MathObject,
                                         include_sequences=True):
         """
         Recursively name all bound vars in p. Each bound var should be
@@ -738,7 +738,7 @@ class Goal:
 
         # (2) Name children's vars:
         for child in p.children:
-            self.__recursive_name_all_bound_vars(child, include_sequences)
+            self.recursive_name_all_bound_vars(child, include_sequences)
 
     def debug(self):
         print('Context props:')
@@ -770,14 +770,14 @@ class Goal:
         if DEBUG:
             print(f"Naming BV in target...")
         self.target.math_type.set_local_context()
-        self.__recursive_name_all_bound_vars(self.target.math_type)
+        self.recursive_name_all_bound_vars(self.target.math_type)
                 
         # (4) Name bound vars in context props:
         for p in self.context_props:
             if DEBUG:
                 print(f"Naming BV in {p}...")
             p.math_type.set_local_context()
-            self.__recursive_name_all_bound_vars(p.math_type)
+            self.recursive_name_all_bound_vars(p.math_type)
 
         # (5) Debug
         # self.debug()
@@ -1071,7 +1071,7 @@ class Goal:
             obj = objs.pop()
             body = MathObject.forall(obj, body)
 
-        self.__recursive_name_all_bound_vars(body)
+        self.recursive_name_all_bound_vars(body)
         return body
 
     def negate(self) -> MathObject:
