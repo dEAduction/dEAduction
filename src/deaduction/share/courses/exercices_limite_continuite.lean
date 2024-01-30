@@ -478,6 +478,22 @@ PrettyName
 
 -- namespace exemples
 
+-- Ceci ne fonctionne pas : pb de mixer des inégalité entre nb réels (le M qui vient de la def de limite infinie)
+-- et nb entiers
+-- lemma exercise.limit_affine 
+-- (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = n/2024 - 100) :
+-- limit_plus_infinity u :=
+-- /- dEAduction
+-- PrettyName
+--   La limite d'une suite explicite
+-- Description
+-- 	Un exemple de suite qui tend vers l'infini.
+-- -/
+-- begin
+--   todo,
+-- end
+
+
 
 lemma exercise.limit_constante 
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :

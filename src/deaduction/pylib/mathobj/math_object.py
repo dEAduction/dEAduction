@@ -105,7 +105,7 @@ def allow_implicit_use(test_: callable) -> callable:
                 # pattern_right = pattern.deep_copy(pattern.children[1])
                 pattern_right = pattern.children[1]
                 # Un-name bound vars to prevent conflict:
-                pattern_right.unname_all_bound_vars()
+                # pattern_right.unname_all_bound_vars()
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
                       f"...)")
@@ -115,11 +115,19 @@ def allow_implicit_use(test_: callable) -> callable:
                         MathObject.last_used_implicit_definition = definition
                         metavars = pattern_left.metavars
                         objects = pattern_left.metavar_objects
+                        # pr = pattern_right.deep_copy(pattern_right)
+                        # pr.unname_all_bound_vars()
+                        # rw_math_object = pr.math_object_from_matching(
+                        #     metavars, objects)
+                        pattern_right.unname_all_bound_vars()
                         rw_math_object = pattern_right.math_object_from_matching(
                             metavars, objects)
                         MathObject.last_rw_object = rw_math_object
+                        pattern_right.rename_all_bound_vars()
                         log.debug(f"Implicit definition: "
                                   f"{definition.pretty_name}")
+                        # FIXME: the following line crashes because of
+                        #  deep_copy above
                         log.debug(f"    {math_type.to_display()}  <=>"
                                   f" {rw_math_object.to_display()}")
                         return True
@@ -2116,6 +2124,10 @@ class MathObject:
         for bv in self.bound_vars():
             bv.set_unnamed_bound_var()
 
+    def rename_all_bound_vars(self):
+        for bv in self.bound_vars():
+            bv.rename()
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
@@ -2329,13 +2341,14 @@ class BoundVar(MathObject):
     def set_unnamed_bound_var(self):
 
         lean_name = self.info.get('lean_name', '')
+        old_name = self.info.get('name', '')
         if lean_name in ("NO NAME", '*no_name*'):
             lean_name = ''
         if lean_name and lean_name.endswith('.BoundVar'):
             # Remove suffix
             lean_name = lean_name[:-len('.BoundVar')]
         if not lean_name:
-            lean_name = self.info.get('name', '')
+            lean_name = old_name
             if lean_name and lean_name.endswith('.BoundVar'):
                 # Remove suffix
                 lean_name = lean_name[:-len('.BoundVar')]
@@ -2344,9 +2357,15 @@ class BoundVar(MathObject):
 
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                     'lean_name': lean_name,
+                    'old_name': old_name,
                     'bound_var_nb': -1}
         self.info.update(new_info)
         self.is_unnamed = True
+
+    def rename(self):
+        old_name = self.info.get('old_name')
+        if old_name:
+            self.name_bound_var(old_name)
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
