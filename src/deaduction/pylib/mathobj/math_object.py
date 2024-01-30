@@ -104,6 +104,7 @@ def allow_implicit_use(test_: callable) -> callable:
                 pattern_left = pattern.children[0]
                 # pattern_right = pattern.deep_copy(pattern.children[1])
                 pattern_right = pattern.children[1]
+                # Un-name bound vars to prevent conflict:
                 pattern_right.unname_all_bound_vars()
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
@@ -2101,10 +2102,19 @@ class MathObject:
 
     def unname_all_bound_vars(self):
         """
-        This method modify self recursively to remove all bound var names.
+        This method unname all bound vars in self.
         """
-        for child in self.children:
-            child.unname_all_bound_vars()
+
+        # bound_var = self.bound_var
+        # if bound_var:
+        #     bound_var.set_unnamed_bound_var()
+        #
+        # for child in self.children:
+        #     if child.is_prop(is_math_type=True):
+        #         child.unname_all_bound_vars()
+
+        for bv in self.bound_vars():
+            bv.set_unnamed_bound_var()
 
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
@@ -2317,25 +2327,26 @@ class BoundVar(MathObject):
         self.is_unnamed = False
 
     def set_unnamed_bound_var(self):
-        # FIXME: suppress:
-        lean_name = self.info.get('name', '')
+
+        lean_name = self.info.get('lean_name', '')
+        if lean_name in ("NO NAME", '*no_name*'):
+            lean_name = ''
         if lean_name and lean_name.endswith('.BoundVar'):
             # Remove suffix
             lean_name = lean_name[:-len('.BoundVar')]
+        if not lean_name:
+            lean_name = self.info.get('name', '')
+            if lean_name and lean_name.endswith('.BoundVar'):
+                # Remove suffix
+                lean_name = lean_name[:-len('.BoundVar')]
+            if lean_name in ("NO NAME", '*no_name*'):
+                lean_name = ''
 
-        if lean_name in ("NO NAME", '*no_name*'):
-            lean_name = ''
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                     'lean_name': lean_name,
                     'bound_var_nb': -1}
         self.info.update(new_info)
         self.is_unnamed = True
-
-    def unname_all_bound_vars(self):
-        """
-        For compatibility with the parent MathObject class.
-        """
-        self.set_unnamed_bound_var()
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')

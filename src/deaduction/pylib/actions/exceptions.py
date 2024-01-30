@@ -218,8 +218,6 @@ class MissingCalculatorOutput(MissingParametersError):
             else:
                 prop = self.prop.math_type.explicit_quant()
                 goal = self.proof_step.goal
-                # Fixme, this is too much:
-                # prop.unname_all_bound_vars()
                 goal.recursive_name_all_bound_vars(prop)
                 self.explicit_math_type_of_prop = prop
 

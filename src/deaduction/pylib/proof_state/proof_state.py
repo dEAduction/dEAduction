@@ -719,7 +719,7 @@ class Goal:
                 child.name_bound_var(name)
 
     def recursive_name_all_bound_vars(self, p: MathObject,
-                                        include_sequences=True):
+                                      include_sequences=True):
         """
         Recursively name all bound vars in p. Each bound var should be
         named only once (!).
