@@ -115,19 +115,13 @@ def allow_implicit_use(test_: callable) -> callable:
                         MathObject.last_used_implicit_definition = definition
                         metavars = pattern_left.metavars
                         objects = pattern_left.metavar_objects
-                        # pr = pattern_right.deep_copy(pattern_right)
-                        # pr.unname_all_bound_vars()
-                        # rw_math_object = pr.math_object_from_matching(
-                        #     metavars, objects)
-                        pattern_right.unname_all_bound_vars()
+                        # pattern_right.unname_all_bound_vars()
                         rw_math_object = pattern_right.math_object_from_matching(
                             metavars, objects)
                         MathObject.last_rw_object = rw_math_object
-                        pattern_right.rename_all_bound_vars()
+                        # pattern_right.rename_all_bound_vars()
                         log.debug(f"Implicit definition: "
                                   f"{definition.pretty_name}")
-                        # FIXME: the following line crashes because of
-                        #  deep_copy above
                         log.debug(f"    {math_type.to_display()}  <=>"
                                   f" {rw_math_object.to_display()}")
                         return True
@@ -752,14 +746,15 @@ class MathObject:
         # Set local context for bound vars, and add them to local context.
         for child in self.children:
             if child.is_bound_var:
-                # Copy so that child's loca ctxt will not be affected
+                # Copy so that child's local ctxt will not be affected
                 #  by future changes
                 child.local_context = copy(local_context)
+                # Add child to local context so that it will propagate to body
                 local_context.append(child)
 
         # Propagate (enriched) local context to other children
         for child in self.children:
-            if not self.is_bound_var:
+            if not child.is_bound_var:
                 # If local_is_local, loc ctxts of children are independent
                 new_local_context = (copy(local_context) if local_is_local
                                      else local_context)
@@ -2108,9 +2103,10 @@ class MathObject:
         """
         return self.math_type
 
-    def unname_all_bound_vars(self):
+    def unname_all_bound_vars(self, forbidden_names=None):
         """
-        This method unname all bound vars in self.
+        This method unname all bound vars in self. If forbidden_name is not
+        None, then only var with name in forbidden_names are unnamed.
         """
 
         # bound_var = self.bound_var
@@ -2122,7 +2118,8 @@ class MathObject:
         #         child.unname_all_bound_vars()
 
         for bv in self.bound_vars():
-            bv.set_unnamed_bound_var()
+            if (not forbidden_names) or bv.name in forbidden_names:
+                bv.set_unnamed_bound_var()
 
     def rename_all_bound_vars(self):
         for bv in self.bound_vars():
@@ -2204,7 +2201,8 @@ class BoundVar(MathObject):
             if self.bound_var_nb() != -1:
                 return self.bound_var_nb() == other.bound_var_nb()
             else:
-                return self.name == other.name  # Is this too easy??
+                # Is this too easy??
+                return self.name == other.name and self.lean_name == other.lean_name
         else:
             return False
 
@@ -2363,9 +2361,10 @@ class BoundVar(MathObject):
         self.is_unnamed = True
 
     def rename(self):
-        old_name = self.info.get('old_name')
-        if old_name:
-            self.name_bound_var(old_name)
+        if self.is_unnamed:
+            old_name = self.info.get('old_name')
+            if old_name:
+                self.name_bound_var(old_name)
 
     def bound_var_nb(self):
         return self.info.get('bound_var_nb')
@@ -2396,9 +2395,37 @@ class BoundVar(MathObject):
         return (other.is_bound_var
                 and self.bound_var_nb() == other.bound_var_nb())
 
-    def math_object_from_matching(self, metavars=None, metavars_objects=None):
+    def math_object_from_matching(self, metavars=None, metavars_objects=None,
+                                  original_bound_vars=None,
+                                  copied_bound_vars=None):
         """
-        Juste return a copy of self.
+        Juste return a smart copy of self.
         """
-        return copy(self)
+
+        # return copy(self)
+        return self.smart_duplicate(original_bound_vars, copied_bound_vars)
+
+    def smart_duplicate(self, original_bound_vars, copied_bound_vars):
+        """
+        Duplicate self once, then take the same copy for further duplication
+        of self.
+        """
+
+        if self in original_bound_vars:
+            # Self has already been duplicated
+            idx = original_bound_vars.index(self)
+            return copied_bound_vars[idx]
+
+        # Copy info so that names become independent!
+        new_info = {key: value for key, value in self.info.items()}
+        new_self = BoundVar(node=self.node,
+                            children=self.children,
+                            math_type=self.math_type,
+                            info=new_info)
+
+        # Add self to copied_bound_vars
+        original_bound_vars.append(self)
+        copied_bound_vars.append(new_self)
+
+        return new_self
 

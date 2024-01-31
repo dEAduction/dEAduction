@@ -79,6 +79,9 @@ class PatternMathObject(MathObject):
     __metavars        = None  # Temporary list of mvars
     __metavar_objects = None  # Objects matching metavars (see self.match)
 
+    __original_bound_vars = None
+    __copied_bound_vars = None
+
     def __init__(self, node, info, children,
                  math_type=None,
                  imperative_matching=False):
@@ -196,6 +199,9 @@ class PatternMathObject(MathObject):
                          turn_lc_into_mvar=True):
         cls.__tmp_loc_csts_for_metavars = []
         cls.__tmp_metavars_csts         = []
+        cls.__original_bound_vars       = []
+        cls.__copied_bound_vars         = []
+
         pattern = cls.__from_math_object(math_object,
                                          turn_lc_into_mvar=turn_lc_into_mvar)
         pattern.metavars = cls.__tmp_metavars_csts
@@ -216,8 +222,6 @@ class PatternMathObject(MathObject):
             # log.debug(f"   Mo is metavar n°{metavar.info['nb']}")
             return metavar
 
-        elif loc_constant.is_bound_var:
-            return copy(loc_constant)
         else:
             # Turn math_type into a PatternMathObject,
             # then create a new metavar.
@@ -249,8 +253,15 @@ class PatternMathObject(MathObject):
         # metavars = cls.__tmp_metavars_csts
         # loc_csts = cls.__tmp_loc_csts_for_metavars
 
-        if math_object.is_local_constant() and turn_lc_into_mvar:
+        if math_object.is_bound_var:
+            # Copy bound var ONCE, and then always refer to the same duplicate.
+            # return copy(loc_constant)
+            return math_object.smart_duplicate(cls.__original_bound_vars,
+                                               cls.__copied_bound_vars)
+
+        elif math_object.is_local_constant() and turn_lc_into_mvar:
             return cls.metavar_from_loc_constant(math_object)
+
         else:
             node = math_object.node
 
@@ -556,7 +567,9 @@ class PatternMathObject(MathObject):
         # log.debug(f"... {match}")
         return match
 
-    def math_object_from_matching(self, metavars=None, metavars_objects=None):
+    def math_object_from_matching(self, metavars=None, metavars_objects=None,
+                                  original_bound_vars=None,
+                                  copied_bound_vars=None):
         """
         Substitute metavars in self according to self.metavars and
         self.metavar_objects. Returns a MathObject if all
@@ -564,6 +577,12 @@ class PatternMathObject(MathObject):
         else a MathObject with some metavars.
         """
 
+        if original_bound_vars is None:
+            original_bound_vars = []
+        if copied_bound_vars is None:
+            copied_bound_vars = []
+
+        # (1) Metavars:
         if metavars is None:
             metavars = self.metavars
             metavars_objects = self.metavar_objects
@@ -573,16 +592,23 @@ class PatternMathObject(MathObject):
         elif self is PatternMathObject.NO_MATH_TYPE:
             return MathObject.NO_MATH_TYPE
 
+        # (2) Generic objects (NOT including BoundVar)
         matched_math_type = self.math_type.math_object_from_matching(
-                                                    metavars, metavars_objects)
-        matched_children = [child.math_object_from_matching(
-                                                    metavars, metavars_objects)
+                                                    metavars,
+                                                    metavars_objects,
+                                                    original_bound_vars,
+                                                    copied_bound_vars)
+        matched_children = [child.math_object_from_matching(metavars,
+                                                            metavars_objects,
+                                                            original_bound_vars,
+                                                            copied_bound_vars)
                             for child in self.children]
 
         math_object = MathObject(node=self.node,
                                  info=self.info,
                                  children=matched_children,
                                  math_type=matched_math_type)
+
         return math_object
 
     @classmethod

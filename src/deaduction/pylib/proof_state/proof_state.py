@@ -1177,7 +1177,7 @@ class Goal:
         text_cr = "<br>" if format_ == "html" else "\n"
 
         # Name bound vars if needed!
-        # self.name_bound_vars(to_prove=to_prove)  # FIXME: deprecated ?
+        self.smart_name_bound_vars()
 
         context = self.context
         target = self.target

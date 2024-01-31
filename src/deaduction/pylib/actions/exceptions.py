@@ -216,8 +216,10 @@ class MissingCalculatorOutput(MissingParametersError):
                     or self.prop.is_exists(implicit=False)):
                 self.explicit_math_type_of_prop = self.prop.math_type
             else:
-                prop = self.prop.math_type.explicit_quant()
                 goal = self.proof_step.goal
+                prop = self.prop.math_type.explicit_quant()
+                prop.unname_all_bound_vars(forbidden_names=goal.free_var_names())
+                prop.set_local_context()
                 goal.recursive_name_all_bound_vars(prop)
                 self.explicit_math_type_of_prop = prop
 
