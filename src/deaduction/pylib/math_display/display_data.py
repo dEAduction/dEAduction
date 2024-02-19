@@ -279,7 +279,9 @@ class MathDisplay:
         # Beware to be coherent with definition statement:
         # 'COMPOSITION': ('composition ', 0, ' ', 1),
         'COMPOSITION': ('function.comp ', 0, ' ', 1),
-        "POWER": ('', 0, [' ^ ', 1], '')
+        "POWER": ('', 0, [' ^ ', 1], ''),
+        # "SET_PRODUCT": ("set.prod ", 0, ' ', 1),
+        "PROP_EQUAL_NOT": ("not ", 0, '=', 1)
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
