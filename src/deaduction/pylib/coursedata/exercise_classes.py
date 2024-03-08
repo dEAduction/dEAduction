@@ -557,6 +557,7 @@ class Exercise(Theorem):
     non_pertinent_course_metadate = ('_raw_metadata', 'description',
                                      'pretty_name')
 
+    __launch_in_history_mode = None
     # def __init__(self, **data: dict):
     #     print('init exo')
     #     for (key, value) in data.items():
@@ -599,8 +600,14 @@ class Exercise(Theorem):
         If True, self should be launched in history mode,
         with refined_auto_steps executed automatically.
         """
+        if self.__launch_in_history_mode is not None:
+            return self.__launch_in_history_mode
+        else:
+            return bool(self.refined_auto_steps)
 
-        return bool(self.refined_auto_steps)
+    @launch_in_history_mode.setter
+    def launch_in_history_mode(self, yes):
+        self.__launch_in_history_mode = yes
 
     @property
     def structured_content(self) -> StructuredContent:
