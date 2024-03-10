@@ -31,6 +31,7 @@ Description
 Display
     divise --> (-2, " | ", -1)
     prime --> (-1, " est premier")
+    puissancede2 --> (-1, " est une puissance de 2")
 -/
 
 ---------------------------------------------
