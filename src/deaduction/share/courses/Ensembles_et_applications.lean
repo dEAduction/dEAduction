@@ -129,7 +129,7 @@ lemma definition.egalite_ensembles {A A' : set X} :
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
-AuxiliaryDefinition
+AuxiliaryDefinitions
   auxiliary_definition.negation_egalite_ensembles
 -/
 begin
@@ -150,7 +150,7 @@ PrettyName
     Double inclusion
 ImplicitUse
   True
-AuxiliaryDefinition
+AuxiliaryDefinitions
   auxiliary_definition.negation_double_inclusion
 -/
 begin

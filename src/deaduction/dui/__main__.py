@@ -119,7 +119,7 @@ def set_logger():
                        'deaduction.dui.elements',
                        # 'deaduction.pylib'
                        'deaduction.pylib.actions',
-                       # 'deaduction.pylib.coursedata',
+                       'deaduction.pylib.coursedata',
                        'deaduction.pylib.editing',
                        'deaduction.pylib.pattern_math_obj',
                        'deaduction.pylib.marked_pattern_math_obj',
