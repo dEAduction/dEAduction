@@ -300,7 +300,10 @@ class ProofStepRequest(HighLevelServerRequest):
         self.code_string = ""
         self.decorated_code = None  # will be decorated_code
         self.compute_code_string()
-        self.effective_code = (deepcopy(self.decorated_code)
+        # self.effective_code = (deepcopy(self.decorated_code)
+        #                        if self.decorated_code else None)
+        # FIXME: the following seems to work:
+        self.effective_code = (self.decorated_code.copy()
                                if self.decorated_code else None)
         self.__from_previous_state_method = from_previous_proof_state_method
 

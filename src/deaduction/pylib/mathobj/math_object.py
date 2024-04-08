@@ -102,7 +102,10 @@ def allow_implicit_use(test_: callable) -> callable:
                 # Test right term if self match pattern
                 pattern = definition_patterns[index]
                 pattern_left = pattern.children[0]
+                # pattern_right = pattern.deep_copy(pattern.children[1])
                 pattern_right = pattern.children[1]
+                # Un-name bound vars to prevent conflict:
+                pattern_right.unname_all_bound_vars()
                 log.debug(f"(Trying definition "
                       f"{MathObject.implicit_definitions[index].pretty_name}"
                       f"...)")
@@ -437,8 +440,13 @@ class MathObject:
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
         """
         Return a deep copy of self. This should work for subclasses.
-        NB: constants, local constants (and bound vars) are NOT copied.
-        This is crucial for coherent bound var naming.
+        NB: in the copied object, original bound vars must be duplicated only
+        once, and all occurrences of a given bound var must be replaced by
+        the same object. This is the purpose
+        of the original_bound_vars and copied_bound_vars lists.
+        This is crucial for coherent bound var naming: if the name of the
+        bound var is modified then this modification must apply to all the
+        other occurrences.
         """
 
         if original_bound_vars is None:
@@ -2092,6 +2100,22 @@ class MathObject:
         """
         return self.math_type
 
+    def unname_all_bound_vars(self):
+        """
+        This method unname all bound vars in self.
+        """
+
+        # bound_var = self.bound_var
+        # if bound_var:
+        #     bound_var.set_unnamed_bound_var()
+        #
+        # for child in self.children:
+        #     if child.is_prop(is_math_type=True):
+        #         child.unname_all_bound_vars()
+
+        for bv in self.bound_vars():
+            bv.set_unnamed_bound_var()
+
 
 MathObject.NO_MATH_TYPE = MathObject(node="not provided",
                                      info={},
@@ -2303,14 +2327,21 @@ class BoundVar(MathObject):
         self.is_unnamed = False
 
     def set_unnamed_bound_var(self):
-        # FIXME: suppress:
-        lean_name = self.info.get('name', '')
+
+        lean_name = self.info.get('lean_name', '')
+        if lean_name in ("NO NAME", '*no_name*'):
+            lean_name = ''
         if lean_name and lean_name.endswith('.BoundVar'):
             # Remove suffix
             lean_name = lean_name[:-len('.BoundVar')]
+        if not lean_name:
+            lean_name = self.info.get('name', '')
+            if lean_name and lean_name.endswith('.BoundVar'):
+                # Remove suffix
+                lean_name = lean_name[:-len('.BoundVar')]
+            if lean_name in ("NO NAME", '*no_name*'):
+                lean_name = ''
 
-        if lean_name in ("NO NAME", '*no_name*'):
-            lean_name = ''
         new_info = {'name': "NO NAME",  # DO NOT MODIFY THIS !!
                     'lean_name': lean_name,
                     'bound_var_nb': -1}

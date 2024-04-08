@@ -142,8 +142,9 @@ if [[ "$OS" == "Linux" ]]; then
 
 elif [[ "$OS" = "Darwin" ]]; then
   DEADUCTION_ON_LINUX=0
+  UBUNTU_DEBIAN=0
 else
-  abort "Deaduction works only on Linux and MacOs."
+  abort "This script works only on Linux and MacOs."
 fi
 
 # Machine hardware name

@@ -806,6 +806,7 @@ class CalculatorController:
         The choice is either a PatternMathObject to be converted to Lean code,
         or a string (of Lean code) if the calculator i in Lean mode.
         """
+        # FIXME: obsolete
 
         if target_type:
             log.debug(f"Calculator with target type = "
@@ -845,7 +846,7 @@ class CalculatorController:
         # task_description = missing_output.task_description()
         statement = missing_output.statement
         task_goal = statement.goal() if statement else None
-        prop = missing_output.explicit_math_type_of_prop()
+        prop = missing_output.explicit_math_type_of_prop
 
         log.debug(f"Calculator with target types")
         cc = cls(goal=goal,

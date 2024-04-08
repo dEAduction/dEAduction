@@ -22,7 +22,12 @@ REM python3 -m pip install -r ..\requirements.txt
 
 
 cd ..\..\src
+REM The following will execute the PyInstaller module; for this NO NEED to
+REM set the PATH variable
+python3 -m PyInstaller deaduction\dui\__main__.py --onefile --windowed --clean
+--add-data deaduction\lean_src;deaduction\lean_src --add-data deaduction\share;deaduction\share
 
+REM **** Obsolete: ****
 REM THe following line will NOT work, unless the path to Python Scripts
 REM has been added to the PATH environment variable
 REM Find your own python/Scripts address by searching in the
@@ -30,5 +35,5 @@ REM %HOMEPATH%\AppData\Local\
 REM and add it to the PATH variable by
 REM set PATH="%PATH%;<your pyinstaller path>"
 REM This is the file where Windows will look for pynstaller.exe
-pyinstaller deaduction\dui\__main__.py --onefile --windowed --clean --add-data deaduction\lean_src;deaduction\lean_src --add-data deaduction\share;deaduction\share
+REM pyinstaller deaduction\dui\__main__.py --onefile --windowed --clean  --add-data deaduction\lean_src;deaduction\lean_src --add-data deaduction\share;deaduction\share
 

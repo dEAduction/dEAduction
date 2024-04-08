@@ -241,13 +241,24 @@ begin
     exact iff.rfl,
 end
 
-lemma definition.intersection_union (A B C : set X) :
+lemma definition.union_deux_ensembles {A B : set X} {x : X} :
+x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
+/- dEAduction
+PrettyName
+    Union de deux ensembles
+ImplicitUse
+    True
+-/
+begin
+    exact iff.rfl,
+end
+
+
+lemma theorem.intersection_union (A B C : set X) :
 A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
 PrettyName
    Intersection avec une union
-ImplicitUse
-    True
 -/
 begin
   exact set.inter_distrib_left A B C,
@@ -453,6 +464,8 @@ a ∈ set.prod A B ↔ ∃x ∈ A, ∃y ∈ B, a= (x,y) :=
 /- dEAduction
 PrettyName
     Produit cartésien de deux parties
+ImplicitUse
+    False
 -/
 begin
     todo

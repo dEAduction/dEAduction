@@ -39,8 +39,6 @@ AvailableProof
     NONE
 AvailableCompute
     NONE
-Settings
-    functionality.calculator_available --> false
 -/
 
 ---------------------------------------------
@@ -68,7 +66,7 @@ lemma exercise.but { a b x y : ℝ} (Hypothese1 : x <= a) (Hypothese2 : y < b):
 PrettyName
     Bouton But - Enoncé directement vrai pour le logiciel -  Réels et inégalités
 Description
-    Le bouton "But !" et les tactiques de simplifications automatiques disponibles 
+    Le bouton "But !" et les tactiques de simplifications automatiques disponibles. 
   
 AvailableLogic
     NONE
@@ -92,6 +90,7 @@ Description
     Découverte du connecteur NON, pour transformer le But.
 AvailableLogic
     not
+    
 AvailableMagic
     assumption
 -/
@@ -138,7 +137,7 @@ end
 
 
 
-lemma exercise.connecteur_etdanshyp (H : (2*m = 6) \and (m+n > 10*n^2)) :
+lemma exercise.connecteur_etdanshyp (H : (2*m = 6) \and (m+n^2 > 10*n)) :
 m*m <=10
 :=
 /- dEAduction
@@ -264,6 +263,24 @@ begin
     todo
 end
 
+lemma exercise.connecteur_equal_ssi  { x  : ℝ} (H1:  5*x >= 23 )  (H2 : ( x >=1 )  ↔ ((1/x <=1)\and (x>0)) ) :
+(1/x <=1) \and (x>0)
+:=
+/- dEAduction
+PrettyName
+   Bouton EGALITE - Substitution d'une proposition par une autre équivalente
+Description
+   
+    Le bouton "=" permet de remplacer une proposition par une autre qui lui est équivalente.
+AvailableLogic
+     equal
+AvailableMagic
+    assumption
+-/
+begin
+    todo
+end
+
 lemma exercise.connecteur_impliquedanshyp (H1: ( m >=5) → (m+n =100) ) (H2 : m=10 ):
 10 + n = 100  -- marche, mais par contre n=90 ne fonctionne pas
 :=
@@ -280,6 +297,8 @@ AvailableMagic
 begin
     todo
 end
+
+
 
 lemma exercise.connecteur_impliquedanshyp2 (H1: ( m >=5) → (m+n =100) ) (H2 : m=10 ):
 n = 90  -- utilisation de equal pour arriver au but
@@ -327,7 +346,7 @@ PrettyName
 Description
     Le bouton "<=>" permet d'utiliser une des implications de l'hypothèse.
 AvailableLogic
-    and or not implies iff
+    and or not implies iff equal
 AvailableMagic
     assumption
 -/

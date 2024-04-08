@@ -111,15 +111,15 @@ def set_logger():
         #                'ServerInterface', 'ServerQueue']
         log_domains = ["__main__",
                        'ServerInterface',
-                       # 'HighLevelServerRequest',
-                       # 'ServerQueue',
+                       'HighLevelServerRequest',
+                       'ServerQueue',
                        # 'lean',
                        # Includes Coordinator, start_coex:
                        'deaduction.dui.stages',
                        'deaduction.dui.elements',
                        # 'deaduction.pylib'
                        'deaduction.pylib.actions',
-                       # 'deaduction.pylib.coursedata',
+                       'deaduction.pylib.coursedata',
                        'deaduction.pylib.editing',
                        'deaduction.pylib.pattern_math_obj',
                        'deaduction.pylib.marked_pattern_math_obj',

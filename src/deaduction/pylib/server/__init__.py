@@ -215,49 +215,24 @@ class ServerQueue(list):
             nb += 1
             # The following try block is here because of some error occurring
             # sometimes when cancelling trio.
-            try:
-                with trio.move_on_after(self.actual_timeout) \
-                        as self.cancel_scope:
-                    # Await Lean Server starts!
-                    if not self.lean_server_running.is_set():
-                        await self.lean_server_running.wait()
-                    ################
-                    # Process task #
-                    task.start_time = time()
-                    await task.fct(task, **task.kwargs)
-                    task.end_time = time()
-                    print(f"task duration: {task.duration}")
-                    if task.pertinent_duration:
-                        self.task_durations.append(task.duration)
-                        # print(f"task durations: {self.task_durations}")
-                    ################
-                if self.cancel_scope.cancelled_caught:
-                    self.log.debug("Cancelling current task")
-                    if task.status == "cancellation_required":
-                        error_type = 7
-                    else:
-                        self.log.warning(f"No answer within "
-                                         f"{self.actual_timeout}s (trial {nb})")
-                        error_type = 3
-                        self.actual_timeout = 2 * self.actual_timeout
-                    no_more_trials = (nb == self.NB_TRIALS
-                                      or task.status == "cancellation_required")
-                    if no_more_trials:
-                        # Task definitively  cancelled!
-                        # Emit lean_response signal with timeout error
-                        lean_response = LeanResponse(error_type=error_type)
-                        self.timeout_signal.emit(lean_response)
-                        break
-                    else:  # Task will be tried again
-                        if task.cancel_fct:
-                            task.cancel_fct()
-                            task.status = 'cancelled'
-                else:
-                    break
-            except TypeError as e:
-                self.log.debug("TypeError while cancelling trio")
-                self.log.debug(e)
-                error_type = 0
+            # try:
+            with trio.move_on_after(self.actual_timeout) \
+                    as self.cancel_scope:
+                # Await Lean Server starts!
+                if not self.lean_server_running.is_set():
+                    await self.lean_server_running.wait()
+                ################
+                # Process task #
+                task.start_time = time()
+                await task.fct(task, **task.kwargs)
+                task.end_time = time()
+                print(f"task duration: {task.duration}")
+                if task.pertinent_duration:
+                    self.task_durations.append(task.duration)
+                    # print(f"task durations: {self.task_durations}")
+                ################
+            if self.cancel_scope.cancelled_caught:
+                self.log.debug("Cancelling current task")
                 if task.status == "cancellation_required":
                     error_type = 7
                 else:
@@ -277,10 +252,35 @@ class ServerQueue(list):
                     if task.cancel_fct:
                         task.cancel_fct()
                         task.status = 'cancelled'
-
-            except Exception as e:
-                self.log.debug(e)
-                raise
+            else:
+                break
+            # except TypeError as e:
+            #     self.log.debug("TypeError while cancelling trio")
+            #     self.log.debug(e)
+            #     error_type = 0
+            #     if task.status == "cancellation_required":
+            #         error_type = 7
+            #     else:
+            #         self.log.warning(f"No answer within "
+            #                          f"{self.actual_timeout}s (trial {nb})")
+            #         error_type = 3
+            #         self.actual_timeout = 2 * self.actual_timeout
+            #     no_more_trials = (nb == self.NB_TRIALS
+            #                       or task.status == "cancellation_required")
+            #     if no_more_trials:
+            #         # Task definitively  cancelled!
+            #         # Emit lean_response signal with timeout error
+            #         lean_response = LeanResponse(error_type=error_type)
+            #         self.timeout_signal.emit(lean_response)
+            #         break
+            #     else:  # Task will be tried again
+            #         if task.cancel_fct:
+            #             task.cancel_fct()
+            #             task.status = 'cancelled'
+            #
+            # except Exception as e:
+            #     self.log.debug(e)
+            #     raise
 
         # Launch next task when done!
         task.status = 'done'

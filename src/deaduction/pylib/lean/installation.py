@@ -113,7 +113,7 @@ class LeanEnvironment:
         """
 
         files = []
-        for directory in self.lean_libs():
+        for directory in self.absolute_lean_libs():
             files.extend(directory.glob('*.lean'))
         return files
 

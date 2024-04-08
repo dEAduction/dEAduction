@@ -117,14 +117,29 @@ begin
     exact iff.rfl
 end
 
-lemma definition.egalite_deux_ensembles {A A' : set X} :
+lemma auxiliary_definition.negation_egalite_ensembles {A A' : set X} :
+(A ≠ A') ↔ ¬ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
+begin
+    todo
+end
+
+
+lemma definition.egalite_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
 PrettyName
     Egalité de deux ensembles
+AuxiliaryDefinitions
+  auxiliary_definition.negation_egalite_ensembles
 -/
 begin
      exact set.ext_iff
+end
+
+lemma auxiliary_definition.negation_double_inclusion {A A' : set X} :
+A ≠ A' ↔ ¬ (A ⊆ A' ∧ A' ⊆ A) :=
+begin
+    todo
 end
 
 -- Unfortunately split cannot work
@@ -135,6 +150,8 @@ PrettyName
     Double inclusion
 ImplicitUse
   True
+AuxiliaryDefinitions
+  auxiliary_definition.negation_double_inclusion
 -/
 begin
     exact set.subset.antisymm_iff
@@ -148,17 +165,29 @@ begin
     exact eq_empty_iff_forall_not_mem,
 end
 
+lemma auxiliary_definition.ensemble_non_vide
+(A: set X) :
+(not (A = ∅) ) ↔ ∃ x : X, x ∈ A
+:=
+begin
+    todo
+end
+
 lemma definition.ensemble_non_vide
-{A: set X} :
+(A: set X) :
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
+AuxiliaryDefinitions
+  auxiliary_definition.ensemble_non_vide
 ImplicitUse
   True
 -/
 begin
     todo
 end
+
+
 
 lemma definition.singleton
 {x x_0: X} :

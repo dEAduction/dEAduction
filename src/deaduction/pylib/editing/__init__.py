@@ -128,6 +128,13 @@ class VirtualFile:
             # Update index and cursor position
             self.idx += ddir
 
+    @property
+    def history_length(self):
+        return len(self.history)
+
+    def has_history(self):
+        return self.history_length > 1
+
     ################################
     # Virtual cursor managment
     ################################
