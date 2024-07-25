@@ -710,7 +710,7 @@ def exercise_from_argv() -> Exercise:
 ##################################################################
 # Main event loop: init WindowManager and wait for window closed #
 ##################################################################
-async def main():
+async def async_main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a WindowManager
     for signals and slots, and call the WindowManager.choose_exercise method.
@@ -781,7 +781,7 @@ async def main():
                 wm.nursery.cancel_scope.cancel()
 
 
-if __name__ == '__main__':
+def main():
     log.info("Starting...")
     #################################################################
     # Init environment variables, directories, and configure logger #
@@ -796,5 +796,10 @@ if __name__ == '__main__':
     #################
     # Run main loop #
     #################
-    qtrio.run(main)
+    qtrio.run(async_main)
     log.debug("qtrio finished")
+
+
+if __name__ == '__main__':
+    main()
+

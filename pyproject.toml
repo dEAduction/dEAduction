@@ -1,9 +1,16 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-git-versioning"]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
-name = "deaduction"
-dynamic = ["dependencies", "version"]
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-[tool.setuptools-git-versioning]
-enabled = true
+requires-python = ">=3.11"
+
+
+[project.scripts]
+deaduction_app = "deaduction.dui.__main__:main"
+
+
+
+[tool.hatch]
+version.source = "vcs"
+build.hooks.vcs.version-file = "src/deaduction/version.py"
