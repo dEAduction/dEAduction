@@ -48,6 +48,11 @@ debian/deaduction.substvars
 debian/debhelper-build-stamp
 debian/files
 
+# Local stuffs
+local-stuffs/
+old-stuffs/
+pyinstaller_venv/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
