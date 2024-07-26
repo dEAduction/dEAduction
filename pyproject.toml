@@ -3,14 +3,51 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
+name = "deaduction"
+description = "Graphical proof assistant for learning proofs"
+authors = [
+  {name = "Marguerite Bin", email = "bin.marguerite@gmail.com"},
+  {name = "Florian Dupeyron", email = "florian.dupeyron@mugcat.fr"},
+  {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"},
+  {name = "Antoine Leudière", email = "hg4fpchw@anonaddy.me"},
+]
+maintainers = [
+  {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"}
+]
+dynamic = ["version"]
+readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.11"
+keywords = ["mathematics", "proofs", "logic"]
 
 
 [project.scripts]
 deaduction_app = "deaduction.dui.__main__:main"
 
+[project.gui-scripts]
+deaduction_gui = "deaduction.dui.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/dEAduction/dEAduction"
+Documentation = "https://github.com/dEAduction/dEAduction/wiki"
+Repository = "https://github.com/dEAduction/dEAduction"
+Issues = "https://github.com/dEAduction/dEAduction/issues"
 
 
 [tool.hatch]
-version.source = "vcs"
+# Get version nb from config.toml
+version.path = "src/deaduction/share/config.toml"
 build.hooks.vcs.version-file = "src/deaduction/version.py"
+# Alt: Get version nb from git. Should coincide with config.tom
+# version.source = "vcs"
+# build.hooks.vcs.version-file = "src/deaduction/version.py"
+# cf automatic versionning from git?
+
+# build.targets.sdist.include = [
+#  "pkg/*.py",
+#  "/tests",
+#]
+build.targets.sdist.exclude = [
+  "snippets/",
+  "tools/",
+]

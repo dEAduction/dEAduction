@@ -440,10 +440,10 @@ def erase_proof_states():
 def check_new_version():
     """
     The usr config var usr_version_nb refers to the nb of the last executed
-    version of deaduction. The factory var version_nb is the actual current
+    version of deaduction. The factory var version is the actual current
     version. Both should be equal after executing adapt_to_new_version.
     """
-    version_nb = cvars.get("others.version_nb")
+    version_nb = cvars.get("others.version")
     usr_version_nb = cvars.get("others.usr_version_nb")
     if version_nb != usr_version_nb:
         log.debug(f"New version detected, {usr_version_nb} --> {version_nb}")
@@ -470,7 +470,7 @@ def adapt_to_new_version():
         cdirs.init()
         # Write new version nb in usr config.toml:
         log.debug("Setting new version nb in usr config file")
-        cvars.set("others.usr_version_nb", cvars.get("others.version_nb"))
+        cvars.set("others.usr_version_nb", cvars.get("others.version"))
         cvars.save()
 
 
