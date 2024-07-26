@@ -16,10 +16,14 @@ maintainers = [
 ]
 dynamic = ["version"]
 readme = "README.md"
-license = {file = "LICENSE"}
-requires-python = ">=3.11"
+license = {file = "LICENSE.md"}
+requires-python = ">=3.8"
 keywords = ["mathematics", "proofs", "logic"]
-
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+  ]
 
 [project.scripts]
 deaduction_app = "deaduction.dui.__main__:main"
@@ -43,11 +47,15 @@ build.hooks.vcs.version-file = "src/deaduction/version.py"
 # build.hooks.vcs.version-file = "src/deaduction/version.py"
 # cf automatic versionning from git?
 
-# build.targets.sdist.include = [
-#  "pkg/*.py",
-#  "/tests",
-#]
-build.targets.sdist.exclude = [
-  "snippets/",
-  "tools/",
+[tool.hatch.build.targets.sdist]
+include = [
+#  "src/deaduction/share/*",
+#  "src/deaduction/lean_src/*",
+    "src/deaduction/*"
+]
+exclude = [
+    "snippets/",
+    "tools/",
+    "debian/",
+    "src/deaduction/make_hlist",
 ]
