@@ -22,10 +22,10 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+# dist is  now included for installation via pip git+https
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
