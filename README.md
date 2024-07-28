@@ -14,6 +14,8 @@
 - Jean Christophe Deligny (work on the installation script)
 - Camille Lichère (lots of testing, and teaching !)
 - Justin Carel (thanks for push_neg_once!)
+- Sébastien Julliot (Pyinstaller version)
+- Isabelle Dubois (Extensive testing and exercises writing)
 
 ## License
 This project is licensed under the terms of the GNU General Public License v3.0.
