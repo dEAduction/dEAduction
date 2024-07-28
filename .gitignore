@@ -6,8 +6,8 @@
 :*
 
 # gettext files
-*.mo
-*.gmo
+#*.mo
+#*.gmo
 
 # misc dev stuff
 env/

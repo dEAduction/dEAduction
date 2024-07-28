@@ -73,8 +73,6 @@ from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
 from deaduction.pylib.math_display.pattern_data import *
 
-global _
-
 
 log = logging.getLogger(__name__)
 
@@ -120,6 +118,7 @@ def set_logger():
                        # 'deaduction.pylib'
                        'deaduction.pylib.actions',
                        'deaduction.pylib.coursedata',
+                       'deaduction.pylib.config',
                        'deaduction.pylib.editing',
                        'deaduction.pylib.pattern_math_obj',
                        'deaduction.pylib.marked_pattern_math_obj',
@@ -382,6 +381,8 @@ def language_check():
         deaduction.pylib.config.i18n.init_i18n()
         if ok:
             cvars.save_single_key('i18n.select_language')  # Do not ask next time!
+
+    print(_("Language test"))
 
 
 def copy_lean_files_to_home():

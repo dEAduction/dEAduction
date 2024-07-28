@@ -45,6 +45,14 @@ courses        = (share / "courses").resolve()
 fonts          = (share / "fonts").resolve()
 pkg_tests_dir = (share / "autotests")
 lean_src_dir = (pkg_dir / "lean_src").resolve()
+language_dir_path = (share / "locales").resolve()
+# if not language_dir_path.exists():
+#     print("No language dir")
+# else:
+#     d = (language_dir_path / "fr_FR" / "LC_MESSAGES" /
+#          "deaduction.po").resolve()
+#     # with d.open() as f: f.readline()
+#     print(d.read_text().splitlines()[0])
 
 # Home paths
 home     = Path.home()
