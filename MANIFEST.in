@@ -1,2 +1,0 @@
-recursive-include src/deaduction/share *
-recursive-include src/deaduction/lean_src *

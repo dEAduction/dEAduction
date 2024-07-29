@@ -137,7 +137,7 @@ Lean_request_method = "from_previous_proof_state"
 copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version_nb = "0.3.9992"
+version = "0.3.9992"
 os = ""  # Let this to "" except for debugging
 
 #########################

@@ -73,8 +73,6 @@ from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
 from deaduction.pylib.math_display.pattern_data import *
 
-global _
-
 
 log = logging.getLogger(__name__)
 
@@ -120,6 +118,7 @@ def set_logger():
                        # 'deaduction.pylib'
                        'deaduction.pylib.actions',
                        'deaduction.pylib.coursedata',
+                       'deaduction.pylib.config',
                        'deaduction.pylib.editing',
                        'deaduction.pylib.pattern_math_obj',
                        'deaduction.pylib.marked_pattern_math_obj',
@@ -383,6 +382,8 @@ def language_check():
         if ok:
             cvars.save_single_key('i18n.select_language')  # Do not ask next time!
 
+    print(_("Language test"))
+
 
 def copy_lean_files_to_home():
     """
@@ -440,10 +441,10 @@ def erase_proof_states():
 def check_new_version():
     """
     The usr config var usr_version_nb refers to the nb of the last executed
-    version of deaduction. The factory var version_nb is the actual current
+    version of deaduction. The factory var version is the actual current
     version. Both should be equal after executing adapt_to_new_version.
     """
-    version_nb = cvars.get("others.version_nb")
+    version_nb = cvars.get("others.version")
     usr_version_nb = cvars.get("others.usr_version_nb")
     if version_nb != usr_version_nb:
         log.debug(f"New version detected, {usr_version_nb} --> {version_nb}")
@@ -470,7 +471,7 @@ def adapt_to_new_version():
         cdirs.init()
         # Write new version nb in usr config.toml:
         log.debug("Setting new version nb in usr config file")
-        cvars.set("others.usr_version_nb", cvars.get("others.version_nb"))
+        cvars.set("others.usr_version_nb", cvars.get("others.version"))
         cvars.save()
 
 
@@ -710,7 +711,7 @@ def exercise_from_argv() -> Exercise:
 ##################################################################
 # Main event loop: init WindowManager and wait for window closed #
 ##################################################################
-async def main():
+async def async_main():
     """
     This is the main loop. It opens a trio.nursery, instantiate a WindowManager
     for signals and slots, and call the WindowManager.choose_exercise method.
@@ -781,7 +782,7 @@ async def main():
                 wm.nursery.cancel_scope.cancel()
 
 
-if __name__ == '__main__':
+def main():
     log.info("Starting...")
     #################################################################
     # Init environment variables, directories, and configure logger #
@@ -796,5 +797,10 @@ if __name__ == '__main__':
     #################
     # Run main loop #
     #################
-    qtrio.run(main)
+    qtrio.run(async_main)
     log.debug("qtrio finished")
+
+
+if __name__ == '__main__':
+    main()
+

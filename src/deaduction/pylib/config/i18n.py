@@ -44,13 +44,13 @@ def init_i18n():
     select_language     = cvars.get('i18n.select_language', "en")
     log.info(f"selected language     = {select_language}")
 
-    language_dir_path   = fs.path_helper(cdirs.share / "locales")
+    # language_dir_path = fs.path_helper(cdirs.share / "locales")
     gettext.install('deaduction',
-                    localedir=str(language_dir_path))
+                    localedir=str(cdirs.language_dir_path))
     if select_language != "no_language":
         # 'no_language' is gotten first time deaduction is launched
         language = gettext.translation('deaduction',
-                                       localedir=str(language_dir_path),
+                                       localedir=str(cdirs.language_dir_path),
                                        languages=[select_language],
                                        fallback=True)
         language.install()
