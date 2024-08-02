@@ -17,7 +17,7 @@ maintainers = [
 dynamic = ["version"]
 readme = "README.md"
 license = {file = "LICENSE.md"}
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 keywords = ["mathematics", "proofs", "logic"]
 classifiers = [
     "Programming Language :: Python :: 3",
