@@ -347,5 +347,8 @@ lean_from_pattern_string = {
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('λ', (1, ),  ', ', (2, )),
-    "LOCAL_CONSTANT/name=RealSubGroup": (r'real',)
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'real',),
+    "SET_PRODUCT(?0: TYPE, ?1)": ("prod ", (0,), ' ', (1,)),
+    "SET_PRODUCT(?0: SET(?2), ?1)": ("set.prod ", (0,), ' ', (1,)),
+    # "SET_PRODUCT(?0: SET ?2, ?1)": ("set.prod ", 0, ' ', 1),
 }

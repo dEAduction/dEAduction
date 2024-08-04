@@ -241,10 +241,13 @@ class Coordinator(QObject):
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
         exercise = self.exercise
-
+        log.debug("New ProofTree:")
         self.proof_tree = ProofTree()
+        log.debug("Proof Tree Controller:")
         self.emw.proof_tree_controller.set_proof_tree(self.proof_tree)
+        log.debug("Status Bar:")
         self.emw.set_msgs_for_status_bar(self.proof_tree.current_proof_msg)
+        log.debug("New ProofStep:")
         self.proof_step = ProofStep()
 
         # Get initial proof state

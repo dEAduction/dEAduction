@@ -1303,10 +1303,11 @@ class AbstractStartCoEx(QDialog):
         if exercise.history_date():
             # Back to original, incorporating auto_steps
             exercise = exercise.from_history_exercise()
-
-        # check if exercise must be negated (e.g. is an open question)
-        # TODO: this should be moved elsewhere, e.g. in __main__
+            exercise.launch_in_history_mode = True
         else:
+            exercise.launch_in_history_mode = False
+            # check if exercise must be negated (e.g. is an open question)
+            # TODO: this should be moved elsewhere, e.g. in __main__
             if not check_negate_statement(exercise):
                 return
 

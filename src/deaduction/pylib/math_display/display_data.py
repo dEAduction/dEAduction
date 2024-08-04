@@ -263,8 +263,8 @@ class MathDisplay:
         # Prevent pattern NOT(APP(CONSTANT(...)) -> is not:
         "PROP_NOT": (r'\not', 0),
         "SET_EMPTY": ('(', r'\emptyset', math_type_for_lean, ')'),  # including ':'
-        "SET_EXTENSION1": ('(', 'singleton ', 0, ')',
-                           set_of_math_type_of_child_for_lean),
+        "SET_EXTENSION1": ('(', '(', 'singleton ', 0, ')',
+                           set_of_math_type_of_child_for_lean, ')'),
         "SET_EXTENSION2": ('(', 'pair ', 0, ' ', 1, ')'),
         "SET_INTENSION": (
             r"\no_text", r'\{', 1, r':', 0, ' | ', 2, r'\}'),
@@ -279,7 +279,9 @@ class MathDisplay:
         # Beware to be coherent with definition statement:
         # 'COMPOSITION': ('composition ', 0, ' ', 1),
         'COMPOSITION': ('function.comp ', 0, ' ', 1),
-        "POWER": ('', 0, [' ^ ', 1], '')
+        "POWER": ('', 0, [' ^ ', 1], ''),
+        # "SET_PRODUCT": ("set.prod ", 0, ' ', 1),
+        "PROP_EQUAL_NOT": ("not ", 0, '=', 1)
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict

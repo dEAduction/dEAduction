@@ -113,16 +113,16 @@ class StructuredContent:
 
     @classmethod
     def new_content(cls, initial_content, additional_metadata, lean_code,
-                    version_nb):
+                    history_nb):
         """
         Create a new StructuredContent instance by updating initial_content
         with additional_metadata, and replacing code by lean_code.
         Date is also included in metadata.
-        Name is modified by inserting version_nb at the end.
+        Name is modified by inserting history_nb at the end.
         """
 
         # Compute new name
-        new_name = initial_content.name + '_' + str(version_nb)
+        new_name = initial_content.name + '_' + str(history_nb)
 
         # Add date to metadata
         date = strftime("%d%b%Hh%M")
@@ -557,6 +557,7 @@ class Exercise(Theorem):
     non_pertinent_course_metadate = ('_raw_metadata', 'description',
                                      'pretty_name')
 
+    __launch_in_history_mode = None
     # def __init__(self, **data: dict):
     #     print('init exo')
     #     for (key, value) in data.items():
@@ -599,8 +600,14 @@ class Exercise(Theorem):
         If True, self should be launched in history mode,
         with refined_auto_steps executed automatically.
         """
+        if self.__launch_in_history_mode is not None:
+            return self.__launch_in_history_mode
+        else:
+            return bool(self.refined_auto_steps)
 
-        return bool(self.refined_auto_steps)
+    @launch_in_history_mode.setter
+    def launch_in_history_mode(self, yes):
+        self.__launch_in_history_mode = yes
 
     @property
     def structured_content(self) -> StructuredContent:
@@ -946,7 +953,7 @@ class Exercise(Theorem):
     #######################################
     def __new_file_content(self, lean_code="todo ",
                            additional_metadata=None,
-                           version_nb=1) -> str:
+                           history_nb=1) -> str:
         """
         Insert additional metadata (e.g. AutoSteps) and code_lines
         into self.course.file_content.
@@ -955,7 +962,7 @@ class Exercise(Theorem):
         struct_content = self.structured_content
         new_st_content = StructuredContent.new_content(struct_content,
                                                        additional_metadata,
-                                                       lean_code, version_nb)
+                                                       lean_code, history_nb)
         new_file_content = new_st_content.content_with_lemma()
         return new_file_content
 
@@ -1060,9 +1067,9 @@ class Exercise(Theorem):
         #     exercise.negate_statement = True
 
         # (3) Compute new content
-        version_nb = len(self.versions_saved_in_history_course()) + 1
+        history_nb = len(self.versions_saved_in_history_course()) + 1
         content = exercise.__new_file_content(lean_code, additional_metadata,
-                                              version_nb)
+                                              history_nb)
 
         # (4) Save!
         with open(path, mode='wt', encoding='utf-8') as output:

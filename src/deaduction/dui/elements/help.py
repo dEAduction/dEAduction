@@ -148,15 +148,22 @@ class HelpWindow(QDialog):
         self.setWindowTitle(_("Help") + " — d∃∀duction")
         # Window stay on top of parent:
 
-        nb = version_info[1]
-        if nb <= 9:
+        # nb = version_info[1]
+        # if nb <= 9:
+        #     flags = self.windowFlags() | Qt.Dialog
+        #     self.setWindowFlags(flags)
+        # else:
+        #     # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
+        #     # FIXME: this is for python >= 3.10
+        #     self.setWindowFlags |= Qt.Dialog
+        # self.main_txt, self.detailed_txt, self.hint = None, None, None
+
+        try:  # Works only for Python 3.11 or more
+            self.setWindowFlags |= Qt.Dialog
+        except TypeError:
             flags = self.windowFlags() | Qt.Dialog
             self.setWindowFlags(flags)
-        else:
-            # self.setWindowFlags(self.windowFlags() | Qt.Dialog)
-            # FIXME: this is for python >= 3.10
-            self.setWindowFlags |= Qt.Dialog
-        # self.main_txt, self.detailed_txt, self.hint = None, None, None
+
         self.msgs_list = []
         self.main_texts = []
         self.hints = []

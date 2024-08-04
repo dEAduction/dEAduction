@@ -1252,8 +1252,10 @@ class Goal:
                 prove_that = _("Prove") + " "
             elif cvars.get('i18n.select_language') == 'fr_FR':
                 # "Démontrer que il" --> "Démontrer qu'il"
-                if target_utf8 and target_utf8[0] in ('a', 'e', 'i', 'o', 'u'):
-                    prove_that = "Démontrer qu'"
+                if target_utf8:
+                    words = target_utf8.split()
+                    if words[0] in ("il", "un"):
+                        prove_that = "Démontrer qu'"
             target_text = prove_that + target_text
         elif text:
             target_text = _("Then") + " " + target_text

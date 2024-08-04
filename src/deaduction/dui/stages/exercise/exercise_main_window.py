@@ -179,7 +179,9 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar              = ExerciseToolBar()
         self.global_toolbar       = GlobalToolbar()
         self.proof_outline_window = ProofOutlineWindow()
+        log.debug("New ProofTreeController")
         self.proof_tree_controller= ProofTreeController()
+        log.debug("New StatusBar")
         self.statusBar            = ExerciseStatusBar(self)
         self.config_window        = None
         self.help_window = HelpWindow()

@@ -1,9 +1,61 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-git-versioning"]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 name = "deaduction"
-dynamic = ["dependencies", "version"]
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-[tool.setuptools-git-versioning]
-enabled = true
+description = "Graphical proof assistant for learning proofs"
+authors = [
+  {name = "Marguerite Bin", email = "bin.marguerite@gmail.com"},
+  {name = "Florian Dupeyron", email = "florian.dupeyron@mugcat.fr"},
+  {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"},
+  {name = "Antoine Leudière", email = "hg4fpchw@anonaddy.me"},
+]
+maintainers = [
+  {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"}
+]
+dynamic = ["version"]
+readme = "README.md"
+license = {file = "LICENSE.md"}
+requires-python = ">=3.8"
+keywords = ["mathematics", "proofs", "logic"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+  ]
+
+[project.scripts]
+deaduction_app = "deaduction.dui.__main__:main"
+
+[project.gui-scripts]
+deaduction_gui = "deaduction.dui.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/dEAduction/dEAduction"
+Documentation = "https://github.com/dEAduction/dEAduction/wiki"
+Repository = "https://github.com/dEAduction/dEAduction"
+Issues = "https://github.com/dEAduction/dEAduction/issues"
+
+
+[tool.hatch]
+# Get version nb from config.toml
+version.path = "src/deaduction/share/config.toml"
+build.hooks.vcs.version-file = "src/deaduction/version.py"
+# Alt: Get version nb from git. Should coincide with config.tom
+# version.source = "vcs"
+# build.hooks.vcs.version-file = "src/deaduction/version.py"
+# cf automatic versionning from git?
+
+[tool.hatch.build.targets.sdist]
+include = [
+#  "src/deaduction/share/*",
+#  "src/deaduction/lean_src/*",
+    "src/deaduction/*"
+]
+exclude = [
+    "snippets/",
+    "tools/",
+    "debian/",
+    "src/deaduction/make_hlist",
+]

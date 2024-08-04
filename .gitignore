@@ -6,8 +6,8 @@
 :*
 
 # gettext files
-*.mo
-*.gmo
+#*.mo
+#*.gmo
 
 # misc dev stuff
 env/
@@ -24,8 +24,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -47,6 +47,11 @@ debian/.debhelper
 debian/deaduction.substvars
 debian/debhelper-build-stamp
 debian/files
+
+# Local stuffs
+local-stuffs/
+old-stuffs/
+pyinstaller_venv/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
