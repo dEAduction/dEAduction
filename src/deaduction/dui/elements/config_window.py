@@ -165,6 +165,10 @@ CONFIGS['Functionalities'] = {
     'functionality.automatic_intro_of_variables_and_hypotheses': (None, True,
         _("The ∀ and ⇒ buttons are operated automatically when the "
           "target is a universal property or an implication")),
+    'functionality.choose_order_to_prove_conjunction': (None, True,
+        _("Choose in which order to prove the two sub-goals of a conjunction")),
+    'functionality.choose_order_to_use_disjunction': (None, True,
+        _("Choose in which order to study the two cases of a disjunction"))
     # 'functionality.calculator_available': (None, True,
     #    _("Open the logical calculator to enter composite objects")),
 }
@@ -183,6 +187,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.ask_to_prove_premises_of_implications': True,
                  'functionality.automatic_intro_of_variables_and_hypotheses':
                      False,
+                 'functionality.choose_order_to_prove_conjunction': False,
+                 'functionality.choose_order_to_use_disjunction': False,
                  # 'functionality.calculator_available': False
                  },
     'Intermediate': {'functionality.allow_proof_by_sorry': True,
@@ -196,6 +202,8 @@ PRE_DEFINED['Functionalities'] = {
                      'functionality.drag_statements_to_context': False,
                      'functionality.ask_to_prove_premises_of_implications': True,
                      'functionality.automatic_intro_of_variables_and_hypotheses': False,
+                     'functionality.choose_order_to_prove_conjunction': False,
+                     'functionality.choose_order_to_use_disjunction': False,
                      # 'functionality.calculator_available': True
                      },
     'Advanced': {'functionality.allow_proof_by_sorry': True,
@@ -210,6 +218,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.ask_to_prove_premises_of_implications': True,
                  'functionality.automatic_intro_of_variables_and_hypotheses':
                      False,
+                 'functionality.choose_order_to_prove_conjunction': False,
+                 'functionality.choose_order_to_use_disjunction': False,
                  # 'functionality.calculator_available': True
                  },
     'Expert':   {'functionality.allow_proof_by_sorry': True,
@@ -224,6 +234,8 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.ask_to_prove_premises_of_implications': False,
                  'functionality.automatic_intro_of_variables_and_hypotheses':
                      True,
+                 'functionality.choose_order_to_prove_conjunction': True,
+                 'functionality.choose_order_to_use_disjunction': True,
                  # 'functionality.calculator_available': True
                  }
 }

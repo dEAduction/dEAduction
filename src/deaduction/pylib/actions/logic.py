@@ -809,6 +809,10 @@ def prove_and(proof_step, user_input: [str]) -> CodeForLean:
 
     left = children[0]
     right = children[1]
+    if not cvars.get("functionality.choose_order_to_prove_conjunction"):
+        # Prove first property first
+        user_input.append(0)
+
     if not user_input:
         # User choice
         choices = [(_("Left"), left.to_display(format_="utf8")),
@@ -1003,6 +1007,10 @@ def use_or(proof_step,
 
     left = children[0]
     right = children[1]
+    if not cvars.get("functionality.choose_order_to_use_disjunction"):
+        # Use first property first
+        user_input.append(0)
+
     if not user_input:
         choices = [(_("Left"), left.to_display(format_="utf8")),
                    (_("Right"), right.to_display(format_="utf8"))]

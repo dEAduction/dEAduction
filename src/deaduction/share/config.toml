@@ -92,7 +92,8 @@ save_history_of_solved_exercises = true
 max_recent_courses = 10
 show_recent_courses_only = false
 calculator_available = true
-
+choose_order_to_prove_conjunction = false
+choose_order_to_use_disjunction = false
 
 [course]
 # Absolute path or relative to a Deaduction reference dir
