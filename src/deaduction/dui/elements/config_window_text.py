@@ -111,5 +111,9 @@ PRETTY_NAMES = {
     "Expert": _("Expert"),
     "logic.use_bounded_quantification_notation":
         _("Bounded quantification: denote ∀x>0, ... instead of ∀x∈ℝ, (x>0 ⇒ "
-          "...)")
+          "...)"),
+    'functionality.choose_order_to_prove_conjunction':
+        _("Choose the order when proving a conjunction"),
+    'functionality.choose_order_to_use_disjunction':
+        _("Choose the order when using a disjunction"),
 }
