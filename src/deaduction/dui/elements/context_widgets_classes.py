@@ -158,12 +158,14 @@ class MathObjectWidgetItem(MathItem):
         self.context_math_object = context_math_object
 
         caption = context_math_object.display_with_type(format_='html')
-        self.setText(caption)
-        self.setIcon(_TagIcon(self.tag))
+        bold = (self.context_math_object.is_new or
+                self.context_math_object.is_modified)
+        self.setText(caption, bold)
+        # self.setIcon(_TagIcon(self.tag))
         self.setDragEnabled(True)
 
     @property
-    def tag(self):
+    def tag(self):  # FIXME: obsolete
         tag = ('+' if self.context_math_object.is_new
                else '≠' if self.context_math_object.is_modified
                else'=')
