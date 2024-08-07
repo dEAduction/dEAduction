@@ -255,7 +255,7 @@ class Coordinator(QObject):
         if proof_state:
             goal = proof_state.goals[0]
             # goal.name_bound_vars()
-            self.emw.ecw.update_goal(goal, [])
+            self.emw.ecw.update_goal(goal, [], history_nb=0)
         elif exercise.negate_statement:
             ##############################################
             # We need initial proof state to negate goal #
@@ -796,7 +796,8 @@ class Coordinator(QObject):
         if self.proof_step.is_error():  # Should not happen?!
             self.emw.update_goal(None)
         else:
-            self.emw.update_goal(proof_state.goals[0])
+            self.emw.update_goal(proof_state.goals[0],
+                                 history_nb=self.history_nb)
 
     ################################################
     # Actions that send code to Lean (via servint) #
@@ -1585,7 +1586,8 @@ class Coordinator(QObject):
         if self.proof_step.is_error():
             self.emw.update_goal(None)
         else:
-            self.emw.update_goal(proof_state.goals[0])
+            self.emw.update_goal(proof_state.goals[0],
+                                 history_nb=self.history_nb)
 
         # ─────── No more goal? ─────── #
         # This is before process_auto_steps, as self could leave history mode.

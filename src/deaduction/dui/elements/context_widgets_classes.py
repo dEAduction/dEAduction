@@ -143,7 +143,7 @@ class MathObjectWidgetItem(MathItem):
 
     from_math_object = dict()  # Set in _exercise_main_window_widgets
 
-    def __init__(self, context_math_object):
+    def __init__(self, context_math_object, activate_bold=True):
         """
         Init self with an instance of the class ContextMathObject.
         See self.__doc__.
@@ -159,7 +159,7 @@ class MathObjectWidgetItem(MathItem):
 
         caption = context_math_object.display_with_type(format_='html')
         bold = (self.context_math_object.is_new or
-                self.context_math_object.is_modified)
+                self.context_math_object.is_modified) and activate_bold
         self.setText(caption, bold)
         # self.setIcon(_TagIcon(self.tag))
         self.setDragEnabled(True)
@@ -316,7 +316,8 @@ class MathObjectWidget(QListView):
     statement_dropped = Signal(StatementsTreeWidgetItem)
     math_object_dropped = Signal(MathObjectWidgetItem, MathObjectWidgetItem)
 
-    def __init__(self, context_math_objects=None, target=None):
+    def __init__(self, context_math_objects=None, target=None,
+                 use_boldface=True):
         """
         Init self with an ordered list of ContextMathObject.
         """
@@ -365,6 +366,7 @@ class MathObjectWidget(QListView):
 
         # self.setStyle(f'{{font - size: {main_font_size};}}')
 
+        self.use_boldface = use_boldface
         if context_math_objects:
             self.add_math_objects(context_math_objects)
 
@@ -382,7 +384,8 @@ class MathObjectWidget(QListView):
 
     def add_math_objects(self, math_objects):
         for math_object in math_objects:
-            item = MathObjectWidgetItem(math_object)
+            item = MathObjectWidgetItem(math_object,
+                                        activate_bold=self.use_boldface)
             self.model().appendRow(item)
             self.items.append(item)
             item.math_object_wdg = self

@@ -61,12 +61,9 @@ import deaduction.pylib.config.dirs  as     cdirs
 import deaduction.pylib.utils.filesystem as fs
 from deaduction.dui.primitives      import (DisclosureDict,
                                             ButtonsDialog,
-                                            MathTextWidget,
                                             GoalTextWidget,
                                             YesNoDialog)
-from deaduction.dui.elements        import (MathObjectWidget,
-                                            TargetLabel,
-                                            CoursesLW,
+from deaduction.dui.elements        import (CoursesLW,
                                             CoursesLWI,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem,

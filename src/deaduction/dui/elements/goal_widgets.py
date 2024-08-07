@@ -84,8 +84,8 @@ class GoalMathWidget(QWidget):
 
         # ───────────── Objects and properties ───────────── #
         propobj_lyt = QHBoxLayout()
-        objects_wgt = MathObjectWidget(objects)
-        properties_wgt = MathObjectWidget(properties)
+        objects_wgt = MathObjectWidget(objects, use_boldface=False)
+        properties_wgt = MathObjectWidget(properties, use_boldface=False)
         objects_lyt = QVBoxLayout()
         properties_lyt = QVBoxLayout()
 

@@ -1004,7 +1004,7 @@ class ExerciseMainWindow(QMainWindow):
     def process_wrong_user_input(self):
         self.empty_current_selection()  # That's it?? Is this even useful??
 
-    def update_goal(self, new_goal):
+    def update_goal(self, new_goal, history_nb=None):
         """
         Change widgets (target, math. objects and properties) to
         new_goal and update internal mechanics accordingly.
@@ -1034,7 +1034,7 @@ class ExerciseMainWindow(QMainWindow):
         # Update UI and attributes. Target stay selected if it was.
         # statements_scroll = self.ecw.statements_tree.verticalScrollBar(
         #                                                            ).value()
-        self.ecw.update_goal(new_goal, self.pending_goals)
+        self.ecw.update_goal(new_goal, self.pending_goals, history_nb)
         # self.ecw.target_wgt.mark_user_selected(self.target_selected)
         self.current_goal = new_goal
 

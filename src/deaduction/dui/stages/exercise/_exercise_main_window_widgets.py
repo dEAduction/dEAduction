@@ -137,6 +137,8 @@ class ExerciseCentralWidget(QWidget):
         MathObjectWidgetItem).
     """
 
+    context_title = _('Context (objects and properties) #{history_nb}')
+
     def __init__(self, exercise: Exercise):
         """
         Init self with an instance of the class Exercise. See
@@ -147,6 +149,7 @@ class ExerciseCentralWidget(QWidget):
         """
         super().__init__()
         self.exercise = exercise
+        self.history_nb = 0
 
         # ───────────── Init layouts and boxes ───────────── #
 
@@ -157,8 +160,8 @@ class ExerciseCentralWidget(QWidget):
         self.__action_btns_lyt = None  # init by init_action_layout
 
         # self.__action_btns_lyt.setContentsMargins(0, 0, 0, 0)
-        context_title = _('Context (objects and properties)')
         self.__actions_gb = None
+        context_title = self.context_title.format(history_nb=self.history_nb)
         self.__context_gb = QGroupBox(context_title)
 
         # ──────────────── Init Context area ─────────────── #
@@ -553,7 +556,8 @@ class ExerciseCentralWidget(QWidget):
                 widget.setEnabled(not yes)
 
     def update_goal(self, new_goal: Goal,
-                    pending_goals):
+                    pending_goals,
+                    history_nb=None):
         """
         Change goal widgets (self.objects_wgts, self.props_wgt and
         self.target_wgt) to new widgets, corresponding to new_goal.
@@ -561,17 +565,27 @@ class ExerciseCentralWidget(QWidget):
         @param new_goal: The goal to update self to.
         @param pending_goals: The list of remaining goals. For the moment we
         just display the nb of pending goals.
+        @param history_nb: History nb; if history_nb = 0 then no bold for new
+        objects.
         """
 
         # # FIXME!!!!!
         # self.calculator = CalculatorController(context=new_goal.context_objects)
         # self.calculator.show()
         #
+
+        if history_nb is not None:
+            self.history_nb = history_nb
+            title = self.context_title.format(history_nb=self.history_nb)
+            self.__context_gb.setTitle(title)
+
         statements_scroll = self.statements_tree.verticalScrollBar().value()
 
         new_target     = new_goal.target
         new_objects = new_goal.context_objects
         new_props = new_goal.context_props
+        self.objects_wgt.use_boldface = bool(self.history_nb)
+        self.props_wgt.use_boldface = bool(self.history_nb)
         self.objects_wgt.set_math_objects(new_objects)
         self.props_wgt.set_math_objects(new_props)
         if new_goal.new_objects:
