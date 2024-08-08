@@ -676,6 +676,17 @@ class Goal:
 
         return new_name
 
+    def provide_good_names(self, math_types):
+        """
+        Provide new names for a list of math_types.
+        """
+        new_names = []
+        for math_type in math_types:
+            new_name = self.provide_good_name(math_type,
+                                              local_names=new_names)
+            new_names.append(new_name)
+        return new_names
+
     def name_one_bound_var(self, var: BoundVar, isolated=False):
         """
         Name the given bound var according to its type and the

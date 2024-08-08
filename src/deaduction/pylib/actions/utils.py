@@ -89,18 +89,64 @@ def add_type_indication(item: Union[str, MathObject],
         return new_item
 
 
-lean_dic = {'epsilon': "ε",
-            "delta": "δ"}
+# αβγδεζηθικλμνξοπρςστυφχψω
+# ₀₁₂₃₄₅₆₇₈₉
+lean_dic = {
+    "alpha": "α",
+    "beta": "β",
+    "gamma": "γ",
+    "delta": "δ",
+    'epsilon': "ε",
+    "lambda": "λ",
+    "mu": "μ",
+    "nu": "ν",
+    "_0": "₀",
+    "_1": "₁₂₃₄₅₆₇₈₉",
+    "_2": "₂",
+    "_3": "₃",
+    "_4": "₄",
+    "_5": "₅",
+    "_6": "₆",
+    "_7": "₇",
+    "_8": "₈",
+    "_9": "₉",
+}
+
+latex_lean_dic = dict()
+for key, value in lean_dic.items():
+    latex_lean_dic["\\" + key] = value
+
+lean_dic.update(latex_lean_dic)
 
 
 def pre_process_lean_code(lean_code: str) -> str:
+    """
+    Replace greek letter names by the utf8 symbol.
+    Replace _1 by
+    """
     # TODO: process '_' --> indices (or remove)
     # (During test it happens that lean_code is a number)
     if not isinstance(lean_code, str):
         return lean_code
 
+    # First latex-like commands
     for key in lean_dic:
-        lean_code = lean_code.replace(key, lean_dic[key])
+        if key.startswith('\\'):
+            value = lean_dic[key]
+            while len(key) > 2:
+                # Try value and all starting sub-words of length at least 3
+                # by decreasing length
+                lean_code = lean_code.replace(key, value)
+                key = key[:-1]
+
+    # Then all others
+    for key in lean_dic:
+        if not key.startswith('\\'):
+            lean_code = lean_code.replace(key, lean_dic[key])
+            if key.startswith(lean_code) and len(lean_code) >= 3:
+                # lean_code is an abbreviation of a key
+                lean_code = lean_dic[key]
+
     return lean_code
 
 

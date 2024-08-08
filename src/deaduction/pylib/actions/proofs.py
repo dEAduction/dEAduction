@@ -469,8 +469,8 @@ def action_new_object(proof_step) -> CodeForLean:
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
             raise MissingParametersError(InputType.Text,
-                                         title="New object",
-                                         output=_("Give a name for your "
+                                         title=_("New notation"),
+                                         output=_("Choose a notation for your "
                                                   "new object:"))
         elif len(user_input) == 2:
             # Check name does not already exist

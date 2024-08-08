@@ -30,14 +30,18 @@ import logging
 from typing import Optional, Union
 
 import deaduction.pylib.config.vars as cvars
+from deaduction.pylib.actions.utils import pre_process_lean_code
+
 from deaduction.pylib.actions import (CalculatorRequest,
                                       MissingCalculatorOutput,
+                                      InputType,
+                                      MissingParametersError,
                                       CodeForLean,
                                       SyntheticProofStep,
                                       SyntheticProofStepType)
 
 from deaduction.pylib.config.request_method import from_previous_state_method
-from deaduction.pylib.actions.utils import extract_var
+
 from deaduction.pylib.give_name import get_new_hyp
 from deaduction.pylib.actions.utils import (add_type_indication,
                                             extract_var)
@@ -439,6 +443,51 @@ def use_forall(proof_step, arguments: [MathObject],
 
     code.add_used_properties(selected_objects)
     return code
+
+
+def provide_name_for_new_vars(proof_step, math_types: [], user_input_nb=0):
+    """
+    Provide names for new vars of types math_types, either by asking usr or
+    by calling proof_step.goal.provide_good_name.
+    @param math_types: list of math_types to be named.
+    @param user_input_nb: Nb of entries in user_input prior to naming.
+    """
+
+    usr_name_vars = cvars.get('logic.usr_name_new_vars')
+    user_input = proof_step.user_input
+    goal = proof_step.goal
+    if usr_name_vars:
+        if len(user_input) > user_input_nb:
+            # Check last given name
+            name = pre_process_lean_code(user_input[-1])
+            names = [obj.display_name for obj in goal.context]
+            if name in names:
+                user_input.pop()
+                math_type = math_types[len(user_input) - user_input_nb -1]
+                type_str = math_type.to_display(format_="utf8", text=True,
+                                                is_type=True)
+                output = _("This name already exists in the context, please "
+                           "give a new name for " + type_str)
+                raise MissingParametersError(InputType.Text,
+                                             title=_("New object"),
+                                             output=output)
+        if len(user_input) < user_input_nb + len(math_types):
+            # Some names are missing
+            math_type = math_types[len(user_input) - user_input_nb]
+            type_str = math_type.to_display(format_="utf8", text=True,
+                                            is_type=True)
+
+            raise MissingParametersError(InputType.Text,
+                                         title=_("New object"),
+                                         output=(_("Choose a name for ")
+                                                 + type_str))
+        # Here all math_types have been provided good names by usr
+        new_names = [pre_process_lean_code(name) for name in user_input[
+                     user_input_nb:]]
+    else:
+        new_names = proof_step.goal.provide_good_names(math_types)
+
+    return new_names
 
 
 # def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:

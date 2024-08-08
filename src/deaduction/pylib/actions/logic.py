@@ -61,7 +61,8 @@ import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions.commun_actions import (introduce_new_subgoal,
                                                      rw_with_defi,
                                                      use_forall,
-                                                     have_new_property)
+                                                     have_new_property,
+                                                     provide_name_for_new_vars)
 
 from deaduction.pylib.actions     import (action,
                                           InputType,
@@ -118,15 +119,20 @@ def prove_forall(proof_step) -> CodeForLean:
     body = math_object.body
 
     if math_type.node == "PRODUCT":
-        name_0 = proof_step.goal.provide_good_name(math_type.children[0])
-        name_1 = proof_step.goal.provide_good_name(math_type.children[1],
-                                                   local_names=[name_0])
-        code = f'rintro ⟨ {name_0}, {name_1} ⟩'
+        # name_0 = proof_step.goal.provide_good_name(math_type.children[0])
+        # name_1 = proof_step.goal.provide_good_name(math_type.children[1],
+        #                                            local_names=[name_0])
+        # code = f'rintro ⟨ {name_0}, {name_1} ⟩'
+        names = provide_name_for_new_vars(proof_step,
+                                          math_types=math_type.children)
+        code = f'rintro ⟨ {names[0]}, {names[1]} ⟩'
         possible_codes = possible_codes.and_then(code)
-        name = f"({name_0},{name_1})"
+        name = f"({names[0]},{names[1]})"
     else:
-        name = proof_step.goal.provide_good_name(math_type,
-                                                 bound_var.preferred_letter())
+        # name = proof_step.goal.provide_good_name(math_type,
+        #                                          bound_var.preferred_letter())
+        [name] = provide_name_for_new_vars(proof_step,
+                                        [math_type])
         possible_codes = possible_codes.and_then(f'intro {name}')
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
