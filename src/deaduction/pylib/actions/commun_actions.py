@@ -445,11 +445,14 @@ def use_forall(proof_step, arguments: [MathObject],
     return code
 
 
-def provide_name_for_new_vars(proof_step, math_types: [], user_input_nb=0):
+def provide_name_for_new_vars(proof_step, math_types: [],
+                              text="", user_input_nb=0):
     """
     Provide names for new vars of types math_types, either by asking usr or
     by calling proof_step.goal.provide_good_name.
+    @param proof_step:
     @param math_types: list of math_types to be named.
+    @param text: text to be displayed.
     @param user_input_nb: Nb of entries in user_input prior to naming.
     """
 
@@ -477,10 +480,10 @@ def provide_name_for_new_vars(proof_step, math_types: [], user_input_nb=0):
             type_str = math_type.to_display(format_="utf8", text=True,
                                             is_type=True)
 
+            text = text + _("choose a name for") + " " + type_str
             raise MissingParametersError(InputType.Text,
                                          title=_("New object"),
-                                         output=(_("Choose a name for ")
-                                                 + type_str))
+                                         output=text)
         # Here all math_types have been provided good names by usr
         new_names = [pre_process_lean_code(name) for name in user_input[
                      user_input_nb:]]

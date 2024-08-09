@@ -42,7 +42,8 @@ from PySide2.QtCore import ( QObject,
                              Qt)
 from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox,
-                               QCheckBox)
+                               QCheckBox,
+                               QLineEdit)
 
 # Configs, utils
 import deaduction.pylib.config.dirs as          cdirs
@@ -890,7 +891,8 @@ class Coordinator(QObject):
                     # TODO: move this into EMW methods
                     choice, ok = QInputDialog.getText(action_btn,
                                                       e.title,
-                                                      e.output)
+                                                      e.output,
+                                                      QLineEdit.Normal)
                 elif e.input_type in (InputType.Choice, InputType.YesNo):
                     choice, ok = ButtonsDialog.get_item(e.choices,
                                                         e.title,

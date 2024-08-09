@@ -118,13 +118,15 @@ def prove_forall(proof_step) -> CodeForLean:
     bound_var = math_object.bound_var
     body = math_object.body
 
+    text = _("To prove this universal property") + ", "
     if math_type.node == "PRODUCT":
         # name_0 = proof_step.goal.provide_good_name(math_type.children[0])
         # name_1 = proof_step.goal.provide_good_name(math_type.children[1],
         #                                            local_names=[name_0])
         # code = f'rintro ⟨ {name_0}, {name_1} ⟩'
         names = provide_name_for_new_vars(proof_step,
-                                          math_types=math_type.children)
+                                          math_types=math_type.children,
+                                          text=text)
         code = f'rintro ⟨ {names[0]}, {names[1]} ⟩'
         possible_codes = possible_codes.and_then(code)
         name = f"({names[0]},{names[1]})"
@@ -132,7 +134,7 @@ def prove_forall(proof_step) -> CodeForLean:
         # name = proof_step.goal.provide_good_name(math_type,
         #                                          bound_var.preferred_letter())
         [name] = provide_name_for_new_vars(proof_step,
-                                        [math_type])
+                                           [math_type], text)
         possible_codes = possible_codes.and_then(f'intro {name}')
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
@@ -316,17 +318,17 @@ def use_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     math_type = selected_hypo.bound_var_type
     bound_var = selected_hypo.bound_var    # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
 
-    name = proof_step.goal.provide_good_name(math_type,
-                                             bound_var.preferred_letter())
+    text = _("To use this existential property") + ", "
+    [name] = provide_name_for_new_vars(proof_step, [math_type], text)
 
     # x = give_global_name(proof_step=proof_step,
     #                      math_type=selected_hypo.children[0],
     #                      hints=[hint],
     #                      strong_hint=hint)
     new_hypo_name1 = get_new_hyp(proof_step)
-    new_hypo_name2 = get_new_hyp(proof_step)
 
     if selected_hypo.children[2].node == "PROP_∃":
+        new_hypo_name2 = get_new_hyp(proof_step)
         code = f'rcases {hypo_name} with ' \
                 f'⟨ {name}, ⟨ {new_hypo_name1}, {new_hypo_name2} ⟩ ⟩'
     else:
@@ -423,7 +425,7 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
             # raise MissingParametersError(InputType.Calculator,
             #                              title=_("Prove an existential property"),
             #                              target=input_target)
-            msg = _("Select one object to prove existence")
+            msg = _("Enter an object to prove existence")
             raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
                                           proof_step=proof_step,
                                           prop=proof_step.goal.target,
@@ -431,7 +433,7 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
 
         else:  # user_input contains Calculator output
             return prove_exists(proof_step, user_input[0][0])
-    elif len(selected_objects) == 1 and not user_input:
+    elif len(selected_objects) == 1:  # and not user_input:
         selected_hypo = selected_objects[0]
         if selected_hypo.math_type.is_prop():
             if selected_hypo.is_equality(is_math_type=False):

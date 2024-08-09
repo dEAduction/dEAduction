@@ -624,8 +624,9 @@ class WindowManager(QObject):
             return
 
         # log.debug("Exercise chosen, closing window")
-        self.chooser_window.close()
-        self.chooser_window = None  # So that exiting d∃∀duction works
+        if self.chooser_window:
+            self.chooser_window.close()
+            self.chooser_window = None  # So that exiting d∃∀duction works
         self.exercise = exercise
         if self.exercise_window:
             # Close window but do not tell main() since a new exercise
