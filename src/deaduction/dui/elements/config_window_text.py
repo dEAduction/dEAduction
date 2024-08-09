@@ -116,4 +116,5 @@ PRETTY_NAMES = {
         _("Choose the order when proving a conjunction"),
     'functionality.choose_order_to_use_disjunction':
         _("Choose the order when using a disjunction"),
+    'logic.usr_name_new_vars': _("Ask user to name variables")
 }

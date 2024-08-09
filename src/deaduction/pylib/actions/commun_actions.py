@@ -470,7 +470,7 @@ def provide_name_for_new_vars(proof_step, math_types: [],
                 type_str = math_type.to_display(format_="utf8", text=True,
                                                 is_type=True)
                 output = _("This name already exists in the context, please "
-                           "give a new name for " + type_str)
+                           "give a new name for ") + type_str
                 raise MissingParametersError(InputType.Text,
                                              title=_("New object"),
                                              output=output)

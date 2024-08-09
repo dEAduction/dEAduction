@@ -126,6 +126,8 @@ CONFIGS["Logic"] = {
     "logic.use_color_for_applied_properties": (None, True,
         _("The context properties are shaded after the first time they are "
           "used")),
+    "logic.usr_name_new_vars": (None, True,
+        _("The user is asked to name new context variables")),
     "logic.use_bounded_quantification_notation": (None, True,
         _("Display properties using bounded quantification"))}
 
