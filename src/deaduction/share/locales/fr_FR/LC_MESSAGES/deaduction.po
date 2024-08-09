@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-08-09 17:52+0200\n"
-"PO-Revision-Date: 2024-08-09 17:53+0200\n"
+"POT-Creation-Date: 2024-08-09 17:58+0200\n"
+"PO-Revision-Date: 2024-08-09 17:59+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -85,7 +85,7 @@ msgstr ""
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/__main__.py:604 dui/elements/config_window.py:326
+#: dui/__main__.py:604 dui/elements/config_window.py:328
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -98,7 +98,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:202
-#: dui/elements/config_window.py:571
+#: dui/elements/config_window.py:573
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:731
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -167,15 +167,19 @@ msgstr ""
 "première fois"
 
 #: dui/elements/config_window.py:130
+msgid "The user is asked to name new context variables"
+msgstr "L'utilisateur doit nommer les nouvelles variables du contexte"
+
+#: dui/elements/config_window.py:132
 msgid "Display properties using bounded quantification"
 msgstr "Utiliser la quantification bornée"
 
-#: dui/elements/config_window.py:134
+#: dui/elements/config_window.py:136
 msgid "'Admit current sub-goal!' is available with the Proof methods button"
 msgstr ""
 "'Admettre le but en cours !' est possible avec le bouton 'Méthodes de preuve'"
 
-#: dui/elements/config_window.py:137
+#: dui/elements/config_window.py:139
 msgid ""
 "When an existence property appears in the context, the ∃ button is operated "
 "automatically"
@@ -183,7 +187,7 @@ msgstr ""
 "Lorsqu'une propriété d'existence apparait dans le contexte, le bouton ∃ est "
 "actionné automatiquement"
 
-#: dui/elements/config_window.py:140
+#: dui/elements/config_window.py:142
 msgid ""
 "When a conjunction appears in the context, the AND button is operated "
 "automatically"
@@ -191,13 +195,13 @@ msgstr ""
 "Lorsqu'une conjonction apparait dans le contexte, le bouton AND est actionné "
 "automatiquement"
 
-#: dui/elements/config_window.py:143
+#: dui/elements/config_window.py:145
 msgid "Buttons act on the target if no context object is selected"
 msgstr ""
 "Les boutons agissent sur le but si aucune propriété du contexte n'a été "
 "sélectionnée"
 
-#: dui/elements/config_window.py:145
+#: dui/elements/config_window.py:147
 msgid ""
 "e.g. the ∀ button applies on properties like 'A⊂B', which is a universal "
 "property by implicitly applying the definition of inclusion"
@@ -206,14 +210,14 @@ msgstr ""
 "comme une propriété universelle en appliquant implicitement la définition "
 "d'inclusion"
 
-#: dui/elements/config_window.py:149
+#: dui/elements/config_window.py:151
 msgid ""
 "e.g. when applying '∀ε>0, P(ε)' to some ε, the computer tries to prove ε>0"
 msgstr ""
 "Si on applique, par exemple, '∀ε>0, P(ε)' à un nombre ε, l'ordinateur essaie "
 "de démontrer ε>0"
 
-#: dui/elements/config_window.py:152
+#: dui/elements/config_window.py:154
 msgid ""
 "Objects and properties of the context may be dragged and dropped on each "
 "other, e.g. drag and drop 'x∈A' on 'A⊂B' to get 'x∈B'"
@@ -221,7 +225,7 @@ msgstr ""
 "Les objets et propriétés du contexte peuvent être glissées et déposées les "
 "unes sur les autres, par exemple déposer 'x∈A' sur 'A⊂B' pour obtenir 'x∈B'"
 
-#: dui/elements/config_window.py:155
+#: dui/elements/config_window.py:157
 msgid ""
 "Properties of the context may be dragged and dropped on statements, "
 "typically a definition, e.g. drag and drop 'A⊂B' on the definition of "
@@ -231,7 +235,7 @@ msgstr ""
 "typiquement sur une définition : par exemple, déposer 'x∈A' sur 'A⊂B' pour "
 "obtenir 'x∈B'"
 
-#: dui/elements/config_window.py:159
+#: dui/elements/config_window.py:161
 msgid ""
 "Statements may be dragged and dropped in the context properties area, where "
 "they become a context property that may be applied with more precision"
@@ -240,7 +244,7 @@ msgstr ""
 "contexte, où ils deviennent une propriété qui peut être utilisée plus "
 "finement"
 
-#: dui/elements/config_window.py:163
+#: dui/elements/config_window.py:165
 msgid ""
 "When an implication 'P ⇒ Q' appears in the context, the computer asks user "
 "if she wants to prove P as a sub-goal"
@@ -248,7 +252,7 @@ msgstr ""
 "Lorsqu'une implication 'P ⇒ Q' apparait dans le contexte, l'ordinateur "
 "demande à l'utilisatrice si elle veut démontrer P comme un but intermédiaire"
 
-#: dui/elements/config_window.py:166
+#: dui/elements/config_window.py:168
 msgid ""
 "The ∀ and ⇒ buttons are operated automatically when the target is a "
 "universal property or an implication"
@@ -256,49 +260,49 @@ msgstr ""
 "Les boutons ∀ et ⇒ sont automatiquement actionnés lorsque le but est une "
 "propriété universelle ou une implication"
 
-#: dui/elements/config_window.py:169
+#: dui/elements/config_window.py:171
 msgid "Choose in which order to prove the two sub-goals of a conjunction"
 msgstr ""
 "Choisir l'ordre dans lequel on prouve les deux termes d'une conjonction"
 
-#: dui/elements/config_window.py:171
+#: dui/elements/config_window.py:173
 msgid "Choose in which order to study the two cases of a disjunction"
 msgstr "Choisir l'ordre dans lequel on étudie les deux cas d'une disjonction"
 
-#: dui/elements/config_window.py:254
+#: dui/elements/config_window.py:256
 msgid "Open the logical calculator to enter composite objects"
 msgstr "Ouvrir la calculatrice logique pour entrer des objets composites"
 
-#: dui/elements/config_window.py:300
+#: dui/elements/config_window.py:302
 #: dui/stages/exercise/exercise_main_window.py:251
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:311
+#: dui/elements/config_window.py:313
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:325
+#: dui/elements/config_window.py:327
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:327
+#: dui/elements/config_window.py:329
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:453
+#: dui/elements/config_window.py:455
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:542
+#: dui/elements/config_window.py:544
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:575
+#: dui/elements/config_window.py:577
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:798
+#: dui/elements/config_window.py:800
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
 "Caractères manquants : entrer exactement {} groupes de caractères séparés "
@@ -518,6 +522,10 @@ msgstr "Choisir l'ordre lorsqu'on prouve une conjonction"
 #: dui/elements/config_window_text.py:118
 msgid "Choose the order when using a disjunction"
 msgstr "Choisir l'ordre lorsqu'on utilise une disjonction"
+
+#: dui/elements/config_window_text.py:119
+msgid "Ask user to name variables"
+msgstr "L'utilisateur nomme les variables"
 
 #: dui/elements/context_widgets_classes.py:718
 msgid "To be proved"
