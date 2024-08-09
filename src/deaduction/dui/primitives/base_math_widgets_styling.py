@@ -25,11 +25,14 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from PySide2.QtWidgets import QLabel, QTextEdit, QWidget, QHBoxLayout
+from PySide2.QtWidgets import (QLabel, QTextEdit, QDialog, QVBoxLayout,
+                               QDialogButtonBox)
 from PySide2.QtGui import QStandardItem
 
 import deaduction.pylib.config.vars as cvars
 from .font_config import deaduction_fonts
+
+global _
 
 
 def highlight_color():
@@ -228,6 +231,7 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
     """
     def __init__(self, text=None):
         super().__init__()
+        self.setReadOnly(True)
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
@@ -262,4 +266,38 @@ class GoalTextWidget(MathTextWidget):
         self.setHtml(text)
 
 
+class ExerciseStatementWindow(QDialog):
+    def __init__(self, goal, parent):
+        super().__init__(parent=parent)
+        self.setWindowTitle(_("Reminder of the exercise statement"))
+        goal_widget = GoalTextWidget(goal, to_prove=True)
 
+        font = goal_widget.font()
+        font.setPointSize(20)
+        goal_widget.setFont(font)
+
+        lyt = QVBoxLayout()
+        lyt.addWidget(goal_widget)
+
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+        button_box.accepted.connect(self.close)
+        lyt.addWidget(button_box)
+
+        self.setLayout(lyt)
+
+
+def scale_geometry(geometry, h_factor, v_factor=None):
+    """
+    Change geometry by scaling by factor from geometry, towards the center.
+    """
+
+    if not v_factor:
+        v_factor = h_factor
+    new_width = geometry.width()*h_factor
+    new_height = geometry.height()*v_factor
+    new_left = geometry.left()+geometry.width()*(1-h_factor)/2
+    new_top = geometry.top()+geometry.height()*(1-v_factor)/2
+    geometry.setWidth(new_width)
+    geometry.setHeight(new_height)
+    geometry.setLeft(new_left)
+    geometry.setTop(new_top)

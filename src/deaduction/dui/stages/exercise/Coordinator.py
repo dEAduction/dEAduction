@@ -52,7 +52,9 @@ from deaduction.pylib.utils.filesystem import   check_dir
 import deaduction.pylib.text.text as text
 
 # DUI
-from deaduction.dui.primitives import           ButtonsDialog
+from deaduction.dui.primitives import           (ButtonsDialog,
+                                                 ExerciseStatementWindow,
+                                                 scale_geometry)
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
 from deaduction.dui.elements import             ActionButton
 from deaduction.dui.stages.calculator import    CalculatorController
@@ -148,6 +150,8 @@ class Coordinator(QObject):
         self.emw = ExerciseMainWindow(exercise)
         self.emw.statusBar.display_initializing_bar()
         self.emw.close_coordinator = self.closeEvent
+
+        self.statement_window = None
 
         # Information
         self.__auto_steps                             = None
@@ -768,6 +772,19 @@ class Coordinator(QObject):
     def update_lean_editor(self):
         self.lean_editor.code_set(self.lean_file.inner_contents)
 
+    def show_exercise_statement(self):
+        # esw = ExerciseStatementWindow(self.proof_step.goal,
+        #                               parent=self.emw)
+        # esw.exec_()
+        if not self.statement_window:
+            self.statement_window = ExerciseStatementWindow(
+                                                        self.proof_step.goal,
+                                                        parent=self.emw)
+            geometry = self.emw.frameGeometry()
+            scale_geometry(geometry, h_factor=.9, v_factor=0.6)
+            self.statement_window.setGeometry(geometry)
+        self.statement_window.exec_()
+
     def process_history_move(self):
         """
         This method is called after lean_file has been updated according to
@@ -799,6 +816,9 @@ class Coordinator(QObject):
         else:
             self.emw.update_goal(proof_state.goals[0],
                                  history_nb=self.history_nb)
+
+        if self.history_nb == 0:
+            self.show_exercise_statement()
 
     ################################################
     # Actions that send code to Lean (via servint) #

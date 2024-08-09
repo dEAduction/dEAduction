@@ -31,6 +31,9 @@ from .text_edit_logger    import TextEditLogger, TextEditLoggerHandler
 from .yes_no_dialog       import YesNoDialog, DeaductionTutorialDialog
 from .font_config         import deaduction_fonts
 from .base_math_widgets_styling import (MathLabel, MathItem, MathTextWidget,
-                                        GoalTextWidget)
+                                        GoalTextWidget, scale_geometry,
+                                        ExerciseStatementWindow,)
 from .disclosure_triangle import (DisclosureTriangle, DisclosureTitleWidget,
                                   DisclosureGroupBox)
+
+
