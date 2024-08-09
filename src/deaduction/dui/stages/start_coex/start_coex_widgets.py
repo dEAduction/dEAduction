@@ -1356,8 +1356,7 @@ class StartCoExStartup(AbstractStartCoEx):
 
         QTimer.singleShot(0, self.__show_intro)
 
-    @staticmethod
-    def __show_intro():
+    def __show_intro(self):
         text = None
         cname = "dialogs.chooser_intro"
         cname2 = "dialogs.chooser_intro_2"
@@ -1373,7 +1372,7 @@ class StartCoExStartup(AbstractStartCoEx):
                      "exercises.")
         if text:
             calc_intro_box = DeaductionTutorialDialog(config_name=config_name,
-                                                      text=text)
+                                                      text=text, parent=self)
             calc_intro_box.exec()
 
 # class StartCoExExerciseFinished(AbstractStartCoEx):

@@ -121,6 +121,18 @@ class DeaductionDialog(QMessageBox):
             self.addButton(QMessageBox.Ok)
 
 
+def center_geometry(geometry, parent_geometry):
+    """
+    Change geometry to center it relative to parent_geometry, without
+    changing width nor height.
+    """
+
+    d_width = parent_geometry.width() - geometry.width()
+    d_height = parent_geometry.height() - geometry.height()
+    geometry.setLeft(parent_geometry.left() + d_width/2)
+    geometry.setTop(parent_geometry.top() + d_height/2)
+
+
 class DeaductionTutorialDialog(DeaductionDialog):
     """
     This class is a modal QMessageBox which displays a tutorial-like message.
@@ -131,7 +143,8 @@ class DeaductionTutorialDialog(DeaductionDialog):
     def __init__(self,
                  config_name,
                  title="Tutorial — d∃∀duction",
-                 text=None):
+                 text=None,
+                 parent=None):
         super().__init__(title=title)
 
         self.config_name = config_name
@@ -141,6 +154,16 @@ class DeaductionTutorialDialog(DeaductionDialog):
                 QTimer.singleShot(0, self.reject)
         if text:
             self.setText(text)
+
+        font = self.font()
+        font.setPointSize(16)
+        self.setFont(font)
+
+        if parent:
+            self.adjustPosition(parent)
+            # geometry = self.geometry()
+            # center_geometry(geometry, parent.frameGeometry())
+            # self.setGeometry(geometry)
 
         # self.dismiss_checkbox = QCheckBox(_("Do not show again"))
         # self.addButton(self.dismiss_checkbox, QMessageBox.HelpRole)
