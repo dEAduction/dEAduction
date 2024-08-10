@@ -1001,7 +1001,7 @@ class Coordinator(QObject):
                     break
 
             except MissingParametersError as e:
-                if e.input_type == InputType.Calculator:
+                if e.input_type == InputType.Calculator:  # Obsolete?
                     target = e.input_target
                     goal = self.proof_step.goal
                     choice, ok = CalculatorController.get_item(goal,

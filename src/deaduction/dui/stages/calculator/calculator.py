@@ -61,7 +61,7 @@ from typing import Union
 from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
-                               QSizePolicy, QScrollArea,
+                               QSizePolicy, QScrollArea, QSplitter,
                                QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QToolBar,
                                QAction, QDialog, QDialogButtonBox,
                                QCheckBox, QGroupBox, QSpacerItem)
@@ -473,7 +473,7 @@ class CalculatorAllButtons(QWidget):
         self.send_pattern.emit(pattern)
 
 
-class CalculatorMainWindow(QDialog):
+class CalculatorWidget(QDialog):
     """
     A class to display a "calculator", i.e. a QWidget that enables usr to
     build a new MathObject (a new mathematical object or property).
@@ -636,6 +636,45 @@ class CalculatorMainWindow(QDialog):
                 return group
 
 
+class CalculatorMainWindow(QDialog):
+    def __init__(self, targets_widget, calculator_widget, horizontal_mode=True):
+        super().__init__()
+
+        window_title = targets_widget.windowTitle()
+        self.setWindowTitle(window_title + " — d∃∀duction")
+        self.setWindowModality(Qt.WindowModal)
+
+        self.targets_widget = targets_widget
+        self.calculator_widget = calculator_widget
+
+        # TODO: le calculator_widget ne doit pas s'étendre horizontalement
+
+        self.targets_widget.button_box.accepted.connect(self.close_n_accept)
+
+        if horizontal_mode:
+            lyt = QHBoxLayout()
+            lyt.addWidget(self.targets_widget)
+            # TODO: add resizable separator
+            lyt.addWidget(self.calculator_widget)
+        else:
+            lyt = QVBoxLayout()
+            lyt.addWidget(self.calculator_widget)
+            lyt.addWidget(self.targets_widget)
+
+        self.setLayout(lyt)
+
+    def set_geometry(self):
+        pass
+
+    def close_n_accept(self):
+        self.close()
+        self.accept()
+
+    def reject(self):
+        self.close()
+        super().reject()
+
+
 class CalculatorController:
     """
     The calculator controller. This is initiated with
@@ -645,14 +684,14 @@ class CalculatorController:
     various buttons groups. This is in general empty, since buttons are
     automatically generated:
         - context and definition buttons, in __init__()
-        - standard buttons, in CalculatorMainWindow.
+        - standard buttons, in CalculatorWidget.
 
     Note that the targets are entirely managed from the CalculatorController,
     and not at the CalculatorTargets level.
     """
 
     _target: MarkedPatternMathObject
-    targets_window: CalculatorTargets
+    targets_widget: CalculatorTargets
 
     ################
     # init methods #
@@ -687,35 +726,35 @@ class CalculatorController:
             # self.titles = titles
             # self.task_description = task_description
 
-            targets_window = CalculatorTargets(window_title=window_title,
+            targets_widget = CalculatorTargets(window_title=window_title,
                                                target_types=target_types,
                                                titles=titles,
                                                task_title=task_title,
                                                # task_description=task_description,
                                                task_goal=task_goal,
                                                prop=prop)
-            self.targets_window = targets_window
+            self.targets_widget = targets_widget
             # wdg_classes = [CalculatorAllButtons,
             #                CalculatorButtonsGroup,
             #                CalculatorButton,
             #                DisclosureTriangle,
             #                CalculatorTargets]
-            # self.targets_window.steal_focus_from_list.extend(wdg_classes)
+            # self.targets_widget.steal_focus_from_list.extend(wdg_classes)
             focus_changed = QApplication.instance().focusChanged
-            focus_changed.connect(targets_window.on_focus_changed)
-            focus_has_changed = targets_window.focus_has_changed
+            focus_changed.connect(targets_widget.on_focus_changed)
+            focus_has_changed = targets_widget.focus_has_changed
             focus_has_changed.connect(self.target_focus_has_changed)
-            self.targets_window.window_closed.connect(
+            self.targets_widget.window_closed.connect(
                 self.targets_window_closed)
 
         else:
             # self.task_description = None
-            self.targets_window = None
+            self.targets_widget = None
 
             ##############
             # Set target #
             ##############
-            self.targets_window: CalculatorTargets = None
+            self.targets_widget: CalculatorTargets = None
             if not target_type:
                 target_type = MetaVar()
                 p_target_type = MarkedPatternMathObject.from_pattern_math_object(
@@ -761,22 +800,27 @@ class CalculatorController:
         # User interface #
         if self.target_types:
             self.buttons_window = CalculatorAllButtons(self.calculator_groups)
-            # self.buttons_window.setParent(self.targets_window)
+            # self.buttons_window.setParent(self.targets_widget)
             # --> buttons_window does not show!
-            # self.buttons_window.setFocusProxy(self.targets_window)
+            # self.buttons_window.setFocusProxy(self.targets_widget)
             #  --> click on buttons has no effect
             self.buttons_window.controller = self  # Useless?
             self.__set_targets()
             self.__init_multiple_signals()
             self.buttons_window.send_pattern.connect(self.insert_pattern)
         else:
-            self.calculator_ui = CalculatorMainWindow(self.calculator_groups)
+            self.calculator_ui = CalculatorWidget(self.calculator_groups)
             self.calculator_ui.setWindowTitle(window_title)
             self.calculator_ui.set_target_title(self.target_title)
             # self.calculator_ui.set_target(target)
             self.calculator_ui.send_pattern.connect(self.insert_pattern)
 
             self.__init_signals()
+
+        h_mode = True if self.targets_widget.task_widget else False
+        self.main_window = CalculatorMainWindow(self.targets_widget,
+                                                self.buttons_window,
+                                                horizontal_mode=h_mode)
 
         self.__init_histories()
         self.__init_targets()
@@ -835,7 +879,7 @@ class CalculatorController:
 
     @classmethod
     def get_items(cls, goal=None,
-                  missing_output: MissingCalculatorOutput = None)->\
+                  missing_output: MissingCalculatorOutput = None) -> \
                                                         ([MathObject], bool):
         """
         Get one or several targets.
@@ -857,12 +901,13 @@ class CalculatorController:
                  # task_description=task_description,
                  task_goal=task_goal,
                  prop=prop)
+
         # Execute the ButtonsDialog and wait for results
-        cc.buttons_window.show()
-        OK = cc.targets_window.exec()
+        # OBSOLETE: cc.buttons_window.show()
+        OK = cc.main_window.exec()  # FIXME
 
         if not OK:
-            cc.targets_window_closed()
+            cc.targets_window_closed()  # FIXME
             return [], OK
         ############################
         # After exec: post-process #
@@ -900,14 +945,14 @@ class CalculatorController:
             target = MarkedMetavar.from_mvar(target_mvar)
             target.mark()
             text = target.to_display(format_='html')
-            self.targets_window.target_wdgs[idx].setHtml(text)
+            self.targets_widget.target_wdgs[idx].setHtml(text)
             self.targets.append(target)
             idx += 1
 
     def __init_multiple_signals(self):
-        # self.buttons_window.targets_window = self.targets_window
+        # self.buttons_window.targets_widget = self.targets_widget
         buttons_window = self.buttons_window
-        targets_window = self.targets_window
+        targets_window = self.targets_widget
 
         t_bar = targets_window.toolbar
         t_bar.undo_all.triggered.connect(self.history_to_beginning)
@@ -947,22 +992,22 @@ class CalculatorController:
             history.append(target)
 
     def __init_targets(self):
-        if self.targets_window:
+        if self.targets_widget:
             idx = 0
             for target, target_wdg in zip(self.targets,
-                                          self.targets_window.target_wdgs):
+                                          self.targets_widget.target_wdgs):
                 target.set_math_cursor()
                 target.math_cursor.go_to_end()
                 target_wdg.setHtml(target.to_display(format_='html'))
-                self.targets_window.set_focused_target_idx(idx)
+                self.targets_widget.set_focused_target_idx(idx)
                 self.update_cursor()
                 idx += 1
 
-            self.targets_window.set_focused_target_idx(0)
+            self.targets_widget.set_focused_target_idx(0)
 
     def show(self):
         if self.target_types:
-            self.targets_window.show()
+            self.targets_widget.show()
         else:
             self.calculator_ui.show()
 
@@ -981,7 +1026,7 @@ class CalculatorController:
     @property
     def current_target_idx(self):
 
-        idx = (self.targets_window.focused_target_idx if self.targets_window
+        idx = (self.targets_widget.focused_target_idx if self.targets_widget
                else 0)
         return idx
 
@@ -1003,8 +1048,8 @@ class CalculatorController:
 
     @property
     def current_target_wdg(self):
-        if self.targets_window:
-            calc_target = self.targets_window.focused_target
+        if self.targets_widget:
+            calc_target = self.targets_widget.focused_target
         else:
             calc_target = self.calculator_ui.calculator_target
         return calc_target
@@ -1070,23 +1115,23 @@ class CalculatorController:
 
     @property
     def navigation_bar(self):
-        if self.targets_window:
-            bar = self.targets_window.navigation_bar
+        if self.targets_widget:
+            bar = self.targets_widget.navigation_bar
         else:
             bar = self.calculator_ui.navigation_bar
         return bar
 
     @property
     def toolbar(self):
-        if self.targets_window:
-            bar = self.targets_window.toolbar
+        if self.targets_widget:
+            bar = self.targets_widget.toolbar
         else:
             bar = self.calculator_ui.toolbar
         return bar
 
     @property
     def lean_mode_wdg(self):
-        return (self.targets_window.lean_mode_wdg if self.targets_window else
+        return (self.targets_widget.lean_mode_wdg if self.targets_widget else
                 self.calculator_ui.lean_mode_wdg)
 
     @property
@@ -1190,7 +1235,7 @@ class CalculatorController:
                 break
             else:  # At least one assigned_math_object
                 OK = True
-        button_box = (self.targets_window.button_box if self.targets_window
+        button_box = (self.targets_widget.button_box if self.targets_widget
                       else self.calculator_ui.button_box)
         button_box.setEnabled(OK)
 
@@ -1206,12 +1251,12 @@ class CalculatorController:
 
     def give_focus_back_to_target_wdg(self):
         """
-        Give focus back to targets_window (and thus to the active
+        Give focus back to targets_widget (and thus to the active
         target_wdg). This prevents the Buttons window to keep focus.
         """
-        if self.targets_window:
-            self.targets_window.activateWindow()
-            self.targets_window.setFocus()
+        if self.targets_widget:
+            self.targets_widget.activateWindow()
+            self.targets_widget.setFocus()
 
     def set_target_and_update_ui(self):
         self.set_target()
