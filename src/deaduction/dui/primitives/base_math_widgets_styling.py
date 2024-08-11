@@ -231,7 +231,6 @@ class MathTextWidget(QTextEdit, AbstractMathHtmlText):
     """
     def __init__(self, text=None):
         super().__init__()
-        self.setReadOnly(True)
         self.set_use_color()
         self.set_text_mode(False)
         self.set_font_size(None)
@@ -270,11 +269,13 @@ class ExerciseStatementWindow(QDialog):
     def __init__(self, goal, parent):
         super().__init__(parent=parent)
         self.setWindowTitle(_("Reminder of the exercise statement"))
+
         goal_widget = GoalTextWidget(goal, to_prove=True)
 
         font = goal_widget.font()
         font.setPointSize(20)
         goal_widget.setFont(font)
+        goal_widget.setReadOnly(True)
 
         lyt = QVBoxLayout()
         lyt.addWidget(goal_widget)

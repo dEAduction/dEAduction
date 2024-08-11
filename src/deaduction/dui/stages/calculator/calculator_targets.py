@@ -220,7 +220,7 @@ class CalculatorTarget(MathTextWidget):
             key += Qt.META
 
         key_sequence = QKeySequence(key)
-        # print(key_sequence == QKeySequence.Undo)
+        print(key_sequence)
         # log.debug("Key event -> Trying Return and Space")
         if key_sequence == QKeySequence("Return"):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
@@ -266,6 +266,8 @@ class CalculatorTarget(MathTextWidget):
             action = bar.redo_action
 
         if bar and action:
+            print(bar)
+            print(action)
             bar.animate_click(action)
             self.clear_key_buffer()
             event.ignore()
@@ -309,7 +311,7 @@ class CalculatorTarget(MathTextWidget):
             self.setTextCursor(cursor)
 
 
-class CalculatorTargets(QDialog):
+class CalculatorTargets(QWidget):
     """
     This class displays one or several CalculatorTarget,
     with a title, a math property and individual titles.
@@ -360,7 +362,7 @@ class CalculatorTargets(QDialog):
 
         super().__init__()
         self.setWindowTitle(window_title + " — d∃∀duction")
-        self.setWindowModality(Qt.WindowModal)
+        # self.setWindowModality(Qt.WindowModal)
         # self.setWindowModality(Qt.NonModal)
 
         # Toolbar
@@ -392,19 +394,6 @@ class CalculatorTargets(QDialog):
             self.task_title_widget = QLabel(task_title)
             self.task_title_widget.setStyleSheet("font-weight: bold; "
                                                  f"font-size: {fs}pt")
-        # elif task_description:
-        #     if not isinstance(task_description, str):
-        #         task_description = task_description.to_display(format_='html')
-        #
-        #     self.task_widget = QGroupBox()
-        #     self.task_widget.setTitle(task_title)
-        #     math_lbl = MathLabel()
-        #     math_lbl.setText(task_description)
-        #     lyt = QHBoxLayout()
-        #     lyt.addWidget(math_lbl)
-        #     self.task_widget.setLayout(lyt)
-        # else:
-        #     self.task_widget = None
 
         ######################
         # Navigation buttons #
@@ -413,7 +402,7 @@ class CalculatorTargets(QDialog):
         self.lean_mode_wdg = QCheckBox("Lean mode")
         self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-        self.button_box.accepted.connect(self.close_n_accept)
+        # self.button_box.accepted.connect(self.close_n_accept)
         nav_lyt = QHBoxLayout()
         nav_lyt.addWidget(self.navigation_bar)
         nav_lyt.addStretch()
@@ -466,42 +455,42 @@ class CalculatorTargets(QDialog):
         self.target_wdgs[0].setFocus()
         self.focused_target_idx = 0
 
-        self.set_geometry()
+        # self.set_geometry()
 
-    def update_size(self):
-        self.resize(self.minimumSizeHint())
-        self.setMinimumWidth(0)
-        # print("Size updated!")
+    # def update_size(self):
+    #     self.resize(self.minimumSizeHint())
+    #     self.setMinimumWidth(0)
+    #     # print("Size updated!")
 
-    def set_geometry(self, geometry=None):
-        """
-        Restore saved geometry if any, but adapt height to content.
-        """
-        settings = QSettings("deaduction")
-        value = settings.value("calculator_targets/geometry")
-        if value:
-            self.restoreGeometry(value)
-        elif geometry:
-            self.setGeometry(geometry)
-        else:
-            return
-        # Resize height window to minimum, but not width
-        self.setMinimumWidth(self.width())
-        QTimer.singleShot(1, self.update_size)
+    # def set_geometry(self, geometry=None):
+    #     """
+    #     Restore saved geometry if any, but adapt height to content.
+    #     """
+    #     settings = QSettings("deaduction")
+    #     value = settings.value("calculator_targets/geometry")
+    #     if value:
+    #         self.restoreGeometry(value)
+    #     elif geometry:
+    #         self.setGeometry(geometry)
+    #     else:
+    #         return
+    #     # Resize height window to minimum, but not width
+    #     self.setMinimumWidth(self.width())
+    #     QTimer.singleShot(1, self.update_size)
 
-    def close(self):
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("calculator_targets/geometry", self.saveGeometry())
-        self.window_closed.emit()
-
-    def close_n_accept(self):
-        self.close()
-        self.accept()
-
-    def reject(self):
-        self.close()
-        super().reject()
+    # def close(self):
+    #     # Save window geometry
+    #     settings = QSettings("deaduction")
+    #     settings.setValue("calculator_targets/geometry", self.saveGeometry())
+    #     self.window_closed.emit()
+    #
+    # def close_n_accept(self):
+    #     self.close()
+    #     self.accept()
+    #
+    # def reject(self):
+    #     self.close()
+    #     super().reject()
 
     @property
     def focused_target(self):

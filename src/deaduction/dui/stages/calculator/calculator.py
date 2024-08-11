@@ -473,7 +473,7 @@ class CalculatorAllButtons(QWidget):
         self.send_pattern.emit(pattern)
 
 
-class CalculatorWidget(QDialog):
+class CalculatorWidget(QWidget):
     """
     A class to display a "calculator", i.e. a QWidget that enables usr to
     build a new MathObject (a new mathematical object or property).
@@ -637,15 +637,28 @@ class CalculatorWidget(QDialog):
 
 
 class CalculatorMainWindow(QDialog):
-    def __init__(self, targets_widget, calculator_widget, horizontal_mode=True):
+    def __init__(self, targets_widget: QWidget,
+                 calculator_widget: QWidget,
+                 horizontal_mode=True):
         super().__init__()
 
         window_title = targets_widget.windowTitle()
-        self.setWindowTitle(window_title + " — d∃∀duction")
+        self.setWindowTitle(window_title)
         self.setWindowModality(Qt.WindowModal)
 
         self.targets_widget = targets_widget
         self.calculator_widget = calculator_widget
+
+        sp = targets_widget.sizePolicy()
+        sp.setHorizontalStretch(2)
+        sp.setVerticalStretch(1)
+        targets_widget.setSizePolicy(sp)
+
+        sp = calculator_widget.sizePolicy()
+        sp.setHorizontalPolicy(QSizePolicy.MinimumExpanding)
+        sp.setHorizontalStretch(1)
+        sp.setVerticalStretch(3)
+        calculator_widget.setSizePolicy(sp)
 
         # TODO: le calculator_widget ne doit pas s'étendre horizontalement
 
@@ -744,8 +757,8 @@ class CalculatorController:
             focus_changed.connect(targets_widget.on_focus_changed)
             focus_has_changed = targets_widget.focus_has_changed
             focus_has_changed.connect(self.target_focus_has_changed)
-            self.targets_widget.window_closed.connect(
-                self.targets_window_closed)
+            # self.targets_widget.window_closed.connect(
+            #     self.targets_window_closed)
 
         else:
             # self.task_description = None
@@ -907,7 +920,8 @@ class CalculatorController:
         OK = cc.main_window.exec()  # FIXME
 
         if not OK:
-            cc.targets_window_closed()  # FIXME
+            # cc.targets_window_closed()  # FIXME
+            cc.main_window.close()
             return [], OK
         ############################
         # After exec: post-process #
@@ -1005,16 +1019,17 @@ class CalculatorController:
 
             self.targets_widget.set_focused_target_idx(0)
 
-    def show(self):
-        if self.target_types:
-            self.targets_widget.show()
-        else:
-            self.calculator_ui.show()
+    # def show(self):
+    #     if self.target_types:
+    #         self.targets_widget.show()
+    #     else:
+    #         self.calculator_ui.show()
 
     def targets_window_closed(self):
         # print("Targets wd closed")
         self.buttons_window.targets_window_is_closed = True
         self.buttons_window.close()
+        # self.main_window.close()
 
     @property
     def nb_of_targets(self):
