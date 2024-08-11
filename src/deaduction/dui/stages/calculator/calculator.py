@@ -637,11 +637,18 @@ class CalculatorWidget(QWidget):
 
 
 class CalculatorMainWindow(QDialog):
+    """
+    The main window, which display the targets widget and the calculator
+    buttons,
+        - either side by side, if horizontal mode is True,
+        - or the targets below, if horizontal mode is False.
+    """
     def __init__(self, targets_widget: QWidget,
                  calculator_widget: QWidget,
                  horizontal_mode=True):
         super().__init__()
 
+        # Steal window title from ancient targets_widget's title.
         window_title = targets_widget.windowTitle()
         self.setWindowTitle(window_title)
         self.setWindowModality(Qt.WindowModal)
@@ -649,6 +656,7 @@ class CalculatorMainWindow(QDialog):
         self.targets_widget = targets_widget
         self.calculator_widget = calculator_widget
 
+        # Set size policies.
         sp = targets_widget.sizePolicy()
         sp.setHorizontalStretch(2)
         sp.setVerticalStretch(1)
@@ -660,14 +668,11 @@ class CalculatorMainWindow(QDialog):
         sp.setVerticalStretch(3)
         calculator_widget.setSizePolicy(sp)
 
-        # TODO: le calculator_widget ne doit pas s'étendre horizontalement
-
         self.targets_widget.button_box.accepted.connect(self.close_n_accept)
 
         if horizontal_mode:
             lyt = QHBoxLayout()
             lyt.addWidget(self.targets_widget)
-            # TODO: add resizable separator
             lyt.addWidget(self.calculator_widget)
         else:
             lyt = QVBoxLayout()
@@ -676,8 +681,34 @@ class CalculatorMainWindow(QDialog):
 
         self.setLayout(lyt)
 
+        self.set_geometry()
+
     def set_geometry(self):
+        """
+        Restore saved geometry for horizontal or vertical mode.
+        """
         pass
+
+    #     """
+    #     Restore saved geometry if any, but adapt height to content.
+    #     """
+    #     settings = QSettings("deaduction")
+    #     value = settings.value("calculator_targets/geometry")
+    #     if value:
+    #         self.restoreGeometry(value)
+    #     elif geometry:
+    #         self.setGeometry(geometry)
+    #     else:
+    #         return
+    #     # Resize height window to minimum, but not width
+    #     self.setMinimumWidth(self.width())
+    #     QTimer.singleShot(1, self.update_size)
+
+    # def close(self):
+    #     # Save window geometry
+    #     settings = QSettings("deaduction")
+    #     settings.setValue("calculator_targets/geometry", self.saveGeometry())
+    #     self.window_closed.emit()
 
     def close_n_accept(self):
         self.close()
@@ -892,8 +923,8 @@ class CalculatorController:
 
     @classmethod
     def get_items(cls, goal=None,
-                  missing_output: MissingCalculatorOutput = None) -> \
-                                                        ([MathObject], bool):
+                  missing_output: MissingCalculatorOutput = None,
+                  geometries=None) -> ([MathObject], bool):
         """
         Get one or several targets.
         """

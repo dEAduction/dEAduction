@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-08-09 17:58+0200\n"
-"PO-Revision-Date: 2024-08-09 17:59+0200\n"
+"POT-Creation-Date: 2024-08-11 23:24+0200\n"
+"PO-Revision-Date: 2024-08-11 23:25+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -100,7 +100,7 @@ msgstr "Bouton"
 #: dui/elements/actions_widgets_classes.py:202
 #: dui/elements/config_window.py:573
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
-#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:731
+#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:814
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:341
 #: pylib/math_display/display_data.py:434 pylib/proof_tree/proof_tree.py:537
@@ -665,11 +665,15 @@ msgstr "Aperçu global de la preuve"
 msgid "(browsed)"
 msgstr "(navigué)"
 
-#: dui/primitives/buttons_dialog.py:88 dui/stages/exercise/Coordinator.py:1173
+#: dui/primitives/base_math_widgets_styling.py:271
+msgid "Reminder of the exercise statement"
+msgstr "Rappel de l'énoncé de l'exercice"
+
+#: dui/primitives/buttons_dialog.py:88 dui/stages/exercise/Coordinator.py:1194
 msgid "Yes"
 msgstr "Oui"
 
-#: dui/primitives/buttons_dialog.py:89 dui/stages/exercise/Coordinator.py:1174
+#: dui/primitives/buttons_dialog.py:89 dui/stages/exercise/Coordinator.py:1195
 msgid "No"
 msgstr "Non"
 
@@ -677,7 +681,7 @@ msgstr "Non"
 msgid "Yes or no? — d∃∀duction"
 msgstr "Oui ou non ? — d∃∀duction"
 
-#: dui/primitives/yes_no_dialog.py:148
+#: dui/primitives/yes_no_dialog.py:171
 msgid "Do not show again"
 msgstr "Ne plus montrer"
 
@@ -730,19 +734,19 @@ msgstr "Effacer la sélection"
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:723
+#: dui/stages/calculator/calculator.py:806
 msgid "Build your object"
 msgstr "Construisez votre objet"
 
-#: dui/stages/calculator/calculator.py:730 pylib/actions/exceptions.py:333
+#: dui/stages/calculator/calculator.py:813 pylib/actions/exceptions.py:333
 msgid "a property"
 msgstr "une propriété"
 
-#: dui/stages/calculator/calculator.py:731
+#: dui/stages/calculator/calculator.py:814
 msgid "Enter"
 msgstr "Entrer"
 
-#: dui/stages/calculator/calculator.py:791
+#: dui/stages/calculator/calculator.py:879
 msgid ""
 "Use the Logical Calculator to fill-in the form. Please note the green "
 "selection: when you click a calculator button, the corresponding operator "
@@ -758,20 +762,20 @@ msgstr ""
 msgid "(type  {})"
 msgstr "(taper {})"
 
-#: dui/stages/exercise/Coordinator.py:581
+#: dui/stages/exercise/Coordinator.py:585
 msgid "Server restarted"
 msgstr "Redémarrage du serveur"
 
-#: dui/stages/exercise/Coordinator.py:585
+#: dui/stages/exercise/Coordinator.py:589
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1166 pylib/actions/logic.py:636
+#: dui/stages/exercise/Coordinator.py:1187 pylib/actions/logic.py:636
 #: pylib/actions/logic.py:697
 msgid "Prove premise?"
 msgstr "Démontrer la prémisse ?"
 
-#: dui/stages/exercise/Coordinator.py:1168
+#: dui/stages/exercise/Coordinator.py:1189
 msgid ""
 "Do you want to prove the <b>premise</b><br><CENTER>{}</CENTER><br>as a new "
 "sub-goal?"
@@ -779,53 +783,53 @@ msgstr ""
 "Voulez-vous démontrer la <b>prémisse</b><br><CENTER>{}</CENTER><br>en tant "
 "que nouveau but ?"
 
-#: dui/stages/exercise/Coordinator.py:1263 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1284 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1279
+#: dui/stages/exercise/Coordinator.py:1300
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1282
+#: dui/stages/exercise/Coordinator.py:1303
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1289
+#: dui/stages/exercise/Coordinator.py:1310
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1292
+#: dui/stages/exercise/Coordinator.py:1313
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1294
+#: dui/stages/exercise/Coordinator.py:1315
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1296 pylib/actions/logic.py:1309
+#: dui/stages/exercise/Coordinator.py:1317 pylib/actions/logic.py:1309
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1342
+#: dui/stages/exercise/Coordinator.py:1363
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1343
+#: dui/stages/exercise/Coordinator.py:1364
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1347
+#: dui/stages/exercise/Coordinator.py:1368
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1349
+#: dui/stages/exercise/Coordinator.py:1370
 #: dui/stages/exercise/_exercise_main_window_widgets.py:870
 #: dui/stages/exercise/_exercise_main_window_widgets.py:886
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1357
+#: dui/stages/exercise/Coordinator.py:1378
 msgid "Save history"
 msgstr "Sauver l'historique"
 
@@ -1082,7 +1086,7 @@ msgstr "Voulez-vous effacer cette sauvegarde ?"
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1366
+#: dui/stages/start_coex/start_coex_widgets.py:1365
 msgid ""
 "Welcome to the d∃∀duction file and exercise selector. Select a file in the "
 "'Files' tab, then select your exercise in the 'Exercises' tab."
@@ -1091,26 +1095,26 @@ msgstr ""
 "Choisissez un fichier dans l'onglet \"Fichiers\", puis un exercice dans "
 "l'onglet \"Exercices\"."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1372
+#: dui/stages/start_coex/start_coex_widgets.py:1371
 msgid "Use the toolbar to display recent files and saved exercises."
 msgstr ""
 "Utilisez la barre d'outils pour afficher les fichiers récents et les "
 "exercices sauvegardés."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1442
+#: dui/stages/start_coex/start_coex_widgets.py:1441
 #: pylib/proof_state/proof_state.py:1297
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1446
+#: dui/stages/start_coex/start_coex_widgets.py:1445
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1451
+#: dui/stages/start_coex/start_coex_widgets.py:1450
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1452
+#: dui/stages/start_coex/start_coex_widgets.py:1451
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 

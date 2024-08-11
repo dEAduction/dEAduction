@@ -990,6 +990,8 @@ class Coordinator(QObject):
 
             except MissingCalculatorOutput as missing_output:
                 cc = CalculatorController
+                # geometries = (self.ecw.context_geometry,
+                #               self.ecw.action_geometry)
                 choices, ok = cc.get_items(goal=self.proof_step.goal,
                                            missing_output=missing_output)
                 if choices and ok:
