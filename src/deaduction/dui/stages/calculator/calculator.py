@@ -643,14 +643,13 @@ class CalculatorMainWindow(QDialog):
         - either side by side, if horizontal mode is True,
         - or the targets below, if horizontal mode is False.
     """
-    def __init__(self, targets_widget: QWidget,
+    def __init__(self, window_title,
+                 targets_widget: QWidget,
                  calculator_widget: QWidget,
                  horizontal_mode=True):
         super().__init__()
 
-        # Steal window title from ancient targets_widget's title.
-        window_title = targets_widget.windowTitle()
-        self.setWindowTitle(window_title)
+        self.setWindowTitle(window_title + " — d∃∀duction")
         self.setWindowModality(Qt.WindowModal)
 
         self.targets_widget = targets_widget
@@ -770,8 +769,7 @@ class CalculatorController:
             # self.titles = titles
             # self.task_description = task_description
 
-            targets_widget = CalculatorTargets(window_title=window_title,
-                                               target_types=target_types,
+            targets_widget = CalculatorTargets(target_types=target_types,
                                                titles=titles,
                                                task_title=task_title,
                                                # task_description=task_description,
@@ -862,7 +860,8 @@ class CalculatorController:
             self.__init_signals()
 
         h_mode = True if self.targets_widget.task_widget else False
-        self.main_window = CalculatorMainWindow(self.targets_widget,
+        self.main_window = CalculatorMainWindow(window_title,
+                                                self.targets_widget,
                                                 self.buttons_window,
                                                 horizontal_mode=h_mode)
 
@@ -872,17 +871,19 @@ class CalculatorController:
 
         QTimer.singleShot(0, self.__show_intro)
 
-    @staticmethod
-    def __show_intro():
+    def __show_intro(self):
         cname = "dialogs.calculator_intro"
         if cvars.get(cname):
-            text = _("Use the Logical Calculator to fill-in the form. "
-                     "Please note the green selection: when you click a "
+            text = _("<div>Use the Logical Calculator to fill-in the "
+                     "form.<br> </div>"
+                     "<div>Please note the green selection: when you click a "
                      "calculator button, the corresponding operator will "
-                     "apply to the selection. Use the left and right arrows "
-                     "to modify the selection.")
+                     "apply to the selection.<br> </div>"
+                     "<div>Use the left and right arrows to modify the "
+                     "selection.</div>")
             calc_intro_box = DeaductionTutorialDialog(config_name=cname,
-                                                      text=text)
+                                                      text=text,
+                                                      parent=self.main_window)
             calc_intro_box.exec()
 
     @classmethod

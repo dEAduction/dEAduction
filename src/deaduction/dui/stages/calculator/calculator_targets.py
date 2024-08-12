@@ -343,7 +343,7 @@ class CalculatorTargets(QWidget):
 
     steal_focus_from_list = []
 
-    def __init__(self, window_title,
+    def __init__(self,  # window_title,
                  target_types: [],  # MathObject
                  titles: [str],
                  task_title=None,
@@ -361,7 +361,7 @@ class CalculatorTargets(QWidget):
             titles += [None]*(len(target_types) - len(titles))
 
         super().__init__()
-        self.setWindowTitle(window_title + " — d∃∀duction")
+        # self.setWindowTitle(window_title + " — d∃∀duction")
         # self.setWindowModality(Qt.WindowModal)
         # self.setWindowModality(Qt.NonModal)
 
