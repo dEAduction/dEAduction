@@ -107,18 +107,20 @@ class DeaductionDialog(QMessageBox):
     """
     Generic Deaduction dialog.
     """
-    def __init__(self, title="d∃∀duction", html=True, OK=True):
+    def __init__(self, title="d∃∀duction", ok=True):
 
         super().__init__()
         self.setTextFormat(Qt.RichText)
+        close = self.addButton(QMessageBox.Close)
 
         if not title.endswith("d∃∀duction"):
             title += " — d∃∀duction"
         self.setWindowTitle(title)
-        # self.setModal(True)
 
-        if OK:
+        if ok:
             self.addButton(QMessageBox.Ok)
+        else:
+            self.setDefaultButton(close)
 
 
 def center_geometry(geometry, parent_geometry):
@@ -137,7 +139,7 @@ class DeaductionTutorialDialog(DeaductionDialog):
     """
     This class is a modal QMessageBox which displays a tutorial-like message.
     The message can be dismissed forever by checking the "do not play again"
-    button.
+    button. This is in rich text format: use <div>, <br>, and so on.
     """
 
     def __init__(self,
@@ -145,7 +147,9 @@ class DeaductionTutorialDialog(DeaductionDialog):
                  title="Tutorial — d∃∀duction",
                  text=None,
                  parent=None):
-        super().__init__(title=title)
+        super().__init__(title=title, ok=False)
+
+        # self.setWindowModality(Qt.WindowModal)
 
         self.config_name = config_name
         if config_name:
@@ -164,9 +168,6 @@ class DeaductionTutorialDialog(DeaductionDialog):
             # geometry = self.geometry()
             # center_geometry(geometry, parent.frameGeometry())
             # self.setGeometry(geometry)
-
-        # self.dismiss_checkbox = QCheckBox(_("Do not show again"))
-        # self.addButton(self.dismiss_checkbox, QMessageBox.HelpRole)
 
         self.dismiss_button = self.addButton(_("Do not show again"),
                                              QMessageBox.HelpRole)
