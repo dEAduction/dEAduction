@@ -240,7 +240,14 @@ def action_theorem(proof_step) -> CodeForLean:
         codes = add_statement_to_context(proof_step, theorem)
         return codes
 
-    theorem_as_math_object = theorem.goal().to_math_object()
+    goal = theorem.goal()
+    if goal:
+        theorem_as_math_object = goal.to_math_object()
+    else:
+        # FIXME:
+        #  We should raise an error indicating theorem's goal is not available
+        #  (User should wait and try again)
+        return apply_theorem(proof_step)
 
     # If all vars are implicit, do not call Calculator!
     if not theorem_as_math_object.is_for_all(is_math_type=True):

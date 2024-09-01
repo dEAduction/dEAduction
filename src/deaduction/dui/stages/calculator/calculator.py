@@ -669,6 +669,8 @@ class CalculatorMainWindow(QDialog):
 
         self.targets_widget.button_box.accepted.connect(self.close_n_accept)
 
+        self.geometry_mode = ("horizontal_mode" if horizontal_mode
+                              else "vertical_mode")
         if horizontal_mode:
             lyt = QHBoxLayout()
             lyt.addWidget(self.targets_widget)
@@ -684,30 +686,27 @@ class CalculatorMainWindow(QDialog):
 
     def set_geometry(self):
         """
-        Restore saved geometry for horizontal or vertical mode.
+        Restore saved position for horizontal or vertical mode.
         """
-        pass
-
-    #     """
-    #     Restore saved geometry if any, but adapt height to content.
-    #     """
-    #     settings = QSettings("deaduction")
-    #     value = settings.value("calculator_targets/geometry")
-    #     if value:
-    #         self.restoreGeometry(value)
-    #     elif geometry:
-    #         self.setGeometry(geometry)
-    #     else:
-    #         return
+        settings = QSettings("deaduction")
+        key = "calculator_window/position/" + self.geometry_mode
+        value = settings.value(key)
+        if value:
+            # self.move(value)
+            try:
+                self.restoreGeometry(value)
+            except TypeError:
+                pass
     #     # Resize height window to minimum, but not width
     #     self.setMinimumWidth(self.width())
     #     QTimer.singleShot(1, self.update_size)
 
-    # def close(self):
-    #     # Save window geometry
-    #     settings = QSettings("deaduction")
-    #     settings.setValue("calculator_targets/geometry", self.saveGeometry())
-    #     self.window_closed.emit()
+    def close(self):
+        # Save window geometry
+        settings = QSettings("deaduction")
+        key = "calculator_window/position/" + self.geometry_mode
+        # settings.setValue(key, self.pos())
+        settings.setValue(key, self.saveGeometry())
 
     def close_n_accept(self):
         self.close()

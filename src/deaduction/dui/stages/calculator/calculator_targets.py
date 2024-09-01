@@ -455,43 +455,6 @@ class CalculatorTargets(QWidget):
         self.target_wdgs[0].setFocus()
         self.focused_target_idx = 0
 
-        # self.set_geometry()
-
-    # def update_size(self):
-    #     self.resize(self.minimumSizeHint())
-    #     self.setMinimumWidth(0)
-    #     # print("Size updated!")
-
-    # def set_geometry(self, geometry=None):
-    #     """
-    #     Restore saved geometry if any, but adapt height to content.
-    #     """
-    #     settings = QSettings("deaduction")
-    #     value = settings.value("calculator_targets/geometry")
-    #     if value:
-    #         self.restoreGeometry(value)
-    #     elif geometry:
-    #         self.setGeometry(geometry)
-    #     else:
-    #         return
-    #     # Resize height window to minimum, but not width
-    #     self.setMinimumWidth(self.width())
-    #     QTimer.singleShot(1, self.update_size)
-
-    # def close(self):
-    #     # Save window geometry
-    #     settings = QSettings("deaduction")
-    #     settings.setValue("calculator_targets/geometry", self.saveGeometry())
-    #     self.window_closed.emit()
-    #
-    # def close_n_accept(self):
-    #     self.close()
-    #     self.accept()
-    #
-    # def reject(self):
-    #     self.close()
-    #     super().reject()
-
     @property
     def focused_target(self):
         idx = 0
