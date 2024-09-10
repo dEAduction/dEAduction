@@ -146,10 +146,16 @@ os = ""  # Let this to "" except for debugging
 #########################
 # All Plateform packages
 #########################
-# NB: path can be modified (e.g. for network install), but
+# NB: path can be modified, but
 # Under Windows Lean will not find its files if they are not relative to its cwd
 # ( which is supposed to be $DEADUCTION_HOME ).
-[package.all.mathlib]
+# Path will be tried first (e.g. adequate for multi-user network install),
+# and then alt_path if Deaduction cannot write on path.
+
+#########################
+# Linux packages
+#########################
+[package.linux.mathlib]
 type="archive"
 path="$DEADUCTION_SHARE/mathlib"
 alt_path="$DEADUCTION_HOME/mathlib"
@@ -160,9 +166,6 @@ archive_hlist="$DEADUCTION_SHARE/hlists/mathlib.hlist"
 archive_root=""
 archive_type="tar"
 
-#########################
-# Linux packages
-#########################
 [package.linux.lean]
 type="archive"
 path="$DEADUCTION_SHARE/lean"
@@ -177,6 +180,17 @@ archive_type="tar"
 #########################
 # Windows packages
 #########################
+[package.windows.mathlib]
+type="archive"
+# Windows is unable to reach $DEADUCTION_SHARE (use relative paths)
+path="$DEADUCTION_HOME/mathlib"
+
+archive_url="https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"
+archive_checksum="a6dcc73a42db7340dcf47c1050c1d9803a279b51"
+archive_hlist="$DEADUCTION_SHARE/hlists/mathlib.hlist"
+archive_root=""
+archive_type="tar"
+
 [package.windows.lean]
 type="archive"
 path="$DEADUCTION_HOME/lean"
@@ -190,9 +204,21 @@ archive_type="zip"
 #########################
 # OSX Packages
 #########################
+[package.darwin.mathlib]
+type="archive"
+path="$DEADUCTION_SHARE/mathlib"
+alt_path="$DEADUCTION_HOME/mathlib"
+
+archive_url="https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"
+archive_checksum="a6dcc73a42db7340dcf47c1050c1d9803a279b51"
+archive_hlist="$DEADUCTION_SHARE/hlists/mathlib.hlist"
+archive_root=""
+archive_type="tar"
+
 [package.darwin.lean]
 type="archive"
-path="$DEADUCTION_HOME/lean"
+path="$DEADUCTION_SHARE/lean"
+alt_path="$DEADUCTION_HOME/lean"
 
 archive_url="https://github.com/leanprover-community/lean/releases/download/v3.16.5/lean-3.16.5-darwin.zip"
 archive_checksum="cb2ca352e6f03ea944174618326fe21fe7ba6607"

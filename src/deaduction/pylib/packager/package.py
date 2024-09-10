@@ -93,13 +93,13 @@ class Package:
         #     # raise RuntimeError( _("invalid directory, must be "
         #     #                       "in $HOME/.deaduction folder !!!"))
 
-        if self._path.exists(): # remove only if path exists
+        if self._path.exists():  # Remove only if path exists
             try:
                 shutil.rmtree(str(self._path.resolve()))
             except:
                 log.warning(f"Unable to remove file {self._path}")
 
-        if self.alt_path.exists(): # remove only if path exists
+        if self.alt_path.exists():
             try:
                 shutil.rmtree(str(self.alt_path.resolve()))
             except:
@@ -271,7 +271,8 @@ class ArchivePackage(Package):
     def install(self, on_progress: Callable = None):
         """
         Downloads and extracts the archive in the destination directory.
-        Try to copy first on self._path, then on self.alt_path.
+        Try to copy first on self._path, then on self.alt_path. The attribute
+        self._use_alt_path is modified accordingly.
 
         Please note the following regarding archive_root :
             → the archive is extracted into a temporary folder.
