@@ -49,8 +49,8 @@ def init():
 
     # Load package config
     # merge platform-agnostic packages with platform-specific ones.
-    plist    = { **cvars.get("package.all"),
-                 **cvars.get(f"package.{__platform_os}") }
+    plist    = { **cvars.get("package.all", {}),
+                 **cvars.get(f"package.{__platform_os}", {}) }
 
     for name, conf in plist.items():
         packages[name] = package.from_config(conf)
