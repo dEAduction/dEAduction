@@ -139,7 +139,8 @@ Lean_request_method = "from_previous_proof_state"
 copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
-version = "0.3.9993"
+## The Python package builder read the version nb from here: ##
+version = "0.3.9995"
 os = ""  # Let this to "" except for debugging
 
 #########################
@@ -150,7 +151,8 @@ os = ""  # Let this to "" except for debugging
 # ( which is supposed to be $DEADUCTION_HOME ).
 [package.all.mathlib]
 type="archive"
-path="$DEADUCTION_HOME/mathlib"
+path="$DEADUCTION_SHARE/mathlib"
+alt_path="$DEADUCTION_HOME/mathlib"
 
 archive_url="https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"
 archive_checksum="a6dcc73a42db7340dcf47c1050c1d9803a279b51"
@@ -163,7 +165,8 @@ archive_type="tar"
 #########################
 [package.linux.lean]
 type="archive"
-path="$DEADUCTION_HOME/lean"
+path="$DEADUCTION_SHARE/lean"
+alt_path="$DEADUCTION_HOME/lean"
 
 archive_url="https://github.com/leanprover-community/lean/releases/download/v3.16.5/lean-3.16.5-linux.tar.gz"
 archive_checksum="cab50923b2ee48190cebf2f7aa55007a9b8b4f69"

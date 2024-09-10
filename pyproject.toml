@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling", "hatch-vcs", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [project]
@@ -14,16 +14,17 @@ authors = [
 maintainers = [
   {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"}
 ]
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 readme = "README.md"
 license = {file = "LICENSE.md"}
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 keywords = ["mathematics", "proofs", "logic"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: OS Independent",
   ]
+dependancies = ["requirements.txt"]
 
 [project.scripts]
 deaduction_app = "deaduction.dui.__main__:main"
@@ -58,4 +59,9 @@ exclude = [
     "tools/",
     "debian/",
     "src/deaduction/make_hlist",
+    "src/deaduction/share/lean",
+    "src/deaduction/share/mathlib",
 ]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]

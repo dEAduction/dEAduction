@@ -23,7 +23,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License
     along with d∃∀duction. If not, see <https://www.gnu.org/licenses/>.
 """
-
+from sys import exec_prefix
 from typing import (Callable, Dict, Optional)
 import requests
 from   pathlib import Path
@@ -54,12 +54,26 @@ from deaduction.pylib.utils.exceptions import (FileCheckError)
 
 log = logging.getLogger(__name__)
 
+
 # ┌────────────────────────────────────────┐
 # │ Package class                          │
 # └────────────────────────────────────────┘
 class Package:
-    def __init__(self, path: Path):
-        self.path   = fs.path_helper(path)
+    """
+    Package instance uses a main path and an alternative path.
+    The method use_alt_path(yes=True) change the math to alt_path.
+    """
+    def __init__(self, path: Path, alt_path: Path = None):
+        self._path   = fs.path_helper(path)
+        self.alt_path = fs.path_helper(alt_path) if alt_path else None
+        self._use_alt_path = False
+
+    def use_alt_path(self, yes=True):
+        self._use_alt_path = yes
+
+    @property
+    def path(self):
+        return self.alt_path if self._use_alt_path else self._path
 
     ############################################
     # Public interface to be implemented
@@ -72,27 +86,55 @@ class Package:
 
     def remove(self):
         """
-        Remove package directory
+        Remove package directory, both in main path and alt_path.
         """
-        if not str(self.path).startswith(str(dirs.local)):
-            log.warning(_("Directory should be $HOME/.deaduction folder !!!"))
-            # raise RuntimeError( _("invalid directory, must be "
-            #                       "in $HOME/.deaduction folder !!!"))
+        # if not str(self.path).startswith(str(dirs.local)):
+        #     log.warning(_("Directory should be $HOME/.deaduction folder !!!"))
+        #     # raise RuntimeError( _("invalid directory, must be "
+        #     #                       "in $HOME/.deaduction folder !!!"))
 
-        if self.path.exists(): # remove only if path exists
-            shutil.rmtree(str(self.path.resolve()))
+        if self._path.exists(): # remove only if path exists
+            try:
+                shutil.rmtree(str(self._path.resolve()))
+            except:
+                log.warning(f"Unable to remove file {self._path}")
+
+        if self.alt_path.exists(): # remove only if path exists
+            try:
+                shutil.rmtree(str(self.alt_path.resolve()))
+            except:
+                log.warning(f"Unable to remove file {self.alt_path}")
 
     ############################################
     # Protected utilities functions
     ############################################
-    def _check_folder(self):
-        log.info(_("Checking package folder for {}").format(self.path))
+    def _check_folder_exists(self):
         try: fs.check_dir(self.path, exc=True)
         except FileCheckError as e:
             raise PackageCheckError(self,
                                     _("Failed to check for folder at {}")
-                                        .format(str(self.path)),
-                                        dbg_info=e )
+                                    .format(str(self.path)),
+                                    dbg_info=e)
+
+    def _check_folder_is_writable(self):
+        # Checking folder is writable:
+        path = (self.path / "test").resolve()
+        try:
+            path.write_text('Testing file is writable')
+        except PermissionError as e:
+            raise PackageCheckError(self,
+                                    _("Failed to write in folder {}")
+                                    .format(str(self.path)),
+                                    dbg_info=e)
+
+    def _check_folder(self):
+        """
+        Check that folder exists and is writable.
+        """
+        log.info(_("Checking package folder for {}").format(self.path))
+
+        self._check_folder_exists()
+        self._check_folder_is_writable()
 
 
 # ┌────────────────────────────────────────┐
@@ -104,9 +146,10 @@ class ArchivePackage(Package):
                  archive_checksum: str = None,
                  archive_hlist: Path   = None,
                  archive_root: Path    = None,        # Root folder
-                 archive_type: str     = "tar"):      # can be "tar" or "zip"
+                 archive_type: str     = "tar",
+                 alt_path: Path = None):      # can be "tar" or "zip"
 
-        super().__init__(path)
+        super().__init__(path, alt_path)
 
         self.archive_url      = archive_url
         self.archive_checksum = archive_checksum
@@ -127,7 +170,7 @@ class ArchivePackage(Package):
             * Modified permissions:
                 [('change', [PosixPath('lib/lean/library/tools/debugger/default.lean')], (('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '744'), ('556dcaa5ae2481d30712ecce863dc7ac3c8cfc0f', '644')))]
 
-            * File that shouldn't exixt:
+            * File that shouldn't exist:
                 [('remove', '', [(PosixPath('bin/prout'), ('da39a3ee5e6b4b0d3255bfef95601890afd80709', '644'))]]
 
             Example dict differ:
@@ -212,12 +255,23 @@ class ArchivePackage(Package):
 
     def check(self):
         log.debug("Checking package...")
-        self._check_folder()
-        self._check_files()
+        try:
+            log.debug(f"Trying {self.path}")
+            self._check_folder()
+            self._check_files()
+        except PackageCheckError:
+            if self.alt_path and self.path != self.alt_path:
+                self.use_alt_path()
+                log.debug(f"Trying {self.path}")
+                self._check_folder()
+                self._check_files()
+            else:
+                raise
 
     def install(self, on_progress: Callable = None):
         """
         Downloads and extracts the archive in the destination directory.
+        Try to copy first on self._path, then on self.alt_path.
 
         Please note the following regarding archive_root :
             → the archive is extracted into a temporary folder.
@@ -248,7 +302,7 @@ class ArchivePackage(Package):
 
             fhandle.seek(0)
 
-            log.info(_("Extract file to {}").format(self.path))
+            # log.info(_("Extract file to {}").format(self.path))
 
             # Get correct archiving module to extract the file
             archive_open_fkt    = { "tar": lambda x: tarfile.open(fileobj=x),
@@ -273,7 +327,17 @@ class ArchivePackage(Package):
                     tpath = (tpath / self.archive_root).resolve()
 
                 log.info(_("→ Move {} to {}").format(tpath, self.path))
-                shutil.move(str(tpath), str(self.path))
+
+                # First try main path, then alt_path
+                self.use_alt_path(False)
+                try:
+                    log.info(_("Extract file to {}").format(self.path))
+                    shutil.move(str(tpath), str(self.path))
+                except (PermissionError, shutil.Error):
+                    log.info(_("Unable to extract file"))
+                    log.info(_("Extract file to {}").format(self.path))
+                    self.use_alt_path(True)
+                    shutil.move(str(tpath), str(self.path))
 
         try:
             self.check()
