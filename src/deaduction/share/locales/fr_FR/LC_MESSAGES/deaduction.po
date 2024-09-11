@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-08-11 23:24+0200\n"
-"PO-Revision-Date: 2024-08-11 23:25+0200\n"
+"POT-Creation-Date: 2024-09-11 14:57+0200\n"
+"PO-Revision-Date: 2024-09-11 14:58+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,27 +15,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.4.3\n"
+"X-Generator: Poedit 3.5\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: dui/__main__.py:181
+#: dui/__main__.py:182
 msgid "No connection! Maybe your wifi is off?"
 msgstr "Pas de connexion ! Le wifi est peut-être désactivé ?"
 
-#: dui/__main__.py:185
+#: dui/__main__.py:186
 msgid "Wrong url!"
 msgstr "Mauvaise url !"
 
-#: dui/__main__.py:187
+#: dui/__main__.py:188
 msgid "Download interrupted!"
 msgstr "Téléchargement interrompu !"
 
-#: dui/__main__.py:190
+#: dui/__main__.py:191
 msgid "Download interrupted by user."
 msgstr "Téléchargement interrompu par l’utilisateur."
 
-#: dui/__main__.py:258
+#: dui/__main__.py:259
 msgid ""
 "Missing packages have been installed, but user decided to quit without "
 "launching d∃∀duction."
@@ -43,19 +43,19 @@ msgstr ""
 "Les dépendances manquantes ont été installées, mais l’utilisateur a décidé "
 "de quitter sans lancer d∃∀duction."
 
-#: dui/__main__.py:267
+#: dui/__main__.py:268
 msgid "Quitting d∃∀duction"
 msgstr "Quitter d∃∀duction"
 
-#: dui/__main__.py:385
+#: dui/__main__.py:386
 msgid "Language test"
 msgstr "Test de langue"
 
-#: dui/__main__.py:590
+#: dui/__main__.py:591
 msgid "Ambiguous name "
 msgstr "Nom ambigu "
 
-#: dui/__main__.py:591
+#: dui/__main__.py:592
 msgid ""
 "File has the same name as \n"
 "{}."
@@ -63,7 +63,7 @@ msgstr ""
 "Il existe un autre fichier du même nom :\n"
 "{}."
 
-#: dui/__main__.py:592
+#: dui/__main__.py:593
 msgid ""
 "\n"
 "Change the name of one of the two files and try again."
@@ -71,7 +71,7 @@ msgstr ""
 "\n"
 "Modifier le nom du fichier, et réessayer."
 
-#: dui/__main__.py:593
+#: dui/__main__.py:594
 msgid ""
 "This will raise an import error from Lean. If you insist on not changing "
 "names, then go to the settings window, select the advanced tab and set the "
@@ -81,15 +81,15 @@ msgstr ""
 "modifier le nom du fichier, choisissez la méthode de requête Lean 'Normale' "
 "dans l'onglet avancé des préférences."
 
-#: dui/__main__.py:603 dui/elements/proof_outline_widget.py:307
+#: dui/__main__.py:604 dui/elements/proof_outline_widget.py:307
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/__main__.py:604 dui/elements/config_window.py:328
+#: dui/__main__.py:605 dui/elements/config_window.py:328
 msgid "Cancel"
 msgstr "Annuler"
 
-#: dui/__main__.py:605
+#: dui/__main__.py:606
 msgid "Proceed anyway"
 msgstr "Commencer l'exercice"
 
@@ -100,7 +100,7 @@ msgstr "Bouton"
 #: dui/elements/actions_widgets_classes.py:202
 #: dui/elements/config_window.py:573
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
-#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:814
+#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:811
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:341
 #: pylib/math_display/display_data.py:434 pylib/proof_tree/proof_tree.py:537
@@ -118,14 +118,14 @@ msgstr "Mode Utiliser"
 #: dui/elements/actions_widgets_classes.py:409
 #: dui/elements/actions_widgets_classes.py:451
 #: dui/elements/actions_widgets_classes.py:665
-#: dui/stages/exercise/_exercise_main_window_widgets.py:334
+#: dui/stages/exercise/_exercise_main_window_widgets.py:335
 msgid "Prove:"
 msgstr "Démontrer :"
 
 #: dui/elements/actions_widgets_classes.py:410
 #: dui/elements/actions_widgets_classes.py:455
 #: dui/elements/actions_widgets_classes.py:666
-#: dui/stages/exercise/_exercise_main_window_widgets.py:335
+#: dui/stages/exercise/_exercise_main_window_widgets.py:336
 msgid "Use:"
 msgstr "Utiliser :"
 
@@ -547,7 +547,7 @@ msgstr "Objets :"
 msgid "Properties:"
 msgstr "Propriétés :"
 
-#: dui/elements/goal_widgets.py:117 pylib/proof_state/proof_state.py:1281
+#: dui/elements/goal_widgets.py:117 pylib/proof_state/proof_state.py:1296
 msgid "True or False:"
 msgstr "Vrai ou faux :"
 
@@ -565,7 +565,7 @@ msgid "Text mode"
 msgstr "Mode texte"
 
 #: dui/elements/help.py:59 dui/elements/help.py:148
-#: dui/stages/exercise/_exercise_main_window_widgets.py:655
+#: dui/stages/exercise/_exercise_main_window_widgets.py:685
 msgid "Help"
 msgstr "Aide"
 
@@ -669,11 +669,11 @@ msgstr "(navigué)"
 msgid "Reminder of the exercise statement"
 msgstr "Rappel de l'énoncé de l'exercice"
 
-#: dui/primitives/buttons_dialog.py:88 dui/stages/exercise/Coordinator.py:1194
+#: dui/primitives/buttons_dialog.py:88 dui/stages/exercise/Coordinator.py:1202
 msgid "Yes"
 msgstr "Oui"
 
-#: dui/primitives/buttons_dialog.py:89 dui/stages/exercise/Coordinator.py:1195
+#: dui/primitives/buttons_dialog.py:89 dui/stages/exercise/Coordinator.py:1203
 msgid "No"
 msgstr "Non"
 
@@ -681,7 +681,7 @@ msgstr "Non"
 msgid "Yes or no? — d∃∀duction"
 msgstr "Oui ou non ? — d∃∀duction"
 
-#: dui/primitives/yes_no_dialog.py:171
+#: dui/primitives/yes_no_dialog.py:172
 msgid "Do not show again"
 msgstr "Ne plus montrer"
 
@@ -734,48 +734,49 @@ msgstr "Effacer la sélection"
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:806
+#: dui/stages/calculator/calculator.py:803
 msgid "Build your object"
 msgstr "Construisez votre objet"
 
-#: dui/stages/calculator/calculator.py:813 pylib/actions/exceptions.py:333
+#: dui/stages/calculator/calculator.py:810 pylib/actions/exceptions.py:333
 msgid "a property"
 msgstr "une propriété"
 
-#: dui/stages/calculator/calculator.py:814
+#: dui/stages/calculator/calculator.py:811
 msgid "Enter"
 msgstr "Entrer"
 
-#: dui/stages/calculator/calculator.py:879
+#: dui/stages/calculator/calculator.py:876
 msgid ""
-"Use the Logical Calculator to fill-in the form. Please note the green "
-"selection: when you click a calculator button, the corresponding operator "
-"will apply to the selection. Use the left and right arrows to modify the "
-"selection."
+"<div>Use the Logical Calculator to fill-in the form.<br> </div><div>Please "
+"note the green selection: when you click a calculator button, the "
+"corresponding operator will apply to the selection.<br> </div><div>Use the "
+"left and right arrows to modify the selection.</div>"
 msgstr ""
-"Utilisez la Calculatrice Logique pour remplir le formulaire. Notez la "
-"sélection en vert : quand vous cliquez sur un bouton de la calculatrice, "
-"l'opérateur correspondant s'applique à la sélection. Utilisez les flèches "
-"gauche et droite pour modifier la sélection."
+"<div>Utilisez la Calculatrice Logique pour remplir le formulaire.<br> </"
+"div><div>Notez la sélection en vert : quand vous cliquez sur un bouton de la "
+"calculatrice, l'opérateur correspondant s'applique à la sélection.<br> </"
+"div><div>Utilisez les flèches gauche et droite pour modifier la sélection.</"
+"div>"
 
 #: dui/stages/calculator/calculator_button.py:153
 msgid "(type  {})"
 msgstr "(taper {})"
 
-#: dui/stages/exercise/Coordinator.py:585
+#: dui/stages/exercise/Coordinator.py:592
 msgid "Server restarted"
 msgstr "Redémarrage du serveur"
 
-#: dui/stages/exercise/Coordinator.py:589
+#: dui/stages/exercise/Coordinator.py:596
 msgid "No action to be cancelled, press again to restart server"
 msgstr "Aucune action à annuler, appuyer à nouveau pour redémarrer le serveur"
 
-#: dui/stages/exercise/Coordinator.py:1187 pylib/actions/logic.py:636
+#: dui/stages/exercise/Coordinator.py:1195 pylib/actions/logic.py:636
 #: pylib/actions/logic.py:697
 msgid "Prove premise?"
 msgstr "Démontrer la prémisse ?"
 
-#: dui/stages/exercise/Coordinator.py:1189
+#: dui/stages/exercise/Coordinator.py:1197
 msgid ""
 "Do you want to prove the <b>premise</b><br><CENTER>{}</CENTER><br>as a new "
 "sub-goal?"
@@ -783,148 +784,165 @@ msgstr ""
 "Voulez-vous démontrer la <b>prémisse</b><br><CENTER>{}</CENTER><br>en tant "
 "que nouveau but ?"
 
-#: dui/stages/exercise/Coordinator.py:1284 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1292 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1300
+#: dui/stages/exercise/Coordinator.py:1308
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1303
+#: dui/stages/exercise/Coordinator.py:1311
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1310
+#: dui/stages/exercise/Coordinator.py:1318
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1313
+#: dui/stages/exercise/Coordinator.py:1321
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1315
+#: dui/stages/exercise/Coordinator.py:1323
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1317 pylib/actions/logic.py:1309
+#: dui/stages/exercise/Coordinator.py:1325 pylib/actions/logic.py:1309
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1363
+#: dui/stages/exercise/Coordinator.py:1371
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1364
+#: dui/stages/exercise/Coordinator.py:1372
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1368
+#: dui/stages/exercise/Coordinator.py:1376
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1370
-#: dui/stages/exercise/_exercise_main_window_widgets.py:870
-#: dui/stages/exercise/_exercise_main_window_widgets.py:886
+#: dui/stages/exercise/Coordinator.py:1378
+#: dui/stages/exercise/_exercise_main_window_widgets.py:900
+#: dui/stages/exercise/_exercise_main_window_widgets.py:916
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1378
+#: dui/stages/exercise/Coordinator.py:1386
 msgid "Save history"
 msgstr "Sauver l'historique"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:140
+#: dui/stages/exercise/_exercise_main_window_widgets.py:141
 #, python-brace-format
 msgid "Context (objects and properties) #{history_nb}"
 msgstr "Contexte (objets et propriétés) n°{history_nb}"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:273
-#: dui/stages/exercise/_exercise_main_window_widgets.py:514
+#: dui/stages/exercise/_exercise_main_window_widgets.py:274
+#: dui/stages/exercise/_exercise_main_window_widgets.py:515
 msgid "Context (objects and properties)"
 msgstr "Contexte (objets et propriétés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:337
+#: dui/stages/exercise/_exercise_main_window_widgets.py:338
 msgid "Compute (experimental):"
 msgstr "Calculer (expérimental) :"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:346
+#: dui/stages/exercise/_exercise_main_window_widgets.py:347
 msgid "Actions (logical rules and statements)"
 msgstr "Actions (règles logiques et énoncés)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:512
+#: dui/stages/exercise/_exercise_main_window_widgets.py:513
 msgid "Actions and statements (transform context and target)"
 msgstr "Actions et énoncés (transforment le contexte et le but)"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:683
+#: dui/stages/exercise/_exercise_main_window_widgets.py:563
+msgid ""
+"<div>The properties that have already been used in the proof are shaded in "
+"the context.<br> </div><div>Note that this does <b>not</b> prevent you from "
+"using them again!<br> </div>"
+msgstr ""
+"<div>Les propriétés qui ont été utilisées au cours de la preuve apparaissent "
+"en grisé dans le contexte.<br> </div>\n"
+"<div>Ceci <b>ne</b> vous empêche <b>pas</b>  de les ré-utiliser !<br></div>"
+
+#: dui/stages/exercise/_exercise_main_window_widgets.py:576
+msgid ""
+"<div>The new objects or properties appear in bold in the context.<br> </div>"
+msgstr ""
+"<div>Les objets ou propriétés nouvelles apparaissent en gras dans le "
+"contexte.<br></div>"
+
+#: dui/stages/exercise/_exercise_main_window_widgets.py:713
 msgid "    Thinking"
 msgstr "    Je réfléchis"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:688
+#: dui/stages/exercise/_exercise_main_window_widgets.py:718
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:793
-#: dui/stages/exercise/_exercise_main_window_widgets.py:855
+#: dui/stages/exercise/_exercise_main_window_widgets.py:823
+#: dui/stages/exercise/_exercise_main_window_widgets.py:885
 msgid "Toolbar"
 msgstr "Barre d’outils"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:798
-#: dui/stages/exercise/_exercise_main_window_widgets.py:843
+#: dui/stages/exercise/_exercise_main_window_widgets.py:828
+#: dui/stages/exercise/_exercise_main_window_widgets.py:873
 msgid "Jump to beginning of proof"
 msgstr "Aller au début de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:801
-#: dui/stages/exercise/_exercise_main_window_widgets.py:844
+#: dui/stages/exercise/_exercise_main_window_widgets.py:831
+#: dui/stages/exercise/_exercise_main_window_widgets.py:874
 msgid "Undo action"
 msgstr "Annuler l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:804
-#: dui/stages/exercise/_exercise_main_window_widgets.py:845
+#: dui/stages/exercise/_exercise_main_window_widgets.py:834
+#: dui/stages/exercise/_exercise_main_window_widgets.py:875
 msgid "Redo action"
 msgstr "Refaire l’action"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:807
-#: dui/stages/exercise/_exercise_main_window_widgets.py:846
+#: dui/stages/exercise/_exercise_main_window_widgets.py:837
+#: dui/stages/exercise/_exercise_main_window_widgets.py:876
 msgid "Jump to end of proof"
 msgstr ""
 "Aller à la fin\n"
 " de la preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:811
-#: dui/stages/exercise/_exercise_main_window_widgets.py:848
+#: dui/stages/exercise/_exercise_main_window_widgets.py:841
+#: dui/stages/exercise/_exercise_main_window_widgets.py:878
 msgid "Toggle proof outline"
 msgstr "Fil de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:815
+#: dui/stages/exercise/_exercise_main_window_widgets.py:845
 msgid "Toggle proof global view"
 msgstr "Aperçu global de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:819
-#: dui/stages/exercise/_exercise_main_window_widgets.py:847
+#: dui/stages/exercise/_exercise_main_window_widgets.py:849
+#: dui/stages/exercise/_exercise_main_window_widgets.py:877
 msgid "Toggle L∃∀N"
 msgstr "Console L∃∀N"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:823
-#: dui/stages/exercise/_exercise_main_window_widgets.py:850
+#: dui/stages/exercise/_exercise_main_window_widgets.py:853
+#: dui/stages/exercise/_exercise_main_window_widgets.py:880
 msgid "Toggle help window"
 msgstr "Fenêtre d'aide"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:849
+#: dui/stages/exercise/_exercise_main_window_widgets.py:879
 msgid "Toggle proof tree"
 msgstr "Arbre de preuve"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:860
-#: dui/stages/exercise/_exercise_main_window_widgets.py:888
+#: dui/stages/exercise/_exercise_main_window_widgets.py:890
+#: dui/stages/exercise/_exercise_main_window_widgets.py:918
 msgid "Stop me from thinking!"
 msgstr "Arrêter la requête"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:865
-#: dui/stages/exercise/_exercise_main_window_widgets.py:887
+#: dui/stages/exercise/_exercise_main_window_widgets.py:895
+#: dui/stages/exercise/_exercise_main_window_widgets.py:917
 msgid "Settings"
 msgstr "Paramètres"
 
-#: dui/stages/exercise/_exercise_main_window_widgets.py:873
-#: dui/stages/exercise/_exercise_main_window_widgets.py:889
+#: dui/stages/exercise/_exercise_main_window_widgets.py:903
+#: dui/stages/exercise/_exercise_main_window_widgets.py:919
 msgid "Save proof"
 msgstr "Sauvegarder la preuve"
 
@@ -1102,7 +1120,7 @@ msgstr ""
 "exercices sauvegardés."
 
 #: dui/stages/start_coex/start_coex_widgets.py:1441
-#: pylib/proof_state/proof_state.py:1297
+#: pylib/proof_state/proof_state.py:1312
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
@@ -1444,7 +1462,7 @@ msgstr "appliqué à"
 msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
-#: pylib/actions/generic.py:255
+#: pylib/actions/generic.py:262
 msgid "Select at least one property"
 msgstr "Sélectionner au moins une propriété"
 
@@ -2466,8 +2484,8 @@ msgstr "neuf"
 msgid "ten"
 msgstr "dix"
 
-#: pylib/math_display/display_data.py:514 pylib/proof_state/proof_state.py:1512
-#: pylib/proof_state/proof_state.py:1526
+#: pylib/math_display/display_data.py:514 pylib/proof_state/proof_state.py:1527
+#: pylib/proof_state/proof_state.py:1541
 msgid "Let {} be {}"
 msgstr "Soit {} {}"
 
@@ -2767,83 +2785,91 @@ msgstr "Etape n°{} "
 msgid "Package check error: {}"
 msgstr "Erreur de vérification de paquet : {}"
 
-#: pylib/packager/package.py:78
-msgid "Directory should be $HOME/.deaduction folder !!!"
-msgstr "Dossier invalide, doit être dans le dossier $HOME/.deaduction !!!"
-
-#: pylib/packager/package.py:89
-msgid "Checking package folder for {}"
-msgstr "Vérification du dossier de paquet pour {}"
-
-#: pylib/packager/package.py:93
+#: pylib/packager/package.py:115
 msgid "Failed to check for folder at {}"
 msgstr "Echec de vérification du dossier dans {}"
 
-#: pylib/packager/package.py:170 pylib/packager/package.py:355
+#: pylib/packager/package.py:126
+#, fuzzy
+#| msgid "Failed to check for folder at {}"
+msgid "Failed to write in folder {}"
+msgstr "Echec de vérification du dossier dans {}"
+
+#: pylib/packager/package.py:134
+msgid "Checking package folder for {}"
+msgstr "Vérification du dossier de paquet pour {}"
+
+#: pylib/packager/package.py:213 pylib/packager/package.py:420
 msgid "Checking files for {}"
 msgstr "Vérification des fichiers dans {}"
 
-#: pylib/packager/package.py:184
+#: pylib/packager/package.py:227
 msgid "Missing files {}, reinstalling package!"
 msgstr "Fichiers manquant {}, le paquet doit être réinstallé !"
 
-#: pylib/packager/package.py:188
+#: pylib/packager/package.py:231
 msgid "Additional file {} found in directory"
 msgstr "Fichier additionnel {} trouvé dans le dossier"
 
-#: pylib/packager/package.py:202
+#: pylib/packager/package.py:245
 msgid "File {} is invalid, reinstalling package"
 msgstr "Fichier {} non valide, le paquet doit être réinstallé"
 
-#: pylib/packager/package.py:206
+#: pylib/packager/package.py:249
 msgid "File {} has permissions {}, excepted {}, updating"
 msgstr "File {} has permissions {}, excepted {}, updating"
 
-#: pylib/packager/package.py:210
+#: pylib/packager/package.py:253
 msgid "Uknown dict differ {}, reinstalling package"
 msgstr "Uknown dict differ {}, reinstalling package"
 
-#: pylib/packager/package.py:234
+#: pylib/packager/package.py:289
 msgid "Installing package {} from archive"
 msgstr "Installation du paquet {} depuis l’archive"
 
-#: pylib/packager/package.py:246
+#: pylib/packager/package.py:301
 msgid "Invalid checksum: {}, expected {}"
 msgstr "Somme de contrôle invalide : {}, somme attendue {}"
 
-#: pylib/packager/package.py:251
-msgid "Extract file to {}"
-msgstr "Extraction du fichier vers {}"
-
-#: pylib/packager/package.py:258
+#: pylib/packager/package.py:313
 msgid "Invalid archive type {}"
 msgstr "Type d’archive invalide : {}"
 
-#: pylib/packager/package.py:264
+#: pylib/packager/package.py:319
 msgid "Temporary path is {}"
 msgstr "Le dossier temporaire est {}"
 
-#: pylib/packager/package.py:275
+#: pylib/packager/package.py:330
 msgid "→ Move {} to {}"
 msgstr "→ Dossier {} déplacé vers {}"
 
-#: pylib/packager/package.py:282
+#: pylib/packager/package.py:335 pylib/packager/package.py:339
+msgid "Extract file to {}"
+msgstr "Extraction du fichier vers {}"
+
+#: pylib/packager/package.py:338
+#, fuzzy
+#| msgid "Unable to get new proof_state"
+msgid "Unable to extract file"
+msgstr "Impossible d'obtenir le nouvel état de preuve"
+
+#: pylib/packager/package.py:347
 msgid "Failed to install Package to {}: {}"
 msgstr "Echec dans l’installation du paquet {}: {}"
 
-#: pylib/packager/package.py:285
+#: pylib/packager/package.py:350
 msgid "Installed Package to {}"
 msgstr "Paquet installé dans {}"
 
-#: pylib/packager/package.py:362
+#: pylib/packager/package.py:427
 msgid "Found differences in files, reinstall."
 msgstr "Différences dans les fichiers, ré-installer."
 
-#: pylib/packager/package.py:388
+#: pylib/packager/package.py:453
 msgid "Excepted \"type\" key in package config."
 msgstr "Excepted \"type\" key in package config."
 
-#: pylib/packager/package.py:392
+#: pylib/packager/package.py:457
 msgid "Uknown package type {}, excepted {}"
 msgstr "Uknown package type {}, excepted {}"
 
@@ -2863,53 +2889,53 @@ msgstr "Etats de preuve reçu"
 msgid "Proof complete"
 msgstr "La preuve est terminée !"
 
-#: pylib/proof_state/proof_state.py:1209
+#: pylib/proof_state/proof_state.py:1224
 msgid "Assume that"
 msgstr "Supposons que"
 
-#: pylib/proof_state/proof_state.py:1210 pylib/proof_state/proof_state.py:1262
+#: pylib/proof_state/proof_state.py:1225 pylib/proof_state/proof_state.py:1277
 msgid "the negation"
 msgstr "la négation"
 
-#: pylib/proof_state/proof_state.py:1211
+#: pylib/proof_state/proof_state.py:1226
 msgid "Assume"
 msgstr "Supposons"
 
-#: pylib/proof_state/proof_state.py:1260 pylib/proof_state/proof_state.py:1310
+#: pylib/proof_state/proof_state.py:1275 pylib/proof_state/proof_state.py:1325
 msgid "Prove that"
 msgstr "Démontrer que"
 
-#: pylib/proof_state/proof_state.py:1263
+#: pylib/proof_state/proof_state.py:1278
 msgid "Prove"
 msgstr "Démontrer"
 
-#: pylib/proof_state/proof_state.py:1272 pylib/proof_state/proof_state.py:1312
+#: pylib/proof_state/proof_state.py:1287 pylib/proof_state/proof_state.py:1327
 msgid "Then"
 msgstr "Alors"
 
-#: pylib/proof_state/proof_state.py:1299 pylib/proof_state/proof_state.py:1334
+#: pylib/proof_state/proof_state.py:1314 pylib/proof_state/proof_state.py:1349
 msgid "Hypothesis:"
 msgstr "Hypothèse :"
 
-#: pylib/proof_state/proof_state.py:1301 pylib/proof_state/proof_state.py:1335
+#: pylib/proof_state/proof_state.py:1316 pylib/proof_state/proof_state.py:1350
 msgid "Hypotheses:"
 msgstr "Hypothèses :"
 
-#: pylib/proof_state/proof_state.py:1307 pylib/proof_state/proof_state.py:1348
+#: pylib/proof_state/proof_state.py:1322 pylib/proof_state/proof_state.py:1363
 #: pylib/proof_step/proof_step.py:467 pylib/proof_step/proof_step.py:469
 #: pylib/proof_step/proof_step.py:476
 msgid ": "
 msgstr " : "
 
-#: pylib/proof_state/proof_state.py:1332
+#: pylib/proof_state/proof_state.py:1347
 msgid "Context:"
 msgstr "Contexte :"
 
-#: pylib/proof_state/proof_state.py:1353
+#: pylib/proof_state/proof_state.py:1368
 msgid "Goal:"
 msgstr "But :"
 
-#: pylib/proof_state/proof_state.py:1355
+#: pylib/proof_state/proof_state.py:1370
 msgid "Conclusion:"
 msgstr "Conclusion :"
 
@@ -3776,6 +3802,9 @@ msgstr "Démarrer d∃∀duction"
 #: share/applications/deaduction.desktop:9
 msgid "deaduction"
 msgstr "deaduction"
+
+#~ msgid "Directory should be $HOME/.deaduction folder !!!"
+#~ msgstr "Dossier invalide, doit être dans le dossier $HOME/.deaduction !!!"
 
 #~ msgid "(no calculator window available)"
 #~ msgstr "(la fenêtre de calcul n'est pas activée)"

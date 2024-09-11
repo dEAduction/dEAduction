@@ -70,7 +70,8 @@ from deaduction.dui.elements            import (ActionButton,
                                                 MathObjectWidget,
                                                 MathObjectWidgetItem,
                                                 TargetWidget)
-from deaduction.dui.primitives          import deaduction_fonts
+from deaduction.dui.primitives          import (deaduction_fonts,
+                                                DeaductionTutorialDialog)
 from deaduction.dui.stages.calculator import CalculatorController
 
 from deaduction.pylib.coursedata        import   Exercise
@@ -555,6 +556,30 @@ class ExerciseCentralWidget(QWidget):
             if widget:
                 widget.setEnabled(not yes)
 
+    def __show__shaded_tutorial(self):
+        cname = "dialogs.used_in_proof_intro"
+        cname_exo = cname + "_exo"
+        if cvars.get(cname) and cvars.get(cname_exo, True):
+            text = _("<div>The properties that have already been used in the "
+                     "proof are shaded in the context.<br> </div>"
+                     "<div>Note that this does <b>not</b> prevent you from "
+                     "using them again!<br> </div>")
+            calc_intro_box = DeaductionTutorialDialog(config_name=cname,
+                                                      text=text)
+            cvars.set(cname_exo, False)  # Enough for this exercise
+            calc_intro_box.exec()
+
+    def __show__bold_tutorial(self):
+        cname = "dialogs.new_object_intro"
+        cname_exo = cname + "_exo"
+        if cvars.get(cname) and cvars.get(cname_exo, True):
+            text = _("<div>The new objects or properties appear in bold in the "
+                     "context.<br> </div>")
+            calc_intro_box = DeaductionTutorialDialog(config_name=cname,
+                                                      text=text)
+            cvars.set(cname_exo, False)  # Enough for this exercise
+            calc_intro_box.exec()
+
     def update_goal(self, new_goal: Goal,
                     pending_goals,
                     history_nb=None):
@@ -600,6 +625,11 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = new_goal
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
+
+        if new_goal.contains_used_in_proof:
+            self.__show__shaded_tutorial()
+        if new_goal.contains_new_or_modified_context:
+            self.__show__bold_tutorial()
 
     def context_selection(self):
         return self.objects_wgt.selected_items() \

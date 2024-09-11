@@ -228,6 +228,13 @@ class Coordinator(QObject):
         self.proof_step.button_name = 'history_rewind'
         self.history_rewind()
 
+    @staticmethod
+    def __init_tutorials():
+        tutorials = ("dialogs.used_in_proof_intro",
+                     "dialogs.new_object_intro")
+        for tuto in tutorials:
+            cvars.set(tuto + "_exo", True)  # Enough for this exercise
+
     async def __init_exercise(self):
         """
         Set initial proof states of exercise and all statements.
@@ -239,7 +246,7 @@ class Coordinator(QObject):
         proof state to be set. This is the reason why this is an async method.
         """
         log.debug("Initializing exercise")
-
+        self.__init_tutorials()
         self.exercise.course.load_initial_proof_states()
 
         # Try to display initial proof state of self.exercise prior to anything

@@ -244,6 +244,21 @@ class Goal:
         if self.context is not None:
             return [cmo for cmo in self.context if cmo.is_modified]
 
+    @property
+    def all_is_new(self) -> bool:
+        return all(obj.is_new for obj in self.context)
+
+    @property
+    def contains_new_or_modified_context(self) -> bool:
+        """True if the context contains new or modified object, but not all
+        of them are."""
+        return (bool(self.new_context + self.modified_context) and not
+                self.all_is_new)
+
+    @property
+    def contains_used_in_proof(self) -> bool:
+        return any(obj.has_been_used_in_proof for obj in self.context)
+
     def defining_equalities(self):
         """
         Return the list of defining equalities in self.context. A prop is a

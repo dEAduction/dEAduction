@@ -118,6 +118,8 @@ exercises_numbers = []
 calculator_intro = true
 chooser_intro = true
 chooser_intro_2 = true
+used_in_proof_intro = true
+new_object_intro = true
 
 [i18n]
 available_languages = ["en", "fr_FR"]
