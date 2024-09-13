@@ -121,6 +121,7 @@ class Package:
         path = (self.path / "test").resolve()
         try:
             path.write_text('Testing file is writable')
+            os.remove(path)
         except PermissionError as e:
             raise PackageCheckError(self,
                                     _("Failed to write in folder {}")
