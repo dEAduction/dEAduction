@@ -154,37 +154,37 @@ class NavigationBar(AbstractToolBar):
         beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
 
         # TODO: implement tooltips for shortcuts
-        beginning_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToPreviousWord)[0].toString()
-        beginning_shortcut = f"({_('type')} {beginning_shortcut})"
-
-        left_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToPreviousChar)[0].toString()
-        right_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToNextChar)[0].toString()
-        end_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToNextWord)[0].toString()
-        delete_shortcut = QKeySequence.keyBindings(
-            QKeySequence.Delete)[0].toString()
+        # beginning_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToPreviousWord)[0].toString()
+        # beginning_shortcut = f"({_('type')} {beginning_shortcut})"
+        #
+        # left_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToPreviousChar)[0].toString()
+        # right_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToNextChar)[0].toString()
+        # end_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToNextWord)[0].toString()
+        # delete_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.Delete)[0].toString()
         self.beginning_action = QAction(QIcon(beg_path),
                                         _('Go to beginning'),
                                         self)
 
         left_path = str((icons_dir / 'icons8-back-48.png').resolve())
-        self.left_action = QAction(QIcon(left_path),
-                                   _('Move left'), self)
+        self.left_action = QAction(QIcon(left_path), _('Move left'), self)
 
-        # up_path = str((icons_dir /
-        #               'icons8-thick-arrow-pointing-up-48.png').resolve())
-        # self.up_action = QAction(QIcon(up_path), _('Move up'), self)
+        up_path = str((icons_dir / 'icons8-expand-48.png').resolve())
+        self.up_action = QAction(QIcon(up_path), _('Expand selection'), self)
+
+        down_path = str((icons_dir / 'icons8-shrink-48.png').resolve())
+        self.down_action = QAction(QIcon(down_path), _('Shrink selection'),
+                                   self)
 
         right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
-        self.right_action = QAction(QIcon(right_path),
-                                   _('Move right'), self)
+        self.right_action = QAction(QIcon(right_path), _('Move right'), self)
 
         end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
-        self.end_action = QAction(QIcon(end_path),
-                                   _('Go to end'), self)
+        self.end_action = QAction(QIcon(end_path), _('Go to end'), self)
 
         self.delete = QAction(QIcon(str((icons_dir /
                                          'icons8-clear-48.png').resolve())),
@@ -193,9 +193,12 @@ class NavigationBar(AbstractToolBar):
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
         # self.addAction(self.up_action)
-        self.addSeparator()
         self.addAction(self.right_action)
         self.addAction(self.end_action)
+        self.addSeparator()
+        self.addAction(self.up_action)
+        self.addAction(self.down_action)
+        self.addSeparator()
         self.addAction(self.delete)
 
 
@@ -878,7 +881,7 @@ class CalculatorController:
                      "<div>Please note the green selection: when you click a "
                      "calculator button, the corresponding operator will "
                      "apply to the selection.<br> </div>"
-                     "<div>Use the left and right arrows to modify the "
+                     "<div>Use the Enlarge and Shrink arrows to modify the "
                      "selection.</div>")
             calc_intro_box = DeaductionTutorialDialog(config_name=cname,
                                                       text=text,
@@ -1008,7 +1011,8 @@ class CalculatorController:
         n_bar = targets_window.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
         n_bar.left_action.triggered.connect(self.move_left)
-        # n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.down_action.triggered.connect(self.move_down)
         n_bar.right_action.triggered.connect(self.move_right)
         n_bar.end_action.triggered.connect(self.go_to_end)
         targets_window.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
@@ -1026,7 +1030,8 @@ class CalculatorController:
         n_bar = calc_ui.navigation_bar
         n_bar.beginning_action.triggered.connect(self.go_to_beginning)
         n_bar.left_action.triggered.connect(self.move_left)
-        # n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.up_action.triggered.connect(self.move_up)
+        n_bar.down_action.triggered.connect(self.move_down)
         n_bar.right_action.triggered.connect(self.move_right)
         n_bar.end_action.triggered.connect(self.go_to_end)
         calc_ui.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
@@ -1187,6 +1192,14 @@ class CalculatorController:
     @property
     def left_action(self):
         return self.navigation_bar.left_action
+
+    @property
+    def up_action(self):
+        return self.navigation_bar.up_action
+
+    @property
+    def down_action(self):
+        return self.navigation_bar.down_action
 
     @property
     def right_action(self):
@@ -1571,15 +1584,41 @@ class CalculatorController:
     ################
 
     @Slot()
+    def move_up(self):
+        log.debug("Action: Move up")
+        self.math_cursor.enlarge_selection()
+        self.set_target_and_update_ui()
+
+    @Slot()
+    def move_down(self):
+        log.debug("Action: Move down")
+        self.math_cursor.shrink_selection()
+        self.set_target_and_update_ui()
+
+    @Slot()
     def move_right(self):
+        """
+        Move the cursor to the right, and shrink selection as much as
+        possible; unless the cursor is at end, then select everything.
+        """
         log.debug("Action: Move right")
-        self.math_cursor.increase_pos()
+        # self.math_cursor.increase_pos()
+        if self.math_cursor.is_almost_at_end():
+            self.go_to_end()
+        else:
+            self.math_cursor.actually_increase_pos()
+            self.math_cursor.max_shrink_selection()
         self.set_target_and_update_ui()
 
     @Slot()
     def move_left(self):
         log.debug("Action: Move left")
-        self.math_cursor.decrease_pos()
+        # self.math_cursor.decrease_pos()
+        if self.math_cursor.is_almost_at_beginning():
+            self.go_to_beginning()
+        else:
+            self.math_cursor.actually_decrease_pos()
+            self.math_cursor.max_shrink_selection()
         self.set_target_and_update_ui()
 
     @Slot()

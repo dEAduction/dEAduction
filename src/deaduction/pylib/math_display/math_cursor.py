@@ -49,9 +49,9 @@ class MathCursor:
     [['f''], '\circ, ['g']]
     then cursor_address
         () corresponds to the main list,
-        (0, ) corresponds to the MathList ['f'],
+        (0,) corresponds to the MathList ['f'],
         (0, 0) corresponds to the MathString 'f'
-        (1) corresponds to the MathString '\circ'
+        (1,) corresponds to the MathString '\circ'
     """
 
     deaduction_cursor = MathString.cursor
@@ -112,12 +112,13 @@ class MathCursor:
 
     @property
     def current_math_object(self):
-        # return self.current_item.descendant
-        # line = self.current_item.line_of_descent
-        # cmo = self.root_math_object.descendant(line)
-        cmo = self.current_item.descendant
-        return cmo
+        return self.current_item.descendant
 
+    @property
+    def parent_math_object(self):
+        parent = self.parent_of_current_item
+        if parent:
+            return parent.descendant
     #######################
     # Pure cursor methods #
     #######################
@@ -171,6 +172,20 @@ class MathCursor:
         #     assert parent[idx] == self.deaduction_cursor
 
         return parent, idx
+
+    def next_item(self) -> MathList:
+        parent = self.parent_of_current_item
+        if parent:
+            idx = self.current_idx
+            if idx < len(parent) - 1:
+                return parent[idx+1]
+
+    def previous_item(self) -> MathList:
+        parent = self.parent_of_current_item
+        if parent:
+            idx = self.current_idx
+            if idx > 0:
+                return parent[idx-1]
 
     def show_cursor(self):
         """
@@ -241,6 +256,7 @@ class MathCursor:
         return position
 
     def debug(self):
+        log.debug(f"MathCursor: {self.cursor_is_before}")
         log.debug(str(self))
         # pass
         # self.show_cursor()
@@ -296,13 +312,12 @@ class MathCursor:
             return
 
         parent = self.parent_of_current_item
-        if parent:
-            idx = self.current_idx
-            if idx < len(parent) - 1:
-                self.cursor_address = (self.cursor_address[:-1] +
-                                       (idx + 1,))
-                self.set_cursor_before()
-                return True
+        idx = self.current_idx
+        if parent and idx < len(parent) - 1:
+            self.cursor_address = (self.cursor_address[:-1] +
+                                   (idx + 1,))
+            self.set_cursor_before()
+            return True
 
         return False
 
@@ -390,16 +405,47 @@ class MathCursor:
             return False
 
     def is_at_end(self):
+        """
+        True if self is at the end of the tree (next to root).
+        """
         # test = ((len(self.cursor_address) == 1) and
         #         (self.current_idx == len(self.math_list)))
         test = self.cursor_address == tuple() and self.cursor_is_after
         return test
 
     def is_at_beginning(self):
+        """
+        True if self is before root.
+        """
         # test = ((len(self.cursor_address) == 1) and
         #         (self.current_idx == 0))
         test = self.cursor_address == tuple() and self.cursor_is_before
         return test
+
+    def is_almost_at_beginning(self):
+        """
+        True if the cursor is at first position, but maybe not at root,
+        i.e. self.cursor_is_before and cursor_address contains only 0s.
+        """
+        test = self.cursor_is_before and not any(self.cursor_address)
+        return test
+
+    def is_almost_at_end(self):
+        """
+        True if the cursor is at last position, but maybe not at root.
+        """
+
+        if not self.cursor_is_after:
+            return False
+        address = self.cursor_address
+        self.hide_cursor()
+        while address:
+            parent = self.item_for_address(address[:-1])
+            idx = address[-1]
+            if idx != len(parent)-1:
+                return False
+            address = address[:-1]
+        return True
 
     def go_to_end(self, set_marked=True):
         # self.set_marked_element(False)
@@ -411,6 +457,68 @@ class MathCursor:
 
         # This --> crash!
         # self.debug()
+
+    def enlarge_selection(self, set_marked=True):
+        """
+        If cursor is before the first item in parent, or after the last item,
+        then go up.
+        """
+        self.hide_cursor()
+        parent, idx = self.parent_and_idx_of_cursor()
+        go_up = False
+        if (self.cursor_is_before and idx == 0) \
+        or (self.cursor_is_after and idx == len(parent)):
+            go_up = self.go_up()
+
+        if not go_up:
+            if self.cursor_is_after:
+                cmo = self.current_math_object
+                ni = self.next_item()
+                if ni:
+                    nmo = ni.descendant
+                    if cmo in nmo.children:
+                        self.go_right()
+            else:
+                cmo = self.current_math_object
+                pi = self.previous_item()
+                if pi:
+                    pmo = pi.descendant
+                    if cmo in pmo.children:
+                        self.go_left()
+
+        if set_marked:
+            self.set_marked_element(True)
+        self.debug()
+
+    def shrink_selection(self, set_marked=True):
+        self.hide_cursor()
+        ok = False
+        ok = self.go_down()
+        if not ok:
+            if self.cursor_is_after:
+                cmo = self.current_math_object
+                ni = self.next_item()
+                if ni:
+                    nmo = ni.descendant
+                    if nmo in cmo.children:
+                        ok = self.go_right()
+            else:
+                cmo = self.current_math_object
+                pi = self.previous_item()
+                if pi:
+                    pmo = pi.descendant
+                    if pmo in cmo.children:
+                        ok = self.go_left()
+
+        if set_marked:
+            self.set_marked_element(True)
+        self.debug()
+        return ok
+
+    def max_shrink_selection(self):
+        ok = True
+        while ok:
+            ok = self.shrink_selection()
 
     def go_to_beginning(self, set_marked=True):
         # self.set_marked_element(False)
@@ -563,35 +671,48 @@ class MathCursor:
 
         self.debug()
 
-    def fast_increase(self, set_marked=True):
-        """
-        Increase pos until cursor pos in the linear order has actually
-        changed (and not only pos in the tree).
-        """
+    def actually_decrease_pos(self):
+        while self.cursor_is_before and not self.is_at_beginning():
+            self.decrease_pos()
+        while self.cursor_is_after and not self.is_at_beginning():
+            self.decrease_pos()
 
-        current_item = self.current_item
-        while self.current_item == current_item and not self.is_at_end():
-            self.minimal_increase_pos()
+    def actually_increase_pos(self):
+        while self.cursor_is_after and not self.is_at_end():
+            self.increase_pos()
+        while self.cursor_is_before and not self.is_at_end():
+            self.increase_pos()
 
-        if set_marked:
-            self.set_marked_element(True)
+    # def fast_increase(self, set_marked=True):
+    #     """
+    #     Increase pos until cursor pos in the linear order has actually
+    #     changed (and not only pos in the tree).
+    #     """
+    #
+    #     current_item = self.current_item
+    #     while self.current_item == current_item and not self.is_at_end():
+    #         self.minimal_increase_pos()
+    #
+    #     if set_marked:
+    #         self.set_marked_element(True)
+    #
+    #     self.debug()
+    #
+    # def fast_decrease(self, set_marked=True):
+    #     """
+    #     Decrease pos until cursor pos in the linear order has actually
+    #     changed (and not only pos in the tree).
+    #     """
+    #
+    #     current_item = self.current_item
+    #     while self.current_item == current_item and not self.is_at_beginning():
+    #         self.minimal_decrease_pos()
+    #
+    #     if set_marked:
+    #         self.set_marked_element(True)
+    #
+    #     self.debug()
 
-        self.debug()
-
-    def fast_decrease(self, set_marked=True):
-        """
-        Decrease pos until cursor pos in the linear order has actually
-        changed (and not only pos in the tree).
-        """
-
-        current_item = self.current_item
-        while self.current_item == current_item and not self.is_at_beginning():
-            self.minimal_decrease_pos()
-
-        if set_marked:
-            self.set_marked_element(True)
-
-        self.debug()
 
 
 

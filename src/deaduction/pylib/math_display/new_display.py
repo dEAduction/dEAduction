@@ -855,7 +855,7 @@ class MathList(list, MathDescendant):
         Recursively checks that self's items are MathString or MathLists.
         Change pure strings to MathStrings.
         Change [[]] to [].
-        Add an empty MathString at vbeginning and end if and only if self has no
+        Add an empty MathString at beginning and end if and only if self has no
         non formatter MathString whose descendant is self.root_math_object.
         """
 

@@ -113,13 +113,17 @@ class NavigationBar(AbstractToolBar):
         self.left_action = QAction(QIcon(left_path),
                                    _('Move left'), self)
 
-        # up_path = str((icons_dir /
-        #               'icons8-thick-arrow-pointing-up-48.png').resolve())
-        # self.up_action = QAction(QIcon(up_path), _('Move up'), self)
-
         right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
         self.right_action = QAction(QIcon(right_path),
                                    _('Move right'), self)
+
+        up_path = str((icons_dir / 'icons8-expand-48.png').resolve())
+        self.up_action = QAction(QIcon(up_path),
+                                   _('Enlarge selection'), self)
+
+        down_path = str((icons_dir / 'icons8-shrink-48.png').resolve())
+        self.down_action = QAction(QIcon(down_path),
+                                   _('Shrink selection'), self)
 
         end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
         self.end_action = QAction(QIcon(end_path),
@@ -132,9 +136,12 @@ class NavigationBar(AbstractToolBar):
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
         # self.addAction(self.up_action)
-        self.addSeparator()
         self.addAction(self.right_action)
         self.addAction(self.end_action)
+        self.addSeparator()
+        self.addAction(self.up_action)
+        self.addAction(self.down_action)
+        self.addSeparator()
         self.addAction(self.delete)
 
 
@@ -250,6 +257,9 @@ class CalculatorTarget(MathTextWidget):
         elif key_sequence == QKeySequence.MoveToPreviousLine:
             bar = self.navigation_bar
             action = bar.up_action
+        elif key_sequence == QKeySequence.MoveToNextLine:
+            bar = self.navigation_bar
+            action = bar.down_action
         elif key_sequence == QKeySequence.Delete:
             bar = self.navigation_bar
             action = bar.delete
