@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2024-09-11 14:57+0200\n"
-"PO-Revision-Date: 2024-09-11 14:58+0200\n"
+"POT-Creation-Date: 2024-09-16 17:21+0200\n"
+"PO-Revision-Date: 2024-09-16 17:23+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -100,7 +100,7 @@ msgstr "Bouton"
 #: dui/elements/actions_widgets_classes.py:202
 #: dui/elements/config_window.py:573
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
-#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:811
+#: dui/primitives/disclosure_dict.py:82 dui/stages/calculator/calculator.py:814
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
 #: dui/stages/start_coex/start_coex_widgets.py:341
 #: pylib/math_display/display_data.py:434 pylib/proof_tree/proof_tree.py:537
@@ -710,58 +710,71 @@ msgstr "Tout rétablir"
 msgid "Go to beginning"
 msgstr "Aller au début"
 
-#: dui/stages/calculator/calculator.py:175
+#: dui/stages/calculator/calculator.py:174
 #: dui/stages/calculator/calculator_targets.py:114
 msgid "Move left"
 msgstr "Aller à gauche"
 
-#: dui/stages/calculator/calculator.py:183
-#: dui/stages/calculator/calculator_targets.py:122
+#: dui/stages/calculator/calculator.py:177
+msgid "Expand selection"
+msgstr "Etendre la sélection"
+
+#: dui/stages/calculator/calculator.py:180
+#: dui/stages/calculator/calculator_targets.py:126
+msgid "Shrink selection"
+msgstr "Réduire la sélection"
+
+#: dui/stages/calculator/calculator.py:184
+#: dui/stages/calculator/calculator_targets.py:118
 msgid "Move right"
 msgstr "Aller à droite"
 
 #: dui/stages/calculator/calculator.py:187
-#: dui/stages/calculator/calculator_targets.py:126
+#: dui/stages/calculator/calculator_targets.py:130
 msgid "Go to end"
 msgstr "Aller à la fin"
 
 #: dui/stages/calculator/calculator.py:191
-#: dui/stages/calculator/calculator_targets.py:130
+#: dui/stages/calculator/calculator_targets.py:134
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
-#: dui/stages/calculator/calculator.py:370
+#: dui/stages/calculator/calculator.py:373
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:803
+#: dui/stages/calculator/calculator.py:806
 msgid "Build your object"
 msgstr "Construisez votre objet"
 
-#: dui/stages/calculator/calculator.py:810 pylib/actions/exceptions.py:333
+#: dui/stages/calculator/calculator.py:813 pylib/actions/exceptions.py:333
 msgid "a property"
 msgstr "une propriété"
 
-#: dui/stages/calculator/calculator.py:811
+#: dui/stages/calculator/calculator.py:814
 msgid "Enter"
 msgstr "Entrer"
 
-#: dui/stages/calculator/calculator.py:876
+#: dui/stages/calculator/calculator.py:879
 msgid ""
 "<div>Use the Logical Calculator to fill-in the form.<br> </div><div>Please "
 "note the green selection: when you click a calculator button, the "
 "corresponding operator will apply to the selection.<br> </div><div>Use the "
-"left and right arrows to modify the selection.</div>"
+"Enlarge and Shrink arrows to modify the selection.</div>"
 msgstr ""
 "<div>Utilisez la Calculatrice Logique pour remplir le formulaire.<br> </"
 "div><div>Notez la sélection en vert : quand vous cliquez sur un bouton de la "
 "calculatrice, l'opérateur correspondant s'applique à la sélection.<br> </"
-"div><div>Utilisez les flèches gauche et droite pour modifier la sélection.</"
-"div>"
+"div><div>Utilisez les flèches \"Elargir\" et \"Réduire\" pour modifier la "
+"sélection.</div>"
 
 #: dui/stages/calculator/calculator_button.py:153
 msgid "(type  {})"
 msgstr "(taper {})"
+
+#: dui/stages/calculator/calculator_targets.py:122
+msgid "Enlarge selection"
+msgstr "Elargir la sélection"
 
 #: dui/stages/exercise/Coordinator.py:592
 msgid "Server restarted"
@@ -2789,87 +2802,83 @@ msgstr "Erreur de vérification de paquet : {}"
 msgid "Failed to check for folder at {}"
 msgstr "Echec de vérification du dossier dans {}"
 
-#: pylib/packager/package.py:126
-#, fuzzy
-#| msgid "Failed to check for folder at {}"
+#: pylib/packager/package.py:127
 msgid "Failed to write in folder {}"
-msgstr "Echec de vérification du dossier dans {}"
+msgstr "Echec d'écriture dans le dossier {}"
 
-#: pylib/packager/package.py:134
+#: pylib/packager/package.py:135
 msgid "Checking package folder for {}"
 msgstr "Vérification du dossier de paquet pour {}"
 
-#: pylib/packager/package.py:213 pylib/packager/package.py:420
+#: pylib/packager/package.py:214 pylib/packager/package.py:421
 msgid "Checking files for {}"
 msgstr "Vérification des fichiers dans {}"
 
-#: pylib/packager/package.py:227
+#: pylib/packager/package.py:228
 msgid "Missing files {}, reinstalling package!"
 msgstr "Fichiers manquant {}, le paquet doit être réinstallé !"
 
-#: pylib/packager/package.py:231
+#: pylib/packager/package.py:232
 msgid "Additional file {} found in directory"
 msgstr "Fichier additionnel {} trouvé dans le dossier"
 
-#: pylib/packager/package.py:245
+#: pylib/packager/package.py:246
 msgid "File {} is invalid, reinstalling package"
 msgstr "Fichier {} non valide, le paquet doit être réinstallé"
 
-#: pylib/packager/package.py:249
+#: pylib/packager/package.py:250
 msgid "File {} has permissions {}, excepted {}, updating"
 msgstr "File {} has permissions {}, excepted {}, updating"
 
-#: pylib/packager/package.py:253
+#: pylib/packager/package.py:254
 msgid "Uknown dict differ {}, reinstalling package"
 msgstr "Uknown dict differ {}, reinstalling package"
 
-#: pylib/packager/package.py:289
+#: pylib/packager/package.py:290
 msgid "Installing package {} from archive"
 msgstr "Installation du paquet {} depuis l’archive"
 
-#: pylib/packager/package.py:301
+#: pylib/packager/package.py:302
 msgid "Invalid checksum: {}, expected {}"
 msgstr "Somme de contrôle invalide : {}, somme attendue {}"
 
-#: pylib/packager/package.py:313
+#: pylib/packager/package.py:314
 msgid "Invalid archive type {}"
 msgstr "Type d’archive invalide : {}"
 
-#: pylib/packager/package.py:319
+#: pylib/packager/package.py:320
 msgid "Temporary path is {}"
 msgstr "Le dossier temporaire est {}"
 
-#: pylib/packager/package.py:330
+#: pylib/packager/package.py:331
 msgid "→ Move {} to {}"
 msgstr "→ Dossier {} déplacé vers {}"
 
-#: pylib/packager/package.py:335 pylib/packager/package.py:339
+#: pylib/packager/package.py:336 pylib/packager/package.py:340
 msgid "Extract file to {}"
 msgstr "Extraction du fichier vers {}"
 
-#: pylib/packager/package.py:338
-#, fuzzy
-#| msgid "Unable to get new proof_state"
+#: pylib/packager/package.py:339
 msgid "Unable to extract file"
-msgstr "Impossible d'obtenir le nouvel état de preuve"
+msgstr "Impossible d'extraire le fichier"
 
-#: pylib/packager/package.py:347
+#: pylib/packager/package.py:348
 msgid "Failed to install Package to {}: {}"
 msgstr "Echec dans l’installation du paquet {}: {}"
 
-#: pylib/packager/package.py:350
+#: pylib/packager/package.py:351
 msgid "Installed Package to {}"
 msgstr "Paquet installé dans {}"
 
-#: pylib/packager/package.py:427
+#: pylib/packager/package.py:428
 msgid "Found differences in files, reinstall."
 msgstr "Différences dans les fichiers, ré-installer."
 
-#: pylib/packager/package.py:453
+#: pylib/packager/package.py:454
 msgid "Excepted \"type\" key in package config."
 msgstr "Excepted \"type\" key in package config."
 
-#: pylib/packager/package.py:457
+#: pylib/packager/package.py:458
 msgid "Uknown package type {}, excepted {}"
 msgstr "Uknown package type {}, excepted {}"
 
