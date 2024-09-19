@@ -2091,7 +2091,8 @@ class MathObject:
         shape = MathList.lean_shape(self)
         return shape
 
-    def recursive_match(self, other, metavars, metavar_objects):
+    def recursive_match(self, other, metavars, metavar_objects,
+                        symmetric_match=False, debug=False):
         """
         For compatibility with the PatternMathObject class.
         """
@@ -2388,7 +2389,8 @@ class BoundVar(MathObject):
 #################################
 # Methods for PatternMathObject #
 #################################
-    def recursive_match(self, other, metavars, metavar_objects):
+    def recursive_match(self, other, metavars, metavar_objects,
+                        symmetric_match=False, debug=False):
         """
         For compatibility with the PatternMathObject class.
         """
