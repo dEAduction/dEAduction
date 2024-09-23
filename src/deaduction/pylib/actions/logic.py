@@ -133,8 +133,11 @@ def prove_forall(proof_step) -> CodeForLean:
     else:
         # name = proof_step.goal.provide_good_name(math_type,
         #                                          bound_var.preferred_letter())
+        letter = bound_var.preferred_letter()
         [name] = provide_name_for_new_vars(proof_step,
-                                           [math_type], text)
+                                           math_types=[math_type],
+                                           preferred_letters=[letter],
+                                           text=text)
         possible_codes = possible_codes.and_then(f'intro {name}')
     possible_codes.add_success_msg(_("Object {} added to the context").
                                    format(name))
@@ -319,7 +322,11 @@ def use_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     bound_var = selected_hypo.bound_var    # "NOT(APP(CST?,...))": ((0, -1), r'\text_is_not', (0, 0)),
 
     text = _("To use this existential property") + ", "
-    [name] = provide_name_for_new_vars(proof_step, [math_type], text)
+    letter = bound_var.preferred_letter()
+    [name] = provide_name_for_new_vars(proof_step,
+                                       math_types=[math_type],
+                                       preferred_letters=[letter],
+                                       text=text)
 
     # x = give_global_name(proof_step=proof_step,
     #                      math_type=selected_hypo.children[0],

@@ -445,13 +445,17 @@ def use_forall(proof_step, arguments: [MathObject],
     return code
 
 
-def provide_name_for_new_vars(proof_step, math_types: [],
+def provide_name_for_new_vars(proof_step,
+                              math_types: [],
+                              preferred_letters: [] = None,
                               text="", user_input_nb=0):
     """
     Provide names for new vars of types math_types, either by asking usr or
     by calling proof_step.goal.provide_good_name.
     @param proof_step:
     @param math_types: list of math_types to be named.
+    @param preferred_letters: letter to be used if possible, e.g. bound var
+                                    letter in a universal statement to prove
     @param text: text to be displayed.
     @param user_input_nb: Nb of entries in user_input prior to naming.
     """
@@ -488,7 +492,8 @@ def provide_name_for_new_vars(proof_step, math_types: [],
         new_names = [pre_process_lean_code(name) for name in user_input[
                      user_input_nb:]]
     else:
-        new_names = proof_step.goal.provide_good_names(math_types)
+        new_names = proof_step.goal.provide_good_names(math_types,
+                                                       preferred_letters)
 
     return new_names
 
