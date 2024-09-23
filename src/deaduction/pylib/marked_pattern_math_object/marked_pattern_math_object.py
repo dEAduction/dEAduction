@@ -885,7 +885,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if pmo.is_bound_var:
             marked_pmo = MarkedBoundVar(node=pmo.node, info=pmo.info,
                                         children=children,
-                                        math_type=marked_type)
+                                        math_type=marked_type,
+                                        keep_name=True)
         else:
             marked_pmo = cls(pmo.node, pmo.info, children,
                              marked_type, pmo.imperative_matching)
@@ -1604,7 +1605,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         after cursor pos.
         """
 
-        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+        new_pmo_copy = new_pmo.deep_copy(new_pmo)
 
         adjacent_items = (self.marked_descendant(), self.on_the_other_side())
 
@@ -1996,14 +1997,15 @@ class MarkedBoundVar(BoundVar, MarkedPatternMathObject):
     """
 
     def __init__(self, node, info, children, math_type,
-                 parent=None, deep_copy=False):
+                 parent=None, deep_copy=False, keep_name=False):
         name = info.get('name')
         lean_name = info.get('lean_name')
         if (not name or name == 'NO NAME') \
                 and (lean_name and lean_name != 'NO NAME'):
             info['name'] = lean_name
 
-        super().__init__(node, info, children, math_type, parent, deep_copy)
+        super().__init__(node, info, children, math_type, parent, deep_copy,
+                         keep_name)
 
     @property
     def name(self):

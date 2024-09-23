@@ -477,6 +477,7 @@ class MathObject:
                               children=new_children, math_type=new_math_type)
 
         if self.is_bound_var:
+            new_math_object.name_bound_var(self.name)  # Copy name
             original_bound_vars.append(self)
             copied_bound_vars.append(new_math_object)
 
@@ -2160,7 +2161,7 @@ class BoundVar(MathObject):
     identifier_nb = 0
 
     def __init__(self, node, info, children, math_type,
-                 parent=None, deep_copy=False):
+                 parent=None, deep_copy=False, keep_name=False):
         """
         The local context is the list of BoundVar instances that are
         meaningful where self is introduced. In particular, self's name
@@ -2170,7 +2171,7 @@ class BoundVar(MathObject):
         MathObject.__init__(self, node, info, children, math_type)
         self.parent = parent
 
-        if not deep_copy:
+        if not deep_copy and not keep_name:  # FIXME: unused?
             self.is_unnamed = True
             self.set_unnamed_bound_var()
             if self.keep_lean_name():
@@ -2401,13 +2402,14 @@ class BoundVar(MathObject):
                                   original_bound_vars=None,
                                   copied_bound_vars=None):
         """
-        Juste return a smart copy of self.
+        Just return a smart copy of self.
         """
 
         # return copy(self)
         return self.smart_duplicate(original_bound_vars, copied_bound_vars)
 
-    def smart_duplicate(self, original_bound_vars, copied_bound_vars):
+    def smart_duplicate(self, original_bound_vars, copied_bound_vars,
+                        keep_name=False):
         """
         Duplicate self once, then take the same copy for further duplication
         of self.
@@ -2423,7 +2425,8 @@ class BoundVar(MathObject):
         new_self = BoundVar(node=self.node,
                             children=self.children,
                             math_type=self.math_type,
-                            info=new_info)
+                            info=new_info,
+                            keep_name=keep_name)
 
         # Add self to copied_bound_vars
         original_bound_vars.append(self)

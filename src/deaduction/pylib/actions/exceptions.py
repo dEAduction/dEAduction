@@ -50,7 +50,7 @@ class InputType(IntEnum):
 
 class MissingParametersError(Exception):
     def __init__(self, input_type: InputType, choices=None, title="", output="",
-                 converter=lambda n: n, target=None):
+                 converter=lambda n: n):  #, target=None):
         """
 
         @param input_type: Text, Choice (in a list), YesNo, Calculator (
@@ -66,7 +66,7 @@ class MissingParametersError(Exception):
         self.title              = title
         self.output             = output
         self.local_to_complete_nb = converter
-        self.input_target = target
+        # self.input_target = target
 
 
 class CalculatorRequest(IntEnum):

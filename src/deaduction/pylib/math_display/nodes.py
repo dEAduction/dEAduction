@@ -255,11 +255,13 @@ class LogicalNode(Node):
 
 
 # TODO: add those (but bound vars must be correctly handled first!)
-# forall = LogicalNode("QUANT_∀",
-#                      # 'PROP()(?0, ?1: ?0, ?2: PROP)',
-#                      'PROP()(?0, LOCAL_CONSTANT/name=?.BoundVar: ?0, ?2: PROP)',
-#                      (r"\forall", 1, r" \in_quant ", 0, ", ", 2)
-#                      )
+forall = LogicalNode("QUANT_∀",
+                     # 'PROP()(?0, ?1: ?0, ?2: PROP)',
+                     'QUANT_∀: PROP()(?0, LOCAL_CONSTANT/name=?.BoundVar: ?0, '
+                     '?2: PROP)',
+                     (r"\forall", 1, r" \in_quant ", 0, ", ", 2)
+                     )
+
 # exists = LogicalNode("QUANT_∃",
 #                      'PROP()(?0, LOCAL_CONSTANT/name=?.BoundVar: ?0, ?2: PROP)',
 #                      (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2)

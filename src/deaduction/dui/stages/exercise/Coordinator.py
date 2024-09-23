@@ -925,12 +925,12 @@ class Coordinator(QObject):
                                                         e.title,
                                                         e.output)
 
-                elif e.input_type == InputType.Calculator:
-                    target = e.input_target
-                    goal = self.proof_step.goal
-                    choice, ok = CalculatorController.get_item(goal,
-                                                               target,
-                                                               e.title)
+                # elif e.input_type == InputType.Calculator:
+                #     target = e.input_target
+                #     goal = self.proof_step.goal
+                #     choice, ok = CalculatorController.get_item(goal,
+                #                                                target,
+                #                                                e.title)
 
                 if ok:
                     # Convert to global choice value
@@ -1009,24 +1009,24 @@ class Coordinator(QObject):
                     self.unfreeze()
                     break
 
-            except MissingParametersError as e:
-                if e.input_type == InputType.Calculator:  # Obsolete?
-                    target = e.input_target
-                    goal = self.proof_step.goal
-                    choice, ok = CalculatorController.get_item(goal,
-                                                               target,
-                                                               e.title)
-
-                    if ok:
-                        # Convert to global choice value
-                        choice = e.local_to_complete_nb(choice)
-                        self.emw.user_input.append(choice)
-                    else:
-                        self.emw.user_input = []
-                        self.unfreeze()
-                        break
-                else:  # Should not happen!
-                    break
+            # except MissingParametersError as e:
+            #     if e.input_type == InputType.Calculator:  # Obsolete?
+            #         target = e.input_target
+            #         goal = self.proof_step.goal
+            #         choice, ok = CalculatorController.get_item(goal,
+            #                                                    target,
+            #                                                    e.title)
+            #
+            #         if ok:
+            #             # Convert to global choice value
+            #             choice = e.local_to_complete_nb(choice)
+            #             self.emw.user_input.append(choice)
+            #         else:
+            #             self.emw.user_input = []
+            #             self.unfreeze()
+            #             break
+            #     else:  # Should not happen!
+            #         break
 
             # No exception raised
             else:

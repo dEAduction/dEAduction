@@ -56,15 +56,13 @@ if __name__ == '__main__':
 
 
 import logging
-from typing import Union
 
 from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon
-from PySide2.QtWidgets import (QApplication, QTextEdit, QWidget,
-                               QSizePolicy, QScrollArea, QSplitter,
-                               QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QToolBar,
-                               QAction, QDialog, QDialogButtonBox,
-                               QCheckBox, QGroupBox, QSpacerItem)
+from PySide2.QtWidgets import (QApplication, QWidget,
+                               QSizePolicy, QScrollArea,
+                               QHBoxLayout, QVBoxLayout, QGridLayout,QToolBar,
+                               QAction, QDialog, QGroupBox)
 
 import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.config.vars as cvars
@@ -87,7 +85,7 @@ from deaduction.dui.primitives import (DisclosureTitleWidget,
                                        DeaductionTutorialDialog)
 
 from deaduction.dui.stages.calculator.calculator_targets import (
-    CalculatorTarget, CalculatorTargets)
+    CalculatorTargets)
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
 
@@ -279,7 +277,12 @@ class CalculatorButtonsGroup(QWidget):
         self.buttons.append(button)
 
     def remove_button(self, button):
-        pass
+        # for btn in self.buttons:
+        #     if pattern in btn.patterns:
+        #         self.buttons_layout.removeWidget(btn)
+        #         btn.hide()
+        self.buttons_layout.removeWidget(button)
+        button.hide()
 
     def patterns(self):
         """
@@ -358,12 +361,9 @@ class CalculatorAllButtons(QWidget):
     A class to display groups of CalculatorButtons, with a vertical scroll bar.
     """
 
-    # FIXME: no tooltips ??
-
     send_pattern = Signal(MarkedPatternMathObject)
     targets_window: CalculatorTargets = None
     controller = None  # Set by CalculatorController
-    # window_closed = Signal()
     targets_window_is_closed = False
 
     def __init__(self, calc_patterns: [CalculatorPatternLines]):
@@ -381,13 +381,11 @@ class CalculatorAllButtons(QWidget):
         # Add buttons #
         ###############
         self.btns_wgt = QWidget()
-        # btns_lyt = QVBoxLayout()
 
         # Lines from pattern_lines
         for calc_pattern in calc_patterns:
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
                 calc_pattern)
-            # btns_lyt.addWidget(buttons)
             self.buttons_groups.append(buttons)
 
         # Lines from nodes
@@ -421,10 +419,10 @@ class CalculatorAllButtons(QWidget):
     def set_buttons(self):
         btns_lyt = self.btns_lyt
         idx = 0
-        for btn in self.buttons_groups:
+        for btns in self.buttons_groups:
             if idx:
                 btns_lyt.addSpacing(20)
-            btns_lyt.addWidget(btn)
+            btns_lyt.addWidget(btns)
             idx += 1
         btns_lyt.addStretch()
 
@@ -475,168 +473,182 @@ class CalculatorAllButtons(QWidget):
     def process_clic(self, pattern):
         self.send_pattern.emit(pattern)
 
-
-class CalculatorWidget(QWidget):
-    """
-    A class to display a "calculator", i.e. a QWidget that enables usr to
-    build a new MathObject (a new mathematical object or property).
-    """
-
-    send_pattern = Signal(MarkedPatternMathObject)
-
-    def __init__(self, calc_patterns: [CalculatorPatternLines]):
-        super().__init__()
-
-        # self.key_event_buffer = ""
-
-        self.toolbar = CalculatorToolbar()
-        self.navigation_bar = NavigationBar()
-
-        main_lyt = QVBoxLayout()
-        main_lyt.addWidget(self.toolbar)
-
-        self.buttons_groups = []
-        # Clear ancient shortcuts!!
-        CalculatorButton.shortcuts_dic = {}
-
-        ###############
-        # Add buttons #
-        ###############
-        self.btns_wgt = QWidget()
-        btns_lyt = QVBoxLayout()
-
-        # Lines from pattern_lines
-        for calc_pattern in calc_patterns:
-            buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
-                calc_pattern)
-            btns_lyt.addWidget(buttons)
-            self.buttons_groups.append(buttons)
-
-        # Lines from nodes
-        for NodeClass, col_size in ((LogicalNode, 5),
-                                    (SetTheoryNode, 5),
-                                    (NumberNode, 4),
-                                    (InequalityNode, 5)):
-            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
-                                                                col_size)
-            btns_lyt.addWidget(buttons)
-            self.buttons_groups.append(buttons)
-
-        btns_lyt.addStretch()
-        self.btns_wgt.setLayout(btns_lyt)
-        self.btns_scroll_area = QScrollArea()
-        self.btns_scroll_area.setWidgetResizable(True)
-        # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
-        self.btns_scroll_area.setWidget(self.btns_wgt)
-
-        main_lyt.addWidget(self.btns_scroll_area)
-
-        # Connect button signals
-        for btn in self.buttons():
-            btn.send_pattern.connect(self.process_clic)
-
-        # main_lyt.addStretch()
-
-        ####################
-        # CalculatorTarget #
-        ####################
-        # calculator_target will process key events and send them to the
-        # toolbars
-        self.calculator_target = CalculatorTarget()
-        self.calculator_target_title = QLabel()
-        self.calculator_target_title.setStyleSheet("font-weight: bold; ")
-        main_lyt.addWidget(self.calculator_target_title)
-        main_lyt.addWidget(self.calculator_target)
-
-        ###################
-        # Navigation btns #
-        ###################
-        # main_lyt.addWidget(self.navigation_bar)
-        nav_lyt = QHBoxLayout()
-        nav_lyt.addWidget(self.navigation_bar)
-        nav_lyt.addStretch()
-        self.lean_mode_wdg = QCheckBox("Lean mode")
-        self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
-        nav_lyt.addWidget(self.lean_mode_wdg)
-
-        main_lyt.addLayout(nav_lyt)
-
-        ####################
-        # OK / Cancel btns #
-        ####################
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-                                           # | QDialogButtonBox.Cancel)
-        self.button_box.accepted.connect(self.close_n_accept)
-        main_lyt.addWidget(self.button_box)
-        self.setLayout(main_lyt)
-
-        # Connect calculator_target
-        self.calculator_target.navigation_bar = self.navigation_bar
-        self.calculator_target.toolbar = self.toolbar
-        self.calculator_target.button_box = self.button_box
-        self.calculator_target.setFocus()
-
-        self.set_geometry()
-
-    def set_geometry(self, geometry=None):
-        settings = QSettings("deaduction")
-        value = settings.value("calculator/geometry")
-        if value:
-            self.restoreGeometry(value)
-        elif geometry:
-            self.setGeometry(geometry)
-
-        for buttons in self.buttons_groups:
-            hidden = settings.value(f"calculator/{buttons.title}",
-                                     buttons.hidden)
-            hidden = (hidden in (True, "true"))
-            # dt = buttons.hidden
-            # if dt.hidden != hidden:
-            #     buttons.hidden = not hidden
-            #     dt.toggle()
-            # else:
-            buttons.set_hidden(hidden=hidden)
-
-    def close(self):
-        # Save window geometry
-        settings = QSettings("deaduction")
-        settings.setValue("calculator/geometry", self.saveGeometry())
-
-        # Save states of disclosure triangles
-        for buttons in self.buttons_groups:
-            settings.setValue(f"calculator/{buttons.title}",
-                              buttons.hidden)
-
-    def close_n_accept(self):
-        self.close()
-        self.accept()
-
-    def reject(self):
-        self.close()
-        super().reject()
-
-    def set_target_title(self, title):
-        self.calculator_target_title.setText(title)
-
-    def buttons(self) -> [CalculatorButton]:
-        btns = []
-        for buttons_group in self.buttons_groups:
-            btns.extend(buttons_group.buttons)
-        return btns
-
-    # def add_bound_var_btn(self):
-
-    def set_html(self, text):
-        self.calculator_target.setHtml(text)
-
-    @Slot()
-    def process_clic(self, pattern):
-        self.send_pattern.emit(pattern)
-
     def bound_var_group(self):
         for group in self.buttons_groups:
             if group.title == CalculatorPatternLines.bound_vars_title:
                 return group
+
+    def add_button(self,
+                   buttons_group: CalculatorButtonsGroup,
+                   button: CalculatorButton):
+        """
+        Add a new button to the specified button groups.
+        """
+        buttons_group.add_button(button)
+        button.send_pattern.connect(self.process_clic)
+
+
+# class CalculatorWidget(QWidget):
+#     """
+#     A class to display a "calculator", i.e. a QWidget that enables usr to
+#     build a new MathObject (a new mathematical object or property).
+#     """
+#
+#     send_pattern = Signal(MarkedPatternMathObject)
+#
+#     def __init__(self, calc_patterns: [CalculatorPatternLines]):
+#         super().__init__()
+#
+#         # self.key_event_buffer = ""
+#
+#         self.toolbar = CalculatorToolbar()
+#         self.navigation_bar = NavigationBar()
+#
+#         main_lyt = QVBoxLayout()
+#         main_lyt.addWidget(self.toolbar)
+#
+#         self.buttons_groups = []
+#         # Clear ancient shortcuts!!
+#         CalculatorButton.shortcuts_dic = {}
+#
+#         ###############
+#         # Add buttons #
+#         ###############
+#         self.btns_wgt = QWidget()
+#         btns_lyt = QVBoxLayout()
+#
+#         # Lines from pattern_lines
+#         for calc_pattern in calc_patterns:
+#             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
+#                 calc_pattern)
+#             btns_lyt.addWidget(buttons)
+#             self.buttons_groups.append(buttons)
+#
+#         # Lines from nodes
+#         for NodeClass, col_size in ((LogicalNode, 5),
+#                                     (SetTheoryNode, 5),
+#                                     (NumberNode, 4),
+#                                     (InequalityNode, 5)):
+#             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
+#                                                                 col_size)
+#             btns_lyt.addWidget(buttons)
+#             self.buttons_groups.append(buttons)
+#
+#         btns_lyt.addStretch()
+#         self.btns_wgt.setLayout(btns_lyt)
+#         self.btns_scroll_area = QScrollArea()
+#         self.btns_scroll_area.setWidgetResizable(True)
+#         # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
+#         self.btns_scroll_area.setWidget(self.btns_wgt)
+#
+#         main_lyt.addWidget(self.btns_scroll_area)
+#
+#         # Connect button signals
+#         for btn in self.buttons():
+#             btn.send_pattern.connect(self.process_clic)
+#
+#         # main_lyt.addStretch()
+#
+#         ####################
+#         # CalculatorTarget #
+#         ####################
+#         # calculator_target will process key events and send them to the
+#         # toolbars
+#         self.calculator_target = CalculatorTarget()
+#         self.calculator_target_title = QLabel()
+#         self.calculator_target_title.setStyleSheet("font-weight: bold; ")
+#         main_lyt.addWidget(self.calculator_target_title)
+#         main_lyt.addWidget(self.calculator_target)
+#
+#         ###################
+#         # Navigation btns #
+#         ###################
+#         # main_lyt.addWidget(self.navigation_bar)
+#         nav_lyt = QHBoxLayout()
+#         nav_lyt.addWidget(self.navigation_bar)
+#         nav_lyt.addStretch()
+#         self.lean_mode_wdg = QCheckBox("Lean mode")
+#         self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
+#         nav_lyt.addWidget(self.lean_mode_wdg)
+#
+#         main_lyt.addLayout(nav_lyt)
+#
+#         ####################
+#         # OK / Cancel btns #
+#         ####################
+#         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
+#                                            # | QDialogButtonBox.Cancel)
+#         self.button_box.accepted.connect(self.close_n_accept)
+#         main_lyt.addWidget(self.button_box)
+#         self.setLayout(main_lyt)
+#
+#         # Connect calculator_target
+#         self.calculator_target.navigation_bar = self.navigation_bar
+#         self.calculator_target.toolbar = self.toolbar
+#         self.calculator_target.button_box = self.button_box
+#         self.calculator_target.setFocus()
+#
+#         self.set_geometry()
+#
+#     def set_geometry(self, geometry=None):
+#         settings = QSettings("deaduction")
+#         value = settings.value("calculator/geometry")
+#         if value:
+#             self.restoreGeometry(value)
+#         elif geometry:
+#             self.setGeometry(geometry)
+#
+#         for buttons in self.buttons_groups:
+#             hidden = settings.value(f"calculator/{buttons.title}",
+#                                      buttons.hidden)
+#             hidden = (hidden in (True, "true"))
+#             # dt = buttons.hidden
+#             # if dt.hidden != hidden:
+#             #     buttons.hidden = not hidden
+#             #     dt.toggle()
+#             # else:
+#             buttons.set_hidden(hidden=hidden)
+#
+#     def close(self):
+#         # Save window geometry
+#         settings = QSettings("deaduction")
+#         settings.setValue("calculator/geometry", self.saveGeometry())
+#
+#         # Save states of disclosure triangles
+#         for buttons in self.buttons_groups:
+#             settings.setValue(f"calculator/{buttons.title}",
+#                               buttons.hidden)
+#
+#     def close_n_accept(self):
+#         self.close()
+#         self.accept()
+#
+#     def reject(self):
+#         self.close()
+#         super().reject()
+#
+#     def set_target_title(self, title):
+#         self.calculator_target_title.setText(title)
+#
+#     def buttons(self) -> [CalculatorButton]:
+#         btns = []
+#         for buttons_group in self.buttons_groups:
+#             btns.extend(buttons_group.buttons)
+#         return btns
+#
+#     # def add_bound_var_btn(self):
+#
+#     def set_html(self, text):
+#         self.calculator_target.setHtml(text)
+#
+#     @Slot()
+#     def process_clic(self, pattern):
+#         self.send_pattern.emit(pattern)
+#
+#     def bound_var_group(self):
+#         for group in self.buttons_groups:
+#             if group.title == CalculatorPatternLines.bound_vars_title:
+#                 return group
 
 
 class CalculatorMainWindow(QDialog):
@@ -742,12 +754,13 @@ class CalculatorController:
     # init methods #
     ################
 
-    def __init__(self, target_type=None,
+    def __init__(self,
+                 target_types,
+                 # target_type=None,
                  goal=None,
                  calculator_groups=None,
                  window_title="Logical Calculator",
                  task_title=None,
-                 target_types=None,
                  titles=None,
                  # task_description=None,
                  task_goal=None,
@@ -755,7 +768,8 @@ class CalculatorController:
 
         self.goal = goal
         self.targets = []
-        self.target_types = target_types if target_types else None
+        self.target_types = target_types
+        self.calculator_groups = []
         nb = self.nb_of_targets
         # One history empty list per target, but they must be distinct lists!
         self.histories: [[MarkedPatternMathObject]] = []
@@ -764,64 +778,21 @@ class CalculatorController:
         # First target history will be updated immediately (so set at -1)
         self.history_indices = [0] * nb
 
-        if target_types:
-            # self.window_title = window_title
-            # self.task_title = task_title
-            self.target_types = target_types
-            # self.titles = titles
-            # self.task_description = task_description
-
-            targets_widget = CalculatorTargets(target_types=target_types,
-                                               titles=titles,
-                                               task_title=task_title,
-                                               # task_description=task_description,
-                                               task_goal=task_goal,
-                                               prop=prop)
-            self.targets_widget = targets_widget
-            # wdg_classes = [CalculatorAllButtons,
-            #                CalculatorButtonsGroup,
-            #                CalculatorButton,
-            #                DisclosureTriangle,
-            #                CalculatorTargets]
-            # self.targets_widget.steal_focus_from_list.extend(wdg_classes)
-            focus_changed = QApplication.instance().focusChanged
-            focus_changed.connect(targets_widget.on_focus_changed)
-            focus_has_changed = targets_widget.focus_has_changed
-            focus_has_changed.connect(self.target_focus_has_changed)
-            # self.targets_widget.window_closed.connect(
-            #     self.targets_window_closed)
-
-        else:
-            # self.task_description = None
-            self.targets_widget = None
-
-            ##############
-            # Set target #
-            ##############
-            self.targets_widget: CalculatorTargets = None
-            if not target_type:
-                target_type = MetaVar()
-                p_target_type = MarkedPatternMathObject.from_pattern_math_object(
-                    target_type)
-                self.target_title = _("Build your object")
-            else:
-                p_target_type = MarkedPatternMathObject.from_math_object(target_type)
-                display_type = target_type.math_type_to_display(format_="utf8",
-                                                                is_math_type=True,
-                                                                text=True)
-                if target_type.is_prop(is_math_type=True):  # Fixme?
-                    display_type = _('a property')
-                self.target_title = _("Enter") + " " + display_type + _(":")
-
-            target_mvar = MetaVar(math_type=p_target_type)
-            self.targets = [MarkedMetavar.from_mvar(target_mvar)]
-            self.targets[0].mark()
+        targets_widget = CalculatorTargets(target_types=target_types,
+                                           titles=titles,
+                                           task_title=task_title,
+                                           # task_description=task_description,
+                                           task_goal=task_goal,
+                                           prop=prop)
+        self.targets_widget = targets_widget
+        focus_changed = QApplication.instance().focusChanged
+        focus_changed.connect(targets_widget.on_focus_changed)
+        focus_has_changed = targets_widget.focus_has_changed
+        focus_has_changed.connect(self.target_focus_has_changed)
 
         ###########
         # Buttons #
         ###########
-        self.calculator_groups = []
-
         # Context buttons #
         if goal:
             context = goal.context_objects
@@ -831,6 +802,9 @@ class CalculatorController:
             self.calculator_groups.extend([context_line])
             # Compute applications on ContextMathObjects:
             MarkedPatternMathObject.populate_applications_from_context(context)
+
+        bound_vars_line = CalculatorPatternLines.bound_vars()
+        self.calculator_groups.extend([bound_vars_line])
 
         if calculator_groups:
             self.calculator_groups.extend(calculator_groups)
@@ -842,24 +816,15 @@ class CalculatorController:
         self.calculator_groups.extend(cpls)
 
         # User interface #
-        if self.target_types:
-            self.buttons_window = CalculatorAllButtons(self.calculator_groups)
-            # self.buttons_window.setParent(self.targets_widget)
-            # --> buttons_window does not show!
-            # self.buttons_window.setFocusProxy(self.targets_widget)
-            #  --> click on buttons has no effect
-            self.buttons_window.controller = self  # Useless?
-            self.__set_targets()
-            self.__init_multiple_signals()
-            self.buttons_window.send_pattern.connect(self.insert_pattern)
-        else:
-            self.calculator_ui = CalculatorWidget(self.calculator_groups)
-            self.calculator_ui.setWindowTitle(window_title)
-            self.calculator_ui.set_target_title(self.target_title)
-            # self.calculator_ui.set_target(target)
-            self.calculator_ui.send_pattern.connect(self.insert_pattern)
-
-            self.__init_signals()
+        self.buttons_window = CalculatorAllButtons(self.calculator_groups)
+        # self.buttons_window.setParent(self.targets_widget)
+        # --> buttons_window does not show!
+        # self.buttons_window.setFocusProxy(self.targets_widget)
+        #  --> click on buttons has no effect
+        self.buttons_window.controller = self  # Useless?
+        self.__set_targets()
+        self.__init_multiple_signals()
+        self.buttons_window.send_pattern.connect(self.insert_pattern)
 
         h_mode = True if self.targets_widget.task_widget else False
         self.main_window = CalculatorMainWindow(window_title,
@@ -888,41 +853,41 @@ class CalculatorController:
                                                       parent=self.main_window)
             calc_intro_box.exec()
 
-    @classmethod
-    def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
-                                                          str],
-                                                    bool):
-        """
-        Execute a CalculatorController and send the choice.
-        The choice is either a PatternMathObject to be converted to Lean code,
-        or a string (of Lean code) if the calculator i in Lean mode.
-        """
-        # FIXME: obsolete
-
-        if target_type:
-            log.debug(f"Calculator with target type = "
-                      f"{target_type.to_display(format_='utf8')}")
-        calculator_controller = cls(goal=goal,
-                                    target_type=target_type,
-                                    window_title=title)
-        # Execute the ButtonsDialog and wait for results
-        OK = calculator_controller.calculator_ui.exec()
-
-        # After exec
-        choice = calculator_controller.target
-        choice.unmark()
-
-        if calculator_controller.lean_mode:
-            choice = calculator_controller.current_target.toPlainText()
-            math_object = MathObject(node="RAW_LEAN_CODE",
-                                     info={'name': '(' + choice + ')'},
-                                     children=[],
-                                     math_type=None)
-        else:
-            # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
-            math_object = choice.assigned_math_object
-
-        return math_object, OK
+    # @classmethod
+    # def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
+    #                                                       str],
+    #                                                 bool):
+    #     """
+    #     Execute a CalculatorController and send the choice.
+    #     The choice is either a PatternMathObject to be converted to Lean code,
+    #     or a string (of Lean code) if the calculator i in Lean mode.
+    #     """
+    #     # FIXME: obsolete
+    #
+    #     if target_type:
+    #         log.debug(f"Calculator with target type = "
+    #                   f"{target_type.to_display(format_='utf8')}")
+    #     calculator_controller = cls(goal=goal,
+    #                                 target_type=target_type,
+    #                                 window_title=title)
+    #     # Execute the ButtonsDialog and wait for results
+    #     OK = calculator_controller.calculator_ui.exec()
+    #
+    #     # After exec
+    #     choice = calculator_controller.target
+    #     choice.unmark()
+    #
+    #     if calculator_controller.lean_mode:
+    #         choice = calculator_controller.current_target.toPlainText()
+    #         math_object = MathObject(node="RAW_LEAN_CODE",
+    #                                  info={'name': '(' + choice + ')'},
+    #                                  children=[],
+    #                                  math_type=None)
+    #     else:
+    #         # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
+    #         math_object = choice.assigned_math_object
+    #
+    #     return math_object, OK
 
     @classmethod
     def get_items(cls, goal=None,
@@ -940,10 +905,10 @@ class CalculatorController:
         prop = missing_output.explicit_math_type_of_prop
 
         log.debug(f"Calculator with target types")
-        cc = cls(goal=goal,
+        cc = cls(target_types=target_types,
+                 goal=goal,
                  window_title=window_title,
                  task_title=task_title,
-                 target_types=target_types,
                  titles=titles,
                  # task_description=task_description,
                  task_goal=task_goal,
@@ -1069,10 +1034,11 @@ class CalculatorController:
 
     @property
     def nb_of_targets(self):
-        if self.target_types:
-            return len(self.target_types)
-        else:
-            return 1
+        return len(self.target_types)
+        # if self.target_types:
+        #     return len(self.target_types)
+        # else:
+        #     return 1
 
     @property
     def current_target_idx(self):
@@ -1340,21 +1306,56 @@ class CalculatorController:
         self.history.append(self.target)
         self.set_target_and_update_ui()
 
-    # def bound_var_buttons_group(self):
-    #     bv_group = self.calculator_ui.bound_var_group()
-    #     return bv_group
+    @property
+    def bound_var_buttons(self):
+        bv_group = self.buttons_window.bound_var_group()
+        return bv_group
+
+    def bound_vars(self):
+        return self.bound_var_buttons.patterns()
+
     #
     # def bound_vars_from_buttons(self):
     #     bound_vars = self.bound_var_buttons_group().patterns()
     #     return bound_vars
     #
-    # def check_new_bound_var(self, assigned_mvar):
-    #     """
-    #     If assigned_mvar affected the type of some bound var, then
-    #     rename this bound var. FIXME: no bound vars in Calculator.
-    #     """
-    #
-    #     bv_group = self.calculator_ui.bound_var_group()
+    def check_old_bound_vars(self):
+        """
+        Remove bound vars buttons whose bound vars is not in self.bound_vars.
+        """
+
+        ids = [bv.identifier_nb for bv in self.current_target.bound_vars()]
+        for btn in self.bound_var_buttons.buttons:
+            bv = btn.patterns[0]
+            if bv.identifier_nb not in ids:
+                self.bound_var_buttons.remove_button(btn)
+
+    def check_new_bound_var(self, assigned_mvar):
+        """
+        If assigned_mvar contains a new bound var, handle it, i.e. name it
+        and add a new button.
+        If the assigned_mvar affects the type of some bound var, then
+        rename this bound var.
+        """
+
+        # (0) Record new bound vars
+        if assigned_mvar.has_bound_var():
+            bound_var = assigned_mvar.bound_var
+            bound_var.is_unnamed = True
+            # Name new bound var:
+            self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
+            # Add bound var button
+            new_button = CalculatorButton.from_math_object(bound_var)
+            self.buttons_window.add_button(self.bound_var_buttons, new_button)
+
+    def rename_bound_vars(self):
+        """
+        Rename all bound vars in current target
+        """
+        for bv in self.bound_vars():
+            bv.set_unnamed_bound_var()
+        self.goal.recursive_name_all_bound_vars(self.current_target)
+
     #
     #     # (0) Record new bound vars
     #     if assigned_mvar.has_bound_var():
@@ -1498,8 +1499,12 @@ class CalculatorController:
         # print(f"New target: {new_target}")
         if assigned_mvar:
             assigned_mvar.adjust_type_of_assigned_math_object()
+            self.check_new_bound_var(assigned_mvar)
             self.target = new_target
+            self.check_old_bound_vars()
+            self.rename_bound_vars()
             # self.check_new_bound_var(assigned_mvar)
+            # FIXME:
             was_at_end = (self.target.math_cursor.is_at_end()
                           or self.target.marked_descendant() ==
                           self.target.ordered_descendants()[-1])
@@ -1675,16 +1680,17 @@ def main():
                              children=[set_])
     target_type = MathObject(node="CONSTANT", info={'name': 'ℝ'},
                              children=[])
-    choice, ok = CalculatorController.get_item(goal=None,
-                                               target_type=target_type,
-                                               title='Essai')
+    # FIXME: obsolete
+    # choice, ok = CalculatorController.get_item(goal=None,
+    #                                            target_type=target_type,
+    #                                            title='Essai')
 
     # sys.exit(app.exec_())
-    print(ok, choice)
-    if isinstance(choice, str):
-        print(choice)
-    else:
-        print(choice.to_display(format_='lean'))
+    # print(ok, choice)
+    # if isinstance(choice, str):
+    #     print(choice)
+    # else:
+    #     print(choice.to_display(format_='lean'))
 
 
 if __name__ == '__main__':

@@ -257,7 +257,8 @@ class PatternMathObject(MathObject):
             # Copy bound var ONCE, and then always refer to the same duplicate.
             # return copy(loc_constant)
             return math_object.smart_duplicate(cls.__original_bound_vars,
-                                               cls.__copied_bound_vars)
+                                               cls.__copied_bound_vars,
+                                               keep_name=True)
 
         elif math_object.is_local_constant() and turn_lc_into_mvar:
             return cls.metavar_from_loc_constant(math_object)
