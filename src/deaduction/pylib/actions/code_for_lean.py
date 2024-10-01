@@ -681,11 +681,11 @@ class CodeForLean:
             return self
         elif not self.is_or_else():
             # replace self by self and_then no_meta_vars
-            if self.could_have_meta_vars():
+            # if self.could_have_meta_vars():
                 # return self.and_then(no_meta_vars_str)
-                return self.and_then(NO_META_VARS)
-            else:
-                return self
+            return self.and_then(NO_META_VARS)
+            # else:
+            #     return self
         else:
             instructions = [piece_of_code.add_no_meta_vars()
                             for piece_of_code in self.instructions]
