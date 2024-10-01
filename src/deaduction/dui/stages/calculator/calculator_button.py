@@ -25,6 +25,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+from deaduction.pylib.math_display.display_utils import shorten
 
 if __name__ == '__main__':
     from deaduction.dui.__main__ import language_check
@@ -131,7 +132,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     send_pattern = Signal(MarkedPatternMathObject)
 
-    shortcuts_dic = dict()
+    shortcuts_dic: dict  # Set by CalculatorButtonsGroup.__init__()
 
     def __init__(self, symbol, tooltip=None, patterns=None, menu=False,
                  shortcut=None):
@@ -209,7 +210,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         # Replace spaces (space is used to end shortcut)
         shortcut_text = text.replace(' ', '_')
         shortcut = ''
-        sdic = self.shortcuts_dic
+        sdic = CalculatorButton.shortcuts_dic
 
         for car in shortcut_text:
             shortcut += car
@@ -262,5 +263,15 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
             button.animateClick(100)
             return True
 
-
+    def remove_button(self):
+        log.debug("Try to rm btn from shortcuts...")
+        bad_keys = [key for key, btns in CalculatorButton.shortcuts_dic.items()
+                    if self in btns]
+        for key in bad_keys:
+            # log.debug(f"Removing btn from key {key}")
+            btns = CalculatorButton.shortcuts_dic[key]
+            btns.remove(self)
+            if not btns:
+                # log.debug(f"Removing key {key}")
+                CalculatorButton.shortcuts_dic.pop(key)
 

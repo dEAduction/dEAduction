@@ -216,7 +216,6 @@ class CalculatorButtonsGroup(QWidget):
         super().__init__()
         # self.setFocusPolicy(Qt.NoFocus)
         self.title = title
-
         self.group_box = QGroupBox()
 
         # Title widget #
@@ -229,8 +228,9 @@ class CalculatorButtonsGroup(QWidget):
             self.col_size = col_size
         self.buttons = []
         self.buttons_layout = QGridLayout()
-        for btn in calculator_buttons:
-            self.add_button(btn)
+        self.set_buttons(calculator_buttons)
+        # for btn in calculator_buttons:
+        #     self.add_button(btn)
 
         self.margin_btns_lyt = QHBoxLayout()
         self.margin_btns_lyt.addStretch()
@@ -261,14 +261,25 @@ class CalculatorButtonsGroup(QWidget):
     def hidden(self, yes):
         self.title_widget.hidden = yes
 
-    def init_btns_lyt(self):
-        # TODO: clear lyt
-        # self.buttons_layout.removeWidget(w)
+    # def init_btns_lyt(self):
+    #     # TODO: clear lyt
+    #
+    #     calculator_buttons = self.buttons
+    #     self.buttons = []
+    #     for btn in calculator_buttons:
+    #         self.add_button(btn)
 
-        calculator_buttons = self.buttons
-        self.buttons = []
-        for btn in calculator_buttons:
-            self.add_button(btn)
+    def remove_all_buttons(self):
+        # log.debug("Removing bv buttons...")
+        item = self.buttons_layout.takeAt(0)
+        while item:
+            button = item.widget()
+            if button:
+                log.debug(button.text())
+                button.remove_button()  # Remove from shortcut_dic
+                button.hide()
+                button.deleteLater()
+            item = self.buttons_layout.takeAt(0)
 
     def add_button(self, button: CalculatorButton):
         line = len(self.buttons) // self.col_size
@@ -276,12 +287,14 @@ class CalculatorButtonsGroup(QWidget):
         self.buttons_layout.addWidget(button, line, col)
         self.buttons.append(button)
 
+    def set_buttons(self, calculator_buttons: [CalculatorButton]):
+        self.remove_all_buttons()
+        for btn in calculator_buttons:
+            self.add_button(btn)
+
     def remove_button(self, button):
-        # for btn in self.buttons:
-        #     if pattern in btn.patterns:
-        #         self.buttons_layout.removeWidget(btn)
-        #         btn.hide()
         self.buttons_layout.removeWidget(button)
+        self.buttons.remove(button)
         button.hide()
 
     def patterns(self):
@@ -373,8 +386,11 @@ class CalculatorAllButtons(QWidget):
         self.setWindowTitle(_("Logical Calculator") + " — d∃∀duction")
         # self.setFocusPolicy(Qt.NoFocus)  --> Buttons cannot be clicked!
         self.buttons_groups = []
-        # Clear ancient shortcuts!!
-        CalculatorButton.shortcuts_dic = {}
+
+        # Set CalculatorButton shortcuts dict:
+        self.shortcuts_dic = dict()
+        CalculatorButton.shortcuts_dic = self.shortcuts_dic
+
         main_lyt = QVBoxLayout()
 
         ###############
@@ -1319,42 +1335,58 @@ class CalculatorController:
     #     bound_vars = self.bound_var_buttons_group().patterns()
     #     return bound_vars
     #
-    def check_old_bound_vars(self):
-        """
-        Remove bound vars buttons whose bound vars is not in self.bound_vars.
-        """
+    # def check_old_bound_vars(self):
+    #     """
+    #     Remove bound vars buttons whose bound vars is not in self.bound_vars.
+    #     """
+    #
+    #     ids = [bv.identifier_nb for bv in self.current_target.bound_vars()]
+    #     log.debug(f"Target bv Ids: {ids}")
+    #     log.debug("Bv buttons ids:")
+    #     for btn in self.bound_var_buttons.buttons:
+    #         bv = btn.patterns[0]
+    #         log.debug(f"{bv.identifier_nb}")
+    #         if bv.identifier_nb not in ids:
+    #             self.bound_var_buttons.remove_button(btn)
 
-        ids = [bv.identifier_nb for bv in self.current_target.bound_vars()]
-        for btn in self.bound_var_buttons.buttons:
-            bv = btn.patterns[0]
-            if bv.identifier_nb not in ids:
-                self.bound_var_buttons.remove_button(btn)
-
-    def check_new_bound_var(self, assigned_mvar):
-        """
-        If assigned_mvar contains a new bound var, handle it, i.e. name it
-        and add a new button.
-        If the assigned_mvar affects the type of some bound var, then
-        rename this bound var.
-        """
-
-        # (0) Record new bound vars
-        if assigned_mvar.has_bound_var():
-            bound_var = assigned_mvar.bound_var
-            bound_var.is_unnamed = True
-            # Name new bound var:
-            self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
-            # Add bound var button
-            new_button = CalculatorButton.from_math_object(bound_var)
-            self.buttons_window.add_button(self.bound_var_buttons, new_button)
+    # def check_new_bound_var(self, assigned_mvar):
+    #     """
+    #     If assigned_mvar contains a new bound var, handle it, i.e. name it
+    #     and add a new button.
+    #     If the assigned_mvar affects the type of some bound var, then
+    #     rename this bound var.
+    #     """
+    #
+    #     # (0) Record new bound vars
+    #     if assigned_mvar.has_bound_var():
+    #         bound_var = assigned_mvar.bound_var
+    #         bound_var.is_unnamed = True
+    #         # Name new bound var:
+    #         self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
+    #         # TODO: ask usr to give name if settings
+    #         # Add bound var button
+    #         new_button = CalculatorButton.from_math_object(bound_var)
+    #         self.buttons_window.add_button(self.bound_var_buttons, new_button)
 
     def rename_bound_vars(self):
         """
         Rename all bound vars in current target
         """
-        for bv in self.bound_vars():
+
+        bound_vars = self.current_target.bound_vars()
+        for bv in bound_vars:
+            print(f"Unnaming bv {bv}")
             bv.set_unnamed_bound_var()
         self.goal.recursive_name_all_bound_vars(self.current_target)
+        for bv in bound_vars:
+            print(f"New name: {bv}, id = {bv.identifier_nb}")
+
+    def set_bound_var_buttons(self):
+        buttons = [CalculatorButton.from_math_object(bound_var)
+                   for bound_var in self.current_target.bound_vars()]
+        self.bound_var_buttons.set_buttons(buttons)
+        for btn in buttons:
+            btn.send_pattern.connect(self.buttons_window.process_clic)
 
     #
     #     # (0) Record new bound vars
@@ -1499,10 +1531,11 @@ class CalculatorController:
         # print(f"New target: {new_target}")
         if assigned_mvar:
             assigned_mvar.adjust_type_of_assigned_math_object()
-            self.check_new_bound_var(assigned_mvar)
+            # self.check_new_bound_var(assigned_mvar)
             self.target = new_target
-            self.check_old_bound_vars()
+            # self.check_old_bound_vars()
             self.rename_bound_vars()
+            self.set_bound_var_buttons()
             # self.check_new_bound_var(assigned_mvar)
             # FIXME:
             was_at_end = (self.target.math_cursor.is_at_end()
@@ -1544,6 +1577,8 @@ class CalculatorController:
         # print(new_target)
         if success:
             self.target = new_target
+            # Remove obsolete bound vars buttons
+            self.set_bound_var_buttons()
             self.history_update()
 
     #################
