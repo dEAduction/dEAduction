@@ -673,19 +673,20 @@ class CodeForLean:
 
     def add_no_meta_vars(self):
         """
-        Add the "no_meta_vars" tactic after each piece of code that contains
-        "apply"
+        Add the "no_meta_vars" tactic after each piece of code.
+        Formerly that was limited to code containing "apply", but metavars
+        appears in many more situations, and this tactic is painless.
         """
 
         if self.is_empty():
             return self
         elif not self.is_or_else():
             # replace self by self and_then no_meta_vars
-            if self.could_have_meta_vars():
+            # if self.could_have_meta_vars():
                 # return self.and_then(no_meta_vars_str)
-                return self.and_then(NO_META_VARS)
-            else:
-                return self
+            return self.and_then(CodeForLean.no_meta_vars())
+            # else:
+            #     return self
         else:
             instructions = [piece_of_code.add_no_meta_vars()
                             for piece_of_code in self.instructions]
@@ -821,7 +822,7 @@ class CodeForLean:
 
     def is_no_meta_vars(self):
         return (self.is_single_code() and
-                self.to_code() == NO_META_VARS.to_code())
+                self.to_code() == CodeForLean.no_meta_vars().to_code())
 
     def is_skip(self):
         return (self.is_single_code() and
@@ -874,7 +875,7 @@ class CodeForLean:
 
     @classmethod
     def no_meta_vars(cls):
-        return cls("no_meta_vars")
+        return cls("all_goals_no_meta_vars")
 
     @classmethod
     def norm_num(cls, location=None):
@@ -924,10 +925,29 @@ class CodeForLean:
         return code
 
     @classmethod
+    def arguments_to_str(cls, arguments, nb_place_holders=0) -> [str]:
+        """
+        Compute Lean code for trying arguments, including up to
+        nb_place_holders place holders, and maybe trying permutations of
+        proposition.
+        @param arguments: [Union[MathObject, str]]
+        @param nb_place_holders: int
+        """
+
+        arg_names = ['(' + arg + ')' if isinstance(arg, str)
+                     else
+                     arg.add_leading_parentheses(arg).to_display(format_='lean')
+                     for arg in arguments]
+        arg_names = (['_'] * nb_place_holders) + arg_names
+        return arg_names
+
+    @classmethod
     def have(cls, fresh_name, operator, arguments,
              iff_direction='', explicit=True, nb_place_holders=0,
              success_msg=None, error_msg=None):
         """
+        Compute one "have" instruction from operator "P => Q" and arguments (
+        "P"), and name it as fresh_name.
 
         @param fresh_name: str
         @param operator: Union[MathObject, Statement, str]
@@ -944,20 +964,21 @@ class CodeForLean:
         @return: CodeForLean
         """
 
-        # var = arguments[0]
-        # var = var.add_leading_parentheses(var)
-        # test = var.to_display(format_='lean')
-
+        # Operator
         op_name = (operator if isinstance(operator, str)
                    else operator.lean_name)
         op_name = '@' + op_name if explicit else op_name
 
-        arg_names = ['(' + arg + ')' if isinstance(arg, str)
-                     else
-                     arg.add_leading_parentheses(arg).to_display(format_='lean')
-                     for arg in arguments]
-        arg_names = (['_'] * nb_place_holders) + arg_names
+        # arg_names = ['(' + arg + ')' if isinstance(arg, str)
+        #              else
+        #              arg.add_leading_parentheses(arg).to_display(format_='lean')
+        #              for arg in arguments]
+        # arg_names = (['_'] * nb_place_holders) + arg_names
 
+        # Arguments
+        arg_names = cls.arguments_to_str(arguments, nb_place_holders)
+
+        # Iff => or <=
         if not iff_direction:
             args = ' '.join(arg_names)
             have = f'have {fresh_name} := {op_name} {args}'
@@ -967,8 +988,12 @@ class CodeForLean:
             have = (f'have {fresh_name} := '
                     f'({op_name} ' f'{first_args}).{iff_direction} {last_arg}')
 
+        # Code
         code = CodeForLean(have)
+        if not isinstance(operator, str):
+            code.operator = operator
 
+        # Messages
         if not success_msg:
             success_msg = _("Property {} added to the context").format(fresh_name)
         code.add_success_msg(success_msg)
@@ -976,9 +1001,6 @@ class CodeForLean:
         if not error_msg:
             error_msg = _("Unable to apply the selected property")
         code.add_error_msg(error_msg)
-
-        if not isinstance(operator, str):
-            code.operator = operator
 
         return code
 
@@ -1019,7 +1041,7 @@ class CodeForLean:
 #     return "solve1 {" + string + "}"
 
 
-NO_META_VARS = CodeForLean("no_meta_vars")
+# NO_META_VARS = CodeForLean("all_goals_no_meta_vars")
 SKIP = CodeForLean.from_string("skip")
 
 

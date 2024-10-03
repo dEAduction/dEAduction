@@ -30,7 +30,15 @@ do
    tactic.done <|> 
       `[ tactic.interactive.context_no_meta_vars,
          tactic.interactive.target_no_meta_vars ]
-      
+
+
+/- all_goals_no_meta_vars check all goals-/
+meta def tactic.interactive.all_goals_no_meta_vars : tactic unit :=
+do
+   tactic.done <|> 
+      `[ all_goals {tactic.interactive.context_no_meta_vars,
+         tactic.interactive.target_no_meta_vars} ]
+
 
 open interactive (parse)
 open tactic
@@ -62,10 +70,12 @@ end tactic
 -- open tactic.interactive
 -- example : ∃ x : ℕ, x = 0 :=
 -- begin
---    no_meta_vars,
+--    all_goals_no_meta_vars,
 --    existsi _,
 --    context_no_meta_vars,
 --    have H: 0=0,
+--    no_meta_vars,
+--    all_goals_no_meta_vars,
 --    {refl, trace "toto", no_meta_vars},
 --    -- no_meta_vars,
 --    sorry
