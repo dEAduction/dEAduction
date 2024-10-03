@@ -92,7 +92,7 @@ class AbstractMathHtmlText:
     def set_use_color(self, yes=True):
         self.use_color = yes
 
-    def set_font_size(self, size) -> int:
+    def set_font_size(self, size):
         if isinstance(size, str):
             size = int(size.replace('pt', ''))
         self.font_size = size

@@ -32,6 +32,7 @@ from PySide2.QtWidgets import   QApplication, QDialog, QLabel, QPushButton, \
 from PySide2.QtGui import QFont
 from functools import partial
 
+from .base_math_widgets_styling import MathLabel
 import deaduction.pylib.config.vars as cvars
 global _
 
@@ -44,7 +45,9 @@ class ButtonsDialog(QDialog):
     def __init__(self,
                  choices,
                  title          = "",
-                 output         = "",
+                 output_text    = "",
+                 output_math    = "",
+                 font_size      = 20,
                  cancel_button  = False,
                  choice         = None,
                  parent         = None):
@@ -63,7 +66,6 @@ class ButtonsDialog(QDialog):
             title = "d∃∀duction"
         self.setWindowTitle(title)
 
-        self.output = output
         self.buttons = []
         self.choices = []
         self.choice = choice
@@ -71,17 +73,38 @@ class ButtonsDialog(QDialog):
         # Display #
         layout = QVBoxLayout()
 
+        # # Output line
+        # output_line = QLabel()
+        # # output_line = MathLabel()
+        # output_line.setText(output)
+        # output_line.setStyleSheet('font-weight: bold;')
+        # output_line.setParent(self)
+        # math_font_name = cvars.get('display.mathematics_font', 'Default')
+        # output_line.setFont(QFont(math_font_name))
+        # output_layout = QHBoxLayout()
+        # output_layout.addWidget(output_line)
+        # output_layout.addStretch(1)
+        #
+        # # Filling the lines
+        # layout.addLayout(output_layout)  # 1st line
+        # layout.addSpacing(5)
+
         # Output line
-        output_line = QLabel(output, self, StyleSheet='font-weight: bold;')
-        math_font_name = cvars.get('display.mathematics_font', 'Default')
-        output_line.setFont(QFont(math_font_name))
-        output_layout = QHBoxLayout()
-        output_layout.addWidget(output_line)
-        output_layout.addStretch(1)
+        if output_text:
+            output_text_lbl = QLabel()
+            text = f'<div style="font-size: {font_size}pt;"> ' + output_text + "</dvi>"
+            output_text_lbl.setText(text)
+            output_text_lbl.setStyleSheet('font-weight: bold;')
+            layout.addWidget(output_text_lbl)
+        if output_math:
+            output_math_lbl = MathLabel()
+            output_math_lbl.set_font_size(font_size)
+            output_math_lbl.setText(output_math)
+            layout.addSpacing(10)
+            layout.addWidget(output_math_lbl)
 
         # Filling the lines
-        layout.addLayout(output_layout)  # 1st line
-        layout.addSpacing(5)
+        layout.addSpacing(20)
 
         # Buttons and corresponding texts, one new_layout per line
         if not choices or choices == ['yes', 'no']:
@@ -136,22 +159,26 @@ class ButtonsDialog(QDialog):
     @classmethod
     def get_item(   cls,
                     choices,
-                    title          = "",
-                    output         = "",
-                    cancel_button  = False,
-                    choice         = None,
-                    parent         = None):
+                    title          ="",
+                    output_text    ="",
+                    output_math    ="",
+                    font_size      =20,
+                    cancel_button  =False,
+                    choice         =None,
+                    parent         =None):
         """
         Execute a ButtonsDialog with the given parameters, and return
         choice_number:     number of the button selected by user
         OK:                a boolean, 0 = cancel, 1 = accepted
         """
         dialog_box = ButtonsDialog( choices,
-                                    title          = title,
-                                    output         = output,
-                                    cancel_button  = cancel_button,
-                                    choice         = choice,
-                                    parent         = parent)
+                                    title          =title,
+                                    output_text    =output_text,
+                                    output_math    =output_math,
+                                    font_size=font_size,
+                                    cancel_button  =cancel_button,
+                                    choice         =choice,
+                                    parent         =parent)
         # Execute the ButtonsDialog and wait for results
         OK = dialog_box.exec()
         choice_number = dialog_box.choice

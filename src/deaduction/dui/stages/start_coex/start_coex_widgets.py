@@ -1441,17 +1441,19 @@ def check_negate_statement(exercise) -> bool:
         title = _("True or False?")
         if exercise.initial_proof_state:
             goal = exercise.initial_proof_state.goals[0]
-            output = goal.goal_to_text(text_mode=False, to_prove=False)
             ask = _("Do you want to prove this statement or its negation?")
-            output = ask + "\n \n" + output + "\n"
+            output = goal.goal_to_text(text_mode=False, to_prove=False)
+            # output = ask + "\n \n" + output + "\n"
         else:
+            ask = ""
             output = exercise.lean_variables + "   " \
                      + exercise.lean_core_statement
         choices = [("1", _("Prove statement")),
                    ("2", _("Prove negation"))]
         choice, ok2 = ButtonsDialog.get_item(choices,
                                              title,
-                                             output)
+                                             output_math=output,
+                                             output_text=ask)
         if ok2:
             exercise.negate_statement = (choice == 1)
         else:  # Cancel exercise if no choice
