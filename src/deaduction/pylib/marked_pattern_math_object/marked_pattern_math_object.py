@@ -1830,7 +1830,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
 
         # log.debug("Trying to insert a generic node")
-        new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
+        # new_pmo_copy = MarkedPatternMathObject.deep_copy(new_pmo)
 
         new_nb = self.insert_number(new_pmo)
         if new_nb:

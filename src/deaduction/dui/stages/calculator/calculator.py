@@ -1310,6 +1310,10 @@ class CalculatorController:
     # Target editing #
     ##################
 
+    def bound_vars_update(self):
+        self.rename_bound_vars()
+        self.set_bound_var_buttons()
+
     def history_update(self):
         """
         Update target display, and store it in history.
@@ -1320,6 +1324,8 @@ class CalculatorController:
         self.history_idx += 1
         self.history = self.history[:self.history_idx]
         self.history.append(self.target)
+
+        self.bound_vars_update()
         self.set_target_and_update_ui()
 
     @property
@@ -1533,10 +1539,7 @@ class CalculatorController:
             assigned_mvar.adjust_type_of_assigned_math_object()
             # self.check_new_bound_var(assigned_mvar)
             self.target = new_target
-            # self.check_old_bound_vars()
-            self.rename_bound_vars()
-            self.set_bound_var_buttons()
-            # self.check_new_bound_var(assigned_mvar)
+
             # FIXME:
             was_at_end = (self.target.math_cursor.is_at_end()
                           or self.target.marked_descendant() ==
@@ -1590,8 +1593,8 @@ class CalculatorController:
         Update after a history move.
         """
         self.target = self.history[self.history_idx]
+        self.bound_vars_update()
         self.set_target_and_update_ui()
-        # TODO: enable/disable buttons
 
     @Slot()
     def history_undo(self):
