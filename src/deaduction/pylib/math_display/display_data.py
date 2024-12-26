@@ -251,7 +251,7 @@ class MathDisplay:
         "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
         "QUANT_∃": (r"\exists", 1, ": ", 0, ", ", 2),
-        "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
+        "QUANT_∃!": (r"\exists_unique", " (λ", 1, r": ", 0, r', ', 2, ")"),
         # Types:
         "FUNCTION": (0, r'\to', 1),
         "SEQUENCE": (0, r"\to", 1),
