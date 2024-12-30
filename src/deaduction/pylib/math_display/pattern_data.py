@@ -355,4 +355,10 @@ lean_from_pattern_string = {
     "SET_PRODUCT(?0: TYPE, ?1)": ("prod ", (0,), ' ', (1,)),
     "SET_PRODUCT(?0: SET(?2), ?1)": ("set.prod ", (0,), ' ', (1,)),
     # "SET_PRODUCT(?0: SET ?2, ?1)": ("set.prod ", 0, ' ', 1),
+    # Use coercion for non homogeneous operations
+    "MULT(?0: CONSTANT/name=ℕ, ?1: CONSTANT/name=ℤ)":
+        ('(↑', 0, ')', r" \mul ", 1),
+    "SUM(?0: CONSTANT/name=ℕ, ?1: CONSTANT/name=ℤ)":
+        ('(↑', 0, ')', r" \mul ", 1),
+
 }

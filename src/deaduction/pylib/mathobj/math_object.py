@@ -1778,6 +1778,7 @@ class MathObject:
         :return: a couple containing
             - the result of the test (a boolean)
             - the equality or iff, so that the two terms may be retrieved
+            (or None)
         """
         if is_math_type:
             math_type = self
