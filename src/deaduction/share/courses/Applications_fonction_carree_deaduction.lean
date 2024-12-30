@@ -48,7 +48,9 @@ Description
     
     Il propose de travailler les différentes notions avec l'aide de la fonction
     carrée définie sur ℝ.
-    
+Settings
+    functionality.calculator_available --> true
+    others.Lean_request_method --> "normal"    
 AvailableExercises
 	NONE
 -/
