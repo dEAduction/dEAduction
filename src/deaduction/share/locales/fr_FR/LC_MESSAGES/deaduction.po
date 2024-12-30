@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2024-12-26 15:13+0100\n"
-"PO-Revision-Date: 2024-12-26 15:13+0100\n"
+"PO-Revision-Date: 2024-12-27 16:26+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -2281,7 +2281,7 @@ msgstr "entier positif ou nul"
 
 #: pylib/math_display/display_data.py:416
 msgid "integer"
-msgstr "nombre entier"
+msgstr "entier relatif"
 
 #: pylib/math_display/display_data.py:417
 msgid "rational number"
@@ -2453,7 +2453,7 @@ msgstr "un entier positif ou nul"
 #: pylib/math_display/display_data.py:522
 #: pylib/math_display/display_data.py:536
 msgid "an integer"
-msgstr "un entier"
+msgstr "un entier relatif"
 
 #: pylib/math_display/display_data.py:491
 #: pylib/math_display/display_data.py:523
@@ -2605,7 +2605,7 @@ msgstr "tout entier positif ou nul"
 
 #: pylib/math_display/display_data.py:536
 msgid "every integer"
-msgstr "tout nombre entier"
+msgstr "tout entier relatif"
 
 #: pylib/math_display/display_data.py:537
 msgid "every rational number"

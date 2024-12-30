@@ -49,6 +49,14 @@ meta def tactic.interactive.no_meta_vars_test (id: parse ident): (tactic unit) :
 do e ← get_local id, et ← infer_type e,  trace et
 
 
+meta def tactic.interactive.test_no_meta_vars (e: expr) : tactic unit :=
+if e.has_meta_var then tactic.fail "has meta var" else tactic.fail "no meta var"
+-- mwhen (expr.has_meta_var <$> (tactic.instantiate_mvars e)) $ tactic.fail (s ++ " contains metavars")
+
+meta def tactic.interactive.test_target_no_meta_vars : tactic unit :=
+--  tactic.target  >>= tactic.interactive.test_no_meta_vars
+trace (tactic.target)
+
 ------------------------------------------------
 ----------------- tactic todo ------------------
 ------------------------------------------------

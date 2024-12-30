@@ -58,7 +58,7 @@ class ContextMathObject(MathObject):
     has_been_used_in_the_proof: bool
     allow_auto_action_: bool = True
 
-    invisible_name_list = ["RealSubGroup"]
+    invisible_name_list = ["RealSubGroup", "IntegerSubGroup"]
 
     def __init__(self, node, info, children, math_type):
         super().__init__(node, info, children, math_type)

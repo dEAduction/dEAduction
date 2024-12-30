@@ -54,8 +54,20 @@ begin
     exact mul_le_mul_left'' h c,
 end
 
+lemma add_eq {X: Type} [has_add X] {a b: X} (H1: a=b) (c: X): 
+a + c = b + c :=
+begin
+  congr, exact H1,
+end
 
-lemma add_eq {X: Type} [has_add X] {a b c d: X} (H1: a=b) (H2: c=d): 
+lemma mul_eq {X: Type} [has_mul X] {a b: X} (H1: a=b) (c: X): 
+a * c = b * c :=
+begin
+  congr, exact H1,
+end
+
+
+lemma add_eq2 {X: Type} [has_add X] {a b c d: X} (H1: a=b) (H2: c=d): 
 a + c = b + d :=
 begin
   congr, exact H1, exact H2,

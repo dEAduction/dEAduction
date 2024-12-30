@@ -120,6 +120,7 @@ latex_from_constant_name = {
     # "application": (-1, r'\text_is', _("an application") + " "),
     # "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
+    "IntegerSubGroup": (r"\integer", ),
     # "even":  (-1,  r'\text_is', " " + _("even")),
     # "odd":  (-1,  r'\text_is', " " + _("odd")),
     # "divides": (-2, ' | ', -1),

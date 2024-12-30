@@ -279,6 +279,8 @@ class MathDisplay:
         # Beware to be coherent with definition statement:
         # 'COMPOSITION': ('composition ', 0, ' ', 1),
         'COMPOSITION': ('function.comp ', 0, ' ', 1),
+        # Note that we allow a coercion here(!):
+        # "MULT": ('↑', 0, r" \mul ", 1),
         "POWER": ('', 0, [' ^ ', 1], ''),
         # "SET_PRODUCT": ("set.prod ", 0, ' ', 1),
         "PROP_EQUAL_NOT": ("not ", 0, '=', 1)
@@ -403,6 +405,7 @@ class MathDisplay:
             r'\symbol_parentheses': r'\parentheses',
             # True parentheses for symbols
             r'\real': "ℝ",
+            r'\integer': "ℤ",
             #########
             # TYPES #
             #########

@@ -39,6 +39,7 @@ import logging
 import trio
 import argparse
 import os
+import time
 
 from PySide2.QtCore import ( QObject,
                              QThread,
@@ -785,7 +786,6 @@ async def async_main():
 
 
 def main():
-    log.info("Starting...")
     #################################################################
     # Init environment variables, directories, and configure logger #
     #################################################################
@@ -795,6 +795,7 @@ def main():
     inst.init()
 
     set_logger()
+    log.info(f"Starting Deaduction at {time.strftime('%d%b%Hh%M')}")
 
     #################
     # Run main loop #

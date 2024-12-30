@@ -61,6 +61,9 @@ exclude = [
     "src/deaduction/make_hlist",
     "src/deaduction/share/lean",
     "src/deaduction/share/mathlib",
+    "src/deaduction/share/courses/Isabelle",
+    "src/deaduction/share/courses/snippets",
+    "src/deaduction/share/courses_not_distrib"
 ]
 
 [tool.hatch.metadata.hooks.requirements_txt]
