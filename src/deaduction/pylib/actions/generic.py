@@ -164,7 +164,7 @@ def apply_theorem(proof_step) -> CodeForLean:
     ips = theorem.initial_proof_state
     theorem_goal = ips.goals[0] if ips else None  # Goal
     substitution, equality = (theorem_goal.target.can_be_used_for_substitution()
-                              if theorem_goal else True, None)
+                              if theorem_goal else (True, None))
     # (If no ips available, then try anyway!)
     if substitution:
         codes = rw_using_statement(goal, selected_objects, theorem)
