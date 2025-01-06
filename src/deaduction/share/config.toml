@@ -104,9 +104,11 @@ preset_courses = ["Tutoriels/Tutoriel.lean",
                   "Tutoriels/Tutoriel_decouverte_deaduction_2.lean",
                   "Tutoriels/Tutoriel_decouverte_deaduction_3.lean",
                   "Tutoriels/Tutoriel_decouverte_deaduction_4.lean",
+                  "Arithmetique.lean",
+                  "Recurrence.lean",
                   "Logique_et_inegalites.lean",
                   "Ensembles_et_applications.lean",
-                  "exercices_limite_continuite.lean"]
+                  "Limite_et_continuite.lean"]
 #    "Logique_propositionnelle.lean",
 #    "Quantificateurs_et_nombres.lean",
 
@@ -142,7 +144,7 @@ copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
 ## The Python package builder read the version nb from here: ##
-version = "0.3.99974"
+version = "0.3.9997"
 os = ""  # Let this to "" except for debugging
 
 #########################
