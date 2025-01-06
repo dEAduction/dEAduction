@@ -53,6 +53,8 @@ Settings
     others.Lean_request_method --> "normal"    
 AvailableExercises
 	NONE
+Display
+    segment --> ( "[",-2, " , ", -1, "]")
 -/
 
 /- RESTES
@@ -523,7 +525,7 @@ ImplicitUse
     True
 -/
 begin
-    todo
+    refl,
 end
 
 @[simp] axiom sqrt4 :  sqrt 4 = 2

@@ -52,38 +52,38 @@ open nat
 
 open set
 
------------------
-namespace logique
+-- -----------------
+-- namespace logique
 
-lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
-/- dEAduction
-PrettyName
-    Equivalence logique
--/
-begin
-  exact iff_def,
-end
+-- lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
+-- /- dEAduction
+-- PrettyName
+--     Equivalence logique
+-- -/
+-- begin
+--   exact iff_def,
+-- end
 
-lemma theorem.disjonction_eqv_implication (P Q: Prop) :
-(P ∨ Q) ↔ ((not P) → Q)
-:= 
-/- dEAduction
-PrettyName
-    Disjonction sous forme d'implication
--/
-begin
-  tautology,
-end
+-- lemma theorem.disjonction_eqv_implication (P Q: Prop) :
+-- (P ∨ Q) ↔ ((not P) → Q)
+-- := 
+-- /- dEAduction
+-- PrettyName
+--     Disjonction sous forme d'implication
+-- -/
+-- begin
+--   tautology,
+-- end
 
-lemma theorem.induction {P: nat → Prop} (H0: P 0)
-(H1: ∀ (n : ℕ) (IH1 : P n), P (n+1) ) :
-∀n, P n
-:=
-begin
-  todo
-end 
+-- lemma theorem.induction {P: nat → Prop} (H0: P 0)
+-- (H1: ∀ (n : ℕ) (IH1 : P n), P (n+1) ) :
+-- ∀n, P n
+-- :=
+-- begin
+--   todo
+-- end 
 
-end logique
+-- end logique
 
 ---------------------
 namespace definitions
@@ -564,7 +564,7 @@ end preuve_par_absurde
 -----------------------------
 namespace equivalence_logique
 
-lemma exercise.carre_pair {n : ℕ} : (even n) ↔ (even (n^2)) :=
+lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
 /- dEAduction
 PrettyName
   Pair ssi carré pair

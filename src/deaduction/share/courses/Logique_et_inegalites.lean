@@ -41,7 +41,7 @@ Author
 Institution
     Université de France
 Title
-    Logique et inégalités
+    VRAI/FAUX : Logique et inégalités
 Description
     Ce fichier contient quelques exercices de base
     impliquant des quantificateurs et des inégalités.

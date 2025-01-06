@@ -29,7 +29,7 @@ Author
 Institution
     Université de Lorraine
 Title
-    Logique avec prédicat, nombres, égalités et inégalités
+    Vrai/Faux : Logique avec prédicat, nombres, égalités et inégalités
 Description
     Ce fichier contient quelques exercices de base
     impliquant des quantificateurs et relations algébriques entre nombres.
