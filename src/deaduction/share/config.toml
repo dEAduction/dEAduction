@@ -115,6 +115,7 @@ preset_courses = ["Tutoriels/Tutoriel.lean",
 recent_courses = []  # Absolute paths
 recent_courses_titles = []
 exercises_numbers = []
+save_all_statements_to_text_file = false
 
 [dialogs]
 calculator_intro = true
