@@ -108,6 +108,8 @@ class CoursesLW(QListWidget):
         allows to temporarily save the course. This way, the user can
         preview other courses without having to rebrowse the files
         everytime they want to see the first browsed course.
+
+        Return True if course was not already associated to item.
         """
 
         index = self.get_index(course.abs_course_path)
@@ -119,7 +121,6 @@ class CoursesLW(QListWidget):
                                else course_title)
             item = CoursesLWI(course.abs_course_path, displayed_title)
 
-        item.course = course
         self.insertItem(0, item)
         self.setCurrentItem(item)
 

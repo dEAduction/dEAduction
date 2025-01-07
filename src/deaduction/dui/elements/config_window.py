@@ -82,10 +82,12 @@ global _
 # TO ADD A NEW SETTING: cf file documentation
 
 CONFIGS = dict()
-# Each value of CONFIGS is a list of tuples:
-# (1) string = ref in cvars,
-# (2) list of predefined values (or None),
-# (3) bool: False if freeze (not implemented yet)
+# Each value of CONFIGS is a dictionary:
+# key = ref in cvars,
+# value 1 = list of predefined values (or None),
+# value 2 = bool: False if freeze (not implemented yet)
+# Value 3 = tooltip
+
 PRE_DEFINED = dict()
 # Dictionary whose keys are keys of CONFIGS.
 
@@ -254,6 +256,8 @@ CONFIGS["Advanced"] = {
     'functionality.save_history_of_solved_exercises': (None, False, ""),
     'functionality.calculator_available': (None, True,
        _("Open the logical calculator to enter composite objects")),
+    'course.save_all_statements_to_text_file': (None, True,
+        _("Save all the statements to a text file in .deaduction/text_files"))
 }
 
 SETTINGS_AFFECTING_UI = ["display.target_display_on_top",

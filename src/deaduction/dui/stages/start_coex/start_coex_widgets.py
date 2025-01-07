@@ -230,6 +230,7 @@ class CourseChooser(AbstractCoExChooser):
 
     course_chosen = Signal(Course)
     goto_exercises = Signal()
+    recent_courses_checkbox = None
 
     def __init__(self, servint, select_first_item=True):
         """
@@ -239,6 +240,7 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         self.current_course = None  # Useful to save initial proof states
+        self.loaded_courses = []  # Set of all loaded courses
 
         self.servint: ServerInterface = servint
 
@@ -272,12 +274,23 @@ class CourseChooser(AbstractCoExChooser):
             self.current_item_changed)
         self.__recent_courses_wgt.itemDoubleClicked.connect(
                 lambda x: self.goto_exercises.emit())
+        self.servint.initial_proof_state_set.connect(
+            self.__check_all_statements)
 
         super().__init__(browser_layout)
         self.show_recent_courses()
         if select_first_item and self.__courses_wgt:
             self.__courses_wgt.select_first_item()
             # self.current_item_changed()
+
+    @property
+    def current_index(self):
+        """
+        Return
+            0 if self.__preset_courses_wgt is displayed
+            1 if self.__recent_course_widget is displayed.
+        """
+        return self.__courses_lyt.currentIndex()
 
     @property
     def __current_item(self):
@@ -294,6 +307,8 @@ class CourseChooser(AbstractCoExChooser):
             if not course_item.course:
                 abs_path = course_item.abs_course_path
                 course_item.course = Course.from_file(abs_path)
+                if course_item.course not in self.loaded_courses:
+                    self.loaded_courses.append(course_item.course)
                 self.__set_initial_proof_states(course_item.course)
             self.set_preview(course_item.course)
 
@@ -326,6 +341,9 @@ class CourseChooser(AbstractCoExChooser):
             yes = cvars.get('functionality.show_recent_courses_only')
         else:
             cvars.set('functionality.show_recent_courses_only', yes)
+
+        if self.recent_courses_checkbox:
+            self.recent_courses_checkbox.setChecked(yes)
 
         if yes:
             self.__courses_lyt.setCurrentIndex(1)
@@ -431,11 +449,9 @@ class CourseChooser(AbstractCoExChooser):
         course.load_initial_proof_states()
 
         # Get missing ips
-        remaining_statements = [st for st in course.statements if not
-                                st.initial_proof_state]
-        exercises = [st for st in remaining_statements
+        exercises = [st for st in course.incomplete_statements
                      if isinstance(st, Exercise)]
-        non_exercises = [st for st in remaining_statements
+        non_exercises = [st for st in course.incomplete_statements
                          if not isinstance(st, Exercise)]
         if exercises or non_exercises:
             log.debug("Asking Lean for initial proof states...")
@@ -443,11 +459,27 @@ class CourseChooser(AbstractCoExChooser):
             self.servint.set_statements(course, exercises)
             self.servint.set_statements(course, non_exercises)
 
-        elif self.servint.request_seq_num == -1:
-            # Ask a first request to the Lean server
-            # (that speeds up a lot when exercise starts)
-            log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
-            self.servint.set_statements(course, [course.statements[0]])
+        else:
+            self.__check_all_statements()  # Save to text file
+            if self.servint.request_seq_num == -1:
+                # Ask a first request to the Lean server
+                # (that speeds up a lot when exercise starts)
+                log.debug(f"Launching Lean with {course.statements[0].pretty_name}")
+                self.servint.set_statements(course, [course.statements[0]])
+
+    def __check_all_statements(self):
+        """
+        If all statements have initial proof states, then save a text file.
+        """
+
+        saving = cvars.get('course.save_all_statements_to_text_file', True)
+        if not saving:
+            return
+
+        for course in self.loaded_courses:
+            ips_complete = course.initial_proofs_complete
+            if ips_complete:
+                course.save_all_exercises_text()
 
     def find_course(self, abs_course_path):
         course = self.__preset_courses_wgt.find_course(abs_course_path)
@@ -821,6 +853,9 @@ class AbstractStartCoEx(QDialog):
 
         yes = False if exercise else True
         self.__course_chooser = CourseChooser(servint, select_first_item=yes)
+        self.__course_chooser.recent_courses_checkbox = self.__recent_courses_action
+        recent_courses = self.__course_chooser.current_index
+        self.__recent_courses_action.setChecked(recent_courses)
         self.__exercise_chooser = QWidget()
 
         # Somehow the order of connections changes performances?
@@ -1374,48 +1409,6 @@ class StartCoExStartup(AbstractStartCoEx):
             calc_intro_box = DeaductionTutorialDialog(config_name=config_name,
                                                       text=text, parent=self)
             calc_intro_box.exec()
-
-# class StartCoExExerciseFinished(AbstractStartCoEx):
-#     """
-#     The CoEx chooser after usr just finished an exercise. It displays
-#     a CoEx chooser with the finished exercise
-#     being preset / previewed. See AbstractStartCoEx docstring.
-#     """
-#     # FIXME: not used
-#
-#     def __init__(self, finished_exercise: Exercise):
-#         """
-#         Init self.
-#
-#         :param finisehd_exercise: Exercise that usr just finished.
-#         """
-#
-#         congrats_wgt = QWidget()
-#         lyt          = QHBoxLayout()
-#         img          = QLabel()
-#         pixmap       = QPixmap(cdirs.icons / 'confetti.png')
-#         pixmap       = pixmap.scaledToHeight(100, Qt.SmoothTransformation)
-#         img.setPixmap(pixmap)
-#         lyt.addWidget(img)
-#         lyt.addStretch()
-#         lyt.addWidget(QLabel(_('Congratulations, exercise finished!')))
-#         congrats_wgt.setLayout(lyt)
-#         title = _('Exercise finished — d∃∀duction')
-#
-#         super().__init__(title=title, widget=congrats_wgt,
-#                          exercise=finished_exercise)
-#
-#     def closeEvent(self, event: QEvent):
-#         """
-#         Overload native Qt closeEvent method — which is called when self
-#         is closed — to send the signal self.window_closed.
-#
-#         :param event: Some Qt mandatory thing.
-#         """
-#
-#         super().closeEvent(event)
-#         self.window_closed.emit()
-
 
 def check_negate_statement(exercise) -> bool:
     """

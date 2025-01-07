@@ -433,11 +433,11 @@ def check_lean_src():
 
 def erase_proof_states():
     """
-    Move initial_proof_states dir to old_initial_proof_state dir.
+    Erase all initial_proof_states and text files.
     """
-    ips_dir = cdirs.all_courses_ipf_dir
-    if ips_dir.exists():
-        rmtree(str(ips_dir), ignore_errors=True)
+    for dir_ in [cdirs.all_courses_ipf_dir, cdirs.text_files]:
+        if dir_.exists():
+            rmtree(str(dir_), ignore_errors=True)
 
 
 def check_new_version():
