@@ -452,7 +452,7 @@ class ExerciseMainWindow(QMainWindow):
                     'display.font_size_for_symbol_buttons'):
                 self.ecw.set_font()
             elif setting == 'functionality.allow_implicit_use_of_definitions':
-                self.ecw.statements_tree.update_tooltips()
+                self.ecw.update_statements_tooltips(check_availability=True)
             # elif setting == 'logic.button_use_or_prove_mode':
             #     self.ecw.init_action_btns_layout()
             #     self.ecw.set_action_gb()
@@ -685,7 +685,8 @@ class ExerciseMainWindow(QMainWindow):
         Emit statement_triggered iff the clicked item is not a node,
         i.e. corresponds to a statement.
         """
-        if isinstance(item, StatementsTreeWidgetItem):
+        if isinstance(item, StatementsTreeWidgetItem)\
+                and not item.isDisabled():
             self.statement_triggered.emit(item)
 
     @Slot()

@@ -500,9 +500,10 @@ class ExerciseCentralWidget(QWidget):
                 self.__main_lyt.addLayout(self.__context_actions_lyt)
                 self.__main_lyt.addWidget(self.target_wgt)
 
-    def update_statements_tooltips(self):
+    def update_statements_tooltips(self, check_availability=False):
         if self.statements_tree:
-            self.statements_tree.update_tooltips()
+            self.statements_tree.update_tooltips(
+                check_availability=check_availability)
 
     def update(self):
         """

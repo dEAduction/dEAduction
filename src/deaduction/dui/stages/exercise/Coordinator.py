@@ -331,7 +331,7 @@ class Coordinator(QObject):
         self.set_definitions_for_implicit_use()
         # self.emw.ecw.statements_tree.update_tooltips()
 
-        self.emw.ecw.update_statements_tooltips()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
@@ -391,7 +391,7 @@ class Coordinator(QObject):
         #            for idx in range(len(loc_csts))])
 
         # Just in case of deletion:
-        self.emw.ecw.statements_tree.update_tooltips()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
     def __disconnect_signals(self):
         """

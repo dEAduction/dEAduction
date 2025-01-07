@@ -313,11 +313,12 @@ class MathDisplay:
         r'\type_Z': 'int',
         r'\type_Q': "rat",
         r'\type_R': 'real',
-        ''
+        r"\real": "real",
+        r"\integer": "int",
         r'used_property': "",
         r'\not': "not ",
         r'\times': "×",
-        r'\mul': "*"
+        r'\mul': "*",
     }
 
     @classmethod

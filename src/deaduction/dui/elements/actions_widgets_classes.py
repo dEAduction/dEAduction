@@ -813,13 +813,20 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         if self.parent:
             return self.parent.is_exercise_list
 
-    def set_tooltip(self, only_ips=True):
+    def set_tooltip(self, only_ips=True, check_availability=False):
         """
         Set the math content of the statement as tooltip.
         If the flag only_ips is True, then no tooltips are shown if the
         initial proof states is not available. Otherwise the tooltip will
         show the Lean code content of the statement.
         """
+
+        available = self.statement.initial_proof_state is not None
+        if not available and check_availability:
+            self.setDisabled(True)
+            return
+        else:
+            self.setDisabled(False)
 
         text = self.statement.caption(is_exercise=self.is_exercise,
                                       only_ips=only_ips)
@@ -1124,7 +1131,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.items: [QTreeWidgetItem] = []  # List of items
         self._init_tree(statements, outline)
-        self.update_tooltips()
+        # self.update_tooltips(check_availability=True)
         # By default, drag and drop disabled. See _exercise_main_window_widgets.
         self.setDragEnabled(False)
         self.setAcceptDrops(False)
@@ -1241,10 +1248,10 @@ class StatementsTreeWidget(QTreeWidget):
         self.setItemSelected(self.item_from_index(index), yes)
 
     @Slot()
-    def update_tooltips(self):
+    def update_tooltips(self, check_availability=False):
         for item in self.items:
             item.parent = self
-            item.set_tooltip()
+            item.set_tooltip(check_availability=check_availability)
 
     @property
     def potential_drop_receiver(self):
