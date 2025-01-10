@@ -359,7 +359,7 @@ class MathDisplay:
             r'\bigcup': '⋃',
             r'\emptyset': '∅',
             r'\to': '→',
-            r'\mapsto': '↦',
+            r'\mapsto': ' ↦ ',
             r'\neq': '≠',
             r'\leq': '≤',
             r'\geq': '≥',
