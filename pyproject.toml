@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "deaduction"
+# version = "0.3.9997"  # Ajout temporaire
 description = "Graphical proof assistant for learning proofs"
 authors = [
   {name = "Marguerite Bin", email = "bin.marguerite@gmail.com"},
@@ -14,7 +15,8 @@ authors = [
 maintainers = [
   {name = "Frédéric Le Roux", email = "frederic.le-roux@imj-prg.fr"}
 ]
-dynamic = ["version", "dependencies"]
+dynamic = ["version", "dependencies"]  # Uncomment
+# dynamic = ["dependencies"]
 readme = "README.md"
 license = {file = "LICENSE.md"}
 requires-python = ">=3.7"
@@ -24,7 +26,6 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: OS Independent",
   ]
-dependancies = ["requirements.txt"]
 
 [project.scripts]
 deaduction_app = "deaduction.dui.__main__:main"
@@ -40,7 +41,7 @@ Issues = "https://github.com/dEAduction/dEAduction/issues"
 
 
 [tool.hatch]
-# Get version nb from config.toml
+# Get version nb from config.toml, put this in version.py
 version.path = "src/deaduction/share/config.toml"
 build.hooks.vcs.version-file = "src/deaduction/version.py"
 # Alt: Get version nb from git. Should coincide with config.tom
