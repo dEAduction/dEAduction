@@ -461,8 +461,9 @@ class Coordinator(QObject):
     def action_button_names(self) -> [str]:
         # buttons = self.emw.ecw.actions_buttons
         # return [button.name for button in buttons]
-        buttons = ActionButton.from_name.keys()
-        return buttons
+        # buttons = ActionButton.from_name.keys()
+        # return buttons
+        return self.ecw.action_button_names
 
     @property
     def code_insert(self):
@@ -848,7 +849,8 @@ class Coordinator(QObject):
 
         # Only first name is tried
         for name in names:
-            action_btn = ActionButton.from_name.get(name)
+            # action_btn = ActionButton.from_name.get(name)
+            action_btn = self.emw.action_button_from_name(name)
             if action_btn:
                 self.proof_step.button_name = name
                 selection = self.current_selection_as_mathobjects

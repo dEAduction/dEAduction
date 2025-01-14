@@ -665,11 +665,18 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(contextualised_selection)
         return contextualised_selection
 
-    @staticmethod
-    def contextualised_button(button_name: str) -> ActionButton:
+    def action_button_from_name(self, button_name: str) -> ActionButton:
         """Turn an action encoded by a string, e.g. "forall", into a button.
         """
-        return ActionButton.from_name.get(button_name)
+        # button = ActionButton.from_name.get(button_name)
+        # if button:
+        #     return button
+        # else:
+        #     print("Button names:")
+        #     print(ActionButton.from_name.keys())
+        for button in self.ecw.action_buttons:
+            if button.name == button_name:
+                return button
 
     ##############
     ##############
@@ -904,7 +911,7 @@ class ExerciseMainWindow(QMainWindow):
         statement_name = user_action.statement_name
         if button:
             msg += f"    -> click on button {button}"
-            action_button = self.contextualised_button(button)
+            action_button = self.action_button_from_name(button)
             if action_button:
                 self.ecw.freeze(False)
                 await action_button.simulate(duration=duration)
