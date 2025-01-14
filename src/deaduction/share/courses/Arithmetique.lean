@@ -204,7 +204,7 @@ end
 
 
 -- Nb premier
-lemma definition.prime {p: ℕ} : (prime p) ↔ (∀ n:ℕ, divides n p → (n=1 or n=p)) :=
+lemma definition.prime {p: ℕ} : (prime p) ↔ (p≥ 2 ∧ (∀ n:ℕ, divides n p → (n=1 or n=p))) :=
 /- dEAduction
 PrettyName
   Nombre premier

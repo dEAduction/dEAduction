@@ -244,7 +244,8 @@ class PatternMathDisplay:
                        'continuous', 'uniformly_continuous',
                        'injective', 'surjective', 'bijective',
                        'relation_equivalence', 'partition',
-                       'application', 'application_bijective', 'even', 'odd']
+                       'application', 'application_bijective', 'even', 'odd',
+                       'prime']
 
     # Dicts
     constants_pretty_names = {'converging_seq': _("converging"),
@@ -272,7 +273,8 @@ class PatternMathDisplay:
                               'odd': _('odd'),
                               'divides': _('divides'),
                               'sqrt': _('sqrt'),
-                              'segment': _("segment")
+                              'segment': _("segment"),
+                              'prime': _('prime')
                               }
 
     # NB: int will be turned to tuples
