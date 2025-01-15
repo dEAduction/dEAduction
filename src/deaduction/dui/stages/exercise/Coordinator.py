@@ -293,6 +293,7 @@ class Coordinator(QObject):
 
         # Finally set initial proof states
         self.__set_missing_initial_proof_states()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
     def __set_missing_initial_proof_states(self):
         """
