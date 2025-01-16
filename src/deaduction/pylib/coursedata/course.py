@@ -462,6 +462,11 @@ class Course:
         :return:                a Course instance.
         """
 
+        # Avoid a bug in the parser: line comments are supposed to end with a
+        # CR ('\n')
+        if not file_content.endswith("\n"):
+            file_content += "\n"
+
         statements = []
         outline = OrderedDict()
         opened_namespace_lines = {}
