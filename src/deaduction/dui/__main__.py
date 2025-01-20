@@ -795,7 +795,9 @@ def main():
     inst.init()
 
     set_logger()
-    log.info(f"Starting Deaduction at {time.strftime('%d%b%Hh%M')}")
+    version_nb = cvars.get("others.version", "?")
+    log.info(f"Starting Deaduction {version_nb} at"
+             f" {time.strftime('%d%b%Hh%M')}")
 
     #################
     # Run main loop #

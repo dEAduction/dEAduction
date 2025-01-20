@@ -43,7 +43,7 @@ color_for_props = "Fuchsia"
 color_for_operator_props = "Red"
 color_for_highlight_in_proof_tree = "Yellow"
 
-show_saved_exercises = false
+show_saved_exercises = true
 # Any modification of the following must be echoed
 # in the replace_dubious_characters function in math_display.utils
 dubious_characters = "ℕ, ℤ, ℚ, ℝ, 𝒫, ↦"
