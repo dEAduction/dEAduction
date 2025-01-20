@@ -306,9 +306,13 @@ class CourseChooser(AbstractCoExChooser):
         if course_item:
             if not course_item.course:
                 abs_path = course_item.abs_course_path
-                course_item.course = Course.from_file(abs_path)
-                if course_item.course not in self.loaded_courses:
+                for course in self.loaded_courses:  # Check in loaded courses
+                    if course.abs_course_path == abs_path:
+                        course_item.course = course
+                if not course_item.course:  # Load course
+                    course_item.course = Course.from_file(abs_path)
                     self.loaded_courses.append(course_item.course)
+
                 self.__set_initial_proof_states(course_item.course)
             self.set_preview(course_item.course)
 
@@ -338,7 +342,9 @@ class CourseChooser(AbstractCoExChooser):
         If yes is None then select according to the config settings.
         """
         if yes is None:
-            yes = cvars.get('functionality.show_recent_courses_only')
+            # Show recent courses if settings asks and there are some
+            yes = (cvars.get('functionality.show_recent_courses_only') and
+                   cvars.get("course.recent_courses", []))
         else:
             cvars.set('functionality.show_recent_courses_only', yes)
 
