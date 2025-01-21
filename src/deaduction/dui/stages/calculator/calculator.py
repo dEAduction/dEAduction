@@ -1376,96 +1376,27 @@ class CalculatorController:
 
     def rename_bound_vars(self):
         """
-        Rename all bound vars in current target
+        Rename all bound vars in current target.
         """
 
         bound_vars = self.current_target.bound_vars()
         for bv in bound_vars:
-            print(f"Unnaming bv {bv}")
+            # print(f"Unnaming bv {bv}")
             bv.set_unnamed_bound_var()
+        self.current_target.set_local_context()
         self.goal.recursive_name_all_bound_vars(self.current_target)
-        for bv in bound_vars:
-            print(f"New name: {bv}, id = {bv.identifier_nb}")
+        # for bv in bound_vars:
+        #     print(f"New name: {bv}, id = {bv.identifier_nb}")
 
     def set_bound_var_buttons(self):
-        buttons = [CalculatorButton.from_math_object(bound_var)
+        # NB: MarkedPMO associated to BoundVar button is bound_var,
+        #  not just a deep_copy of it:
+        buttons = [CalculatorButton.from_math_object(bound_var,
+                                                     copy_math_object=False)
                    for bound_var in self.current_target.bound_vars()]
         self.bound_var_buttons.set_buttons(buttons)
         for btn in buttons:
             btn.send_pattern.connect(self.buttons_window.process_clic)
-
-    #
-    #     # (0) Record new bound vars
-    #     if assigned_mvar.has_bound_var():
-    #         new_bound_var = assigned_mvar.bound_var
-    #         self.bound_vars.append(new_bound_var)
-    #         button = CalculatorButton.from_math_object(new_bound_var)
-    #         bv_group.add_button(button)
-    #         button.send_pattern.connect(self.calculator_ui.process_clic)
-    #
-    #     # (1) Name bound vars that have just been given a type
-    #     target = self.target
-    #     bound_var = target.bound_var_affected_by(assigned_mvar)
-    #     if bound_var:
-    #         # (1a) Name bound_var
-    #         bound_var.is_unnamed = True
-    #         self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
-    #         # Propagate name in target.bound_vars()
-    #         # FIXME: should be useless(
-    #
-    #         for bv in target.bound_vars():
-    #             if bound_var.refer_to_the_same_bound_var(bv):
-    #                 if bv.name != bound_var.name:
-    #                     # FIXME: does not work
-    #                     bv.set_unnamed_bound_var()
-    #                     bv.name_bound_var(bound_var.name)
-    #
-    #         # (1b) Propagate name in self.bound_vars fixme: useless??
-    #         for bv in self.bound_vars:
-    #             if bound_var.refer_to_the_same_bound_var(bv):
-    #                 bv.set_unnamed_bound_var()
-    #                 bv.name_bound_var(bound_var.name)
-    #         # (1c) And change buttons accordingly
-    #         for button in bv_group.buttons:
-    #             button_bv = button.patterns[0]
-    #             button.reset_text(button_bv.name)
-    #
-    # def update_bound_vars(self, previous_bound_vars, new_bound_vars):
-    #     """
-    #     Compare self.bound_vars() and self.target.bound_vars(),
-    #     create or delete or modify buttons accordingly.
-    #     """
-    #     # FIXME
-    #
-    #     target = self.target
-    #     bv_group = self.calculator_ui.bound_var_group()
-    #
-    #     set_of_bv1 = set([bv.info.get('identifier_nb')
-    #                       for bv in self.bound_vars
-    #                       if bv.info.get('identifier_nb')])
-    #     set_of_bv2 = set([bv.info.get('identifier_nb')
-    #                       for bv in target.bound_vars()
-    #                       if bv.info.get('identifier_nb')])
-    #     target_ident = [bv.info.get('identifier_nb')
-    #                       for bv in target.bound_vars()]
-    #     to_be_removed = []
-    #     for bv in self.bound_vars:
-    #         ident = bv.info.get('identifier_nb')
-    #         if ident not in target_ident:
-    #             to_be_removed.append(bv)
-    #
-    #     if to_be_removed:
-    #         for bv in to_be_removed:
-    #             self.bound_vars.remove(bv)
-    #         new_group = CalculatorButtonsGroup.from_bound_vars(self.bound_vars)
-    #         ui_lyt = self.calculator_ui.btns_wgt.layout()
-    #         # ui_lyt.replaceWidget(bv_group, new_group)
-    #         # bv_group.deleteLater()
-    #         idx = ui_lyt.indexOf(bv_group)
-    #         print(f"Idx of bv group: {idx}")
-    #         ui_lyt.removeWidget(bv_group)
-    #         bv_group.hide()
-    #         ui_lyt.insertWidget(idx, new_group)
 
     @Slot()
     def insert_pattern(self, pattern_s: [MarkedPatternMathObject]):
@@ -1493,7 +1424,26 @@ class CalculatorController:
             self.history_update()
             return
 
-        new_target = self.target.deep_copy(self.target)
+        potential_bv = pattern_s[0]
+        if potential_bv.is_bound_var:
+            # pattern_s MUST refer to copied bv in new_target below
+            # print("Inserting BV")
+            original_bvs = [potential_bv]
+            copied_bvs = [potential_bv.deep_copy(potential_bv)]
+            pattern_s[0] = copied_bvs[0]
+        else:
+            original_bvs = []
+            copied_bvs = []
+
+        new_target = self.target.deep_copy(self.target,
+                                           original_bvs,
+                                           copied_bvs)
+        # if pattern_s[0].is_bound_var:
+        #     # FIXME
+        #     main_bv = self.target.children[1]
+        #     print(f"BV, {main_bv}"
+        #           f",{pattern_s[0] is main_bv}")
+
         # Do not affect marked_descendant:
         new_target.set_math_cursor(go_to_end=False)
         new_target.math_cursor.set_cursor_at_the_same_position_as(
@@ -1551,6 +1501,7 @@ class CalculatorController:
         else:
             # Fixme
             self.current_target_wdg.setFocus()
+        # DEBUGGING:
         # print(f"Shape: {self.target.latex_shape()}")
         # print(f"New target after move: {new_target}")
         # print("Math list:")
@@ -1565,10 +1516,25 @@ class CalculatorController:
         # print(total)
         # print(cursor)
         # print("Bound vars:")
-        # BV = self.target.bound_vars()
+        # print("Target:")
+        # print(self.target.math_list())
+        # BV = self.target.all_bound_vars()
         # print(BV)
-        # print([bv.info.get('identifier_nb') for bv in BV])
+        # if BV:
+        #     print([bv.info.get('identifier_nb') for bv in BV])
+        #     print([bv is BV[0] for bv in BV])
         # print(self.target.math_type)
+        # if pattern_s[0].is_bound_var:
+        #     # FIXME
+        #     main_bv = self.target.children[1]
+        #     print(f"pattern is {main_bv}? --> {pattern_s[0] is main_bv}")
+        #     # child = self.target.children[2]
+        #     # if child.children:
+        #     #     bv = child.children[0].assigned_math_object
+        #     #     print(f"{bv} is {main_bv},"
+        #     #           f"{bv is main_bv}")
+        #     for bv in BV:
+        #         print(f"{bv} is {main_bv}? --> {bv is main_bv}")
 
     @Slot()
     def delete(self):

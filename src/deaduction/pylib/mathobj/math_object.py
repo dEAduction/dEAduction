@@ -728,6 +728,16 @@ class MathObject:
 
         return self_vars + child_vars
 
+    def all_bound_vars(self) ->[]:
+        """
+        Return the list of all bound vars appearing in self, with repetition.
+        Just for debugging.
+        """
+        if self.is_bound_var:
+            return [self]
+        else:
+            return sum([child.all_bound_vars() for child in self.children], [])
+
     def set_local_context(self, local_context=None):
         """
         The local context of a given bound var is the list of all bound vars
@@ -2211,32 +2221,6 @@ class BoundVar(MathObject):
     def __repr__(self):
         return self.debug_repr('BV')
 
-    # @classmethod
-    # def from_has_bound_var_parent(cls, parent):
-    #     bound_var = parent.children[1]
-    #     math_type = parent.children[0]
-    #     return cls(bound_var.node, bound_var.info, bound_var.children,
-    #                math_type, parent=parent)
-
-    # @classmethod
-    # def deep_copy(cls, self):
-    #     """
-    #     We want to keep the name during the deep copy.
-    #     """
-    #     new_info = deepcopy(self.info)
-    #     math_type: cls = self.math_type
-    #     children: [cls] = self.children  # Real type could be different
-    #     new_math_type = (math_type if math_type.is_no_math_type()
-    #                      else math_type.deep_copy(math_type))
-    #
-    #     new_children = [child.deep_copy(child) for child in children]
-    #
-    #     new_bound_var = cls(node=self.node, info=new_info,
-    #                         children=new_children, math_type=new_math_type,
-    #                         deep_copy=True)
-    #     new_bound_var.is_unnamed = self.is_unnamed
-    #     return new_bound_var
-
     @classmethod
     def from_math_type(cls, math_type, parent=None):
         """
@@ -2257,11 +2241,13 @@ class BoundVar(MathObject):
     def set_id_nb(self):
         """
         Set a unique identifier nb for self. This nb should be copied
-        identically when self is deep copied.
+        identically when self is deep_copied.
         """
         if not self.info.get('identifier_nb'):
             BoundVar.identifier_nb += 1
             self.info['identifier_nb'] = BoundVar.identifier_nb
+
+        # print(f"New bv {self.name} with id {self.id_nb}")
 
     def refer_to_the_same_bound_var(self, other):
         """
@@ -2274,8 +2260,12 @@ class BoundVar(MathObject):
         return id_nb1 and (id_nb1 == id_nb2)
 
     @property
+    def id_nb(self):
+        return self.info.get('identifier_nb')
+
+    @property
     def name(self):
-        # Fixme: make it an attribute
+        # TODO: make it an attribute
         return self.info['name']
 
     @property

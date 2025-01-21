@@ -152,9 +152,13 @@ class CalculatorAbstractButton:
                    menu=False)
 
     @classmethod
-    def from_math_object(cls, math_object):
+    def from_math_object(cls, math_object, copy_math_object=True):
         symbol = math_object.to_display(format_='html', use_color=True)
-        marked_pmo = MarkedPatternMathObject.from_math_object(math_object)
+        if copy_math_object:
+            marked_pmo = MarkedPatternMathObject.from_math_object(math_object)
+        else:
+            assert isinstance(math_object, MarkedPatternMathObject)
+            marked_pmo = math_object
         return cls(symbol=symbol,
                    tooltip=None,
                    patterns=marked_pmo,

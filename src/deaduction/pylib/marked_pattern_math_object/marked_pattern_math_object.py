@@ -858,7 +858,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     A PatternMathObject with a marked node.
     """
 
-    # cursor_pos = None
     automatic_patterns = []  # Populated in calculator_pattern_strings.py
     app_patterns = dict()
     applications_from_ctxt = []
@@ -923,7 +922,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             marked_descendant = self.marked_descendant()
             marked_descendant.unmark()
 
-        self._math_cursor = MathCursor(self, marked_descendant, go_to_end)
+        self._math_cursor = MathCursor(root_math_object=self,
+                                       cursor_math_object=marked_descendant,
+                                       go_to_end=go_to_end)
 
         if marked_descendant:
             marked_descendant.mark()
@@ -1595,7 +1596,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     def insert(self, new_pmo: PatternMathObject):
         """
-        Try to insert pmo in self's tree, so that pmo is just after the
+        Try to insert new_pmo in self's tree, so that new_pmo is just after the
         marked node in the infix order. In case of success, return the mvar
         at which insertion has been done.
 
@@ -1605,7 +1606,15 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         after cursor pos.
         """
 
-        new_pmo_copy = new_pmo.deep_copy(new_pmo)
+        # FIXME: debug
+        # print("Insert:")
+        # print(type(new_pmo))
+        # print(new_pmo.is_bound_var)
+
+        if new_pmo.is_bound_var:  # insert bound_var and NOT a copy
+            new_pmo_copy = new_pmo
+        else:
+            new_pmo_copy = new_pmo.deep_copy(new_pmo)
 
         adjacent_items = (self.marked_descendant(), self.on_the_other_side())
 
@@ -1932,7 +1941,9 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
 
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
-        new_mvar: MarkedMetavar = super().deep_copy(self)
+        new_mvar: MarkedMetavar = super().deep_copy(self,
+                                                    original_bound_vars,
+                                                    copied_bound_vars)
         if self.is_marked:
             new_mvar.mark()
         return new_mvar
@@ -1949,7 +1960,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     @property
     def info(self):
         """
-        Override super().children in case self has a assigned_math_object.
+        Override super().info in case self has a assigned_math_object.
         """
         info = (self.assigned_math_object.info
                 if self.assigned_math_object else self._info)
@@ -1967,7 +1978,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     @property
     def math_type(self):
         """
-        Override super().children in case self has a assigned_math_object.
+        Override super().math_type in case self has a assigned_math_object.
         """
         math_type = (self.assigned_math_object.math_type
                      if self.assigned_math_object else self._math_type)

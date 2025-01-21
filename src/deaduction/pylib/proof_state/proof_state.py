@@ -748,7 +748,7 @@ class Goal:
                                       include_sequences=True):
         """
         Recursively name all bound vars in p. Each bound var should be
-        named only once (!).
+        named only once (!). Beware that local context should have been set.
         """
 
         # (1) Name self's direct bound var, if any

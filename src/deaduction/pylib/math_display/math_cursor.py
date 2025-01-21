@@ -52,6 +52,7 @@ class MathCursor:
         (0,) corresponds to the MathList ['f'],
         (0, 0) corresponds to the MathString 'f'
         (1,) corresponds to the MathString '\circ'
+        and so on.
     """
 
     deaduction_cursor = MathString.cursor
@@ -397,9 +398,6 @@ class MathCursor:
             self.cursor_is_after = after
             if set_marked:
                 self.set_marked_element(True)
-
-            # This --> crash!
-            # self.debug()
             return True
         else:
             return False

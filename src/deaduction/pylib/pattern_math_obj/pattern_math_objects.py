@@ -713,10 +713,16 @@ class MetaVar(PatternMathObject):
 
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
-        new_mvar = super().deep_copy(self)
+        """
+        Deep copy self, including assigned math object.
+        """
+        new_mvar = super().deep_copy(self, original_bound_vars,
+                                     copied_bound_vars)
         mmo = self.assigned_math_object
         if mmo:
-            new_mvar.assigned_math_object = mmo.deep_copy(mmo)
+            new_mvar.assigned_math_object = mmo.deep_copy(mmo,
+                                                          original_bound_vars,
+                                                          copied_bound_vars)
         return new_mvar
 
     @property
