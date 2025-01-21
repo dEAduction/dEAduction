@@ -141,10 +141,15 @@ class LeanEnvironment:
     def check_file_path(self, abs_path):
         """
         If abs_path is not in one of the directories in the leanpath,
-        then copy file in cdirs.tmp_exercises_dir.
+        then copy file in cdirs.tmp_exercises_dir, adding _tmp to its name.
+        Return the absolute path to be used for that file.
         """
         if not self.is_in_leanpath(abs_path):
-            new_file = cdirs.tmp_exercises_dir / abs_path.name
-            copy(abs_path, new_file)
-
+            tmp_name = abs_path.stem + "_tmp" + abs_path.suffix
+            # tmp_name = abs_path.name
+            new_abs_path = cdirs.tmp_exercises_dir / tmp_name
+            copy(abs_path, new_abs_path)
+            return new_abs_path
+        else:
+            return abs_path
 

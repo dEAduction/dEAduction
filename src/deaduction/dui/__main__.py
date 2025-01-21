@@ -34,6 +34,7 @@ This file is part of d∃∀duction.
 from sys import argv
 from shutil import copytree, rmtree
 from requests import HTTPError
+from pathlib import Path
 
 import logging
 import trio
@@ -583,15 +584,21 @@ class WindowManager(QObject):
         """
         Check that course file name will not raise an import error.
         """
-        path = course.abs_course_path
+
         lean_env = self.servint.lean_env
+        # path = course.abs_course_path
+        # course.abs_course_path = lean_env.check_file_path(abs_path=path)
+        path = course.abs_course_path
         other = lean_env.other_file_with_same_name(abs_path=path)
         if other and not other.parent == cdirs.tmp_exercises_dir:
             dialog = QMessageBox()  # title=_('File selector')
             dialog.setWindowTitle(_('Ambiguous name ') + '— d∃∀duction')
             txt = _("File has the same name as \n{}.").format(other)
             txt += _("\nChange the name of one of the two files and try again.")
-            det_txt = _("This will raise an import error from Lean. "
+            det_txt = _("The following files share the same name:\n"
+                        f"{path}\n"
+                        f"{other}\n"
+                        "This will raise an import error from Lean. "
                         "If you insist on not changing names, then go to the "
                         "settings window, select the advanced tab and set "
                         "the Lean requests method to 'Normal'.")
@@ -608,7 +615,6 @@ class WindowManager(QObject):
             if dialog.clickedButton() != ok_btn:
                 return False
 
-        lean_env.check_file_path(abs_path=path)
         return True
 
     @Slot()
@@ -693,21 +699,22 @@ class WindowManager(QObject):
             self.chooser_window.close()
             self.chooser_window_closed.emit()
 
+    def exercise_from_argv(self) -> Exercise:
+        """
+        Try to build Exercise object from arguments.
+        """
+        exercise = None
+        args = arg_parser.parse_args(argv[1:])
+        course_path = args.course
+        course_path = Path(course_path)
+        course_path = self.servint.lean_env.check_file_path(course_path)
+        exercise_like = args.exercise
 
-def exercise_from_argv() -> Exercise:
-    """
-    Try to build Exercise object from arguments.
-    """
-    exercise = None
-    args = arg_parser.parse_args(argv[1:])
-    course_path = args.course
-    exercise_like = args.exercise
+        if course_path and exercise_like:
+            log.debug('Searching course and exercise...')
+            course, exercise = select_exercise(course_path, exercise_like)
 
-    if course_path and exercise_like:
-        log.debug('Searching course and exercise...')
-        course, exercise = select_exercise(course_path, exercise_like)
-
-    return exercise
+        return exercise
 
 
 ##################################################################
@@ -745,7 +752,7 @@ async def async_main():
         #################################
         try:
             # Choose first exercise
-            exercise = exercise_from_argv()
+            exercise = wm.exercise_from_argv()
             if not exercise:
                 wm.choose_exercise()
                 # wm.choose_exercise()

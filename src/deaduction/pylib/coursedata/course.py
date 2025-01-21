@@ -82,7 +82,7 @@ class Course:
     outline:                OrderedDict
     opened_namespace_lines: Dict
     statements:             List[Statement]
-    relative_course_path:   Path = None
+    # relative_course_path:   Path = None
     abs_course_path:   Path = None
     # Relative_course_path, path relative to the home directory, is added after
     # instantiation.
@@ -94,6 +94,10 @@ class Course:
     #   values = corresponding plain language namespace
     #   e. g. section_dict["set_theory.unions_and_intersections"] =
     #   "Unions and intersections"
+
+    @property
+    def relative_course_path(self):
+        return cdirs.relative_to_home(self.abs_course_path)
 
     @property
     def course_file_name(self):
@@ -366,7 +370,7 @@ class Course:
         # home = cdirs.home.resolve()
         # relative_course_path = Path(os.path.relpath(course_path,
         #                                             start=home))
-        course.relative_course_path = cdirs.relative_to_home(abs_course_path)
+        # course.relative_course_path = cdirs.relative_to_home(abs_course_path)
         course.abs_course_path = abs_course_path
 
         return course

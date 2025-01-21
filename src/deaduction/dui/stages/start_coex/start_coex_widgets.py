@@ -483,6 +483,7 @@ class CourseChooser(AbstractCoExChooser):
             # course_path = cdirs.relative_to_home(path)
             course = self.find_course(abs_path)
             if not course:
+                abs_path = self.servint.lean_env.check_file_path(abs_path)
                 course = Course.from_file(abs_path)
 
             if course:
