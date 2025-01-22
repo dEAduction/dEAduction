@@ -163,13 +163,13 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     def insert_by_length(self, calc_buttons: list):
         """
-        Insert string s in list l, ordered by length.
+        Insert self in list calc_buttons, ordered by length of text.
         """
 
         if not calc_buttons:
             calc_buttons.append(self)
 
-        idx = None  # note that calc_buttons is not the trivial list
+        idx = None  # Note that calc_buttons is not the trivial list
         broken = False
         for idx in range(len(calc_buttons)):
             button = calc_buttons[idx]
@@ -194,7 +194,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         Add a pertinent beginning of self.text() as a shortcut for self.
 
         If the text of some button is a beginning word of one or more others,
-        its shortcut will be a tuple containing all these buttons.
+        its shortcut will be a tuple containing all these buttons, sorted by
+        text length (the first is supposed to be called).
 
         If two buttons have the same text, only one will have a shortcut.
         """
@@ -208,10 +209,17 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 text = text.replace(value, key)
 
         # Replace spaces (space is used to end shortcut)
-        shortcut_text = text.replace(' ', '_')
-        shortcut = ''
+        shortcut_text = text
+        for pair in (' ', '_'), ('·', ''), ('⁻¹', 'inv'):
+            shortcut_text = shortcut_text.replace(*pair)
         sdic = CalculatorButton.shortcuts_dic
+        conflicting_buttons = sdic.get(shortcut_text, [])
 
+        if self.text() in [btn.text() for btn in conflicting_buttons]:
+            # There is another copy of this button, no shortcut for this one!
+            return
+
+        shortcut = ''
         for car in shortcut_text:
             shortcut += car
             conflicting_buttons = sdic.get(shortcut, [])
@@ -221,6 +229,12 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         if shortcut in sdic and sdic[shortcut][0] == self:
             self.shortcut = shortcut
 
+        # # Debug
+        # if text.startswith("="):
+        #     print(f"Processing button with text {text}")
+        #     print(f"Shortcut: {self.shortcut}")
+        #     print(f"--> {sdic[shortcut]}")
+
     @classmethod
     def find_shortcut(cls, text_buffer, timeout=False, text_is_macro=False):
         """
@@ -228,11 +242,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         return the corresponding button.
 
         If timeout is True:
-        If only one shortcut match text_buffer (i.e. has text_buffer as a
-        sub-word), return the corresponding
-        button, even if there may be some other shortcut starting with
-        text_buffer.
-
+        return the first button matching shortcut, which is supposed to be
+        the one with smallest length
 
         """
 
