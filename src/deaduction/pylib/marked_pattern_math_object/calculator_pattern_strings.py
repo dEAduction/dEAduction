@@ -264,16 +264,16 @@ class CalculatorPatternLines:
         return pattern
 
 
-calculator_group = CalculatorPatternLines(_('Calculator'),
-                                          [['7', '8', '9', '/'],
-                                           ['4', '5', '6', '*'],
-                                           ['1', '2', '3', '-'],
-                                           ['0', '.', '()', '+'],
-                                           ])
-sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
-                                        [['sin', '()', ','],
-                                         # ['=', '<']
-                                         ])
+# calculator_group = CalculatorPatternLines(_('Calculator'),
+#                                           [['7', '8', '9', '/'],
+#                                            ['4', '5', '6', '*'],
+#                                            ['1', '2', '3', '-'],
+#                                            ['0', '.', '()', '+'],
+#                                            ])
+# sci_calc_group = CalculatorPatternLines(_('scientific calculator'),
+#                                         [['sin', '()', ','],
+#                                          # ['=', '<']
+#                                          ])
 # logic_group = CalculatorPatternLines(_('Logic'), [['∀', '⇒', '∧']])
 # set_theory_group = CalculatorPatternLines(_('Set theory'), [['∩', '∪']])
 

@@ -706,6 +706,9 @@ class WindowManager(QObject):
         exercise = None
         args = arg_parser.parse_args(argv[1:])
         course_path = args.course
+        if not course_path:
+            return None
+
         course_path = Path(course_path)
         course_path = self.servint.lean_env.check_file_path(course_path)
         exercise_like = args.exercise

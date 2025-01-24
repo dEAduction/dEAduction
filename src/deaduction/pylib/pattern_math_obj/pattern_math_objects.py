@@ -320,9 +320,9 @@ class PatternMathObject(MathObject):
               debug=False) -> bool:
         """
         Test if math_object match self. This is a recursive test.
-        The metavars list contains the metavars that have
+        The cls.__metavars list contains the metavars that have
         already been matched against a math_object, which is stored with the
-        same index in the .metavar_objects list.
+        same index in the cls.__.metavar_objects list.
         e.g. 'g∘f is injective' matches 'metavar_28 is injective'
         (note that math_types of metavars should also match).
         In case of successful matching, the metavars and metavar_objects

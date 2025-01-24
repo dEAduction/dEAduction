@@ -213,8 +213,8 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         for pair in (' ', '_'), ('·', ''), ('⁻¹', 'inv'):
             shortcut_text = shortcut_text.replace(*pair)
         sdic = CalculatorButton.shortcuts_dic
-        conflicting_buttons = sdic.get(shortcut_text, [])
 
+        conflicting_buttons = sdic.get(shortcut_text, [])
         if self.text() in [btn.text() for btn in conflicting_buttons]:
             # There is another copy of this button, no shortcut for this one!
             return

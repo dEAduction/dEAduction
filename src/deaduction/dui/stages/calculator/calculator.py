@@ -1427,7 +1427,6 @@ class CalculatorController:
         potential_bv = pattern_s[0]
         if potential_bv.is_bound_var:
             # pattern_s MUST refer to copied bv in new_target below
-            # print("Inserting BV")
             original_bvs = [potential_bv]
             copied_bvs = [potential_bv.deep_copy(potential_bv)]
             pattern_s[0] = copied_bvs[0]
