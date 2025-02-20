@@ -245,8 +245,10 @@ class CalculatorPatternLines:
                         # idx, symbol = marked_pmo.main_shape_symbol()
                         # if symbol == 'max':
                         #     print(marked_pmo.math_type)
-                        symbols.append(symbol)
-                        patterns[symbol] = marked_pmo
+                        # Not twice in the same section:
+                        if symbol not in symbols:
+                            symbols.append(symbol)
+                            patterns[symbol] = marked_pmo
                 # Slices of 4
                 if symbols:
                     symbols = [symbols[4*idx:4*(idx+1)]

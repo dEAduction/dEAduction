@@ -30,7 +30,15 @@ do
    tactic.done <|> 
       `[ tactic.interactive.context_no_meta_vars,
          tactic.interactive.target_no_meta_vars ]
-      
+
+
+/- all_goals_no_meta_vars check all goals-/
+meta def tactic.interactive.all_goals_no_meta_vars : tactic unit :=
+do
+   tactic.done <|> 
+      `[ all_goals {tactic.interactive.context_no_meta_vars,
+         tactic.interactive.target_no_meta_vars} ]
+
 
 open interactive (parse)
 open tactic
@@ -40,6 +48,14 @@ open lean.parser (ident)
 meta def tactic.interactive.no_meta_vars_test (id: parse ident): (tactic unit) :=
 do e ← get_local id, et ← infer_type e,  trace et
 
+
+meta def tactic.interactive.test_no_meta_vars (e: expr) : tactic unit :=
+if e.has_meta_var then tactic.fail "has meta var" else tactic.fail "no meta var"
+-- mwhen (expr.has_meta_var <$> (tactic.instantiate_mvars e)) $ tactic.fail (s ++ " contains metavars")
+
+meta def tactic.interactive.test_target_no_meta_vars : tactic unit :=
+--  tactic.target  >>= tactic.interactive.test_no_meta_vars
+trace (tactic.target)
 
 ------------------------------------------------
 ----------------- tactic todo ------------------
@@ -62,10 +78,12 @@ end tactic
 -- open tactic.interactive
 -- example : ∃ x : ℕ, x = 0 :=
 -- begin
---    no_meta_vars,
+--    all_goals_no_meta_vars,
 --    existsi _,
 --    context_no_meta_vars,
 --    have H: 0=0,
+--    no_meta_vars,
+--    all_goals_no_meta_vars,
 --    {refl, trace "toto", no_meta_vars},
 --    -- no_meta_vars,
 --    sorry

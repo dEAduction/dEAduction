@@ -30,7 +30,8 @@ This file is part of dEAduction.
 from deaduction.pylib.actions import MissingCalculatorOutput, CalculatorRequest
 from deaduction.pylib.actions import CodeForLean, test_selection
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
-from deaduction.pylib.actions.commun_actions import use_forall
+from deaduction.pylib.actions.commun_actions import use_forall, \
+    have_new_property
 
 # from deaduction.pylib.proof_state import Goal
 
@@ -159,14 +160,16 @@ def apply_theorem(proof_step) -> CodeForLean:
         codes = add_statement_to_context(proof_step, theorem)
         return codes
 
+    # If thm may be used for rewriting, then try it
     ips = theorem.initial_proof_state
     theorem_goal = ips.goals[0] if ips else None  # Goal
     substitution, equality = (theorem_goal.target.can_be_used_for_substitution()
-                              if theorem_goal else True, None)
-    # If no ips available, then try anyway!
+                              if theorem_goal else (True, None))
+    # (If no ips available, then try anyway!)
     if substitution:
         codes = rw_using_statement(goal, selected_objects, theorem)
 
+    # Apply thm
     h = get_new_hyp(proof_step)
     th = theorem.lean_name
     if len(selected_objects) == 0:
@@ -176,8 +179,8 @@ def apply_theorem(proof_step) -> CodeForLean:
         codes = codes.or_else(code)
 
     else:
-        command = f'have {h} := {th}' + ' '
-        command_implicit = f'have {h} := @{th}' + ' '
+        # command = f'have {h} := {th}' + ' '
+        # command_implicit = f'have {h} := @{th}' + ' '
         names = [item.info['name'] for item in selected_objects]
         arguments = ' '.join(names)
         if target_selected:
@@ -190,20 +193,24 @@ def apply_theorem(proof_step) -> CodeForLean:
 
         else:
             # Up to 4 implicit arguments
-            more_codes = [command + arguments,
-                          command_implicit + arguments,
-                          command + ' _ ' + arguments,
-                          command_implicit + ' _ ' + arguments,
-                          command + ' _ _ ' + arguments,
-                          command_implicit + ' _ _ ' + arguments,
-                          command + ' _ _ _ ' + arguments,
-                          command_implicit + ' _ _ _ ' + arguments,
-                          command + ' _ _ _ _ ' + arguments,
-                          command_implicit + ' _ _ _ _ ' + arguments
-                          ]
+            # more_codes = [command + arguments,
+            #               command_implicit + arguments,
+            #               command + ' _ ' + arguments,
+            #               command_implicit + ' _ ' + arguments,
+            #               command + ' _ _ ' + arguments,
+            #               command_implicit + ' _ _ ' + arguments,
+            #               command + ' _ _ _ ' + arguments,
+            #               command_implicit + ' _ _ _ ' + arguments,
+            #               command + ' _ _ _ _ ' + arguments,
+            #               command_implicit + ' _ _ _ _ ' + arguments
+            #               ]
             success_msg = (_('Theorem') + ' ' + _('applied to') + ' '
                            + arguments)
-            more_codes = CodeForLean.or_else_from_list(more_codes)
+            more_codes = have_new_property(operator=theorem,
+                                           arguments=selected_objects,
+                                           new_hypo_name=h,
+                                           success_msg=success_msg)
+            # more_codes = CodeForLean.or_else_from_list(more_codes)
 
         more_codes.add_success_msg(success_msg)
         more_codes.add_used_properties(selected_objects)

@@ -15,52 +15,59 @@ Simplifier lemmas for basic arithmetic operations
 -- TODO: tactic.ring.add_neg_eq_sub
 -- TODO: how to add existing lemmas?? simp only <list>
 
+variables {u: Type} [add_comm_group u]
+
 @[simp_arith]
-lemma sub1 (a: ℝ) : a-a = 0 :=
+lemma sub1 (a: u) : a-a = 0 :=
 begin
   simp only [sub_self],
 end
 
 @[simp_arith]
-lemma sub2 (a b: ℝ) : a + b - b = a :=
+lemma sub2 (a b: u) : a + b - b = a :=
 begin
   simp only [add_sub_cancel]
 end
 
 @[simp_arith]
-lemma sub3 (a b: ℝ) : (b + a) - b = a :=
+lemma sub3 (a b: u) : (b + a) - b = a :=
 begin
   simp only [add_sub_cancel']
 end
 
-
--- addition
 @[simp_arith]
-lemma zero_add1 (a: ℝ) : 0+a = a :=
+lemma sub4 (a b c: u) : a + b + c - a = b + c :=
+begin
+  todo,
+end
+
+-- Addition
+@[simp_arith]
+lemma zero_add1 (a: u) : 0+a = a :=
 begin
   simp only [zero_add],
 end
 
 @[simp_arith]
-lemma add_zero1 (a: ℝ) : a+0 = a :=
+lemma add_zero1 (a: u) : a+0 = a :=
 begin
   simp only [add_zero],
 end
 
 @[simp_arith]
-lemma add_right_inj1 (a b c: ℝ) : a+b = a+c ↔ b = c:=
+lemma add_right_inj1 (a b c: u) : a+b = a+c ↔ b = c:=
 begin
   simp only [add_right_inj]
 end
 
 @[simp_arith]
-lemma add_right_inj2 (a c: ℝ) : a = a+c ↔ 0 = c:=
+lemma add_right_inj2 (a c: u) : a = a+c ↔ 0 = c:=
 begin
   todo
 end
 
 @[simp_arith]
-lemma add_right_inj3 (a b: ℝ) : a + b = a ↔ b = 0:=
+lemma add_right_inj3 (a b: u) : a + b = a ↔ b = 0:=
 begin
   simp only [add_right_eq_self]
 end
@@ -68,21 +75,84 @@ end
 
 -- left
 @[simp_arith]
-lemma add_left_inj1 (a b c: ℝ) : a+b = c+b ↔ a = c:=
+lemma add_left_inj1 (a b c: u) : a+b = c+b ↔ a = c:=
 begin
   simp only [add_left_inj]
 end
 
 @[simp_arith]
-lemma add_left_inj2 (a c: ℝ) : a = c+a ↔ 0 = c:=
+lemma add_left_inj2 (a c: u) : a = c+a ↔ 0 = c:=
 begin
   todo
 end
 
 @[simp_arith]
-lemma add_left_inj3 (a b: ℝ) : a+b = b ↔ a = 0:=
+lemma add_left_inj3 (a b: u) : a+b = b ↔ a = 0:=
 begin
   simp only [add_left_eq_self]
+end
+
+
+-- Multiplication
+variables {v w: Type} [monoid v] [group w]
+
+@[simp_arith]
+lemma one_mul1 (a: v) : 1*a = a :=
+begin
+  simp only [one_mul],
+end
+
+@[simp_arith]
+lemma mul_one1 (a: v) : a*1 = a :=
+begin
+  simp only [mul_one],
+end
+
+@[simp_arith]
+lemma mul_right_inj1 (a b c: w) : a*b = a*c ↔ b = c:=
+begin
+  have H2 :=(@mul_right_inj w _ a b c),
+  exact H2,
+end
+
+@[simp_arith]
+lemma mul_right_inj2 (a b: w) : a = a*b ↔ 1 = b:=
+begin
+  todo
+end
+
+@[simp_arith]
+lemma mul_right_inj3 (a b: w) : a*b = a ↔ b = 1:=
+begin
+  todo
+end
+
+
+-- left
+@[simp_arith]
+lemma mul_left_inj1 (a b c: w) : a*b = c*b ↔ a = c:=
+begin
+  todo
+end
+
+@[simp_arith]
+lemma mul_left_inj2 (a b: w) : a = b*a ↔ 1 = b:=
+begin
+  todo
+end
+
+@[simp_arith]
+lemma mul_left_inj3 (a b: w) : a*b = b ↔ a = 1:=
+begin
+  todo
+end
+
+
+-- Powers
+@[simp_arith]
+lemma square {Z:Type} [has_mul Z] [has_pow Z ℕ] {a:Z}: a^2 = a * a :=
+begin
+  todo
 end
 
 /-

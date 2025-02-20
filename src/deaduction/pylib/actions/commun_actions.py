@@ -28,6 +28,7 @@ This file is part of dEAduction.
 
 import logging
 from typing import Optional, Union
+from itertools import permutations
 
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions.utils import pre_process_lean_code
@@ -162,12 +163,44 @@ def inequality_from_pattern_matching(math_object: MathObject,
             return new_inequality
 
 
+def permute_arguments(arguments) -> []:
+    """
+    Return lists of lists arguments, with all possible permutations of last
+    propositional arguments. If the number of propositional arguments is more
+    than max_nb then only the id permutation is returned.
+
+    @param arguments: [Union[MathObject, str]]
+
+    return: [[Union[MathObject, str]]]
+    """
+    max_nb = 3
+
+    # (1) Split last prop arguments from arguments
+    last_prop_args = []
+    first_args = [arg for arg in arguments]
+    while (first_args
+           and isinstance(first_args[-1], MathObject)
+           and first_args[-1].math_type.is_prop()):
+        arg = first_args.pop()
+        # print(f"Found prop {arg}")
+        last_prop_args.insert(0, arg)
+
+    if len(last_prop_args) > max_nb:
+        return [arguments]
+
+    # (2) Compute all permutations of last_prop_args
+    permuted_args = permutations(last_prop_args)
+    # print(permuted_args)
+    return [first_args+list(args) for args in permuted_args]
+
+
 def have_new_property(operator,  #: Union[MathObject, Statement]
                       arguments: [Union[MathObject, str]],
                       new_hypo_name: str,
                       success_msg=None,
                       iff_direction='',
-                      no_more_place_holder=False) -> CodeForLean:
+                      no_more_place_holder=False,
+                      allow_permutations=True) -> CodeForLean:
     """
     Compute Lean code to apply an implication or a universal property to a
     property or a variable.
@@ -191,6 +224,7 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
     @param no_more_place_holder:
                             if False, try to add 0 to 6  Lean place-holders
                             ( '_').
+    @param allow_permutations: if True, try to permute propositional arguments.
 
     return:                 Lean Code to produce the wanted new property,
                             taking into account implicit parameters
@@ -200,42 +234,26 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
     #  May even try to guess parameters from the context
     #  (e.g. if we need a function and there is only one in the context)
 
-    # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
-    # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
-    # = "mp")
-
-    # variable_names = [variable.to_display(format_='lean')
-    #                   if isinstance(variable, MathObject)
-    #                   else variable for variable in arguments]
-    #
-    # # selected_hypo = arrow.info["name"]
-    # selected_hypo = operator.lean_name  # Property of both MathObject and Statement
-
     if not no_more_place_holder:
         no_more_place_holder = (hasattr(arguments[0], 'is_place_holder')
                                 and arguments[0].is_place_holder())
-    # have = f'have {new_hypo_name} := '
-    # args = ' '.join(variable_names)
     implicit_codes = []
     explicit_codes = []
     nbs = [0] if no_more_place_holder else range(6)  # Implicit args ('_')
-    for nb in nbs:
-        have = CodeForLean.have(new_hypo_name, operator, arguments,
-                                iff_direction=iff_direction, explicit=False,
-                                nb_place_holders=nb)
-        # imp_code = f'{selected_hypo} ' + '_ '*nb
-        # exp_code = f'@{selected_hypo} ' + '_ '*nb
-        # if iff_direction:
-        #     if nb > 0:
-        #         imp_code = '(' + imp_code + ')'
-        #         exp_code = '(' + exp_code + ')'
-        #     imp_code = imp_code + '.' + iff_direction + ' '
-        #     exp_code = exp_code + '.' + iff_direction + ' '
-        implicit_codes.append(have)
-        have = CodeForLean.have(new_hypo_name, operator, arguments,
-                                iff_direction=iff_direction, explicit=True,
-                                nb_place_holders=nb)
-        explicit_codes.append(have)
+    if allow_permutations:
+        list_of_args = permute_arguments(arguments)
+    else:
+        list_of_args = [arguments]
+    for args in list_of_args:
+        for nb in nbs:
+            have = CodeForLean.have(new_hypo_name, operator, args,
+                                    iff_direction=iff_direction, explicit=False,
+                                    nb_place_holders=nb)
+            implicit_codes.append(have)
+            have = CodeForLean.have(new_hypo_name, operator, args,
+                                    iff_direction=iff_direction, explicit=True,
+                                    nb_place_holders=nb)
+            explicit_codes.append(have)
 
     codes = (explicit_codes if no_more_place_holder
              else implicit_codes + explicit_codes)
@@ -244,7 +262,7 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
         success_msg = _("Property {} added to the context").format(new_hypo_name)
     code.add_success_msg(success_msg)
 
-    code.operator = operator
+    # code.operator = operator
     return code
 
 
@@ -445,13 +463,17 @@ def use_forall(proof_step, arguments: [MathObject],
     return code
 
 
-def provide_name_for_new_vars(proof_step, math_types: [],
+def provide_name_for_new_vars(proof_step,
+                              math_types: [],
+                              preferred_letters: [] = None,
                               text="", user_input_nb=0):
     """
     Provide names for new vars of types math_types, either by asking usr or
     by calling proof_step.goal.provide_good_name.
     @param proof_step:
     @param math_types: list of math_types to be named.
+    @param preferred_letters: letter to be used if possible, e.g. bound var
+                                    letter in a universal statement to prove
     @param text: text to be displayed.
     @param user_input_nb: Nb of entries in user_input prior to naming.
     """
@@ -488,7 +510,8 @@ def provide_name_for_new_vars(proof_step, math_types: [],
         new_names = [pre_process_lean_code(name) for name in user_input[
                      user_input_nb:]]
     else:
-        new_names = proof_step.goal.provide_good_names(math_types)
+        new_names = proof_step.goal.provide_good_names(math_types,
+                                                       preferred_letters)
 
     return new_names
 

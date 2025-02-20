@@ -366,6 +366,7 @@ class CalculatorTargets(QWidget):
         @param titles: a list of strings.
         """
 
+        log.debug("Init Calculator Targets Widget")
         assert target_types
         if len(titles) < len(target_types):
             titles += [None]*(len(target_types) - len(titles))

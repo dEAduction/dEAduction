@@ -350,7 +350,7 @@ class AutoStep(UserAction):
                 calc_item = None
             else:
                 new_item = item.replace('__', ' ')
-                if new_item.isdecimal():
+                if new_item.isdecimal() and calc_item is None:
                     new_item = int(new_item)
                 if calc_item is not None:
                     # Encode in a MathObject

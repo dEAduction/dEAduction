@@ -41,7 +41,7 @@ Author
 Institution
     Université de France
 Title
-    Logique et inégalités
+    VRAI/FAUX : Logique et inégalités
 Description
     Ce fichier contient quelques exercices de base
     impliquant des quantificateurs et des inégalités.
@@ -243,6 +243,19 @@ begin
 end
 
 
+lemma exercise.positif :
+(∀x:ℝ, ∃y:ℝ, x+y >0)
+:=
+/- dEAduction
+PrettyName
+    Positif
+-/
+begin
+    todo
+end
+
+
+
 lemma exercise.egalite : ∀ n:ℕ, ∃ m:ℕ, m=n
 :=
 /- dEAduction
@@ -265,7 +278,7 @@ begin
     todo
 end
 
-
+-- Marche bien par l'absurde, ou directement
 lemma exercise.tres_petit :
 ∀ a ≥ (0:ℝ), ∀ ε ≥ (0:ℝ), (a ≤ ε → a = 0)
 :=
@@ -292,7 +305,7 @@ begin
 end
 
 
-
+-- Utiliser la preuve par contrapposée
 lemma exercise.tres_petit_3 :
 ∀ a ≥ (0:ℝ), ((∀ ε > (0:ℝ), a ≤ ε) → a = 0)
 :=

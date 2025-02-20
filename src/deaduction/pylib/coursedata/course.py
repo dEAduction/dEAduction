@@ -296,9 +296,55 @@ class Course:
                      if isinstance(item, Exercise)]
         return exercises
 
+    def all_exercises_text(self):
+        """
+        Return the detailed statements of all exercises.
+        """
+
+        txt = ""
+        ex_counter = 0
+        for exercise in self.exercises:
+            ex_counter += 1
+            txt += _(f"Exercise {ex_counter}: ") + exercise.pretty_name
+            txt += '\n'
+            txt += exercise.statement_to_text
+            txt += '\n\n'
+        return txt
+
+    @property
+    def abs_text_file_path(self):
+        filename = 'all_statements_' \
+                   + self.course_file_name.replace('.', '_') \
+                   + '.txt'
+
+        check_dir(cdirs.text_files, create=True)
+        abs_path = cdirs.text_files / filename
+        # print(f"Abs history path:{abs_path}")
+        return abs_path
+
+    def save_all_exercises_text(self):
+        """
+        Save the text of all exercises in a file, if the file does not
+        already exist.
+        """
+        # TODO: write on previous file if contents not up to date.
+        path = self.abs_text_file_path
+        content = self.all_exercises_text()
+        # 'x' = fails if file already exists
+        try:
+            with open(path, mode='xt', encoding='utf-8') as output:
+                log.info("Saving all statements to file" + " " + str(path))
+                output.write(content)
+        except FileExistsError:
+            log.debug("(File already exists:" + " " + str(path) + ")")
+
+    @property
+    def incomplete_statements(self):
+        return [st for st in self.statements if not st.initial_proof_state]
+
     @property
     def initial_proofs_complete(self):
-        return None not in [st.initial_proof_state for st in self.statements]
+        return not self.incomplete_statements
 
     @property
     def nice_metadata(self) -> dict:
@@ -419,6 +465,11 @@ class Course:
         :param file_content:    str, to be parsed
         :return:                a Course instance.
         """
+
+        # Avoid a bug in the parser: line comments are supposed to end with a
+        # CR ('\n')
+        if not file_content.endswith("\n"):
+            file_content += "\n"
 
         statements = []
         outline = OrderedDict()

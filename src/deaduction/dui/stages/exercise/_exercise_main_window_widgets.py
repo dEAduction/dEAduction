@@ -182,7 +182,7 @@ class ExerciseCentralWidget(QWidget):
 
         # ──────────────── Init Actions area ─────────────── #
         # Action buttons
-        ActionButton.from_name = dict()
+        # ActionButton.from_name = dict()
         self.__prove_btns = ActionButtonsLine(exercise.available_logic_prove,
                                               show_label=False)
         self.__use_btns = ActionButtonsLine(exercise.available_logic_use,
@@ -429,10 +429,18 @@ class ExerciseCentralWidget(QWidget):
 
     @property
     def action_buttons(self) -> [ActionButton]:
-        btns = sum([action_buttons_widgets.buttons
-                    for action_buttons_widgets in
-                    self.__action_buttons_lines], [])
-        return btns
+        if self.__action_btns_lyt:
+            return self.__action_btns_lyt.buttons
+        else:
+            return []
+        # btns = sum([action_buttons_widgets.buttons
+        #             for action_buttons_widgets in
+        #             self.__action_buttons_lines], [])
+        # return btns
+
+    @property
+    def action_button_names(self) -> [str]:
+        return [btn.name for btn in self.action_buttons]
 
     def set_font_for_action_buttons(self):
         symbol_size = deaduction_fonts.symbol_button_font_size
@@ -500,9 +508,10 @@ class ExerciseCentralWidget(QWidget):
                 self.__main_lyt.addLayout(self.__context_actions_lyt)
                 self.__main_lyt.addWidget(self.target_wgt)
 
-    def update_statements_tooltips(self):
+    def update_statements_tooltips(self, check_availability=False):
         if self.statements_tree:
-            self.statements_tree.update_tooltips()
+            self.statements_tree.update_tooltips(
+                check_availability=check_availability)
 
     def update(self):
         """

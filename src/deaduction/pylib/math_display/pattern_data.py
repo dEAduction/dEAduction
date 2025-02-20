@@ -159,6 +159,7 @@ def set_quant_pattern():
         # QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup) before QUANT_∀(TYPE, ...)
 
         "QUANT_∀(TYPE, LOCAL_CONSTANT/name=RealSubGroup, ?2)": ((2,),),
+        "QUANT_∀(TYPE, LOCAL_CONSTANT/name=IntegerSubGroup, ?2)": ((2,),),
         "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
             ((2,),),
         "QUANT_∀(SET(...), ?0, ?1)":
@@ -220,7 +221,8 @@ latex_from_pattern_string = {
         #  '<sub>', (1,), r"\in_symbol", (0,), '</sub>'),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('(', (2, ), ')', ['_', (1, ), r"\in_symbol", (0, )]),
-    "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',)
+    "LOCAL_CONSTANT/name=RealSubGroup": (r'\real',),
+    "LOCAL_CONSTANT/name=IntegerSubGroup": (r'\integer',)
 }
 
 #########################################
@@ -306,6 +308,7 @@ latex_from_pattern_string_for_type = {
     "CONSTANT/name=ℚ": (r'\type_Q',),
     "CONSTANT/name=ℝ": (r'\type_R',),
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
+    "LOCAL_CONSTANT/name=IntegerSubGroup": (r'\type_Z',),
     "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
     # This is maybe too strong: any guy with undefined math_type will match!! :
     "?:TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is treated above
@@ -347,8 +350,15 @@ lean_from_pattern_string = {
     "LOCAL_CONSTANT: !SEQUENCE(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
     "LAMBDA: !SEQUENCE(?3, ?4)(?0, ?1, ?2)":
         ('λ', (1, ),  ', ', (2, )),
-    "LOCAL_CONSTANT/name=RealSubGroup": (r'real',),
+    "LOCAL_CONSTANT/name=RealSubGroup": ('real',),
+    "LOCAL_CONSTANT/name=IntegerSubGroup": ('int',),
     "SET_PRODUCT(?0: TYPE, ?1)": ("prod ", (0,), ' ', (1,)),
     "SET_PRODUCT(?0: SET(?2), ?1)": ("set.prod ", (0,), ' ', (1,)),
     # "SET_PRODUCT(?0: SET ?2, ?1)": ("set.prod ", 0, ' ', 1),
+    # Use coercion for non homogeneous operations
+    "MULT(?0: CONSTANT/name=ℕ, ?1: CONSTANT/name=ℤ)":
+        ('(↑', 0, ')', r" \mul ", 1),
+    "SUM(?0: CONSTANT/name=ℕ, ?1: CONSTANT/name=ℤ)":
+        ('(↑', 0, ')', r" \mul ", 1),
+
 }

@@ -126,7 +126,7 @@ class ActionButton(QPushButton):
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
-    from_name: dict = {}  # name -> ActionButton
+    # from_name: dict = {}  # name -> ActionButton
     # ! Must be updated to avoid pointing to deleted items !
 
     def __init__(self, action: Action, in_demo_or_use_line=False):
@@ -167,7 +167,8 @@ class ActionButton(QPushButton):
         self.setCursor(QCursor(Qt.PointingHandCursor))
         # Update dictionary:
         # self.from_name[action.symbol] = self
-        self.from_name[action.name] = self
+        # self.from_name[action.name] = self
+        # log.debug(f"Init action button {action.name}")
 
     def set_color(self, color):
         palette = self.palette()
@@ -481,6 +482,11 @@ class ActionButtonsLine(QWidget):
     def names(self):
         return [button.name for button in self.buttons]
 
+    def button_from_name(self, name):
+        for button in self.buttons:
+            if button.name == name:
+                return button
+
 
 class ProveUseSwitcherButtonGroupBox(QGroupBox):
     """
@@ -572,15 +578,26 @@ class ActionButtonsGroup(QGroupBox):
         super().__init__()
         self.setTitle(title)
         self.lyt = QVBoxLayout()
-
-        self.no_button = True
+        self.action_button_lines = action_button_lines
+        self.buttons = []
+        # self.no_button = True
         for abw in action_button_lines:
             if abw.buttons:
-                self.no_button = False
+                self.buttons.extend(abw.buttons)
+                # self.no_button = False
                 self.lyt.addWidget(abw)
 
         self.setLayout(self.lyt)
 
+    @property
+    def no_button(self) -> bool:
+        return not bool(self.buttons)
+
+    # def button_from_name(self, name):
+    #     for abl in self.action_button_lines:
+    #         name = abl.button_from_name(name)
+    #         if name:
+    #             return name
 
     # def __init__(self, title, action_button_wdgs: [ActionButtonsLine]):
     #     super().__init__()
@@ -635,11 +652,12 @@ class ActionButtonsLyt(QVBoxLayout):
     def __init__(self, action_buttons_lines: [(str, [[ActionButtonsLine]])],
                  switcher=False):
         super().__init__()
-
+        self.buttons = []
         for (title, group) in action_buttons_lines:
             group_box = ActionButtonsGroup(title, group)
             if not group_box.no_button:
                 self.addWidget(group_box)
+                self.buttons.extend(group_box.buttons)
 
     @classmethod
     def from_actions(cls, actions_lines: [(str, [[Action]])]):
@@ -650,51 +668,51 @@ class ActionButtonsLyt(QVBoxLayout):
         """
         pass
 
-    # FIXME:
-    @classmethod
-    def obsolete(cls,
-                 other_line_wdgs: [ActionButtonsLine],
-                 prove_wdgs: ActionButtonsLine = None,
-                 use_wdgs: ActionButtonsLine = None,
-                 display_prove_use=False,
-                 switcher=True):
-
-        super().__init__()
-
-        # Try
-        prove_wdgs = ActionButtonsGroup(_('Prove:'), [prove_wdgs])
-        use_wdgs = ActionButtonsGroup(_('Use:'), [use_wdgs])
-
-        self.prove_use_box = None
-        other_lyt = QVBoxLayout() if display_prove_use else self
-
-        # Populate other_lyt, in the simple case that's enough
-        # first = True
-        for wdg in other_line_wdgs:
-            # if not first:
-            #     pass
-            #     # other_lyt.addSpacing(5)
-            # else:
-            #     first = False
-            other_lyt.addWidget(wdg)
-
-        # In the complicated case, populate self with two QGroupBoxes
-        if display_prove_use:
-            self.prove_use_box = \
-                ProveUseSwitcherButtonGroupBox(prove_wdgs, use_wdgs,
-                                               switcher=switcher)
-            # self.prove_use_box.setTitle('Prove or use')
-            # self.prove_use_box.setCheckable(True)
-            other_box = QGroupBox()
-            other_box.setLayout(other_lyt)
-
-            self.prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
-            self.prove_use_box.layout().setSpacing(5)
-            other_box.layout().setContentsMargins(5, 5, 5, 5)
-            other_box.layout().setSpacing(5)
-
-            self.addWidget(self.prove_use_box)
-            self.addWidget(other_box)
+    # # FIXME:
+    # @classmethod
+    # def obsolete(cls,
+    #              other_line_wdgs: [ActionButtonsLine],
+    #              prove_wdgs: ActionButtonsLine = None,
+    #              use_wdgs: ActionButtonsLine = None,
+    #              display_prove_use=False,
+    #              switcher=True):
+    #
+    #     super().__init__()
+    #
+    #     # Try
+    #     prove_wdgs = ActionButtonsGroup(_('Prove:'), [prove_wdgs])
+    #     use_wdgs = ActionButtonsGroup(_('Use:'), [use_wdgs])
+    #
+    #     self.prove_use_box = None
+    #     other_lyt = QVBoxLayout() if display_prove_use else self
+    #
+    #     # Populate other_lyt, in the simple case that's enough
+    #     # first = True
+    #     for wdg in other_line_wdgs:
+    #         # if not first:
+    #         #     pass
+    #         #     # other_lyt.addSpacing(5)
+    #         # else:
+    #         #     first = False
+    #         other_lyt.addWidget(wdg)
+    #
+    #     # In the complicated case, populate self with two QGroupBoxes
+    #     if display_prove_use:
+    #         self.prove_use_box = \
+    #             ProveUseSwitcherButtonGroupBox(prove_wdgs, use_wdgs,
+    #                                            switcher=switcher)
+    #         # self.prove_use_box.setTitle('Prove or use')
+    #         # self.prove_use_box.setCheckable(True)
+    #         other_box = QGroupBox()
+    #         other_box.setLayout(other_lyt)
+    #
+    #         self.prove_use_box.layout().setContentsMargins(5, 5, 5, 5)
+    #         self.prove_use_box.layout().setSpacing(5)
+    #         other_box.layout().setContentsMargins(5, 5, 5, 5)
+    #         other_box.layout().setSpacing(5)
+    #
+    #         self.addWidget(self.prove_use_box)
+    #         self.addWidget(other_box)
 
     def set_switch_mode(self, to_prove=True):
         if self.prove_use_box:
@@ -813,13 +831,20 @@ class StatementsTreeWidgetItem(QTreeWidgetItem):
         if self.parent:
             return self.parent.is_exercise_list
 
-    def set_tooltip(self, only_ips=True):
+    def set_tooltip(self, only_ips=True, check_availability=False):
         """
         Set the math content of the statement as tooltip.
         If the flag only_ips is True, then no tooltips are shown if the
         initial proof states is not available. Otherwise the tooltip will
         show the Lean code content of the statement.
         """
+
+        available = self.statement.initial_proof_state is not None
+        if not available and check_availability:
+            self.setDisabled(True)
+            return
+        else:
+            self.setDisabled(False)
 
         text = self.statement.caption(is_exercise=self.is_exercise,
                                       only_ips=only_ips)
@@ -1124,7 +1149,7 @@ class StatementsTreeWidget(QTreeWidget):
 
         self.items: [QTreeWidgetItem] = []  # List of items
         self._init_tree(statements, outline)
-        self.update_tooltips()
+        # self.update_tooltips(check_availability=True)
         # By default, drag and drop disabled. See _exercise_main_window_widgets.
         self.setDragEnabled(False)
         self.setAcceptDrops(False)
@@ -1241,10 +1266,10 @@ class StatementsTreeWidget(QTreeWidget):
         self.setItemSelected(self.item_from_index(index), yes)
 
     @Slot()
-    def update_tooltips(self):
+    def update_tooltips(self, check_availability=False):
         for item in self.items:
             item.parent = self
-            item.set_tooltip()
+            item.set_tooltip(check_availability=check_availability)
 
     @property
     def potential_drop_receiver(self):

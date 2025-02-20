@@ -452,7 +452,7 @@ class ExerciseMainWindow(QMainWindow):
                     'display.font_size_for_symbol_buttons'):
                 self.ecw.set_font()
             elif setting == 'functionality.allow_implicit_use_of_definitions':
-                self.ecw.statements_tree.update_tooltips()
+                self.ecw.update_statements_tooltips(check_availability=True)
             # elif setting == 'logic.button_use_or_prove_mode':
             #     self.ecw.init_action_btns_layout()
             #     self.ecw.set_action_gb()
@@ -665,11 +665,18 @@ class ExerciseMainWindow(QMainWindow):
         log.debug(contextualised_selection)
         return contextualised_selection
 
-    @staticmethod
-    def contextualised_button(button_name: str) -> ActionButton:
+    def action_button_from_name(self, button_name: str) -> ActionButton:
         """Turn an action encoded by a string, e.g. "forall", into a button.
         """
-        return ActionButton.from_name.get(button_name)
+        # button = ActionButton.from_name.get(button_name)
+        # if button:
+        #     return button
+        # else:
+        #     print("Button names:")
+        #     print(ActionButton.from_name.keys())
+        for button in self.ecw.action_buttons:
+            if button.name == button_name:
+                return button
 
     ##############
     ##############
@@ -685,7 +692,8 @@ class ExerciseMainWindow(QMainWindow):
         Emit statement_triggered iff the clicked item is not a node,
         i.e. corresponds to a statement.
         """
-        if isinstance(item, StatementsTreeWidgetItem):
+        if isinstance(item, StatementsTreeWidgetItem)\
+                and not item.isDisabled():
             self.statement_triggered.emit(item)
 
     @Slot()
@@ -903,7 +911,7 @@ class ExerciseMainWindow(QMainWindow):
         statement_name = user_action.statement_name
         if button:
             msg += f"    -> click on button {button}"
-            action_button = self.contextualised_button(button)
+            action_button = self.action_button_from_name(button)
             if action_button:
                 self.ecw.freeze(False)
                 await action_button.simulate(duration=duration)

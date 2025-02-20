@@ -691,13 +691,21 @@ class Goal:
 
         return new_name
 
-    def provide_good_names(self, math_types):
+    def provide_good_names(self, math_types, preferred_letters=None):
         """
         Provide new names for a list of math_types.
         """
+
+        # Fill preferred_letters with None to get equal length with math_types
+        if not preferred_letters:
+            preferred_letters = [None]*len(math_types)
+        elif len(preferred_letters) < len(math_types):
+            preferred_letters.extend([None] *
+                                     (len(math_types)-len(preferred_letters)))
         new_names = []
-        for math_type in math_types:
+        for math_type, letter in zip(math_types, preferred_letters):
             new_name = self.provide_good_name(math_type,
+                                              preferred_letter=letter,
                                               local_names=new_names)
             new_names.append(new_name)
         return new_names
@@ -807,257 +815,6 @@ class Goal:
 
         # (5) Debug
         # self.debug()
-
-# ###############
-# ###############
-# # OLD METHODS #
-# ###############
-#     def __name_real_bound_vars(self, math_type, unnamed_vars, forb_vars):
-#         """
-#         Name dummy variables of type 'ℝ', by using Lean's name if possible.
-#
-#         we first sort dummy_vars by initials of Lean's name.
-#         Then we name all vars with a given initial together.
-#         """
-#         initials = []
-#         var_with_initials = []  # For each initial, list of vars with initial
-#         for var in unnamed_vars:
-#             if 'lean_name' in var.info:
-#                 name = var.info['lean_name']
-#                 hint_name = name[0]
-#                 var.info['hint_name'] = hint_name
-#             else:
-#                 hint_name = None
-#             if hint_name in initials:
-#                 index = initials.index(hint_name)
-#                 var_with_initials[index].append(var)
-#             else:
-#                 initials.append(hint_name)
-#                 var_with_initials.append([var])
-#
-#         for initial, variables in zip(initials, var_with_initials):
-#             name_bound_vars(math_type=math_type, named_vars=[],
-#                             unnamed_vars=variables, forbidden_vars=forb_vars)
-#
-#     def __name_bound_vars_in_data(self, math_types, dummy_vars, forb_vars,
-#                                   future_vars=None):
-#         """
-#         Name all vars in dummy_vars, type by type.
-#
-#         :param math_types: union of all types of vars in dummy_vars.
-#         :param dummy_vars: unnamed dummy_vars, to be named
-#         :param forb_vars:  vars whose name is forbidden.
-#         :param future_vars:  anticipated vars in future context, whose name
-#         is to be forbidden and used as guide for naming.
-#         """
-#
-#         if not future_vars:
-#             future_vars = []
-#         glob_vars = self.context_objects
-#         for math_type in math_types:
-#             glob_vars_of_type = [var for var in glob_vars
-#                                  if var.math_type == math_type]
-#             dummy_vars_of_type = [var for var in dummy_vars
-#                                   if var.math_type == math_type]
-#             future_vars_of_type = [var for var in future_vars
-#                                    if var.math_type == math_type]
-#
-#             forb_vars = forb_vars + future_vars_of_type
-#             named_vars = glob_vars_of_type + future_vars_of_type
-#             # log.debug(f"Naming vars of type "
-#             #           f"{math_type.to_display()}")
-#             if math_type.display_name == 'ℝ':
-#                 self.__name_real_bound_vars(math_type=math_type,
-#                                             unnamed_vars=dummy_vars_of_type,
-#                                             forb_vars=forb_vars)
-#             else:
-#                 name_bound_vars(math_type=math_type,
-#                                 named_vars=named_vars,
-#                                 unnamed_vars=dummy_vars_of_type,
-#                                 forbidden_vars=forb_vars)
-#             # Update forb_vars to prevent a name to be given in the next
-#             # math_type unnamed_vars:
-#             forb_vars += dummy_vars_of_type
-#             # log.debug(f"    --> "
-#             #           f"{[var.to_display() for var in dummy_vars_of_type]}")
-#
-#     def __name_bound_vars_of_type(self, chain, forbidden_vars):
-#         pass
-#
-#     def __recursive_name_bound_vars(self, prop: MathObject,
-#                                     named_ancestors):
-#         """
-#         Recursive method to name all unnamed bound vars in prop.
-#         named_ancestors = bound vars between root and self, that are
-#         assumed to be already named.
-#         named_descendants = bound vars named below itself.
-#         """
-#
-#         # FIXME: this algo include too many forbidden_vars, because the
-#         #  forbidden vars are pertinent only for the first element of the
-#         #  chain that will be named.
-#
-#         if prop.has_bound_var():
-#             bound_var = prop.children[1]
-#             if bound_var.is_unnamed():
-#                 math_type = prop.children[0]
-#                 # The following will include prop's bound var,
-#                 # so we will name at least one bound var.
-#                 # FIXME: return only unnamed bv
-#                 chain = prop.longest_bound_vars_chain(include_sequences=False,
-#                                                       math_type=math_type)
-#                 # NB: no variable in the chain has been named yet (CHECK?)
-#                 assert len(chain) >= 1
-#                 named_descendants = [var for var in prop.bound_vars(
-#                                      include_sequences=False)
-#                                      if not var.is_unnamed()]
-#                 forbidden_vars = inj_list(named_ancestors + named_descendants
-#                                           + self.context_objects)
-#                 data = ([math_type], chain, forbidden_vars)
-#                 self.__name_bound_vars_in_data(*data)
-#                 named_ancestors.append(chain.pop(0))
-#
-#         for child in prop.children:
-#             # Do not forget to add chain to forbidden vars
-#             self.__recursive_name_bound_vars(child, named_ancestors)
-#
-#     def __name_bound_vars_in_prop(self, prop: MathObject, future_vars):
-#         """
-#         Name all dummy vars in prop.
-#
-#         :param prop: MathObject, whose math_type is a proposition.
-#         :return:
-#         """
-#         not_glob = cvars.get("logic.do_not_name_dummy_vars_as_global_vars",
-#                              True)
-#
-#         glob_vars = self.context_objects
-#
-#         # log.debug(f"Naming vars in {prop.to_display()}:")
-#         math_type = prop.math_type
-#         if math_type.bound_vars():
-#             # log.debug(f"""-->Dummy vars types: {[var.math_type.to_display()
-#             #                       for var in prop.math_type.bound_vars]}""")
-#
-#             # Un-name everything!
-#             math_type.remove_names_of_bound_vars(include_sequences=False)
-#
-#             # Collect math_types of bound_vars with no rep
-#             math_types = inj_list([var.math_type for var in
-#                                    prop.math_type.bound_vars()])
-#             # log.debug(f"-->Math_types : "
-#             #           f"{[mt.to_display() for mt in math_types]}")
-#             forb_vars = glob_vars if not_glob \
-#                 else prop.math_type.extract_local_vars()
-#
-#             data = (math_types,
-#                     inj_list(prop.math_type.bound_vars()),
-#                     forb_vars,
-#                     future_vars)
-#             self.__name_bound_vars_in_data(*data)
-#
-#     def name_bound_vars(self, to_prove=True):
-#         """
-#         FIXME: obsolete doc
-#         Give a name to all dummy vars appearing in the properties of
-#         self.context. Three level of constraint are taken into account,
-#         according to cvars values:
-#         * Level 0: dummy vars can share names with dummy vars of other props
-#         and with glob vars.
-#         * Level 1: dummy vars can share names with dummy vars of other props
-#         but not with glob vars.
-#         * Level 2: dummy vars cannot share names with glob vars nor dummy vars
-#             of other props.
-#
-#         We first name dummy vars for target.
-#
-#         Obsolete:
-#             Then we estimate future
-#             context vars from target. Note that those two sets of vars are not
-#             disjoint but not identical: target usually contains dummy vars that
-#             will not be introduced (e.g. existence quantifier, or any dummy var
-#             in a premise), and dummy vars will also appear in definitions
-#             that have not been unfolded yet.
-#             Those future vars will be considered as forbidden vars, to prevent
-#             dummy vars name of context properties to from changing too much as
-#             user unfolds the target.
-#
-#         :param to_prove: True if this is the goal of the exercise currently
-#         being solved in the UI, as opposed to coming from the
-#         initial_proof_state of a statement.
-#         """
-#         # (0) Some unnamed vars?
-#         # there_are_unnamed_vars = False
-#         # if self.target.math_type.has_unnamed_bound_vars:
-#         #     there_are_unnamed_vars = True
-#         # else:
-#         #     for context_math_prop in self.context_props:
-#         #         if context_math_prop.math_type.has_unnamed_bound_vars:
-#         #             there_are_unnamed_vars = True
-#         # if not there_are_unnamed_vars:
-#         #     return
-#         objects = [self.target.math_type] \
-#             + [prop.math_type for prop in self.context_props]
-#         # We choose NOT to include bound vars in objects (e.g. sequences)
-#             # + self.context_objects
-#         objects_with_unnamed_vars = [math_object for math_object in objects
-#                                      if math_object.has_unnamed_bound_vars]
-#         there_are_unnamed_vars = any(objects_with_unnamed_vars)
-#         if not there_are_unnamed_vars:
-#             return
-#
-#         # (1) Name dummy_vars in target
-#         self.__name_bound_vars_in_prop(self.target, [])
-#
-#         # (2) Estimate future context names from target (if to_prove == True)
-#         future_vars = []  # Future context vars to be named
-#         # FIXME: future_vars is not efficient, suppressed
-#         # if to_prove:
-#         #     # First unfold definitions
-#         #     math_type = self.target.math_type
-#         #     rw_math_type = math_type.unfold_implicit_definition_recursively()
-#         #     # log.debug(f"Rw math_type: {rw_math_type.to_display()}")
-#         #     future_vars = rw_math_type.glob_vars_when_proving()
-#         #     math_types = inj_list([var.math_type for var in future_vars])
-#         #     data = (math_types, future_vars, self.context_objects, [])
-#         #     # log.debug("Naming future vars:")
-#         #     self.__name_bound_vars_in_data(*data)
-#
-#         # (3) Name context dummy vars
-#         not_dummy = cvars.get("logic.do_not_name_dummy_vars_as_dummy_vars",
-#                               False)  # All dummy vars have distinct names
-#         if not_dummy:  # (Level 2)
-#             # Collect all math_types, with no repetition
-#             math_types = inj_list([var.math_type
-#                                    for prop in self.context_props
-#                                    for var in prop.math_type.bound_vars()])
-#             # All dummy vars (no repetition):
-#             dummy_vars = [var for prop in self.context_props
-#                           for var in prop.math_type.bound_vars()]
-#             data = (math_types, dummy_vars, self.context_objects, future_vars)
-#             self.__name_bound_vars_in_data(*data)
-#         else:  # Types and dummy vars prop by prop
-#             data = []
-#             for prop in self.context_props:
-#                 self.__name_bound_vars_in_prop(prop, future_vars)
-
-    # def objects_of_type(self, math_type):
-    #     """
-    #     Return all object of self.context whose type is math_type.
-    #     """
-    #     return [obj for obj in self.context_objects
-    #             if obj.math_type == math_type]
-
-    # def extract_vars(self) -> List[MathObject]:
-    #     """
-    #     Provides the list of all variables in the context,
-    #     (but NOT bound variables, nor names of hypotheses)
-    #
-    #     :return: list of MathObject (variables names)
-    #     """
-    #     variables = [math_object for math_object in self.context
-    #                  if not math_object.is_prop()]
-    #     return variables
 
     def extract_vars_names(self) -> List[str]:
         """

@@ -62,9 +62,10 @@ else:
     local = (home / ".deaduction").resolve()
 
 # Other paths
-journal        = (local / "deaduction_journal").resolve()
+journal = (local / "deaduction_journal").resolve()
+text_files = (local / "text_files").resolve()
 test_exercises = (local / "test_exercises").resolve()
-history        = (local / "history").resolve()
+history = (local / "history").resolve()
 all_courses_ipf_dir = (local / "initial_proof_states").resolve()
 all_courses_ipf_old = (local / "old_initial_proof_states").resolve()
 usr_lean_exercises_dir = (local / "lean_exercises_dir").resolve()

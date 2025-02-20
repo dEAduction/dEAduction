@@ -40,6 +40,7 @@ import logging
 import trio
 import argparse
 import os
+import time
 
 from PySide2.QtCore import ( QObject,
                              QThread,
@@ -433,11 +434,11 @@ def check_lean_src():
 
 def erase_proof_states():
     """
-    Move initial_proof_states dir to old_initial_proof_state dir.
+    Erase all initial_proof_states and text files.
     """
-    ips_dir = cdirs.all_courses_ipf_dir
-    if ips_dir.exists():
-        rmtree(str(ips_dir), ignore_errors=True)
+    for dir_ in [cdirs.all_courses_ipf_dir, cdirs.text_files]:
+        if dir_.exists():
+            rmtree(str(dir_), ignore_errors=True)
 
 
 def check_new_version():
@@ -795,7 +796,6 @@ async def async_main():
 
 
 def main():
-    log.info("Starting...")
     #################################################################
     # Init environment variables, directories, and configure logger #
     #################################################################
@@ -805,6 +805,9 @@ def main():
     inst.init()
 
     set_logger()
+    version_nb = cvars.get("others.version", "?")
+    log.info(f"Starting Deaduction {version_nb} at"
+             f" {time.strftime('%d%b%Hh%M')}")
 
     #################
     # Run main loop #

@@ -120,9 +120,10 @@ latex_from_constant_name = {
     # "application": (-1, r'\text_is', _("an application") + " "),
     # "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
-    "even":  (-1,  r'\text_is', " " + _("even")),
-    "odd":  (-1,  r'\text_is', " " + _("odd")),
-    "divides": (-2, ' | ', -1),
+    "IntegerSubGroup": (r"\integer", ),
+    # "even":  (-1,  r'\text_is', " " + _("even")),
+    # "odd":  (-1,  r'\text_is', " " + _("odd")),
+    # "divides": (-2, ' | ', -1),
     "connexe": (-2, r'\text_is', " " + _("connected")),
     "connexePartie": (-1, r'\text_is', " " + _("connected")),
 }
@@ -230,7 +231,7 @@ class PatternMathDisplay:
 
     fcts_two_var = ['max', 'min']
 
-    infix = {'divise': '|',
+    infix = {'divides': '|',
              'ne': '\\neq',
              'prod': '\\times',
              'product': ".",
@@ -243,7 +244,8 @@ class PatternMathDisplay:
                        'continuous', 'uniformly_continuous',
                        'injective', 'surjective', 'bijective',
                        'relation_equivalence', 'partition',
-                       'application', 'application_bijective', 'even', 'odd']
+                       'application', 'application_bijective', 'even', 'odd',
+                       'prime']
 
     # Dicts
     constants_pretty_names = {'converging_seq': _("converging"),
@@ -268,7 +270,11 @@ class PatternMathDisplay:
                               'application_bijective': _('a bijective '
                                                          'application'),
                               'even': _('even'),
-                              'odd': _('odd')
+                              'odd': _('odd'),
+                              'divides': _('divides'),
+                              'sqrt': _('sqrt'),
+                              'segment': _("segment"),
+                              'prime': _('prime')
                               }
 
     # NB: int will be turned to tuples
@@ -287,8 +293,10 @@ class PatternMathDisplay:
                             "borne_sup": ("Sup ", -2, " = ", -1),
                             "borne_inf": ("Inf ", -2, " = ", -1),
                             "limit_plus_infinity": ("lim ", -1, " = +∞"),
-                            "limit_function": (
-                            "lim", ['_', (-2,)], (-3,), " = ", (-1,)),
+                            "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
+                            # "sqrt":  ("√", -1),
+                            "segment": ("[", -2, ", ", -1, "]"),
+                            "bit0": (-1, " + ", -1)
                             }
 
     # TODO: add a "special_patterns" if both pattern and shape are special??

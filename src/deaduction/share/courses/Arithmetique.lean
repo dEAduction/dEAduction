@@ -29,9 +29,11 @@ Institution
 Description
     Premier essai d'arithmétique
 Display
-    divise --> (-2, " | ", -1)
     prime --> (-1, " est premier")
     puissancede2 --> (-1, " est une puissance de 2")
+Settings
+    functionality.calculator_available --> true
+    others.Lean_request_method --> "normal"
 -/
 
 ---------------------------------------------
@@ -40,7 +42,7 @@ Display
 
 
 open nat
-universe u
+-- universe u
 
 -- theorem two_step_induction {P : ℕ → Sort u} (H1 : P 0) (H2 : P 1)
 --     (H3 : ∀ (n : ℕ) (IH1 : P n) (IH2 : P (succ n)), P (succ (succ n))) : Π (a : ℕ), P a
@@ -50,38 +52,38 @@ universe u
 
 open set
 
------------------
-namespace logique
+-- -----------------
+-- namespace logique
 
-lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
-/- dEAduction
-PrettyName
-    Equivalence logique
--/
-begin
-  exact iff_def,
-end
+-- lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
+-- /- dEAduction
+-- PrettyName
+--     Equivalence logique
+-- -/
+-- begin
+--   exact iff_def,
+-- end
 
-lemma theorem.disjonction_eqv_implication (P Q: Prop) :
-(P ∨ Q) ↔ ((not P) → Q)
-:= 
-/- dEAduction
-PrettyName
-    Disjonction sous forme d'implication
--/
-begin
-  tautology,
-end
+-- lemma theorem.disjonction_eqv_implication (P Q: Prop) :
+-- (P ∨ Q) ↔ ((not P) → Q)
+-- := 
+-- /- dEAduction
+-- PrettyName
+--     Disjonction sous forme d'implication
+-- -/
+-- begin
+--   tautology,
+-- end
 
-lemma theorem.induction {P: nat → Prop} (H0: P 0)
-(H1: ∀ (n : ℕ) (IH1 : P n), P (n+1) ) :
-∀n, P n
-:=
-begin
-  todo
-end 
+-- lemma theorem.induction {P: nat → Prop} (H0: P 0)
+-- (H1: ∀ (n : ℕ) (IH1 : P n), P (n+1) ) :
+-- ∀n, P n
+-- :=
+-- begin
+--   todo
+-- end 
 
-end logique
+-- end logique
 
 ---------------------
 namespace definitions
@@ -90,36 +92,41 @@ PrettyName
     Définitions
 -/
 
-def even (a: ℤ) := ∃ b, a = 2*b 
+variables {IntegerSubGroup:Type} [has_add IntegerSubGroup] 
+[has_one IntegerSubGroup] [has_mul IntegerSubGroup] 
 
-def odd (a: ℤ) := ∃ b, a = 2*b + 1 
+-- def even (a: ℤ) := ∃ b, a = 2*b 
 
-def divides (a b:ℤ) := ∃ c, b = a * c
+def even (a: IntegerSubGroup) := ∃ (b: IntegerSubGroup), a = 2*b 
 
-lemma auxiliary_theorem.nat_even {a:ℕ} : (even a) ↔ ∃ b, a = 2*b :=
-begin
-  todo
-end
+def odd (a: IntegerSubGroup) := ∃ (b: IntegerSubGroup), a = 2*b + 1 
 
-lemma definition.even {a:ℤ} : (even a) ↔ ∃ b, a = 2*b :=
+def divides (a b: IntegerSubGroup) := ∃ c, b = a * c
+
+-- lemma auxiliary_theorem.nat_even {a:ℕ} : (even a) ↔ ∃ b, a = 2*b :=
+-- begin
+--   todo
+-- end
+-- AuxiliaryDefinitions
+--   auxiliary_theorem.nat_even
+
+lemma definition.even {a: IntegerSubGroup} : (even a) ↔ ∃ (b: IntegerSubGroup), a = 2*b :=
 /- dEAduction
 PrettyName
   Pair
 ImplicitUse
   True
-AuxiliaryDefinitions
-  auxiliary_theorem.nat_even
 -/
 begin
   refl
 end
 
-lemma auxiliary_theorem.nat_odd {a:ℕ} : (odd a) ↔ ∃ b, a = 2*b :=
-begin
-  todo
-end
+-- lemma auxiliary_theorem.nat_odd {a: IntegerSubGroup} : (odd a) ↔ ∃ b, a = 2*b + 1:=
+-- begin
+--   todo
+-- end
 
-lemma definition.odd {a:ℤ} : (odd a) ↔ ∃ b, a = 2*b + 1 :=
+lemma definition.odd {a: IntegerSubGroup} : (odd a) ↔ ∃ (b: IntegerSubGroup), a = 2*b + 1 :=
 /- dEAduction
 PrettyName
   Impair
@@ -132,20 +139,10 @@ begin
   refl
 end
 
--- Does not work
--- lemma auxiliary_theorem.not_even_is_odd {a:ℤ} :
--- (not (odd a)) ↔ even a :=
--- begin
---     todo
--- end
 
-lemma auxiliary_theorem.nat_not_even_is_odd {a:ℕ} :
-(not (even a)) ↔ odd a :=
-begin
-  todo
-end
-
-lemma theorem.not_even_is_odd {a:ℤ} :
+-- NB: the following is obviously false for general type u...
+axiom AX: IntegerSubGroup = ℕ ∨ IntegerSubGroup = ℤ
+lemma theorem.not_even_is_odd {a: IntegerSubGroup} :
 (not (even a)) ↔ odd a :=
 /- dEAduction
 PrettyName
@@ -181,7 +178,7 @@ begin
 end
 
 
-lemma definition.divides {a b : ℤ} : (divides a b) ↔ (∃ c, b = a * c) :=
+lemma definition.divides {a b : IntegerSubGroup} : (divides a b) ↔ (∃ (c: IntegerSubGroup), b = a * c) :=
 /- dEAduction
 PrettyName
   Divise
@@ -207,7 +204,7 @@ end
 
 
 -- Nb premier
-lemma definition.prime {p: ℕ} : (prime p) ↔ (∀ n:ℕ, divides n p → (n=1 or n=p)) :=
+lemma definition.prime {p: ℕ} : (prime p) ↔ (p≥ 2 ∧ (∀ n:ℕ, divides n p → (n=1 or n=p))) :=
 /- dEAduction
 PrettyName
   Nombre premier
@@ -215,10 +212,6 @@ PrettyName
 begin
   todo
 end
-
-
-
-
 
 
 end definitions
@@ -246,28 +239,7 @@ II - Types de preuves
   - Par cas ; utilisation du ∨ ; wlog
   - Contrapposée
   - Absurde
-
-
-
 -/
---------------------------------
--- namespace provisoirement_non_classes
-
--- lemma exercise.  :
---  :=
--- /- dEAduction
--- PrettyName
-  
--- -/
--- begin
---   todo
--- end
-
--- TODO: preuves de cas similaire
-
-
--- end provisoirement_non_classes
-
 
 --------------------------------
 namespace preuve_d_existence
@@ -285,7 +257,7 @@ begin
   todo
 end
 
-lemma exercise.existe_pair : ∃a, (even a) :=
+lemma exercise.existe_pair : ∃(a:ℤ), (even a) :=
 /- dEAduction
 PrettyName
   Il existe un entier pair
@@ -294,7 +266,7 @@ begin
   todo
 end
 
-lemma exercise.existe_impair : ∃a, (odd a) :=
+lemma exercise.existe_impair : ∃(a:ℤ), (odd a) :=
 /- dEAduction
 PrettyName
   Il existe un entier impair
@@ -312,20 +284,6 @@ begin
   todo
 end
 
--- lemma exercise.  :
---  :=
--- /- dEAduction
--- PrettyName
-  
--- -/
--- begin
---   todo
--- end
-
--- TODO: formaliser :
---  tout entier impair est la différence de deux carrés
-
--- exo 1 page 42 
 lemma exercise.nombre_8  :
 (even 8) ∧ (puissancede2 8)
  :=
@@ -356,8 +314,10 @@ begin
   todo
 end
 
+variables {IntegerSubGroup:Type} [has_add IntegerSubGroup] 
+[has_one IntegerSubGroup] [has_mul IntegerSubGroup] 
 
-lemma exercise.divise_transitive (a b c : ℤ) :
+lemma exercise.divise_transitive (a b c : IntegerSubGroup) :
 (divides a b) ∧ (divides b c) → (divides a c) :=
 /- dEAduction
 PrettyName
@@ -366,16 +326,6 @@ PrettyName
 begin
   todo
 end
-
--- lemma exercise.  :
---  :=
--- /- dEAduction
--- PrettyName
-  
--- -/
--- begin
---   todo
--- end
 
 lemma exercise.produit_pairs (n m:ℤ) :
 (even n ∧ even m) → even (n*m) :=
@@ -408,7 +358,7 @@ PrettyName
 -/
 
 lemma exercise.carre_pair1 :
-∀n, (even n) → (even (n^2)) :=
+∀{n:ℤ}, (even n) → (even (n^2)) :=
 /- dEAduction
 PrettyName
   Carré d'un nombre pair
@@ -419,15 +369,19 @@ begin
   todo
 end
 
--- lemma exercise.  :
---  :=
--- /- dEAduction
--- PrettyName
-  
--- -/
--- begin
---   todo
--- end
+lemma exercise.mul_divides  : ∀ {a b c : ℤ}, divides a b → divides a (b*c) :=
+/- dEAduction
+PrettyName
+  Diviseurs d'un multiple
+-/
+begin
+  todo
+  -- intro H2,
+  -- cases H2 with k,
+  -- use (k*c),
+  -- rw H2_h,
+  -- cc, -- ring
+end
 
 end preuves_universelles
 
@@ -438,8 +392,6 @@ PrettyName
   Intervertion de quantificateurs
 -/
 
-
--- exo 9 page 55
 lemma exercise.pour_tout_il_existe   :
 ∀ n:ℤ, ∃  m:ℤ, m=n+5
 :=
@@ -473,27 +425,15 @@ end intervertion_quantificateurs
 --------------------------------
 namespace preuve_par_cas
 
--- lemma exercise.  :
---  :=
--- /- dEAduction
--- PrettyName
-  
--- -/
--- begin
---   todo
--- end
-
 lemma exercise.multiple_de_quatre (n:ℕ) :
-divides 4 (1+(-1)^n*(2*n-1)) :=
+divides 4 (1+((-1:ℤ))^n*(2*n-1)) :=
 /- dEAduction
 PrettyName
-  (**) Des multiples de quatre
+  Des multiples de quatre
 -/
 begin
   todo
 end
-
--- TODO: la réciproque (implication, univ, exist)
 
 lemma exercise.impair (n: ℤ) :
 odd (5*n^2 + 3*n + 7) :=
@@ -504,7 +444,6 @@ PrettyName
 begin
   todo
 end
-
 
 end preuve_par_cas
 
@@ -529,14 +468,12 @@ begin
   todo
 end
 
-
-
 lemma exercise.carre_pair {n : ℤ} : (even (n^2)) → (even n) :=
 /- dEAduction
 PrettyName
   Carré pair implique pair
 Description
-  Un nombre dont le carré est pair est pair.
+  Tout nombre dont le carré est pair est pair.
 -/
 begin
   todo
@@ -559,7 +496,7 @@ lemma exercise.parite3 {a b : ℤ} :
 PrettyName
   Parité III
 Description
-  (à écrire)
+  Tous impairs
 -/
 begin
   todo
@@ -571,8 +508,6 @@ lemma exercise.divise1 {a b c : ℤ}:
 /- dEAduction
 PrettyName
   Divise I
-Description
-  (à écrire)
 -/
 begin
   todo
@@ -584,14 +519,11 @@ lemma exercise.divise2 {a : ℤ}:
 /- dEAduction
 PrettyName
   Impair si divise pas
-Description
-  (à écrire)
 -/
 begin
   todo
 end
 
--- Et aussi une preuve par cas, non ?
 lemma exercise.somme_et_produit {a b : ℤ}:
 (even (a*b) ∧ even (a+b)) → (even a ∧ even b)
 :=
@@ -599,7 +531,7 @@ lemma exercise.somme_et_produit {a b : ℤ}:
 PrettyName
   Somme et produit
 Description
-  (à écrire)
+  Ici, la contrapposée va nous conduire à une preuve par cas.
 -/
 begin
   todo
@@ -614,48 +546,42 @@ PrettyName
   Preuve par l'absurde
 -/
 
--- TODO : irrationalite racine. On a besoin :
--- existence d'une fraction irréductible
-
--- lemma exercise. {a b : ℤ} :
---  :=
--- /- dEAduction
--- PrettyName
-
--- -/
--- begin
---   todo
--- end
-
--- Déplacer ? But intermédiaire, et carré pair
 lemma exercise.inegalite (a b : ℤ) :
 a^2 - 4*b ≠ 2 :=
 /- dEAduction
 PrettyName
   Non égal à deux
 Description
-  Par l'absurde, montrer d'abord que a doit être pair...
+  Par l'absurde, montrer d'abord que a² doit être pair, en introduisant un but intermédiaire.
 -/
 begin
   todo
 end
 
-
--- racine de 2 !
-
 end preuve_par_absurde
+
 
 -----------------------------
 namespace equivalence_logique
 
--- TODO: ajouter theorem: non pair ssi impair,
--- puis l'enlever quand on le démontre plus tard par récurrence
-lemma exercise.carre_pair {n : ℕ} : (even n) ↔ (even (n^2)) :=
+lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
 /- dEAduction
 PrettyName
   Pair ssi carré pair
 Description
   Un nombre est pair si et seulement si son carré est pair.
+-/
+begin
+  todo
+end
+
+lemma exercise.difference_carres {n : ℤ} : (odd n) ↔ (∃m, n=(m+1)^2 - m^2) :=
+/- dEAduction
+PrettyName
+  Différence de deux carrés consécutifs
+Description
+  Un nombre peut s'écrire comme une différence de deux carrés consécutifs
+  si et seulement si il est impair.
 -/
 begin
   todo
@@ -674,20 +600,24 @@ PrettyName
 -- TODO: sommes quelconques, 
 -- binome de Newton ou relation dans le triangle de Pascal
 
-
-
 lemma exercise.even_or_odd : ∀n: nat, (even n or odd n) :=
 /- dEAduction
 PrettyName
   Pair ou impair I
+AvailableTheorem
+  ALL -not_even_is_odd
 -/
 begin
-    -- intro n, induction n with n H1,
-    -- apply induction.simple_induction,
-    -- apply induction.strong_induction,
-    -- rotate, intros n HR1,
-    -- targets_analysis,
-    -- all_goals {hypo_analysis2 2},
+  -- apply induction.simple_induction, rotate,
+  -- intro n,
+  -- intro H1,
+  -- cases H1 with H2 H3,
+  -- right,
+  -- rw definitions.definition.even at H2,
+  -- cases H2 with b H5,
+  -- rw H5,
+  -- use (b),
+  -- norm_num,
     todo
 end
 
@@ -695,12 +625,15 @@ lemma exercise.even_or_odd2 : ∀n: nat, (not (even n)) ↔ odd n :=
 /- dEAduction
 PrettyName
   Pair ou impair II
+AvailableTheorem
+  ALL -not_even_is_odd
 -/
 begin
     todo
 end
 
 end preuve_par_recurrence
+
 
 namespace contre_exemples
 /- dEAduction
@@ -719,47 +652,35 @@ end
 
 end contre_exemples
 
-namespace autres_exercices
+-- namespace autres_exercices
 
-lemma exercise.mul_divides {a b c : ℤ} : divides a b → divides a (b*c) :=
-/- dEAduction
-PrettyName
-  Diviseurs d'un multiple
--/
-begin
-  todo
-  -- intro H2,
-  -- cases H2 with k,
-  -- use (k*c),
-  -- rw H2_h,
-  -- cc, -- ring
-end
 
-lemma theorem.divides_one {a b : ℤ} :
-a * b = 1 → (a=1 ∧ b=1) ∨ (a=-1 ∧ b=-1) :=
-/- dEAduction
-PrettyName
-  Diviseurs de 1
--/
-begin
-  todo
-end
+-- lemma theorem.divides_one {a b : ℤ} :
+-- a * b = 1 → (a=1 ∧ b=1) ∨ (a=-1 ∧ b=-1) :=
+-- /- dEAduction
+-- PrettyName
+--   Diviseurs de 1
+-- -/
+-- begin
+--   todo
+-- end
 
-lemma exercise.mutual_divisors {a b : ℤ} :
-(divides a b and divides b a) → (a = b or a = -b) :=
-/- dEAduction
-PrettyName
-  Diviseurs mutuels
--/
-begin
-  todo
-  -- rintro ⟨H1 , H2⟩,
-  -- cases H1 with d H1,
-  -- cases H2 with d' H2,
-  -- rw H1 at H2,
-  -- by_cases a=0, rotate,
-  -- have H2b : (d * d' =1),
-  -- todo, todo, todo,
-end
 
-end autres_exercices
+-- -- The following needs to be able to simplify a = a*b when a != 0
+-- lemma exercise.mutual_divisors {a b : ℤ} :
+-- (divides a b and divides b a) → (a = b or a = -b) :=
+-- /- dEAduction
+-- PrettyName
+--   Diviseurs mutuels
+-- -/
+-- begin
+--   todo
+--   -- rintro ⟨H1 , H2⟩,
+--   -- cases H1 with d H1,
+--   -- cases H2 with d' H2,
+--   -- rw H1 at H2,
+--   -- by_cases a=0, rotate,
+--   -- have H2b : (d * d' =1),
+--   -- todo, todo, todo,
+-- end
+-- end autres_exercices

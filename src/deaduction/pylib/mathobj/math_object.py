@@ -1598,7 +1598,8 @@ class MathObject:
         return self.display_name == 'ℕ'
 
     def is_Z(self):
-        return self.display_name == 'ℤ'
+        return (self.display_name == 'ℤ'
+                or self.display_name == 'IntegerSubGroup')
 
     def is_Q(self):
         return self.display_name == 'ℚ'
@@ -1788,6 +1789,7 @@ class MathObject:
         :return: a couple containing
             - the result of the test (a boolean)
             - the equality or iff, so that the two terms may be retrieved
+            (or None)
         """
         if is_math_type:
             math_type = self
@@ -2166,7 +2168,8 @@ MathObject.PROP = MathObject(node="PROP",
 class BoundVar(MathObject):
     is_bound_var = True  # Override MathObject attribute
     is_unnamed = False
-    untouched_bound_var_names = ["RealSubGroup", "_inst_1", "_inst_2", "inst_3"]
+    untouched_bound_var_names = ["RealSubGroup", "IntegerSubGroup",
+                                 "_inst_1", "_inst_2", "inst_3"]
 
     identifier_nb = 0
 

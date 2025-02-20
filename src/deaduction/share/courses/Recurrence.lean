@@ -18,7 +18,7 @@ import deaduction_all_tactics
 
 -- dEAduction definitions
 -- import set_definitions
-import real_definitions
+-- import real_definitions
 
 -- Use classical logic
 local attribute [instance] classical.prop_decidable
@@ -36,6 +36,9 @@ Description
     Exercices sur la récurrence
 AvailableExercises
     NONE
+Settings
+    functionality.calculator_available --> true
+    others.Lean_request_method --> "normal"  
 -/
 
 
@@ -70,7 +73,7 @@ ImplicitUse
   True
 -/
 begin
-  todo
+  refl,
 end
 
 lemma definition.impair {m:nat} : (impair m) ↔ ∃ k, m = 2*k + 1 :=
@@ -81,7 +84,7 @@ ImplicitUse
   True
 -/
 begin
-  todo
+  refl,
 end
 
 
@@ -152,9 +155,9 @@ begin
     todo
 end
 
-def divise (a b:ℤ) := ∃ c, b = a * c
+def divides (a b:ℤ) := ∃ c, b = a * c
 
-lemma definition.divise {a b : ℤ} : (divise a b) ↔ (∃ c, b = a * c) :=
+lemma definition.divise {a b : ℤ} : (divides a b) ↔ (∃ c, b = a * c) :=
 /- dEAduction
 PrettyName
   Divise
@@ -165,7 +168,7 @@ begin
   todo
 end
 
-lemma exercise.quatre_divise : ∀n: nat, divise (4) (3^n -(-1)^n) :=
+lemma exercise.quatre_divise : ∀n: nat, divides (4) (3^n -(-1)^n) :=
 /- dEAduction
 PrettyName
   Divisibilité par 4
@@ -178,7 +181,7 @@ AvailableTheorems
 
 -/
 begin
-    todo
+  todo
 end
 
 lemma theorem.puissance3  : ∀ m: nat , ∀ n: nat, m^(n+1) = (m^n)*m :=

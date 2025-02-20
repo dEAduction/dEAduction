@@ -278,10 +278,17 @@ class Statement:
         """
         if self.initial_proof_state is not None:
             initial_goal = self.initial_proof_state.goals[0]
-            text = initial_goal.goal_to_text()
+            if isinstance(self, Exercise):
+                to_prove = True
+                open_pb = self.is_open_question
+            else:
+                to_prove = False
+                open_pb = False
+            content = initial_goal.goal_to_text(to_prove=to_prove,
+                                                open_problem=open_pb)
         else:
-            text = ""
-        return text
+            content = ""
+        return content
 
     @property
     def target(self):
@@ -389,7 +396,7 @@ class Statement:
         """
         if not self.initial_proof_state:
             if only_ips:
-                text = ""
+                text = _("(Computing statement, please wait...)")
             else:
                 text = self.lean_core_statement
         else:

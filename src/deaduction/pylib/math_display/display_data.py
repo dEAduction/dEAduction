@@ -251,7 +251,7 @@ class MathDisplay:
         "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
         "QUANT_∃": (r"\exists", 1, ": ", 0, ", ", 2),
-        "QUANT_∃!": (r"\exists_unique", 1, r": ", 0, r', ', 2),
+        "QUANT_∃!": (r"\exists_unique", " (λ", 1, r": ", 0, r', ', 2, ")"),
         # Types:
         "FUNCTION": (0, r'\to', 1),
         "SEQUENCE": (0, r"\to", 1),
@@ -313,11 +313,12 @@ class MathDisplay:
         r'\type_Z': 'int',
         r'\type_Q': "rat",
         r'\type_R': 'real',
-        ''
+        r"\real": "real",
+        r"\integer": "int",
         r'used_property': "",
         r'\not': "not ",
         r'\times': "×",
-        r'\mul': "*"
+        r'\mul': "*",
     }
 
     @classmethod
@@ -358,7 +359,7 @@ class MathDisplay:
             r'\bigcup': '⋃',
             r'\emptyset': '∅',
             r'\to': '→',
-            r'\mapsto': '↦',
+            r'\mapsto': ' ↦ ',
             r'\neq': '≠',
             r'\leq': '≤',
             r'\geq': '≥',
@@ -403,6 +404,7 @@ class MathDisplay:
             r'\symbol_parentheses': r'\parentheses',
             # True parentheses for symbols
             r'\real': "ℝ",
+            r'\integer': "ℤ",
             #########
             # TYPES #
             #########

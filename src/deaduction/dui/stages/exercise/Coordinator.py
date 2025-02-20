@@ -266,8 +266,9 @@ class Coordinator(QObject):
         proof_state = self.exercise.initial_proof_state
         if proof_state:
             goal = proof_state.goals[0]
-            # goal.name_bound_vars()
             self.emw.ecw.update_goal(goal, [], history_nb=0)
+            if not exercise.negate_statement:
+                self.show_exercise_statement()
         elif exercise.negate_statement:
             ##############################################
             # We need initial proof state to negate goal #
@@ -293,6 +294,7 @@ class Coordinator(QObject):
 
         # Finally set initial proof states
         self.__set_missing_initial_proof_states()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
     def __set_missing_initial_proof_states(self):
         """
@@ -331,7 +333,7 @@ class Coordinator(QObject):
         self.set_definitions_for_implicit_use()
         # self.emw.ecw.statements_tree.update_tooltips()
 
-        self.emw.ecw.update_statements_tooltips()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
         statements = [st for st in self.exercise.available_statements
                       if not st.initial_proof_state]
@@ -391,7 +393,7 @@ class Coordinator(QObject):
         #            for idx in range(len(loc_csts))])
 
         # Just in case of deletion:
-        self.emw.ecw.statements_tree.update_tooltips()
+        self.emw.ecw.update_statements_tooltips(check_availability=True)
 
     def __disconnect_signals(self):
         """
@@ -461,8 +463,9 @@ class Coordinator(QObject):
     def action_button_names(self) -> [str]:
         # buttons = self.emw.ecw.actions_buttons
         # return [button.name for button in buttons]
-        buttons = ActionButton.from_name.keys()
-        return buttons
+        # buttons = ActionButton.from_name.keys()
+        # return buttons
+        return self.ecw.action_button_names
 
     @property
     def code_insert(self):
@@ -783,10 +786,12 @@ class Coordinator(QObject):
         # esw = ExerciseStatementWindow(self.proof_step.goal,
         #                               parent=self.emw)
         # esw.exec_()
+        if not self.exercise.initial_proof_state:
+            return
         if not self.statement_window:
-            self.statement_window = ExerciseStatementWindow(
-                                                        self.proof_step.goal,
-                                                        parent=self.emw)
+            goal = self.exercise.initial_proof_state.goals[0]
+            self.statement_window = ExerciseStatementWindow(goal,
+                                                            parent=self.emw)
             geometry = self.emw.frameGeometry()
             scale_geometry(geometry, h_factor=.9, v_factor=0.6)
             self.statement_window.setGeometry(geometry)
@@ -848,7 +853,8 @@ class Coordinator(QObject):
 
         # Only first name is tried
         for name in names:
-            action_btn = ActionButton.from_name.get(name)
+            # action_btn = ActionButton.from_name.get(name)
+            action_btn = self.emw.action_button_from_name(name)
             if action_btn:
                 self.proof_step.button_name = name
                 selection = self.current_selection_as_mathobjects

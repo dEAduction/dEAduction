@@ -37,6 +37,7 @@ Description
     et la continuité des fonctions 
 Settings
     functionality.calculator_available --> true
+    others.Lean_request_method --> "from_previous_proof_state"
 -/
 
 
