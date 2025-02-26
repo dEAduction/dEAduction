@@ -294,8 +294,18 @@ equal = LogicalNode("PROP_EQUAL",
                     'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
                     (r"\no_text", 0, r" \equal ", 1)
                     )
+
+mapsto = LogicalNode("LAMBDA",
+                     "LAMBDA: FUNCTION(?0, ?2)(?0,"
+                     "LOCAL_CONSTANT/name=?.BoundVar: ?0, ?3: ?2)",
+                     (1, r'\in', 0, r"\mapsto", 3)
+                     )
+mapsto.set_button_symbol("↦")
+mapsto.set_button_tooltip(_("Define a function"))
+#                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+
 # "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
-# "PROP_FALSE": (r"\false",),  # Macro to be defined by LateX
+# "PROP_FALSE": (r"\false",)
 
 
 class SetTheoryNode(Node):
@@ -343,12 +353,6 @@ pair.set_button_tooltip(_("A pair (set with two elements"))
 
 # "SET_EXTENSION3": (r'\{', 0, ', ', 1, ', ', 2, r'\}'),
 
-# lambda_ = SetTheoryNode("LAMBDA",
-#                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
-#                          'LAMBDA: FUNCTION(?2, ?3)(?2, ?0: ?2, ?1: ?3)'],
-#                         (1, r"\mapsto", 2))
-# lambda_.set_button_tooltip(_("Construction of a function"))
-
 set_image = SetTheoryNode("SET_IMAGE",
                           'SET_IMAGE: SET(?3)(?0: FUNCTION(?2, ?3), ?1: SET(?2))',
                           (0, r'\set_image', r'\parentheses', 1)
@@ -388,6 +392,8 @@ composition = SetTheoryNode("COMPOSITION",
 composition.set_button_tooltip(_("Composition of two functions"))
 
 
+# "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
+# "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
 # "SET_UNION+": (r"\bigcup", 0),
 # "SET_DIFF": (0, r" \backslash ", 1),
@@ -414,6 +420,29 @@ class NumberNode(Node):
     _name = "Numbers"
     __name_for_translation = _("Numbers")
     calculator_nodes = []
+
+
+Naturals = NumberNode('ℕ',
+                      "CONSTANT/name=ℕ",
+                      (r'\type_N',))
+Integers = NumberNode('ℤ',
+                      "CONSTANT/name=ℤ",
+                      (r'\type_Z',))
+Rationals = NumberNode('ℚ',
+                       "CONSTANT/name=ℚ",
+                       (r'\type_Q',))
+Reals = NumberNode('ℝ',
+                   "CONSTANT/name=ℝ",
+                   (r'\type_R',))
+Naturals.set_shortcut('\\N')
+Integers.set_shortcut('\\Z')
+Rationals.set_shortcut('\\Q')
+Reals.set_shortcut('\\R')
+
+Naturals.set_button_symbol('ℕ')
+Integers.set_button_symbol('ℤ')
+Rationals.set_button_symbol('ℚ')
+Reals.set_button_symbol('ℝ')
 
 
 def instantiate_nb_node(i: int):

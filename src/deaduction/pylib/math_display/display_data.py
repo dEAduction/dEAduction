@@ -227,7 +227,7 @@ class MathDisplay:
          "NUMBER": (display_value,),
          "LOCAL_CONSTANT": ('self.local_constant_shape',),
          "APPLICATION": (0, r'\parentheses', 1),
-         "LAMBDA": (1, r"\mapsto", 2),
+         "LAMBDA": (1, r'\in', 0, r"\mapsto", 2),  #(1, r"\mapsto", 2),
          "METAVAR": ('?',),
          "POINT": (0, '.', 1),
          "COMMA": (0, ', ', 1),
