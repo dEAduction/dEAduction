@@ -131,7 +131,8 @@ def exists_patterns_from_forall():
         for new_node, quant_macro in [("QUANT_∃", r'\exists'),
                                       ("QUANT_∃!", r'\exists_unique')]:
             new_key = pattern.replace(forall_node, new_node)
-            if isinstance(shape[0], str) and shape[0].find(forall_macro):
+            if (isinstance(shape[0], str)
+                    and (shape[0].find(forall_macro) != -1)):
                 new_value = ((shape[0].replace(forall_macro, quant_macro), )
                              + shape[1:])
                 additional_quant_pattern[new_key] = new_value
