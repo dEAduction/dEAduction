@@ -152,7 +152,7 @@ class NameHint:
     A class to provide names for all vars of a given type.
     There are two kinds of NameHint:
     - the generic NameHint is associated to a given math_type, and will be
-    used naming all vars (bound vars of global vars introduced by "intro")
+    used naming all vars (bound vars or global vars introduced by "intro")
     of this type.
     - some NameHint are associated to a couple
         (math_type, preferred letter).
@@ -178,15 +178,16 @@ class NameHint:
         self.preferred_letter = preferred_letter
         self.letter = letter
         self.case = case
-        self.names = []
+        self.names = []  # Current list of names to be used
 
         if math_type.is_sequence(is_math_type=True):
             self.use_index = False
 
     def __repr__(self):
         rep = f"hint(math_type = {self.math_type}, " \
-              f"pref letter = {self.preferred_letter}" \
-              f" letter = {self.letter}, current names = {self.names}"
+              f"pref letter = {self.preferred_letter}," \
+              f" letter = {self.letter}," \
+              f"current names = {self.names})"
         return rep
 
     def is_suitable_for(self, math_type, preferred_letter='',

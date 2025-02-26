@@ -672,7 +672,7 @@ class Goal:
 
         if DEBUG:
             print(f"Naming var, preferred_letter = {preferred_letter}, context ="
-                  f" {given_names}")
+                  f" {given_names}, self.name_hints= {self.name_hints}")
             print(f"Names hint = {name_hint.names}, new_name = {new_name}")
             print(f"---> new_name = {new_name}")
         if not success:

@@ -2305,10 +2305,12 @@ class BoundVar(MathObject):
         """
 
         lean_name = self.info.get('lean_name', '')
-        if lean_name in ("NO NAME", '*no_name*'):
+        old_name = self.info.get('old_name', '')
+        if lean_name in ("NO NAME", '*no_name*', '?'):
             lean_name = ''
         letter = (lean_name[:-2] if lean_name.endswith('__')
                   else lean_name if (lean_name and self.math_type.is_number())
+                  else old_name if old_name  # FIXME: trial
                   else 'n' if self.math_type.is_N()
                   else 'x' if self.math_type.is_R()
                   else '')

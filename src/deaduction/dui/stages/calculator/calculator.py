@@ -1384,6 +1384,8 @@ class CalculatorController:
             # print(f"Unnaming bv {bv}")
             bv.set_unnamed_bound_var()
         self.current_target.set_local_context()
+        # Erase name_hints, otherwise they will forbid previously used letters:
+        self.goal.name_hints = []
         self.goal.recursive_name_all_bound_vars(self.current_target)
         # for bv in bound_vars:
         #     print(f"New name: {bv}, id = {bv.identifier_nb}")

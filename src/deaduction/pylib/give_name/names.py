@@ -252,7 +252,7 @@ def name_lists_from_name(hint: str,
 def are_friends(letter1, letter2):
     """
     True iff both letters belongs to a common list of letters. This is
-    crucial to decide whether a NameHint may be used ti name some variable.
+    crucial to decide whether a NameHint may be used to name some variable.
     """
     # Upper letter are not friend with lower letter (not symmetric):
     if letter2.isupper() and letter1.islower():
