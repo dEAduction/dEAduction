@@ -256,13 +256,13 @@ class LogicalNode(Node):
 
 forall = LogicalNode("QUANT_∀",
                      # 'PROP()(?0, ?1: ?0, ?2: PROP)',
-                     'QUANT_∀: PROP()(?0, '
+                     'QUANT_∀: PROP()(?0: *TYPE, '
                      'LOCAL_CONSTANT/name=?.BoundVar: ?0, ?2: PROP)',
                      (r"\forall", 1, r" \in_quant ", 0, ", ", 2)
                      )
 
 exists = LogicalNode("QUANT_∃",
-                     'QUANT_∃: PROP()(?0, '
+                     'QUANT_∃: PROP()(?0: *TYPE, '
                      'LOCAL_CONSTANT/name=?.BoundVar: ?0, ?2: PROP)',
                      (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2)
                      )
@@ -423,16 +423,16 @@ class NumberNode(Node):
 
 
 Naturals = NumberNode('ℕ',
-                      "CONSTANT/name=ℕ",
+                      "CONSTANT/name=ℕ: TYPE",
                       (r'\type_N',))
 Integers = NumberNode('ℤ',
-                      "CONSTANT/name=ℤ",
+                      "CONSTANT/name=ℤ: TYPE",
                       (r'\type_Z',))
 Rationals = NumberNode('ℚ',
-                       "CONSTANT/name=ℚ",
+                       "CONSTANT/name=ℚ: TYPE",
                        (r'\type_Q',))
 Reals = NumberNode('ℝ',
-                   "CONSTANT/name=ℝ",
+                   "CONSTANT/name=ℝ: TYPE",
                    (r'\type_R',))
 Naturals.set_shortcut('\\N')
 Integers.set_shortcut('\\Z')
@@ -471,7 +471,7 @@ for i in [1, 2, 3]:
     instantiate_nb_node(i)
 
 diff = NumberNode('DIFFERENCE',
-                  ['MINUS(?0)',
+                  ['MINUS: ?1()(?0: ?1)',
                       'DIFFERENCE: ?2()(?0: ?2, ?1: ?2)'],
                   (0, "-", 1)
                   )
@@ -504,11 +504,13 @@ parentheses = NumberNode('GENERIC_PARENTHESES',
 parentheses.set_button_symbol("()")
 
 sum_ = NumberNode('SUM',
+                  # 'SUM: ?2: *HAS_ADD()()(?0: ?2, ?1: ?2)',
                   'SUM: ?2()(?0: ?2, ?1: ?2)',
                   (0, "+", 1)
                   )
+
 power = NumberNode('POWER',
-                   'POWER(?0, ?1: *INT_OR_NAT)',
+                   'POWER: ?2()(?0: ?2, ?1: *INT_OR_NAT)',
                    (0, "^", 1)
                    )
 
@@ -592,6 +594,30 @@ abs_ = InequalityNode('abs',
 abs_.set_button_symbol('|·|')
 abs_.set_button_tooltip(_("Absolute value"))
 abs_.set_shortcut('\\abs')
+
+
+class DefinitionNode(Node):
+    """
+    A class for definition nodes, to specify the patterns.
+    """
+    _name = "Definitions"
+    __name_for_translation = _("Definitions")
+    calculator_nodes = []
+
+
+even = DefinitionNode('even',
+                      'APP: PROP()(CONSTANT/name=even, ?0: *NUMBER_TYPES)',
+                      (-1, '\text_is', _('even')))
+odd = DefinitionNode('odd',
+                      'APP: PROP()(CONSTANT/name=odd, ?0: *NUMBER_TYPES)',
+                      (-1, '\text_is', _('even')))
+divides = DefinitionNode('divides',
+                      'APP: PROP()(CONSTANT/name=divides, ?0: *NUMBER_TYPES, '
+                      '?1: *NUMBER_TYPES)',
+                      (-2, ' ' + _('divides') + ' ', -1))
+prime = DefinitionNode('prime',
+                      'APP: PROP()(CONSTANT/name=prime, ?0: *NUMBER_TYPES)',
+                      (-1, '\text_is', _('prime')))
 
 
 class SpecialNode(Node):
