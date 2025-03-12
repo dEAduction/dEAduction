@@ -1261,7 +1261,7 @@ class CalculatorController:
         else:
             if (expected_type and not (target_expected_type.is_metavar
                     and not target_expected_type.assigned_math_object)):
-                msg = _(f"Enter {expected_type}")
+                msg = _("Enter {}").format(expected_type)
             else:
                 msg = _("(No help available)")
         return msg

@@ -237,10 +237,10 @@ class MathDisplay:
          "GENERIC_NODE": (0, '¿', 1),
          "PLACE_HOLDER": (r'\place_holder',),
          "RAW_LEAN_CODE": (display_name,),
-         '*INEQUALITY': ("some inequality",),  # Is this useful?
-         '*NUMBER_TYPES': ("some number",),
-         '*INT_OR_NAT': ("some integer",),
-         '*TYPE': ("some set",)
+         '*INEQUALITY': (_("some inequality"),),  # Is this useful?
+         '*NUMBER_TYPES': (_("some number"),),
+         '*INT_OR_NAT': (_("some integer"),),
+         '*TYPE': (_("some set"),)
          }
 
     #####################

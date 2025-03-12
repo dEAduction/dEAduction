@@ -755,7 +755,8 @@ class MetaVar(PatternMathObject):
         expected_type = self._math_type.try_to_display(text=True, is_type=True)
         assigned_type = self.assigned_math_type.try_to_display(text=True,
                                                                is_type=True)
-        msg = _(f"Expecting {expected_type}, but this is {assigned_type}")
+        msg = _("Expecting {}, but this is {}").format(
+            expected_type, assigned_type)
         return msg
 
     def check_type(self):
