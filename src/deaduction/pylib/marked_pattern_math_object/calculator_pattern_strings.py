@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 from collections import OrderedDict
 from typing import Optional
 
-from deaduction.pylib.math_display.nodes import Node
+from deaduction.pylib.math_display.nodes import Node, DefinitionNode
 from .marked_pattern_math_object import MarkedPatternMathObject
 from deaduction.pylib.pattern_math_obj.definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
@@ -145,9 +145,10 @@ class CalculatorAbstractButton:
 
     @classmethod
     def from_node(cls, node: Node):
+        patterns = node.marked_pattern_math_objects()
         return cls(symbol=node.button_symbol(),
                    tooltip=node.button_tooltip(),
-                   patterns=node.marked_pattern_math_objects(),
+                   patterns=patterns,
                    shortcut=node.shortcut,
                    menu=False)
 
@@ -233,6 +234,8 @@ class CalculatorPatternLines:
         csts_dict = DefinitionMathObject.get_constants()
         patterns_dict = MarkedPatternMathObject.app_patterns
         pretty_names = PatternMathDisplay.constants_pretty_names
+        definition_node_names = [node.node_name for node in
+                                 DefinitionNode.calculator_nodes]
         cpls = []
         for section, constants in csts_dict.items():
             if constants:
@@ -249,6 +252,12 @@ class CalculatorPatternLines:
                         if symbol not in symbols:
                             symbols.append(symbol)
                             patterns[symbol] = marked_pmo
+                        if name in definition_node_names:
+                            idx = definition_node_names.index(name)
+                            node = DefinitionNode.calculator_nodes[idx]
+                            marked_pmos = node.marked_pattern_math_objects()
+                            patterns[symbol] = marked_pmos
+
                 # Slices of 4
                 if symbols:
                     symbols = [symbols[4*idx:4*(idx+1)]

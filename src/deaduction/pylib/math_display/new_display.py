@@ -808,6 +808,10 @@ class MathList(list, MathDescendant):
             dicts.append(PatternInit.pattern_text)
         dicts.append(PatternInit.pattern_latex)
 
+        # DEBUG
+        if math_object.node.startswith("*"):
+            pass
+
         # (1) Search for patterns
         for dic in dicts:
             for pattern, pre_shape, metavars in dic:

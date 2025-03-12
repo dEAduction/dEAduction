@@ -130,7 +130,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
     of self.shortcut.
     """
 
-    send_pattern = Signal(MarkedPatternMathObject)
+    send_pattern = Signal(MarkedPatternMathObject, str)
 
     shortcuts_dic: dict  # Set by CalculatorButtonsGroup.__init__()
 
@@ -264,7 +264,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         """
         Send a signal so that Calculator process the click.
         """
-        self.send_pattern.emit(self.patterns)
+        self.send_pattern.emit(self.patterns, self.symbol)
 
     @classmethod
     def process_key_events(cls, key_event_buffer, timeout=False):

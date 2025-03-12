@@ -167,6 +167,7 @@ class MarkedTree:
     def set_cursor_at_main_symbol(self) -> bool:
         pass
 
+    @property
     def is_metavar(self):
         pass
 
@@ -433,7 +434,7 @@ class MarkedTree:
     #
     #     # (1) Unassigned children mvar?
     #     for child in assigned_mvar.ordered_children():
-    #         if child.is_metavar() and not child.is_assigned:
+    #         if child.is_metavar and not child.is_assigned:
     #             # self.set_cursor_at(child, 0)
     #             return child
     #
@@ -441,7 +442,7 @@ class MarkedTree:
     #     parent = self.parent_of(assigned_mvar)
     #     if parent:
     #         for child in parent.ordered_children():
-    #             if child.is_metavar() and not child.is_assigned:
+    #             if child.is_metavar and not child.is_assigned:
     #                 self.set_cursor_at(child, 0)
     #                 return child
     #
@@ -526,7 +527,7 @@ class MarkedTree:
     #     """
     #
     #     # if only_unassigned:
-    #     #     if self.is_metavar() and not self.is_assigned:
+    #     #     if self.is_metavar and not self.is_assigned:
     #     #         maybe_self = [self]
     #     #     else:
     #     #         maybe_self = []
@@ -864,31 +865,80 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     _math_cursor: MathCursor = None
 
+    def is_equal_to(self, other,
+                    remove_generic_paren=False,
+                    use_assigned_math_obj=False,
+                    return_msg=False) -> (bool, str):
+
+        if hasattr(other, "is_metavar") and other.is_metavar:
+            if not other.assigned_math_object:
+                return True, ""
+            else:
+                other = other.assigned_math_object
+
+        mo = self.assigned_math_object
+        if not mo:
+            return True, ""
+
+        return mo.is_equal_to(other,
+                              remove_generic_paren=remove_generic_paren,
+                              use_assigned_math_obj=use_assigned_math_obj,
+                              return_msg=return_msg)
+
     @classmethod
-    def from_pattern_math_object(cls, pmo: PatternMathObject):
+    def from_pattern_math_object(cls, pmo: PatternMathObject,
+                                 original_objects=None,
+                                 marked_objects=None):
         """
-        Create a MarkedPatternMathObject from a PatternMathObject,
+        Recursively create a MarkedPatternMathObject from a PatternMathObject,
         or a MarkedMetavar if pmo is a metavar.
         """
 
-        if isinstance(pmo, MetaVar):
-            return MarkedMetavar.from_mvar(pmo)
+        if original_objects is None:
+            original_objects = []
+        if marked_objects is None:
+            marked_objects = []
 
-        children = [MarkedMetavar.from_mvar(child, parent=pmo)
-                    if isinstance(child, MetaVar)
-                    else cls.from_pattern_math_object(child)
+        if pmo in original_objects:
+            idx = original_objects.index(pmo)
+            return marked_objects[idx]
+
+        ############
+        # CHILDREN #
+        ############
+        children = [cls.from_pattern_math_object(child,
+                                                 original_objects,
+                                                 marked_objects)
                     for child in pmo.children]
+        # children = [MarkedMetavar.from_mvar(child, parent=pmo)
+        #             if isinstance(child, MetaVar)
+        #             else cls.from_pattern_math_object(child)
+        #             for child in pmo.children]
+
+        #############
+        # MATH_TYPE #
+        #############
         # NO_MATH_TYPE should be kept identical
         marked_type = (pmo.math_type if pmo.math_type.is_no_math_type()
-                       else copy(pmo.math_type))
+                       else cls.from_pattern_math_object(pmo.math_type,
+                                                         original_objects,
+                                                         marked_objects))
+
         if pmo.is_bound_var:
             marked_pmo = MarkedBoundVar(node=pmo.node, info=pmo.info,
                                         children=children,
                                         math_type=marked_type,
                                         keep_name=True)
+        elif pmo.is_metavar:
+            marked_pmo = MarkedMetavar(math_type=marked_type)
+
         else:
             marked_pmo = cls(pmo.node, pmo.info, children,
                              marked_type, pmo.imperative_matching)
+
+        original_objects.append(pmo)
+        marked_objects.append(marked_pmo)
+
         return marked_pmo
 
     @classmethod
@@ -1239,7 +1289,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     # def clear_all_matchings(self):
     #     for mvar in self.left_descendants() + self.right_descendants():
-    #         if mvar.is_metavar():
+    #         if mvar.is_metavar:
     #             mvar.clear_matching()
 
     def bound_var_affected_by(self, mvar) -> Optional[BoundVar]:
@@ -1635,7 +1685,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
                 mvar = parent_mvar
                 parent_mvar = self.parent_of(parent_mvar)
-                if mvar and not mvar.is_metavar():
+                if mvar and not mvar.is_metavar:
                     continue
 
     def insert_application(self, pattern=None):
@@ -1886,7 +1936,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         # (1) Unassigned children mvar?
         for child in assigned_mvar.ordered_children():
-            if child.is_metavar() and not child.is_assigned:
+            if child.is_metavar and not child.is_assigned:
                 math_cursor.go_to(child)
                 return
                 # self.set_cursor_at(child, 0)
@@ -1897,7 +1947,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         if parent:
             # for child in parent.ordered_descendants():
             for child in parent.ordered_children():
-                if child.is_metavar() and not child.is_assigned:
+                if child.is_metavar and not child.is_assigned:
                     # self.set_cursor_at(child, 0)
                     # return child
                     math_cursor.go_to(child)
@@ -1922,6 +1972,24 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 # self.decrease_cursor_pos()
                 return True
 
+    def recursive_check_type(self) -> str:
+        """
+        Return a msg listing all places in self where assigned type is
+        not equal to expected type.
+        """
+        msg = ""
+        for child in self.children:
+            child_msg = child.check_type()
+            if child_msg:
+                msg += child_msg + "\\n"
+
+        if self.is_metavar:
+            self_msg = self.check_type()
+            if self_msg:
+                msg += self_msg
+
+        return msg
+
 
 class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     """
@@ -1940,10 +2008,13 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
         return rep
 
     @classmethod
-    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None,
+                  original_metavars=None, copied_metavars=None):
         new_mvar: MarkedMetavar = super().deep_copy(self,
                                                     original_bound_vars,
-                                                    copied_bound_vars)
+                                                    copied_bound_vars,
+                                                    original_metavars,
+                                                    copied_metavars)
         if self.is_marked:
             new_mvar.mark()
         return new_mvar
@@ -1993,7 +2064,8 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
 
     def delete(self):
         """
-        FIXME: what is the desired behavior?
+        Remove self's assigned math object, if any, and self.math_type's
+        assigned math object.
         """
         if self.assigned_math_object:
             self.assigned_math_object = None

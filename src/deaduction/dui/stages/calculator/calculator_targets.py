@@ -37,7 +37,7 @@ from PySide2.QtWidgets import (QTextEdit, QWidget,
 import deaduction.pylib.config.dirs as cdirs
 from deaduction.dui.primitives.base_math_widgets_styling import (
     MathTextWidget, MathLabel)
-from deaduction.dui.elements import GoalWidget
+from deaduction.dui.elements import GoalWidget, DeaductionStatusBar
 from deaduction.dui.stages.calculator.calculator_button import CalculatorButton
 
 log = logging.getLogger(__name__)
@@ -378,6 +378,8 @@ class CalculatorTargets(QWidget):
 
         # Toolbar
         self.toolbar = CalculatorToolbar()
+        self.status_bar = DeaductionStatusBar(self)
+        # self.status_bar.pending_msg_time_interval = 1000
 
         ####################
         # Detailed context #
@@ -438,6 +440,7 @@ class CalculatorTargets(QWidget):
             # text = target_type.to_display(format_='html')
             # target_wdg.setHtml(text)
             target_wdg.toolbar = self.toolbar
+            target_wdg.status_bar = self.status_bar
             target_wdg.navigation_bar = self.navigation_bar
             target_wdg.button_box = self.button_box
 
@@ -461,6 +464,8 @@ class CalculatorTargets(QWidget):
             main_lyt.addWidget(target)
 
         main_lyt.addLayout(nav_lyt)
+        main_lyt.addWidget(self.status_bar)
+
         self.setLayout(main_lyt)
 
         self.target_wdgs[0].setFocus()

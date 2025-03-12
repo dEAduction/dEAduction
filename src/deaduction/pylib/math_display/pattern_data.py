@@ -107,9 +107,33 @@ def is_inequality(math_object):
     return math_object.is_inequality(is_math_type=True)
 
 
+def has_add(math_object):
+    """
+    Check if math_object is a type that has an addition.
+    TODO: vector spaces, abelian groups...
+    """
+    # print("HAS ADD TEST")
+    return (math_object.is_number() or math_object.is_function() or
+            math_object.is_sequence())
+
+
+def is_type(math_object):
+    """
+    True if math_object can be used as a "type", e.g. after the ∈ symbol.
+    """
+    # TODO: should correspond automatically to the keys of the
+    #  latex_from_pattern_string_for_type dict below
+    if math_object.node in ["TYPE", "SET", "FUNCTION", "SEQUENCE"]:
+        return True
+    elif math_object.node in ["CONSTANT", "LOCAL_CONSTANT"]:
+        return math_object.name in ["ℕ", "ℤ", "ℚ", "ℝ"]
+
+
 metanodes = {'*INEQUALITY': is_inequality,
-             '*NUMBER_TYPES': is_number_type,
-             '*INT_OR_NAT': is_int_or_nat}
+             '*NUMBER_TYPES': is_number_type,  # FIXME: just call *NUMBER
+             '*INT_OR_NAT': is_int_or_nat,
+             '*HAS_ADD': has_add,  # TODO: improve
+             '*TYPE': is_type}
 
 
 ###############
@@ -311,10 +335,13 @@ latex_from_pattern_string_for_type = {
     "LOCAL_CONSTANT/name=RealSubGroup": (r'\type_R',),
     "LOCAL_CONSTANT/name=IntegerSubGroup": (r'\type_Z',),
     "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
-    # This is maybe too strong: any guy with undefined math_type will match!! :
-    "?:TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is treated above
-    "?:CONSTANT/name=MetricSpace": (r'\type_point', local_constant_shape),  # a point of...
-    "?:SET(?0)": (r'\type_element', 'self'),
+    # This is maybe too strong: any guy with undefined math_type will match!!
+    # Added imperative matching (!) otherwise *TYPE match
+    "?:!TYPE": (r'\type_element', local_constant_shape),  # NB: TYPE is
+    # treated above
+    "?:!CONSTANT/name=MetricSpace": (r'\type_point', local_constant_shape),
+    # a point of...
+    "?:!SET(?0)": (r'\type_element', 'self'),
     "CONSTANT/name=_inst_1": ('Hypo1',)
 }
 

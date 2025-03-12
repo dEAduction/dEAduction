@@ -88,16 +88,11 @@ class DefinitionMathObject(MathObject, Definition):
             return self.definition.initial_proof_state.goals[0].target
 
     @classmethod
-    def clear_instances(cls):
-        cls.instances = []
-
-    @classmethod
     def get_constants(cls):
         """
         Add all CONSTANTS in self to the all_constants list.
         """
 
-        # FIXME: croiser avec PatternMathDisplay.all_constants_names
         all_constants = dict()
         for defi in cls.instances:
             # hierarchy_of_sections = (_(title).capitalize() for title in

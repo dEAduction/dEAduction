@@ -1,3 +1,5 @@
+# Lists are accepted (cf preset_courses)
+
 [icons]
 path        = "$DEADUCTION_SHARE/graphical_resources/icons"
 letter_type = "letters/trials"

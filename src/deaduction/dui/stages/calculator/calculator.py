@@ -49,6 +49,7 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+# from deaduction.pylib.math_display.pattern_data import is_type
 
 if __name__ == '__main__':
     from deaduction.dui.__main__ import language_check
@@ -62,7 +63,7 @@ from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QApplication, QWidget,
                                QSizePolicy, QScrollArea,
                                QHBoxLayout, QVBoxLayout, QGridLayout,QToolBar,
-                               QAction, QDialog, QGroupBox)
+                               QAction, QDialog, QGroupBox, QMainWindow)
 
 import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.config.vars as cvars
@@ -374,7 +375,7 @@ class CalculatorAllButtons(QWidget):
     A class to display groups of CalculatorButtons, with a vertical scroll bar.
     """
 
-    send_pattern = Signal(MarkedPatternMathObject)
+    send_pattern = Signal(MarkedPatternMathObject, str)
     targets_window: CalculatorTargets = None
     controller = None  # Set by CalculatorController
     targets_window_is_closed = False
@@ -405,10 +406,12 @@ class CalculatorAllButtons(QWidget):
             self.buttons_groups.append(buttons)
 
         # Lines from nodes
-        for NodeClass, col_size in ((LogicalNode, 5),
-                                    (SetTheoryNode, 5),
-                                    (NumberNode, 4),
-                                    (InequalityNode, 5)):
+        for node_name, NodeClass, col_size in (
+                ("logic", LogicalNode, 5),
+                ("sets", SetTheoryNode, 5),
+                ("numbers", NumberNode, 4),
+                ("inequalities", InequalityNode, 5)):
+            # TODO: add settings test on buttons name
             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
                                                                 col_size)
             # btns_lyt.addWidget(buttons)
@@ -486,8 +489,8 @@ class CalculatorAllButtons(QWidget):
         return btns
 
     @Slot()
-    def process_clic(self, pattern):
-        self.send_pattern.emit(pattern)
+    def process_clic(self, pattern, symbol):
+        self.send_pattern.emit(pattern, symbol)
 
     def bound_var_group(self):
         for group in self.buttons_groups:
@@ -738,6 +741,7 @@ class CalculatorMainWindow(QDialog):
         key = "calculator_window/position/" + self.geometry_mode
         # settings.setValue(key, self.pos())
         settings.setValue(key, self.saveGeometry())
+        self.calculator_widget.close()
 
     def close_n_accept(self):
         self.close()
@@ -801,14 +805,16 @@ class CalculatorController:
                                            task_goal=task_goal,
                                            prop=prop)
         self.targets_widget = targets_widget
+        self.status_bar.proof_msg = self.help_msg
+
         focus_changed = QApplication.instance().focusChanged
         focus_changed.connect(targets_widget.on_focus_changed)
         focus_has_changed = targets_widget.focus_has_changed
         focus_has_changed.connect(self.target_focus_has_changed)
 
-        ###########
-        # Buttons #
-        ###########
+        ######################
+        # Calculator Buttons #
+        ######################
         # Context buttons #
         if goal:
             context = goal.context_objects
@@ -1207,6 +1213,59 @@ class CalculatorController:
     def redo_all(self):
         return self.toolbar.redo_all
 
+    #########################
+    # Status bar management #
+    #########################
+    @property
+    def status_bar(self):
+        return self.targets_widget.status_bar
+
+    def show_error_msg(self, msg):
+        self.status_bar.show_error_msg(msg)
+
+    def show_success_msg(self, msg):
+        self.status_bar.show_success_msg(msg)
+
+    def show_help_msg(self):
+        self.status_bar.show_pending_msgs()
+        # if True:
+        #     duration = self.status_bar.pending_msg_time_interval
+        #     self.status_bar.timer.setInterval(duration)
+        #     # self.timer.singleShot(duration, self.show_pending_msgs)
+        #     self.status_bar.timer.start()
+        # else:  # Show immediately
+        #     self.status_bar.show_pending_msgs()
+
+    def help_msg(self):
+        DEBUG=False
+        current_mo = self.current_target.marked_descendant()
+        target_expected_type = current_mo._math_type
+        if current_mo.math_type:
+            display_type = current_mo.math_type_to_display(format_='utf8',
+                                                           text=True)
+        else:
+            display_type = "((no type))"
+        if target_expected_type is PatternMathObject.NO_MATH_TYPE:
+            expected_type = ""
+        else:
+            expected_type = target_expected_type.try_to_display(text=True,
+                                                                is_type=True)
+
+        if not current_mo.is_metavar:
+            msg = "((not a metavar))"
+        elif current_mo.assigned_math_object:
+            msg = current_mo.check_type()
+            if not msg and DEBUG:
+                msg = (f"((type checked : expected {expected_type},"
+                       f"got {display_type}))")
+        else:
+            if (expected_type and not (target_expected_type.is_metavar
+                    and not target_expected_type.assigned_math_object)):
+                msg = _(f"Enter {expected_type}")
+            else:
+                msg = _("(No help available)")
+        return msg
+
     def set_lean_target(self):
         """
         This method is called when self goes from lean_mode=True to
@@ -1305,6 +1364,7 @@ class CalculatorController:
         self.update_cursor()
         self.enable_actions()
         self.give_focus_back_to_target_wdg()
+        self.show_help_msg()
 
     ##################
     # Target editing #
@@ -1401,7 +1461,7 @@ class CalculatorController:
             btn.send_pattern.connect(self.buttons_window.process_clic)
 
     @Slot()
-    def insert_pattern(self, pattern_s: [MarkedPatternMathObject]):
+    def insert_pattern(self, pattern_s: [MarkedPatternMathObject], symbol):
         """
         Try to insert pattern (or patterns) in self.target.
         If several patterns are provided, they are tried in order until
@@ -1420,7 +1480,9 @@ class CalculatorController:
 
         if self.lean_mode:
             text_wdg = self.current_target_wdg
+            # FIXME: better formatting in Lean mode?
             code = pattern_s[0].to_display(format_='lean')
+            code.replace('?', ' ')
             text_wdg.insertPlainText(code)
             self.set_lean_target()
             self.history_update()
@@ -1486,22 +1548,32 @@ class CalculatorController:
             assigned_mvar = new_target.generic_insert(pattern)
 
         # print(f"New target: {new_target}")
-        if assigned_mvar:
-            assigned_mvar.adjust_type_of_assigned_math_object()
+        if assigned_mvar:  # SUCCESS!
+            # The following is not pertinent:
+            # assigned_mvar.adjust_type_of_assigned_math_object()
             # self.check_new_bound_var(assigned_mvar)
             self.target = new_target
 
-            # FIXME:
-            was_at_end = (self.target.math_cursor.is_at_end()
-                          or self.target.marked_descendant() ==
-                          self.target.ordered_descendants()[-1])
-            # was_at_end = self.target.math_cursor.is_at_end()
+            # check_type_msg = new_target.check_type()
+            # if check_type_msg:
+            #     self.show_error_msg(check_type_msg)
+            # else:
+            #     self.show_success_msg(_(f"{symbol} inserted!"))
+            # self.show_help_msg()
+
+            # was_at_end = (self.target.math_cursor.is_at_end()
+            #               or self.target.marked_descendant() ==
+            #               self.target.ordered_descendants()[-1])
             self.target.move_after_insert(assigned_mvar,
-                                          was_at_end=was_at_end)
+                                          was_at_end=False)
             self.history_update()
-        else:
+        else:  # ERROR!
             # Fixme
+            error_msg = _(f"Cannot insert {symbol} here")
+            self.show_error_msg(error_msg)
             self.current_target_wdg.setFocus()
+            # self.show_help_msg()
+
         # DEBUGGING:
         # print(f"Shape: {self.target.latex_shape()}")
         # print(f"New target after move: {new_target}")

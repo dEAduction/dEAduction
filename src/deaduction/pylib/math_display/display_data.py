@@ -236,7 +236,11 @@ class MathDisplay:
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
          "PLACE_HOLDER": (r'\place_holder',),
-         "RAW_LEAN_CODE": (display_name,)
+         "RAW_LEAN_CODE": (display_name,),
+         '*INEQUALITY': ("some inequality",),  # Is this useful?
+         '*NUMBER_TYPES': ("some number",),
+         '*INT_OR_NAT': ("some integer",),
+         '*TYPE': ("some set",)
          }
 
     #####################

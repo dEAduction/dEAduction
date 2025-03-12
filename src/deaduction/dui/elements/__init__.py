@@ -53,6 +53,8 @@ from .menubar import (
     MenuBarAction,
     MenuBarMenu)
 
+from .statusbar import DeaductionStatusBar
+
 from .recent_courses_widgets import (
     CoursesLW,
     CoursesLWI)
