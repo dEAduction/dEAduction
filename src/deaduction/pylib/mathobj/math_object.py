@@ -158,6 +158,7 @@ class MathObject:
     # numbers involved in the current exercise
     bound_var_counter = 0  # A counter to distinguish bound variables
     is_bound_var = False
+    is_metavar = False
 
     ###########################################
     # Lists from definitions for implicit use #
@@ -439,7 +440,8 @@ class MathObject:
         return other
 
     @classmethod
-    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None):
+    def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None,
+                  original_metavars=None, copied_metavars=None):
         """
         Return a deep copy of self. This should work for subclasses.
         NB: in the copied object, original bound vars must be duplicated only
@@ -449,28 +451,44 @@ class MathObject:
         This is crucial for coherent bound var naming: if the name of the
         bound var is modified then this modification must apply to all the
         other occurrences.
+        Likewise for metavars.
+        TODO: we could just do that for every sub_object, not only metavars/bv.
         """
 
         if original_bound_vars is None:
             original_bound_vars = []
         if copied_bound_vars is None:
             copied_bound_vars = []
+        if original_metavars is None:
+            original_metavars = []
+        if copied_metavars is None:
+            copied_metavars = []
 
         if self in original_bound_vars:
             idx = original_bound_vars.index(self)
             return copied_bound_vars[idx]
+        elif self in original_metavars:
+            idx = original_metavars.index(self)
+            return copied_metavars[idx]
 
         new_info = deepcopy(self.info)
-        math_type: cls = self.math_type
+        # Consider self._math_type, NOT self.math_type, cf metavar
+        # but beware this can be NONE
+        math_type: cls = self._math_type
         children: [cls] = self.children  # Real type could be different
-        new_math_type = (math_type if math_type.is_no_math_type()
+        new_math_type = (math_type if (math_type is None or
+                                       math_type.is_no_math_type())
                          else math_type.deep_copy(math_type,
                                                   original_bound_vars,
-                                                  copied_bound_vars))
+                                                  copied_bound_vars,
+                                                  original_metavars,
+                                                  copied_metavars))
 
         new_children = [child.deep_copy(child,
                                         original_bound_vars,
-                                        copied_bound_vars)
+                                        copied_bound_vars,
+                                        original_metavars,
+                                        copied_metavars)
                         for child in children]
 
         new_math_object = cls(node=self.node, info=new_info,
@@ -480,6 +498,9 @@ class MathObject:
             new_math_object.name_bound_var(self.name)  # Copy name
             original_bound_vars.append(self)
             copied_bound_vars.append(new_math_object)
+        if self.is_metavar:
+            original_metavars.append(self)
+            copied_metavars.append(new_math_object)
 
         return new_math_object
 
@@ -899,14 +920,22 @@ class MathObject:
 
         WARNING: this should probably not be used for bound variables.
         """
-        return self.is_equal_to(other,
-                                remove_generic_paren=False,
-                                use_assigned_math_obj=False)
+        equal, msg = self.is_equal_to(other,
+                                      remove_generic_paren=False,
+                                      use_assigned_math_obj=False)
+        return equal
 
     def is_equal_to(self, other,
                     remove_generic_paren=False,
-                    use_assigned_math_obj=False) -> bool:
-
+                    use_assigned_math_obj=False,
+                    return_msg=False) -> (bool, str):
+        """
+        If return_msg is False, then the returned string will be empty.
+        Otherwise, we use self.to_display() to return an error msg explaining
+        where other differs from self.
+        (This method is used in to_display(), and thus we cannot
+        use to_display() here with return_msg = True.)
+        """
         ##########################################################
         # Mod out by generic_parentheses / assigned_math_objects #
         ##########################################################
@@ -929,7 +958,8 @@ class MathObject:
         if (mo0 is not self) or (mo1 is not other):
             test = mo0.is_equal_to(mo1,
                                    remove_generic_paren=remove_generic_paren,
-                                   use_assigned_math_obj=use_assigned_math_obj)
+                                   use_assigned_math_obj=use_assigned_math_obj,
+                                   return_msg=return_msg)
             return test
 
         # Successively test for
@@ -941,30 +971,38 @@ class MathObject:
 
         # Include case of NO_MATH_TYPE (avoid infinite recursion!)
         if self is other:
-            return True
+            return True, ""
+
+        if return_msg:
+            error_msg = self.try_to_display() + " ≠ "
+        else:
+            error_msg = ""
 
         if other is None or not isinstance(other, MathObject):
-            return False
+            return False, error_msg + str(other)
+        if return_msg:
+            error_msg += other.try_to_display()
 
         # Test math_types only if they are both defined:
         if self.is_no_math_type() or other.is_no_math_type():
-            return True
+            return True, ""
 
         ################################################
         # Test node, bound var, name, value, math_type #
         ################################################
         if (self.node, self.is_bound_var, self.name, self.value) != \
                 (other.node, other.is_bound_var, other.name, other.value):
-            return False
+            return False, error_msg
 
         # Test math_types
         mt0 = self.math_type
         mt1 = other.math_type
-        test = mt0.is_equal_to(mt1,
+        test, msg = mt0.is_equal_to(mt1,
                                remove_generic_paren=remove_generic_paren,
-                               use_assigned_math_obj=use_assigned_math_obj)
+                               use_assigned_math_obj=use_assigned_math_obj,
+                               return_msg=return_msg)
         if not test:
-            return False
+            return test, msg
 
         # BoundVar has an __eq__() method
         # if self.is_bound_var:
@@ -975,7 +1013,7 @@ class MathObject:
         # Recursively test for children #
         #################################
         elif len(self.children) != len(other.children):
-            return False
+            return False, error_msg
         else:
             equal = True
             bound_var_1 = None
@@ -999,10 +1037,12 @@ class MathObject:
                 # log.debug(f"Marking BV {bound_var_1, bound_var_2}")
 
             # Test children
+            children_error_msg = ""
             for ch0, ch1 in zip(self.children, other.children):
-                test = ch0.is_equal_to(ch1,
+                test, msg = ch0.is_equal_to(ch1,
                                        remove_generic_paren=remove_generic_paren,
-                                       use_assigned_math_obj=use_assigned_math_obj)
+                                       use_assigned_math_obj=use_assigned_math_obj,
+                                       return_msg=return_msg)
 
                 if not test:
                     # if self.node == 'PROP_≥':
@@ -1010,13 +1050,14 @@ class MathObject:
                     #     log.debug(f"and {child1}")
                     #     log.debug(f" in {self}")
                     equal = False
+                    children_error_msg = msg
 
             # Un-mark bound_vars
             if bound_var_1:
                 bound_var_1.unmark_bound_var()
                 bound_var_2.unmark_bound_var()
 
-            return equal
+            return equal, children_error_msg
 
     def is_in(self, others: [],
               remove_generic_paren=False,
@@ -1027,7 +1068,7 @@ class MathObject:
 
         idx = 0
         for other in others:
-            test = self.is_equal_to(other,
+            test, msg = self.is_equal_to(other,
                                     remove_generic_paren=remove_generic_paren,
                                     use_assigned_math_obj=use_assigned_math_obj)
             if test:
@@ -2079,6 +2120,22 @@ class MathObject:
                                    pretty_parentheses=pretty_parentheses)
         return display
 
+    def try_to_display(self, text=False, is_type=False):
+        """
+        Version of to_display() that catch infinite recursion, mainly for
+        debugging.
+        """
+        # FIXME:
+        try:
+            display = self.to_display(format_="utf8", text=text,
+                                      is_type=is_type)
+        except RecursionError:
+            if self.name:
+                display = self.name
+            else:
+                display = str(self)
+        return display
+
     def math_type_to_display(self, format_="html", text=False,
                              is_math_type=False, used_in_proof=False,
                              pretty_parentheses=True) -> str:
@@ -2105,11 +2162,20 @@ class MathObject:
         return shape
 
     def recursive_match(self, other, metavars, metavar_objects,
-                        symmetric_match=False, debug=False):
+                        symmetric_match=False, debug=False, return_msg=False)\
+                        -> (bool, str):
         """
         For compatibility with the PatternMathObject class.
         """
-        return self == other
+        if self == other:
+            return True, ""
+        else:
+            if return_msg:
+                error_msg = (self.try_to_display() + " ≠match "
+                             + other.try_to_display())
+            else:
+                error_msg = ""
+            return False, error_msg
 
     def to_math_object(self):
         """
@@ -2195,11 +2261,18 @@ class BoundVar(MathObject):
 
     def is_equal_to(self, other,
                     remove_generic_paren=False,
-                    use_assigned_math_obj=False) -> bool:
+                    use_assigned_math_obj=False,
+                    return_msg=False) -> (bool, str):
         """
         For compatibility with MathObject.is_equal_to().
         """
-        return self == other
+
+        if self == other:
+            return True, ""
+        else:
+            msg = (self.name + " ≠ " + other.to_display(format_="utf8") if
+                   return_msg else "")
+            return False, msg
 
     def __eq__(self, other):
         """
@@ -2310,9 +2383,9 @@ class BoundVar(MathObject):
             lean_name = ''
         letter = (lean_name[:-2] if lean_name.endswith('__')
                   else lean_name if (lean_name and self.math_type.is_number())
-                  else old_name if old_name  # FIXME: trial
                   else 'n' if self.math_type.is_N()
                   else 'x' if self.math_type.is_R()
+                  else old_name if old_name  # FIXME: trial
                   else '')
         sub = letter.find('_')
         if sub > 0:
@@ -2386,12 +2459,20 @@ class BoundVar(MathObject):
 # Methods for PatternMathObject #
 #################################
     def recursive_match(self, other, metavars, metavar_objects,
-                        symmetric_match=False, debug=False):
+                        symmetric_match=False, debug=False, return_msg=False)\
+                        -> (bool, str):
         """
         For compatibility with the PatternMathObject class.
         """
-        return (other.is_bound_var
-                and self.bound_var_nb() == other.bound_var_nb())
+        if other.is_bound_var and self.bound_var_nb() == other.bound_var_nb():
+            return True, ""
+        else:
+            if return_msg:
+                error_msg = (self.try_to_display() + " ≠match "
+                             + other.try_to_display())
+            else:
+                error_msg = ""
+            return False, error_msg
 
     def math_object_from_matching(self, metavars=None, metavars_objects=None,
                                   original_bound_vars=None,
