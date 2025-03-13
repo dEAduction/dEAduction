@@ -409,7 +409,7 @@ class CalculatorAllButtons(QWidget):
         # (1) Lines from pattern_lines
         for calc_pattern in calc_patterns:
             # Avoid empty context
-            if (calc_pattern.title is CalculatorPatternLines.context_title
+            if (calc_pattern.title is not CalculatorPatternLines.bound_vars_title
                     and all(not line for line in calc_pattern.lines)):
                 continue
             # No bounded vars if only numbers
