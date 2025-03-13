@@ -181,6 +181,7 @@ class CalculatorPatternLines:
     """
 
     bound_vars_title = _('Bound variables')
+    context_title = _('Context')
 
     marked_patterns = OrderedDict()
     for symbol, string in calculator_pattern_strings.items():
@@ -203,14 +204,13 @@ class CalculatorPatternLines:
 
     @classmethod
     def from_context(cls, context_math_objects: [ContextMathObject]):
-        title = _('Context')
         patterns = dict()
         for obj in context_math_objects:
             symbol = obj.to_display(format_='html',
                                     use_color=True)
             marked_pmo = MarkedPatternMathObject.from_math_object(obj)
             patterns[symbol] = marked_pmo
-        cpl = cls(title=title,
+        cpl = cls(title= cls.context_title,
                   lines=[list(patterns.keys())],
                   patterns=patterns)
         return cpl
@@ -222,7 +222,7 @@ class CalculatorPatternLines:
         return cpl
 
     @classmethod
-    def constants_from_definitions(cls):
+    def constants_from_definitions(cls, only_numbers=False):
         """
         Create CalculatorPatternLines from the constants appearing in the
         definitions of the Lean file. A constant is selected only if it also
@@ -253,10 +253,17 @@ class CalculatorPatternLines:
                             symbols.append(symbol)
                             patterns[symbol] = marked_pmo
                         if name in definition_node_names:
+                            # Use definition_node_name to have more precise
+                            # type indications
                             idx = definition_node_names.index(name)
                             node = DefinitionNode.calculator_nodes[idx]
                             marked_pmos = node.marked_pattern_math_objects()
                             patterns[symbol] = marked_pmos
+                            if (only_numbers and
+                                    all(mo.is_prop()
+                                        for mo in marked_pmos)):
+                                patterns.pop(symbol)
+                                symbols.remove(symbol)
 
                 # Slices of 4
                 if symbols:

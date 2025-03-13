@@ -514,6 +514,22 @@ power = NumberNode('POWER',
                    (0, "^", 1)
                    )
 
+abs_ = NumberNode('abs',
+                      'APP(CONSTANT/name=abs, ?0)',
+                      ('|', -1, '|'))
+abs_.set_button_symbol('|·|')
+abs_.set_button_tooltip(_("Absolute value"))
+abs_.set_shortcut('\\abs')
+
+max_ = NumberNode('max',
+                      'APP(CONSTANT/name=max, ?0: ?2, ?1: ?2)',
+                      ('max ', '\\parentheses', -2, ', ', -1))
+
+min_ = NumberNode('min',
+                      'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
+                      ('min ', '\\parentheses', -2, ', ', -1))
+
+
 # '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
 # # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
 # '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
@@ -579,21 +595,6 @@ equal_not = InequalityNode("PROP_EQUAL_NOT",
 equal2 = InequalityNode("PROP_EQUAL",
                         'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',
                         (r"\no_text", 0, r" \equal ", 1))
-
-max_ = InequalityNode('max',
-                      'APP(CONSTANT/name=max, ?0: ?2, ?1: ?2)',
-                      ('max ', '\\parentheses', -2, ', ', -1))
-
-min_ = InequalityNode('min',
-                      'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
-                      ('min ', '\\parentheses', -2, ', ', -1))
-
-abs_ = InequalityNode('abs',
-                      'APP(CONSTANT/name=abs, ?0)',
-                      ('|', -1, '|'))
-abs_.set_button_symbol('|·|')
-abs_.set_button_tooltip(_("Absolute value"))
-abs_.set_shortcut('\\abs')
 
 
 class DefinitionNode(Node):

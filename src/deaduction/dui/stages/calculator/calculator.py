@@ -380,7 +380,14 @@ class CalculatorAllButtons(QWidget):
     controller = None  # Set by CalculatorController
     targets_window_is_closed = False
 
-    def __init__(self, calc_patterns: [CalculatorPatternLines]):
+    def __init__(self, calc_patterns: [CalculatorPatternLines],
+                 node_classes=None,
+                 only_numbers=False):
+        """
+        If only_numbers is True then only nodes pertinent to enter a number
+        are displayed. Otherwise, node_classes is the list of names of node
+        classes that should be displayed.
+        """
         super().__init__()
         self.setAttribute(Qt.WA_AlwaysShowToolTips, True)
         self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
@@ -399,23 +406,35 @@ class CalculatorAllButtons(QWidget):
         ###############
         self.btns_wgt = QWidget()
 
-        # Lines from pattern_lines
+        # (1) Lines from pattern_lines
         for calc_pattern in calc_patterns:
+            # Avoid empty context
+            if (calc_pattern.title is CalculatorPatternLines.context_title
+                    and all(not line for line in calc_pattern.lines)):
+                continue
+            # No bounded vars if only numbers
+            if only_numbers:
+                if calc_pattern.title is CalculatorPatternLines.bound_vars_title:
+                    continue
+
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
                 calc_pattern)
-            self.buttons_groups.append(buttons)
+            if buttons:
+                self.buttons_groups.append(buttons)
 
-        # Lines from nodes
+        # (2) Lines from nodes
+        if only_numbers:
+            node_classes = ["numbers"]
         for node_name, NodeClass, col_size in (
                 ("logic", LogicalNode, 5),
                 ("sets", SetTheoryNode, 5),
                 ("numbers", NumberNode, 4),
                 ("inequalities", InequalityNode, 5)):
             # TODO: add settings test on buttons name
-            buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
-                                                                col_size)
-            # btns_lyt.addWidget(buttons)
-            self.buttons_groups.append(buttons)
+            if (not node_classes) or node_name in node_classes:
+                buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
+                                                                    col_size)
+                self.buttons_groups.append(buttons)
 
         self.btns_lyt = QVBoxLayout()
         self.set_buttons()
@@ -778,7 +797,7 @@ class CalculatorController:
                  target_types,
                  # target_type=None,
                  goal=None,
-                 calculator_groups=None,
+                 # calculator_groups=None,
                  window_title="Logical Calculator",
                  task_title=None,
                  titles=None,
@@ -819,26 +838,25 @@ class CalculatorController:
         if goal:
             context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
-            # bound_vars = CalculatorPatternLines.bound_vars()
-            # self.calculator_groups.extend([context_line, bound_vars])
-            self.calculator_groups.extend([context_line])
+            if context_line.lines:
+                self.calculator_groups.extend([context_line])
             # Compute applications on ContextMathObjects:
             MarkedPatternMathObject.populate_applications_from_context(context)
 
         bound_vars_line = CalculatorPatternLines.bound_vars()
         self.calculator_groups.extend([bound_vars_line])
 
-        if calculator_groups:
-            self.calculator_groups.extend(calculator_groups)
-        # Add 'constant' from definitions,
-        # e.g. is_bounded, is_even, and so on
+        # if calculator_groups:
+        #     self.calculator_groups.extend(calculator_groups)
 
         # Definition buttons #
-        cpls = CalculatorPatternLines.constants_from_definitions()
+        cpls = CalculatorPatternLines.constants_from_definitions(
+            only_numbers=self.targets_are_numbers)
         self.calculator_groups.extend(cpls)
 
         # User interface #
-        self.buttons_window = CalculatorAllButtons(self.calculator_groups)
+        self.buttons_window = CalculatorAllButtons(
+            self.calculator_groups, only_numbers=self.targets_are_numbers)
         # self.buttons_window.setParent(self.targets_widget)
         # --> buttons_window does not show!
         # self.buttons_window.setFocusProxy(self.targets_widget)
@@ -859,6 +877,10 @@ class CalculatorController:
         self.set_target_and_update_ui()
 
         QTimer.singleShot(0, self.__show_intro)
+
+    @property
+    def targets_are_numbers(self):
+        return all(t_type.is_number() for t_type in self.target_types)
 
     def __show_intro(self):
         cname = "dialogs.calculator_intro"
