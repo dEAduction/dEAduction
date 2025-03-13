@@ -2050,10 +2050,22 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
     def math_type(self):
         """
         Override super().math_type in case self has a assigned_math_object.
+        If the assigned_math_type is generic (i.e. node startswith '*') then
+        send self._math_type.
         """
-        math_type = (self.assigned_math_object.math_type
-                     if self.assigned_math_object else self._math_type)
-        return self.NO_MATH_TYPE if math_type is None else math_type
+        # Default type
+        math_type = self._math_type
+        if math_type is None:
+            math_type = self.NO_MATH_TYPE
+
+        # Assigned_math_type if pertinent
+        amo = self.assigned_math_object
+        if amo:
+            amo_t = self.assigned_math_type
+            if (not amo_t.node.startswith("*")
+                    and math_type is not self.NO_MATH_TYPE):
+                math_type = amo_t
+        return math_type
 
     @classmethod
     def from_mvar(cls, mvar: MetaVar, parent=None):

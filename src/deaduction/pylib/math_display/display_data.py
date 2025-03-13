@@ -100,7 +100,7 @@ def set_of_math_type_of_child_for_lean(mo):
 def display_lean_value(mo):
     type_ = mo.math_type
     val = display_value(mo)
-    if type_.is_no_math_type:
+    if type_.is_no_math_type() or type_.node.startswith('*'):
         return val
     else:
         return '(' + val + ': ' + type_.to_display(format_='lean') + ')'
@@ -285,7 +285,11 @@ class MathDisplay:
         'COMPOSITION': ('function.comp ', 0, ' ', 1),
         "POWER": ('', 0, [' ^ ', 1], ''),
         # "SET_PRODUCT": ("set.prod ", 0, ' ', 1),
-        "PROP_EQUAL_NOT": ("not ", 0, '=', 1)
+        "PROP_EQUAL_NOT": ("not ", 0, '=', 1),
+        # '*INEQUALITY': ("_",),  # Is this useful?
+        # '*NUMBER_TYPES': ("_",),
+        # '*INT_OR_NAT': ("_",),
+        # '*TYPE': ("_",)
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict

@@ -981,7 +981,8 @@ class CalculatorController:
                 lean_code = cc.current_target_wdg.toPlainText()
                 math_object = MathObject.raw_lean_code(lean_code)
             else:
-                math_object = target.assigned_math_object
+                # math_object = target.assigned_math_object
+                math_object = target
             math_objects.append(math_object)
 
         math_objects = missing_output.initial_place_holders + math_objects
@@ -1475,6 +1476,9 @@ class CalculatorController:
     def set_bound_var_buttons(self):
         # NB: MarkedPMO associated to BoundVar button is bound_var,
         #  not just a deep_copy of it:
+        if not self.bound_var_buttons:
+            return
+
         buttons = [CalculatorButton.from_math_object(bound_var,
                                                      copy_math_object=False)
                    for bound_var in self.current_target.bound_vars()]
