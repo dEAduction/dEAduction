@@ -251,6 +251,7 @@ class MathDisplay:
     # Only those shape that are distinct from the latex_from_node dict
     lean_from_node = {
         # "PLACE_HOLDER": (r'__',),
+        "COE": ("↥", 0,),
         "LOCAL_CONSTANT": (display_name,),
         "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),

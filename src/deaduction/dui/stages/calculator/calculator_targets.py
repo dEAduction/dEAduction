@@ -181,7 +181,7 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer.setSingleShot(True)
         self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
 
-        self.lean_mode = False  # TODO: change behavior in Lean mode
+        self.lean_mode = False
         self.check_types = False  # TODO: add button?
 
     def mousePressEvent(self, event):
@@ -204,12 +204,6 @@ class CalculatorTarget(MathTextWidget):
         work.
         """
 
-        if self.lean_mode:
-            super().keyPressEvent(event)
-            return
-
-        self.key_buffer_timer.start()
-
         key = event.key()
         if int(event.modifiers()) & int(Qt.ControlModifier):
             # print("CTRL")
@@ -227,11 +221,13 @@ class CalculatorTarget(MathTextWidget):
             key += Qt.META
 
         key_sequence = QKeySequence(key)
-        print(key_sequence)
+        # print(key_sequence)
         # log.debug("Key event -> Trying Return and Space")
         if key_sequence == QKeySequence("Return"):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
-        elif key_sequence == QKeySequence("Space"):
+            return
+
+        if key_sequence == QKeySequence("Space") and not self.lean_mode:
             self.key_buffer_timeout()
             event.ignore()
             return
@@ -245,7 +241,7 @@ class CalculatorTarget(MathTextWidget):
             bar = self.navigation_bar
             action = bar.beginning_action
         elif key_sequence == QKeySequence.MoveToPreviousChar:
-            print("<-")
+            # print("<-")
             bar = self.navigation_bar
             action = bar.left_action
         elif key_sequence == QKeySequence.MoveToNextChar:
@@ -276,16 +272,22 @@ class CalculatorTarget(MathTextWidget):
             action = bar.redo_action
 
         if bar and action:
-            print(bar)
-            print(action)
+            # print(bar)
+            # print(action)
             bar.animate_click(action)
             self.clear_key_buffer()
             event.ignore()
             return
 
+        if self.lean_mode:
+            # TODO: unfreeze OK button
+            super().keyPressEvent(event)
+            return
+
         # Text shortcuts
         text = event.text()
         if text:
+            self.key_buffer_timer.start()
             self.key_event_buffer += text
             # print(self.key_event_buffer, self.key_buffer_timer)
             yes = CalculatorButton.process_key_events(self.key_event_buffer,
