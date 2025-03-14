@@ -721,9 +721,9 @@ class MathList(list, MathDescendant):
         Return a new tuple shape.
         """
 
-        if (math_object.node == 'NUMBER' and
-                (math_object.math_type.is_number() or 
-                 math_object.math_type.node == '*NUMBER_TYPES')):
+        if math_object.node == 'NUMBER' and math_object.math_type.is_number()\
+                and math_object:
+                 # or math_object.math_type.node == '*NUMBER_TYPES')):
             # wrap_shape = ['(', '('] + lean_shape + [') : ', lean_type, ')']
             lean_type = math_object.math_type.to_display(format_='lean')
             self.insert(0, MathString.left_paren)
@@ -764,7 +764,8 @@ class MathList(list, MathDescendant):
                              root_math_object=math_object,
                              format_='lean')
 
-            shape.wrap_lean_shape_with_type(math_object)
+            # FIXME: removed, since this is done in display_lean_value
+            # shape.wrap_lean_shape_with_type(math_object)
 
         return shape
 

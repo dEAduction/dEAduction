@@ -1584,6 +1584,8 @@ class CalculatorController:
             # assigned_mvar.adjust_type_of_assigned_math_object()
             # self.check_new_bound_var(assigned_mvar)
             self.target = new_target
+            # DEBUG
+            print(new_target.to_display(format_='lean'))
 
             # check_type_msg = new_target.check_type()
             # if check_type_msg:

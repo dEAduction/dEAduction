@@ -286,10 +286,10 @@ class MathDisplay:
         "POWER": ('', 0, [' ^ ', 1], ''),
         # "SET_PRODUCT": ("set.prod ", 0, ' ', 1),
         "PROP_EQUAL_NOT": ("not ", 0, '=', 1),
-        # '*INEQUALITY': ("_",),  # Is this useful?
-        # '*NUMBER_TYPES': ("_",),
-        # '*INT_OR_NAT': ("_",),
-        # '*TYPE': ("_",)
+        '*INEQUALITY': ("",),  # Is this useful?
+        '*NUMBER_TYPES': ("",),
+        '*INT_OR_NAT': ("",),
+        '*TYPE': ("",)
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
