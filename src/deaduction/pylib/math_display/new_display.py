@@ -738,14 +738,22 @@ class MathList(list, MathDescendant):
         """
         Shape for lean format. See the latex_shape() method doc.
         """
+        DEBUG=False
         shape = None
         for pattern, pre_shape, metavars in PatternInit.pattern_lean:
-            if pattern.match(math_object):
+            if DEBUG:
+                match, msg = pattern.match(math_object, return_msg=True)
+            else:
+                match = pattern.match(math_object)
+            if match:
                 # Now metavars are matched
                 # log.debug(f"Matching pattern --> {pre_shape}")
                 shape = tuple(substitute_metavars(item, metavars, pattern)
                               for item in pre_shape)
                 break
+            if DEBUG:
+                print(pre_shape)
+                print("-->" + msg)
         if not shape:
             if math_object.node in MathDisplay.lean_from_node:
                 shape = list(MathDisplay.lean_from_node[math_object.node])

@@ -1276,7 +1276,7 @@ class CalculatorController:
             expected_type = target_expected_type.try_to_display(text=True,
                                                                 is_type=True)
 
-        if not current_mo.is_metavar:
+        if not current_mo.is_metavar and DEBUG:
             msg = "((not a metavar))"
         elif current_mo.assigned_math_object:
             msg = current_mo.check_type()
@@ -1603,7 +1603,7 @@ class CalculatorController:
         else:  # ERROR!
             # Fixme
             symbol = MathDisplay.latex_to_utf8(latex_symbol)
-            error_msg = _(f"Cannot insert {symbol} here")
+            error_msg = _("Cannot insert {} here").format(symbol)
             self.show_error_msg(error_msg)
             self.current_target_wdg.setFocus()
             # self.show_help_msg()

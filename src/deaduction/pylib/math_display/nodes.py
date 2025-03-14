@@ -394,7 +394,7 @@ composition = SetTheoryNode("COMPOSITION",
 composition.set_button_tooltip(_("Composition of two functions"))
 
 subsets = SetTheoryNode("SUBSETS",
-                        "SET: TYPE()(?0: TYPE)",
+                        "SET: TYPE()(?0: *TYPE)",
                         (r'\set_of_subsets', [r'\symbol_parentheses', 0]))
 subsets.set_button_symbol("𝒫(·)")
 subsets.set_button_tooltip(_("The set of subsets of a set."))

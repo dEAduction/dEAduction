@@ -367,12 +367,16 @@ lean_from_pattern_string = {
     "CONSTANT/name=_inst_2": ('_inst_2',),
 
     # If type is imperatively 'set ??' then use 'in' (instead of ':')
-    "QUANT_∀(?0: !set ?3, ?1, ?2)":
-        (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
-    "QUANT_∃(?0: !set ?3, ?1, ?2)":
-        (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
-    "QUANT_∀(SET(?2: !SET(?3)), ?0, ?1)":
+    # ∀B ⊂ A, ...
+    "QUANT_∀(!SET(?3: !SET(?4)), ?1, ?2)":  # FIXME
         (r"\forall", (1,), r" \subset ", (0, 0), ", ", (2,)),
+    # ∀x ∈ A, ...
+    "QUANT_∀(?0: !SET(?3), ?1, ?2)":
+        (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
+    "QUANT_∃(?0: SET(?3: !SET(?4)), ?1, ?2)":
+        (r"\exists", (1,), r" \subset ", (0, 0), ", ", (2,)),
+    "QUANT_∃(?0: !SET(?3), ?1, ?2)":
+        (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)": (raw_display_name, ),
     "LAMBDA: !SET_FAMILY(?0, ?3)(?0, ?1, ?2)":
         ('λ', (1, ),  ', ', (2, )),
@@ -382,7 +386,7 @@ lean_from_pattern_string = {
         ('λ', (1, ),  ', ', (2, )),
     "LOCAL_CONSTANT/name=RealSubGroup": ('real',),
     "LOCAL_CONSTANT/name=IntegerSubGroup": ('int',),
-    "SET(?0: SET(?1))": ("{", "A_: set ", 1, "|", "A_ ⊆ ", 0, "}"),
+    "SET(?0: !SET(?1))": ("{", "A_: set ", 1, "|", "A_ ⊆ ", 0, "}"),
     "SET_PRODUCT(?0: TYPE, ?1)": ("prod ", (0,), ' ', (1,)),
     "SET_PRODUCT(?0: SET(?2), ?1)": ("set.prod ", (0,), ' ', (1,)),
     # "SET_PRODUCT(?0: SET ?2, ?1)": ("set.prod ", 0, ' ', 1),
