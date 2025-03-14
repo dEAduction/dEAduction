@@ -279,7 +279,7 @@ class MathDisplay:
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
         # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
         "NUMBER": (display_lean_value, ),
-        "RAW_LEAN_CODE": (display_name, ),
+        "RAW_LEAN_CODE": (display_name, ), # FIXME: parenthesis removed
         # Beware to be coherent with definition statement:
         # 'COMPOSITION': ('composition ', 0, ' ', 1),
         'COMPOSITION': ('function.comp ', 0, ' ', 1),

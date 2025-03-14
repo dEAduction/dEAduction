@@ -629,7 +629,7 @@ class MathObject:
         # TODO: remove all obviously unnecessary parentheses
 
         new_object = MathObject(node='RAW_LEAN_CODE',
-                                info={'name': '(' + code + ')'},
+                                info={'name': code},
                                 children=[],
                                 math_type=None)
         return new_object

@@ -40,6 +40,7 @@ from PySide2.QtWidgets import (QToolButton,
                                QHBoxLayout,
                                QSizePolicy)
 
+from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject,
                                                          calc_shortcuts_macro)
 from deaduction.pylib.marked_pattern_math_object.calculator_pattern_strings import CalculatorAbstractButton
@@ -134,14 +135,19 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     shortcuts_dic: dict  # Set by CalculatorButtonsGroup.__init__()
 
-    def __init__(self, symbol, tooltip=None, patterns=None, menu=False,
-                 shortcut=None):
+    def __init__(self, latex_symbol, button_symbol=None,
+                 tooltip=None, patterns=None, menu=False, shortcut=None):
         super().__init__()
-        CalculatorAbstractButton.__init__(self, symbol, tooltip, patterns,
-                                          menu, shortcut=shortcut)
+        CalculatorAbstractButton.__init__(self,
+                                          latex_symbol=latex_symbol,
+                                          button_symbol=button_symbol,
+                                          tooltip=tooltip,
+                                          patterns=patterns,
+                                          menu=menu,
+                                          shortcut=shortcut)
 
         self.clicked.connect(self.process_click)
-        self.setText(symbol)
+        self.setText(self.button_symbol)
         # self.shortcut = ''
         self.add_shortcut()
         self.set_tooltip()
@@ -264,7 +270,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         """
         Send a signal so that Calculator process the click.
         """
-        self.send_pattern.emit(self.patterns, self.symbol)
+        self.send_pattern.emit(self.patterns, self.latex_symbol)
 
     @classmethod
     def process_key_events(cls, key_event_buffer, timeout=False):

@@ -223,6 +223,9 @@ class Node:
         else:
             return len(shape)-1, None
 
+    def latex_symbol(self) -> str:
+        return self.main_symbol()[1]
+
     def button_symbol(self) -> str:
         """
         Text that should appear on the Calculator button corresponding to node.
@@ -231,8 +234,7 @@ class Node:
         if self._button_symbol:
             return self._button_symbol
         else:
-            idx, symbol = self.main_symbol()
-            symbol = MathDisplay.latex_to_utf8(symbol)
+            symbol = MathDisplay.latex_to_utf8(self.latex_symbol())
             return symbol
 
     def button_tooltip(self) -> str:
@@ -391,8 +393,23 @@ composition = SetTheoryNode("COMPOSITION",
                             )
 composition.set_button_tooltip(_("Composition of two functions"))
 
+subsets = SetTheoryNode("SUBSETS",
+                        "SET: TYPE()(?0: TYPE)",
+                        (r'\set_of_subsets', [r'\symbol_parentheses', 0]))
+subsets.set_button_symbol("𝒫(·)")
+subsets.set_button_tooltip(_("The set of subsets of a set."))
 
-# "FUNCTION(...)": (r'\function_from', (0, ), r'\to', (1, )),
+
+functions = SetTheoryNode('FUNCTIONS',
+                          'FUNCTION: TYPE()(?0:TYPE, ?1:TYPE)',
+                          (0, r'\to', 1))
+functions.set_button_tooltip(_("A set of functions"))
+
+# "SET": (r'\set_of_subsets', [r'\symbol_parentheses', 0]),
+# "PROP": (r'\proposition',),
+# "TYPE": (r'\set',),
+# "SET_INDEX": (r'\set',),
+# "FUNCTION": (r'\function_from', 0, r'\to', 1),  # (0, r" \to ", 1),
 # "SET_PRODUCT(?0, ?1)": (r'\type_element', (0,), r'\times', (1,)),
 # "SET_INTER+": (r"\bigcap", 0),  # !! big ⋂
 # "SET_UNION+": (r"\bigcup", 0),

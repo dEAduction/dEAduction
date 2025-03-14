@@ -69,6 +69,7 @@ import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import MissingCalculatorOutput
 
+from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, NumberNode,
                                                  InequalityNode)
@@ -1161,6 +1162,7 @@ class CalculatorController:
     def html_target(self):
         if self.lean_mode:
             text = self.target.to_display(format_='lean')
+            text = text.replace('?', ' ')
         else:
             text = self.target.to_display(format_='html',
                                           pretty_parentheses=False)
@@ -1293,6 +1295,7 @@ class CalculatorController:
         """
         This method is called when self goes from lean_mode=True to
         lean_mode=False.
+        TODO: write a parser!
         """
         # Lean code to MathObject
         lean_code = self.current_target_wdg.toPlainText()
@@ -1487,7 +1490,8 @@ class CalculatorController:
             btn.send_pattern.connect(self.buttons_window.process_clic)
 
     @Slot()
-    def insert_pattern(self, pattern_s: [MarkedPatternMathObject], symbol):
+    def insert_pattern(self, pattern_s: [MarkedPatternMathObject],
+                       latex_symbol):
         """
         Try to insert pattern (or patterns) in self.target.
         If several patterns are provided, they are tried in order until
@@ -1507,9 +1511,10 @@ class CalculatorController:
         if self.lean_mode:
             text_wdg = self.current_target_wdg
             # FIXME: better formatting in Lean mode?
-            code = pattern_s[0].to_display(format_='lean')
-            code.replace('?', ' ')
-            text_wdg.insertPlainText(code)
+            # code = pattern_s[0].to_display(format_='lean')
+            # code.replace('?', ' ')
+            lean_symbol = MathDisplay.latex_to_lean(latex_symbol)
+            text_wdg.insertPlainText(lean_symbol)
             self.set_lean_target()
             self.history_update()
             return
@@ -1595,6 +1600,7 @@ class CalculatorController:
             self.history_update()
         else:  # ERROR!
             # Fixme
+            symbol = MathDisplay.latex_to_utf8(latex_symbol)
             error_msg = _(f"Cannot insert {symbol} here")
             self.show_error_msg(error_msg)
             self.current_target_wdg.setFocus()

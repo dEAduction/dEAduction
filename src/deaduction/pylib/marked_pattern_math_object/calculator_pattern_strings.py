@@ -32,6 +32,8 @@ from .marked_pattern_math_object import MarkedPatternMathObject
 from deaduction.pylib.pattern_math_obj.definition_math_object import DefinitionMathObject
 from deaduction.pylib.mathobj import ContextMathObject
 from deaduction.pylib.math_display import MathDisplay, PatternMathDisplay
+from ..text import button_symbol
+
 # from deaduction.pylib.math_display.pattern_init import pattern_latex
 
 global _
@@ -130,23 +132,34 @@ class CalculatorAbstractButton:
     A class to store the data needed to build a CalculatorButton.
     """
 
-    def __init__(self, symbol: str,
-                 tooltip: Optional[str],
+    def __init__(self, latex_symbol: str,
                  patterns: [MarkedPatternMathObject],  # or just one
+                 button_symbol: str = None,
+                 tooltip: Optional[str] = None,
                  menu=False,
                  shortcut=None):
-        self.symbol = symbol
+        self.latex_symbol = latex_symbol
+        if not button_symbol:
+            button_symbol = MathDisplay.latex_to_utf8(self.latex_symbol)
+        self.button_symbol = button_symbol
         self.tooltip = tooltip
         if not patterns:
-            patterns = CalculatorPatternLines.marked_patterns.get(symbol)
+            patterns = CalculatorPatternLines.marked_patterns.get(
+                self.button_symbol)
         self.patterns = patterns if isinstance(patterns, list) else [patterns]
         self.menu = menu
         self.shortcut = shortcut
 
+    @property
+    def lean_symbol(self):
+        symbol = MathDisplay.latex_to_lean(self.latex_symbol)
+        return symbol
+
     @classmethod
     def from_node(cls, node: Node):
         patterns = node.marked_pattern_math_objects()
-        return cls(symbol=node.button_symbol(),
+        return cls(latex_symbol=node.latex_symbol(),
+                   button_symbol=node.button_symbol(),
                    tooltip=node.button_tooltip(),
                    patterns=patterns,
                    shortcut=node.shortcut,
@@ -160,7 +173,7 @@ class CalculatorAbstractButton:
         else:
             assert isinstance(math_object, MarkedPatternMathObject)
             marked_pmo = math_object
-        return cls(symbol=symbol,
+        return cls(latex_symbol=symbol,
                    tooltip=None,
                    patterns=marked_pmo,
                    menu=False)
