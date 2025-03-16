@@ -931,7 +931,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                                         keep_name=True)
         elif pmo.is_metavar:
             marked_pmo = MarkedMetavar(math_type=marked_type)
-
+            p_amo = pmo.assigned_math_object
+            if p_amo:
+                amo = p_amo.deep_copy(p_amo)
+                marked_pmo.assigned_math_object = amo
         else:
             marked_pmo = cls(pmo.node, pmo.info, children,
                              marked_type, pmo.imperative_matching)

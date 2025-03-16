@@ -150,6 +150,10 @@ class PatternMathObject(MathObject):
 
         # -----> (3b) Case of a metavar, e.g. ?7
         elif node.startswith('?'):
+            assigned_pmo=None
+            if '=' in node:  # Metavar has an assignment
+                node, assigned_str = node.split('=', 1)
+                assigned_pmo = cls.from_string(assigned_str, metavars=None)
             nb_str = node[1:]
             # If no nb then take first available
             metavar_nb = int(nb_str) if nb_str else len(metavars)
@@ -159,6 +163,8 @@ class PatternMathObject(MathObject):
             if not pmo:  # Create new metavar and store it in metavars
                 pmo = PatternMathObject.new_metavar(math_type)
                 metavars[metavar_nb] = pmo
+            if assigned_pmo:
+                pmo.assigned_math_object = assigned_pmo
 
         # -----> (3c) Info
         elif "/" in node:
