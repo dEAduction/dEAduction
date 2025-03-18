@@ -133,6 +133,9 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     send_pattern = Signal(MarkedPatternMathObject, str)
 
+    # Dict of whole (original) shortcuts, e.g. as provided by Nodes:
+    original_shortcuts_dic: dict
+    # Dict of all operating shortcuts, including sub-words of original:
     shortcuts_dic: dict  # Set by CalculatorButtonsGroup.__init__()
 
     def __init__(self, latex_symbol, button_symbol=None,
@@ -218,6 +221,9 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         shortcut_text = text
         for pair in (' ', '_'), ('·', ''), ('⁻¹', 'inv'):
             shortcut_text = shortcut_text.replace(*pair)
+
+        CalculatorButton.original_shortcuts_dic[shortcut_text] = self
+
         sdic = CalculatorButton.shortcuts_dic
 
         conflicting_buttons = sdic.get(shortcut_text, [])

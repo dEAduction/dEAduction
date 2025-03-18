@@ -399,6 +399,7 @@ class CalculatorAllButtons(QWidget):
         # Set CalculatorButton shortcuts dict:
         self.shortcuts_dic = dict()
         CalculatorButton.shortcuts_dic = self.shortcuts_dic
+        CalculatorButton.original_shortcuts_dic = dict()
 
         main_lyt = QVBoxLayout()
 
@@ -1299,8 +1300,19 @@ class CalculatorController:
         """
         # Lean code to MathObject
         lean_code = self.current_target_wdg.toPlainText()
-        math_object_code = MathObject.raw_lean_code(lean_code)
+        if not lean_code:
+            return
 
+        # Polish Lean code by replacing latex macro found in
+        # CalculatorButton.original_shortcuts_dic
+        # by lean code (button.lean_symbol)
+        polished_code = lean_code
+        for shortcut, button in (
+                CalculatorButton.original_shortcuts_dic.items()):
+            text = button.lean_symbol
+            polished_code = polished_code.replace(shortcut, text)
+
+        math_object_code = MathObject.raw_lean_code(polished_code)
         # Set target
         math_type = self.target.math_type
         target = MarkedMetavar.from_mvar(MetaVar(math_type=math_type))
