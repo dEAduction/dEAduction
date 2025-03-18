@@ -1,3 +1,4 @@
 Icons are from icons8.com. Style is 'Fluent'.
+Update: style name is now "Windows 11 color".
 
 right_arrow is 48x48

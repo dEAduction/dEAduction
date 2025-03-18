@@ -1413,9 +1413,8 @@ class Coordinator(QObject):
             self.journal.store(self.proof_step, self)
 
         # Compute right now since we need current proof_state
-        self.proof_step.auto_step = AutoStep.from_proof_step(
-                                                        self.proof_step,
-                                                        emw=self.emw)
+        self.proof_step.auto_step = AutoStep.from_proof_step(self.proof_step,
+                                                             emw=self.emw)
 
         # Create next proof_step, and connect to ProofTree
         self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME

@@ -237,7 +237,7 @@ class ProofStep:
         self.current_goal_number = current_goal_number
         self.total_goals_counter = total_goals_counter
         if new_goals:
-            self.new_goals = new_goals
+            self.new_goals = new_goals  # FIXME: unused(?)
         else:
             self.new_goals = []
         if parent:

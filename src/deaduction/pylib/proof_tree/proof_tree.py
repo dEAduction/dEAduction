@@ -1060,14 +1060,14 @@ class ProofTree:
         with current_goal_node as a parent.
 
         The new_proof_step is set as the child_proof_step of
-        self.current_goal_node, and it turns it receives one or two GoalNodes as
+        self.current_goal_node, and in turn it receives one or two GoalNodes as
          its children. Note that this happens even if the new_proof_step
          solves the current goal; this is crucial to be able to correctly
          prune the ProofTree when user start a new step after some undoing.
 
          Note that the ProofSteps corresponding to history moves are NOT
-         processed, thue they do not appear in the ProofTree. They should
-         rather be sees as acting on the current_goal_node of the ProofTree.
+         processed, thus they do not appear in the ProofTree. They should
+         rather be seen as acting on the current_goal_node of the ProofTree.
         """
 
         self.previous_goal_node = self.current_goal_node
