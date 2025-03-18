@@ -68,6 +68,7 @@ class Node:
 
     _button_symbol = None
     _button_tooltip = None
+    _button_menu = None
 
     _pattern_math_objects = None
     _marked_pattern_math_objects = None
@@ -118,6 +119,9 @@ class Node:
 
     def set_button_tooltip(self, tooltip: str):
         self._button_tooltip = tooltip
+
+    def set_button_menu(self, menu_items: [str]):
+        self._button_menu = menu_items
 
     def set_shortcut(self, shortcut):
         self.shortcut = shortcut
@@ -249,6 +253,9 @@ class Node:
             self._button_tooltip = pattern.to_display(format_='utf8')
             return self._button_tooltip
 
+    def button_menu(self):
+        return self._button_menu
+
 
 class LogicalNode(Node):
     _name = "Logic"
@@ -375,16 +382,17 @@ application = SetTheoryNode("APPLICATION",
                             # "GENERIC_APPLICATION",
                             # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                             # 'APPLICATION(?0, ?1)',
-                            ['APPLICATION: ?3()(?0: !SEQUENCE(CONSTANT/name=ℕ, '
-                             '?3), ?1: CONSTANT/name=ℕ)',
-                                'APPLICATION: ?3()(?0: !FUNCTION(?2, ?3), '
-                                '?1: ?2)'],
+                            ['APPLICATION: ?3()(?0: !FUNCTION(?2, ?3), '
+                                '?1: ?2)',
+                             'APPLICATION: ?3()(?0: !SEQUENCE(CONSTANT/name=ℕ, '
+                             '?3), ?1: CONSTANT/name=ℕ)'
+                             ],
                             (0, "\\parentheses", 1))
 
 application.set_button_symbol("f(·)")
 application.set_button_tooltip(_("Application of a function to an element\\n"
                                  "or term of a sequence."))
-
+application.set_button_menu(["f(x)", "u_n"])
 
 composition = SetTheoryNode("COMPOSITION",
                             "COMPOSITION: FUNCTION(?1, ?3)"
@@ -493,7 +501,6 @@ diff = NumberNode('DIFFERENCE',
                   (0, "-", 1)
                   )
 diff.set_button_tooltip(_("-? or ?-?"))
-
 
 # sqrt = NumberNode('SQRT',
 #                   '*NUMBER_TYPES()(?0: *NUMBER_TYPES)',

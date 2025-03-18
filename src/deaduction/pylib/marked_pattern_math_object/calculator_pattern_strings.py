@@ -136,7 +136,7 @@ class CalculatorAbstractButton:
                  patterns: [MarkedPatternMathObject],  # or just one
                  button_symbol: str = None,
                  tooltip: Optional[str] = None,
-                 menu=False,
+                 menu=None,
                  shortcut=None):
         self.latex_symbol = latex_symbol
         if not button_symbol:
@@ -163,7 +163,7 @@ class CalculatorAbstractButton:
                    tooltip=node.button_tooltip(),
                    patterns=patterns,
                    shortcut=node.shortcut,
-                   menu=False)
+                   menu=node.button_menu())
 
     @classmethod
     def from_math_object(cls, math_object, copy_math_object=True):
@@ -176,7 +176,7 @@ class CalculatorAbstractButton:
         return cls(latex_symbol=symbol,
                    tooltip=None,
                    patterns=marked_pmo,
-                   menu=False)
+                   menu=None)
 
     @classmethod
     def from_pattern_nodes(cls, node):

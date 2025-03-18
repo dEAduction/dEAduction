@@ -874,6 +874,9 @@ class CalculatorController:
                                                 self.buttons_window,
                                                 horizontal_mode=h_mode)
 
+        for target_wdg in self.target_widgets:
+            target_wdg.enable_actions = self.enable_actions
+
         self.__init_histories()
         self.__init_targets()
         self.set_target_and_update_ui()
@@ -980,7 +983,7 @@ class CalculatorController:
                 # No more data from this point
                 break
             elif cc.lean_mode:
-                lean_code = cc.current_target_wdg.toPlainText()
+                lean_code = cc.polished_lean_code()
                 math_object = MathObject.raw_lean_code(lean_code)
             else:
                 # math_object = target.assigned_math_object
@@ -1030,30 +1033,33 @@ class CalculatorController:
         targets_window.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
-    def __init_signals(self):
-        calc_ui = self.calculator_ui
-
-        t_bar = calc_ui.toolbar
-        t_bar.rewind.triggered.connect(self.history_to_beginning)
-        t_bar.undo_action.triggered.connect(self.history_undo)
-        t_bar.redo_action.triggered.connect(self.history_redo)
-        t_bar.go_to_end.triggered.connect(self.history_to_end)
-
-        n_bar = calc_ui.navigation_bar
-        n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-        n_bar.left_action.triggered.connect(self.move_left)
-        n_bar.up_action.triggered.connect(self.move_up)
-        n_bar.down_action.triggered.connect(self.move_down)
-        n_bar.right_action.triggered.connect(self.move_right)
-        n_bar.end_action.triggered.connect(self.go_to_end)
-        calc_ui.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
-        n_bar.delete.triggered.connect(self.delete)
+    # def __init_signals(self):
+    #     calc_ui = self.calculator_ui
+    #
+    #     t_bar = calc_ui.toolbar
+    #     t_bar.rewind.triggered.connect(self.history_to_beginning)
+    #     t_bar.undo_action.triggered.connect(self.history_undo)
+    #     t_bar.redo_action.triggered.connect(self.history_redo)
+    #     t_bar.go_to_end.triggered.connect(self.history_to_end)
+    #
+    #     n_bar = calc_ui.navigation_bar
+    #     n_bar.beginning_action.triggered.connect(self.go_to_beginning)
+    #     n_bar.left_action.triggered.connect(self.move_left)
+    #     n_bar.up_action.triggered.connect(self.move_up)
+    #     n_bar.down_action.triggered.connect(self.move_down)
+    #     n_bar.right_action.triggered.connect(self.move_right)
+    #     n_bar.end_action.triggered.connect(self.go_to_end)
+    #     calc_ui.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
+    #     n_bar.delete.triggered.connect(self.delete)
 
     def __init_histories(self):
         for target, history in zip(self.targets, self.histories):
             history.append(target)
 
     def __init_targets(self):
+        """
+        Display initial targets.
+        """
         if self.targets_widget:
             idx = 0
             for target, target_wdg in zip(self.targets,
@@ -1066,6 +1072,15 @@ class CalculatorController:
                 idx += 1
 
             self.targets_widget.set_focused_target_idx(0)
+
+    @property
+    def target_widgets(self):
+        """
+        List of all target widgets in self.
+        Do not mistake for self.targets_widget, which is an optional single
+        widget (containing several target widgets).
+        """
+        return self.targets_widget.target_wdgs
 
     # def show(self):
     #     if self.target_types:
@@ -1112,11 +1127,11 @@ class CalculatorController:
 
     @property
     def current_target_wdg(self):
-        if self.targets_widget:
-            calc_target = self.targets_widget.focused_target
-        else:
-            calc_target = self.calculator_ui.calculator_target
-        return calc_target
+        return self.targets_widget.focused_target
+
+    @property
+    def current_lean_code(self):
+        return self.current_target_wdg.toPlainText()
 
     @property
     def current_target(self):
@@ -1145,6 +1160,9 @@ class CalculatorController:
 
     @Slot()
     def toggle_lean_mode(self):
+        """
+        This is called when the Lean box is checked or unchecked.
+        """
         self.current_target_wdg.lean_mode = self.lean_mode
         if not self.lean_mode:
             # Leaving lean mode, set target as a MathObject from code
@@ -1152,6 +1170,7 @@ class CalculatorController:
             self.history_update()
         else:
             # Entering Lean mode, modify display
+            self.enable_actions()
             self.set_target()
 
     @property
@@ -1180,24 +1199,15 @@ class CalculatorController:
 
     @property
     def navigation_bar(self):
-        if self.targets_widget:
-            bar = self.targets_widget.navigation_bar
-        else:
-            bar = self.calculator_ui.navigation_bar
-        return bar
+        return self.targets_widget.navigation_bar
 
     @property
     def toolbar(self):
-        if self.targets_widget:
-            bar = self.targets_widget.toolbar
-        else:
-            bar = self.calculator_ui.toolbar
-        return bar
+        return self.targets_widget.toolbar
 
     @property
     def lean_mode_wdg(self):
-        return (self.targets_widget.lean_mode_wdg if self.targets_widget else
-                self.calculator_ui.lean_mode_wdg)
+        return self.targets_widget.lean_mode_wdg
 
     @property
     def beginning_action(self):
@@ -1238,6 +1248,10 @@ class CalculatorController:
     @property
     def redo_all(self):
         return self.toolbar.redo_all
+
+    @property
+    def delete_action(self):
+        return self.navigation_bar.delete
 
     #########################
     # Status bar management #
@@ -1292,27 +1306,34 @@ class CalculatorController:
                 msg = _("(No help available)")
         return msg
 
-    def set_lean_target(self):
+    def polished_lean_code(self):
         """
-        This method is called when self goes from lean_mode=True to
-        lean_mode=False.
-        TODO: write a parser!
+        Polish Lean code by replacing latex macro found in
+        CalculatorButton.original_shortcuts_dic
+        by lean code (button.lean_symbol).
+        TODO: write a proper parser!
         """
         # Lean code to MathObject
-        lean_code = self.current_target_wdg.toPlainText()
-        if not lean_code:
-            return
+        polished_code = self.current_lean_code
+        if not polished_code:
+            return ""
 
-        # Polish Lean code by replacing latex macro found in
-        # CalculatorButton.original_shortcuts_dic
-        # by lean code (button.lean_symbol)
-        polished_code = lean_code
         for shortcut, button in (
                 CalculatorButton.original_shortcuts_dic.items()):
             text = button.lean_symbol
             polished_code = polished_code.replace(shortcut, text)
 
-        math_object_code = MathObject.raw_lean_code(polished_code)
+        return polished_code
+
+    def set_lean_target(self):
+        """
+        This method is called when self goes from lean_mode=True to
+        lean_mode=False.
+        """
+        if not self.current_lean_code:
+            return
+
+        math_object_code = MathObject.raw_lean_code(self.polished_lean_code())
         # Set target
         math_type = self.target.math_type
         target = MarkedMetavar.from_mvar(MetaVar(math_type=math_type))
@@ -1341,29 +1362,55 @@ class CalculatorController:
         self.current_target_wdg.go_to_position(position)
 
     def enable_actions(self):
+        """
+        Freeze/unfreeze buttons according to context.
+        In particular, the OK button is frozen unless a non void initial
+        sub-list of self.targets have assigned_math_objects.
+        """
         # target = self.target
         cursor = self.math_cursor
-        self.beginning_action.setEnabled(not cursor.is_at_beginning())
-        # self.left_unassigned_action.setEnabled(bool(target.previous_unassigned()))
-        self.left_action.setEnabled(not cursor.is_at_beginning())
-        # self.up_action.setEnabled(bool(target.parent_of_marked()))
-        self.right_action.setEnabled(not cursor.is_at_end())
-        # self.right_unassigned_action.setEnabled(bool(target.next_unassigned()))
-        self.end_action.setEnabled(not cursor.is_at_end())
-        self.undo_action.setEnabled(self.history_idx > 0)
-        self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
-        self.undo_all.setEnabled(self.history_idx > 0)
-        self.redo_all.setEnabled(self.history_idx < len(self.history) - 1)
+        if self.lean_mode: # FIXME
+            self.beginning_action.setEnabled(False)
+            self.left_action.setEnabled(False)
+            # self.up_action.setEnabled(bool(target.parent_of_marked()))
+            self.right_action.setEnabled(False)
+            self.end_action.setEnabled(False)
+            self.undo_action.setEnabled(False)
+            self.redo_action.setEnabled(False)
+            self.undo_all.setEnabled(False)
+            self.redo_all.setEnabled(False)
+            self.up_action.setEnabled(False)
+            self.down_action.setEnabled(False)
+            self.delete_action.setEnabled(False)
+        else:
+            self.beginning_action.setEnabled(not cursor.is_at_beginning())
+            self.left_action.setEnabled(not cursor.is_at_beginning())
+            self.right_action.setEnabled(not cursor.is_at_end())
+            self.end_action.setEnabled(not cursor.is_at_end())
+            self.undo_action.setEnabled(self.history_idx > 0)
+            self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
+            self.undo_all.setEnabled(self.history_idx > 0)
+            self.redo_all.setEnabled(self.history_idx < len(self.history) - 1)
+
+            # FIXME:
+            self.up_action.setEnabled(True)
+            self.down_action.setEnabled(True)
+            self.delete_action.setEnabled(True)
 
         # Has usr filled-in enough targets?
         #  All place_holders must be at the end,
         #  i.e. no assigned_math_object after unassigned
         assigned_math_objects = [var.assigned_math_object
                                  for var in self.targets]
+        # Take into account current target may be in Lean mode
+        if self.lean_mode:
+            idx = self.current_target_idx
+            assigned_math_objects[idx] = self.current_lean_code
+
         place_holders_found = False
         OK = False
         for mo in assigned_math_objects:
-            if mo is None:
+            if not mo :
                 if not OK:  # No initial assigned_math_object
                     break
                 else:
@@ -1373,8 +1420,9 @@ class CalculatorController:
                 break
             else:  # At least one assigned_math_object
                 OK = True
-        button_box = (self.targets_widget.button_box if self.targets_widget
-                      else self.calculator_ui.button_box)
+        # button_box = (self.targets_widget.button_box if self.targets_widget
+        #               else self.calculator_ui.button_box)
+        button_box = self.targets_widget.button_box
         button_box.setEnabled(OK)
 
     @Slot()

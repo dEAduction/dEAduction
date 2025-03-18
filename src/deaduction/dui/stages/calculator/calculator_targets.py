@@ -157,6 +157,8 @@ class CalculatorTarget(MathTextWidget):
 
     key_event_item_interval = 1000
 
+    enable_actions: callable  # Set by CalculatorController
+
     def __init__(self):
         super().__init__()
 
@@ -182,7 +184,7 @@ class CalculatorTarget(MathTextWidget):
         self.key_buffer_timer.timeout.connect(self.key_buffer_timeout)
 
         self.lean_mode = False
-        self.check_types = False  # TODO: add button?
+        self.check_types = False  # TODO: add button in debug mode?
 
     def mousePressEvent(self, event):
         if self.lean_mode:
@@ -227,7 +229,12 @@ class CalculatorTarget(MathTextWidget):
             self.button_box.button(QDialogButtonBox.Ok).animateClick()
             return
 
-        if key_sequence == QKeySequence("Space") and not self.lean_mode:
+        if self.lean_mode:
+            super().keyPressEvent(event)
+            self.enable_actions()  # Unfreeze OK button
+            return
+
+        if key_sequence == QKeySequence("Space"):
             self.key_buffer_timeout()
             event.ignore()
             return
@@ -277,11 +284,6 @@ class CalculatorTarget(MathTextWidget):
             bar.animate_click(action)
             self.clear_key_buffer()
             event.ignore()
-            return
-
-        if self.lean_mode:
-            # TODO: unfreeze OK button
-            super().keyPressEvent(event)
             return
 
         # Text shortcuts
@@ -414,7 +416,7 @@ class CalculatorTargets(QWidget):
         # Navigation buttons #
         ######################
         self.navigation_bar = NavigationBar()
-        self.lean_mode_wdg = QCheckBox("Lean mode")
+        self.lean_mode_wdg = QCheckBox(_("Raw editor (Lean)"))
         self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
         # self.button_box.accepted.connect(self.close_n_accept)

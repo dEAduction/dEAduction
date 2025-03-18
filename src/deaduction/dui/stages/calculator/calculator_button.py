@@ -36,9 +36,9 @@ import logging
 from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtGui     import  QTextDocument
 from PySide2.QtWidgets import (QToolButton,
-                               # QPushButton,
+    # QPushButton,
                                QHBoxLayout,
-                               QSizePolicy)
+                               QSizePolicy, QMenu, QAction)
 
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject,
@@ -156,6 +156,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         self.set_tooltip()
         symbol_size = deaduction_fonts.symbol_button_font_size
         self.set_font(deaduction_fonts.math_fonts(size=symbol_size))
+        self.set_menu()
 
     def set_tooltip(self):
         tooltip = ""
@@ -169,6 +170,25 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         symbol_size = deaduction_fonts.symbol_button_font_size
         self.setFont(deaduction_fonts.math_fonts(size=symbol_size))
+
+    def set_menu(self):
+        """
+        Set a pop-up menu if self has more than one pattern.
+        """
+        if len(self.patterns) ==1:
+            return
+        menu = QMenu(self)
+        if not self.menu:
+            self.menu = [pattern.to_display(format_='utf8') for pattern in
+                         self.patterns]
+
+        for pattern, menu_item in zip(self.patterns, self.menu):
+            action = QAction(menu_item, self)
+            action.triggered.connect(lambda: self.process_click([pattern]))
+            menu.addAction(action)
+
+        self.setMenu(menu)
+        self.setPopupMode(QToolButton.MenuButtonPopup)
 
     def insert_by_length(self, calc_buttons: list):
         """
@@ -272,11 +292,13 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 return button
 
     @Slot()
-    def process_click(self):
+    def process_click(self, patterns=None):
         """
         Send a signal so that Calculator process the click.
         """
-        self.send_pattern.emit(self.patterns, self.latex_symbol)
+        if not patterns:
+            patterns = self.patterns
+        self.send_pattern.emit(patterns, self.latex_symbol)
 
     @classmethod
     def process_key_events(cls, key_event_buffer, timeout=False):
