@@ -115,7 +115,7 @@ class PatternMathObject(MathObject):
         return MetaVar(math_type=math_type)
 
     @classmethod
-    def from_tree(cls, tree, metavars):
+    def from_tree(cls, tree, metavars, bound_vars=None):
         """
         Recursive method to create a PMO from a Tree instance,
         with attributes node, children and type_. A list of the metavars used in
@@ -124,15 +124,19 @@ class PatternMathObject(MathObject):
         string, e.g. "?0" --> metavar at index 0 in metavars.
         """
 
-        # if tree.node == '*INEQUALITY':
-        #     pass  # debug
+        if bound_vars is None:
+            bound_vars = []
 
         # (1) Math_type
-        math_type = (cls.from_tree(tree.type_, metavars=metavars) if tree.type_
+        math_type = (cls.from_tree(tree.type_,
+                                   metavars=metavars,
+                                   bound_vars=bound_vars) if tree.type_
                      else PatternMathObject.NO_MATH_TYPE)
 
         # (2) Children
-        children_pmo = [cls.from_tree(child, metavars=metavars)
+        children_pmo = [cls.from_tree(child,
+                                      metavars=metavars,
+                                      bound_vars=bound_vars)
                         for child in tree.children]
 
         # (3) Node
@@ -150,7 +154,7 @@ class PatternMathObject(MathObject):
 
         # -----> (3b) Case of a metavar, e.g. ?7
         elif node.startswith('?'):
-            assigned_pmo=None
+            assigned_pmo = None
             if '=' in node:  # Metavar has an assignment
                 node, assigned_str = node.split('=', 1)
                 assigned_pmo = cls.from_string(assigned_str, metavars=None)
@@ -166,7 +170,13 @@ class PatternMathObject(MathObject):
             if assigned_pmo:
                 pmo.assigned_math_object = assigned_pmo
 
-        # -----> (3c) Info
+        # -----> (3d) Bound var
+        elif node.startswith('BV'):
+            nb_str = node[2:]
+            bv_nb = int(nb_str) if nb_str else len(bound_vars)-1
+            pmo = bound_vars[bv_nb]
+
+        # -----> (3d) Info
         elif "/" in node:
             node, info = node.split('/')
             key, value = info.split('=')
@@ -175,13 +185,12 @@ class PatternMathObject(MathObject):
             if name and name.endswith('.BoundVar'):
                 # if name == 'u.BoundVar':
                 #     print("debug")
-                # Remove suffix and create a BoundVar
-                # info['name'] = info['name'][:-len('.BoundVar')]
                 pmo = BoundVar(node=node,
                                info=info,
                                math_type=math_type,
                                children=children_pmo,
                                parent=None)
+                bound_vars.append(pmo)
             else:
                 pmo = cls(node=node, children=children_pmo, math_type=math_type,
                           info=info, imperative_matching=imperative)
@@ -194,11 +203,13 @@ class PatternMathObject(MathObject):
         return pmo
 
     @classmethod
-    def from_string(cls, s: str, metavars=None):
+    def from_string(cls, s: str, metavars=None, bound_vars=None):
         if metavars is None:
             metavars = []
+        if bound_vars is None:
+            bound_vars = []
         tree = tree_from_str(s)
-        pmo = cls.from_tree(tree, metavars)
+        pmo = cls.from_tree(tree, metavars, bound_vars)
         return pmo
 
     @classmethod

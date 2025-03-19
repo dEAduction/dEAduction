@@ -363,6 +363,10 @@ lean_from_pattern_string = {
     # type class instance between brackets:
     "QUANT_∀(?0, LOCAL_CONSTANT/binder_info=inst_implicit, ?2)":
         (r"\forall", '[', (1, ), ": ", (0, ), ']', ", ", (2, )),
+    "QUANT_∀(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
+        (r"\forall", (2, 0), ", ", (2, 1)),
+    "QUANT_∃(?0, ?1, PROP_IMPLIES(*INEQUALITY(?1, ?2), ?3))":
+        (r"\exists", (2, 0), ", ", (2, 1)),
     "CONSTANT/name=_inst_1": ('_inst_1',),
     "CONSTANT/name=_inst_2": ('_inst_2',),
 

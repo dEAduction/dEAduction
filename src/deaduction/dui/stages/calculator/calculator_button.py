@@ -25,6 +25,8 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+
+from functools import partial
 from deaduction.pylib.math_display.display_utils import shorten
 
 if __name__ == '__main__':
@@ -131,12 +133,14 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
     of self.shortcut.
     """
 
-    send_pattern = Signal(MarkedPatternMathObject, str)
+    btn_send_pattern = Signal(list, str)
 
     # Dict of whole (original) shortcuts, e.g. as provided by Nodes:
     original_shortcuts_dic: dict
     # Dict of all operating shortcuts, including sub-words of original:
     shortcuts_dic: dict  # Set by CalculatorButtonsGroup.__init__()
+
+    calculator_window = None  # Set by CalculatorWindow
 
     def __init__(self, latex_symbol, button_symbol=None,
                  tooltip=None, patterns=None, menu=False, shortcut=None):
@@ -149,7 +153,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                                           menu=menu,
                                           shortcut=shortcut)
 
-        self.clicked.connect(self.process_click)
+        self.clicked.connect(self.btn_process_click)
         self.setText(self.button_symbol)
         # self.shortcut = ''
         self.add_shortcut()
@@ -178,13 +182,13 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         if len(self.patterns) ==1:
             return
         menu = QMenu(self)
-        if not self.menu:
-            self.menu = [pattern.to_display(format_='utf8') for pattern in
-                         self.patterns]
+        menu_items = [pattern.to_display(format_='utf8') for pattern in
+                      self.patterns]
 
-        for pattern, menu_item in zip(self.patterns, self.menu):
+        for pattern, menu_item in zip(self.patterns, menu_items):
             action = QAction(menu_item, self)
-            action.triggered.connect(lambda: self.process_click([pattern]))
+            action.triggered.connect(partial(self.btn_process_click,
+                                             [pattern]))
             menu.addAction(action)
 
         self.setMenu(menu)
@@ -292,13 +296,14 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
                 return button
 
     @Slot()
-    def process_click(self, patterns=None):
+    def btn_process_click(self, patterns=None):
         """
         Send a signal so that Calculator process the click.
         """
+
         if not patterns:
             patterns = self.patterns
-        self.send_pattern.emit(patterns, self.latex_symbol)
+        self.btn_send_pattern.emit(patterns, self.latex_symbol)
 
     @classmethod
     def process_key_events(cls, key_event_buffer, timeout=False):

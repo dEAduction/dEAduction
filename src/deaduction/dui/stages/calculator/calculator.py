@@ -374,9 +374,18 @@ class CalculatorButtonsGroup(QWidget):
 class CalculatorAllButtons(QWidget):
     """
     A class to display groups of CalculatorButtons, with a vertical scroll bar.
+    Each Button, when clicked, emit the btn_send_pattern signal, which is
+    connected to CalculatorAllButtons.process_click, which in turn emit the
+    CalculatorAllButtons.send_pattern signal, which is connected to
+    CalculatorController.insert_pattern() method:
+    CalculatorButton.btn_process_click
+        --> CalculatorButton.btn_send_pattern signal
+        --> CalculatorAllButtons.process_click
+        --> CalculatorAllButtons.send_pattern signal
+        --> CalculatorController.insert_pattern():
     """
 
-    send_pattern = Signal(MarkedPatternMathObject, str)
+    send_pattern = Signal(list, str)
     targets_window: CalculatorTargets = None
     controller = None  # Set by CalculatorController
     targets_window_is_closed = False
@@ -452,7 +461,7 @@ class CalculatorAllButtons(QWidget):
 
         # Connect button signals
         for btn in self.buttons():
-            btn.send_pattern.connect(self.process_clic)
+            btn.btn_send_pattern.connect(self.process_clic)
 
         self.set_geometry()
 
@@ -525,7 +534,7 @@ class CalculatorAllButtons(QWidget):
         Add a new button to the specified button groups.
         """
         buttons_group.add_button(button)
-        button.send_pattern.connect(self.process_clic)
+        button.btn_send_pattern.connect(self.process_clic)
 
 
 # class CalculatorWidget(QWidget):
@@ -703,6 +712,7 @@ class CalculatorMainWindow(QDialog):
                  calculator_widget: QWidget,
                  horizontal_mode=True):
         super().__init__()
+        CalculatorButton.calculator_window = self
 
         self.setWindowTitle(window_title + " — d∃∀duction")
         self.setWindowModality(Qt.WindowModal)
@@ -1410,7 +1420,7 @@ class CalculatorController:
         place_holders_found = False
         OK = False
         for mo in assigned_math_objects:
-            if not mo :
+            if not mo:
                 if not OK:  # No initial assigned_math_object
                     break
                 else:
@@ -1547,7 +1557,7 @@ class CalculatorController:
                    for bound_var in self.current_target.bound_vars()]
         self.bound_var_buttons.set_buttons(buttons)
         for btn in buttons:
-            btn.send_pattern.connect(self.buttons_window.process_clic)
+            btn.btn_send_pattern.connect(self.buttons_window.process_clic)
 
     @Slot()
     def insert_pattern(self, pattern_s: [MarkedPatternMathObject],
