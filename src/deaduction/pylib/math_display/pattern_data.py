@@ -302,7 +302,11 @@ text_from_pattern_string = {
     "QUANT_∃!(SEQUENCE(...), ?0, ?1)":
         ("global",
          _("there exists a unique sequence {} of elements of {} such that {}"),
-         (1, ), (0, 1), (2, ))
+         (1, ), (0, 1), (2, )),
+    "APP(CONSTANT/name=divides, ...)":
+        ((-2,), " ", _("divides"), " ", (-1,)),
+    "NOT(APP(CONSTANT/name=divides, ...))":
+        ((-1, -2), " ", _("does not divide"), " ", (-1, -1))
 }
 # TODO: add bounded quantification patterns for text
 

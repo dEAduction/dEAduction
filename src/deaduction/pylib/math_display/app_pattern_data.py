@@ -215,7 +215,7 @@ class PatternMathDisplay:
     - generic patterns:
         - unary number functions, e.g. sin
         - binary number functions, e.g. max
-        - infix binary operator, e.g. divise
+        - infix binary operator, e.g. divides
         - unary predicate, e.g. bounded
         - sup/inf/lim/...
     """
@@ -442,6 +442,10 @@ class PatternMathDisplay:
                 return display_not
             else:
                 return
+
+        if name not in cls.unary_predicate:
+            return
+
         pretty_name = cls.constants_pretty_names.get(name, name)
         shape = ((0, -1), r'\text_is_not', pretty_name)
         return shape

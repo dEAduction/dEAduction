@@ -978,15 +978,17 @@ class Goal:
                 object_is_prop = True
                 prop = math_object.math_type_to_display(format_=format_,
                                                         text=text_mode)
+                prop_utf8 = math_object.math_type_to_display(format_='utf8',
+                                                        text=True)
                 assume_that = _("Assume that") + " "
-                if prop.startswith(_('the negation')):
+                if prop_utf8.startswith(_('the negation')):
                     assume_that = _("Assume") + " "
 
                 if cvars.get('i18n.select_language') == 'fr_FR':
                     # "Supposons que il" --> "Supposons qu'il"
-                    if (prop.startswith("un")
-                            or prop.startswith("il")):
-                        assume_that = assume_that[:-2] + "'"
+                    if (prop_utf8.startswith("un")
+                            or prop_utf8.startswith("il")):
+                        assume_that = "Supposons qu'"
 
                 new_sentence = assume_that + prop + "."
             else:  # Display objects
