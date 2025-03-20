@@ -209,7 +209,8 @@ class MathObject:
         elif self.value:
             rep = self.value
         elif self.children:
-            rep = f"{typ}(node={self.node}, children={self.children})"
+            children_rep = [child.__repr__() for child in self.children]
+            rep = f"{typ}(node={self.node}, children={children_rep})"
         else:
             rep = f"{typ}(node={self.node})"
         return rep
@@ -920,10 +921,10 @@ class MathObject:
 
         WARNING: this should probably not be used for bound variables.
         """
-        equal, msg = self.is_equal_to(other,
-                                      remove_generic_paren=False,
-                                      use_assigned_math_obj=False)
-        return equal
+        test, msg = self.is_equal_to(other,
+                                remove_generic_paren=False,
+                                use_assigned_math_obj=False)
+        return test
 
     def is_equal_to(self, other,
                     remove_generic_paren=False,
@@ -979,7 +980,7 @@ class MathObject:
             error_msg = ""
 
         if other is None or not isinstance(other, MathObject):
-            return False, error_msg + str(other)
+            return False, error_msg + ""  # str(other) BIG BUG!!
         if return_msg:
             error_msg += other.try_to_display()
 
@@ -2126,14 +2127,15 @@ class MathObject:
         debugging.
         """
         # FIXME:
-        try:
-            display = self.to_display(format_="utf8", text=text,
-                                      is_type=is_type)
-        except RecursionError:
-            if self.name:
-                display = self.name
-            else:
-                display = str(self)
+        display = self.__repr__()
+        # try:
+        #     display = self.to_display(format_="utf8", text=text,
+        #                               is_type=is_type)
+        # except RecursionError:
+        #     if self.name:
+        #         display = self.name
+        #     else:
+        #         display = str(self)
         return display
 
     def math_type_to_display(self, format_="html", text=False,

@@ -206,6 +206,10 @@ class Statement:
     # def __repr__(self):
     #     return self.pretty_name if self.pretty_name else self.lean_name
 
+    def __str__(self):
+        s = "Statement " + self.pretty_name
+        return s
+
     @classmethod
     def from_parser_data(cls, **data):
         """
