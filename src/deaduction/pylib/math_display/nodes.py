@@ -491,6 +491,9 @@ def instantiate_nb_node(i: int):
 for i in [7, 8, 9]:
     instantiate_nb_node(i)
 
+
+# NB: I do not type operands since they coulld be numbers but also functions,
+# sequences, and so on.
 div_ = NumberNode('DIV',
                   'DIV: ?2()(?0: ?2, ?1: ?2)',
                   (0, "/", 1)
@@ -546,52 +549,24 @@ sum_ = NumberNode('SUM',
                   )
 
 power = NumberNode('POWER',
-                   'POWER: ?2()(?0: ?2, ?1: *INT_OR_NAT)',
+                   'POWER: ?2()(?0: ?2=*NUMBER_TYPES, ?1: *INT_OR_NAT)',
                    (0, "^", 1)
                    )
 
 abs_ = NumberNode('abs',
-                      'APP(CONSTANT/name=abs, ?0)',
+                      'APP(CONSTANT/name=abs, ?0: *NUMBER_TYPES)',
                       ('|', -1, '|'))
 abs_.set_button_symbol('|·|')
 abs_.set_button_tooltip(_("Absolute value"))
 abs_.set_shortcut('\\abs')
 
 max_ = NumberNode('max',
-                      'APP(CONSTANT/name=max, ?0: ?2, ?1: ?2)',
+                      'APP(CONSTANT/name=max, ?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                       ('max ', '\\parentheses', -2, ', ', -1))
 
 min_ = NumberNode('min',
-                      'APP(CONSTANT/name=min, ?0: ?2, ?1: ?2)',
+                      'APP(CONSTANT/name=min, ?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                       ('min ', '\\parentheses', -2, ', ', -1))
-
-
-# '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
-# # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
-# '-': 'DIFFERENCE: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
-# '*': 'MULT: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',  # pb = real + int ?
-# '/': 'DIV: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
-# '.': 'POINT(?0, ?1)',
-
-# [['7', '8', '9', '/'],
-#  ['4', '5', '6', '*'],
-#  ['1', '2', '3', '-'],
-#  ['0', '.', '()', '+'],
-
-# """
-#      "PROP_<": (0, " < ", 1),  # Fixme ms: <>+-*....
-#      "PROP_>": (0, " > ", 1),
-#      "PROP_≤": (0, r" \leq ", 1),
-#      "PROP_≥": (0, r" \geq ", 1),
-#      "DIFFERENCE": (0, " - ", 1),
-#      "SUM": (0, " + ", 1),
-#      "MULT": (0, r" \mul ", 1),
-#      "PRODUCT": (0, r" \times ", 1),
-#      "DIV": (0, r"/", 1),
-#      "MINUS": ("-", 0),
-#      "POWER": (0, [r'\super', 1]),  # FIXME: remove list??
-#      "SQRT": ('√', -1),
-# """
 
 
 class InequalityNode(Node):
@@ -601,25 +576,25 @@ class InequalityNode(Node):
 
 
 lt = InequalityNode("PROP_<",
-                    'PROP_<: PROP()(?0: ?2, ?1: ?2)',
+                    'PROP_<: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                     (0, " < ", 1)
                     )
 lt.set_button_symbol('&#60;')  # Html code
 
 leq = InequalityNode("PROP_≤",
-                     'PROP_≤: PROP()(?0: ?2, ?1: ?2)',
+                     'PROP_≤: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2)',
                      (0, " ≤ ", 1)
                      )
 
 
 gt = InequalityNode("PROP_>",
-                    'PROP_>: PROP()(?0: ?2, ?1: ?2)',
+                    'PROP_>: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                     (0, " > ", 1)
                     )
 
 
 geq = InequalityNode("PROP_≥",
-                     'PROP_≥: PROP()(?0: ?2, ?1: ?2)',
+                     'PROP_≥: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                      (0, " ≥ ", 1)
                      )
 
