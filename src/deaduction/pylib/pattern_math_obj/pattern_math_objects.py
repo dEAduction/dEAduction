@@ -476,10 +476,11 @@ class PatternMathObject(MathObject):
         # Test node #
         #############
         if node != math_object.node:
-            if node in metanodes and metanodes[node](math_object):
+            if node in metanodes:
                 # e.g. metanodes[*INEQUALITIES] is a callable
                 #  that tests if object is an inequality
-                return True, ""
+                if not metanodes[node](math_object):
+                    return False, f"Object does not match {node}"
             # elif (math_object.node in metanodes
             #         and metanodes[math_object.node](self_)):
             #     # (NB: math_object could be a PatternMathObject)
