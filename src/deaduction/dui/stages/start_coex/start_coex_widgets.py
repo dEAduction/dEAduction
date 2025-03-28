@@ -136,6 +136,7 @@ class AbstractCoExChooser(QWidget):
         spacer1             = QSpacerItem(1, 5)
         spacer2             = QSpacerItem(1, 5)
         self.__main_layout = QVBoxLayout()
+        self.__browser_layout = browser_layout
         self.__main_layout.addLayout(browser_layout)
         self.__main_layout.addItem(spacer1)
         self.__main_layout.addWidget(HorizontalLine())
@@ -587,15 +588,30 @@ class ExerciseChooser(AbstractCoExChooser):
         browser_layout.addWidget(exercises_tree)
 
         self.__exercises_tree = exercises_tree
+        self.__vertical_bar = exercises_tree.verticalScrollBar()
+        self.__previous_vertical_value = 0
+        self.__vertical_max = -1
         self.__text_mode_checkbox = None
         self.__main_widget_lyt    = None
         self.__goal_widget        = None
         self.__text_wgt           = None
         self.__ui_wgt             = None
 
-        self.__scrollbar_current_item_pos = 0
+        self.__vertical_bar.valueChanged.connect(self.__on_scrolling)
 
         super().__init__(browser_layout)
+
+    def __on_scrolling(self):
+        if self.__vertical_max == -1:
+            self.__vertical_max = self.__vertical_bar.maximum()
+        # print([self.__vertical_bar.value(), self.__vertical_bar.maximum()])
+        current_value = self.__vertical_bar.value()
+        # if abs(current_value-self.__previous_vertical_value) > 1:
+        if self.__vertical_bar.maximum() == 0:
+            # print("Adjusting")
+            self.__vertical_bar.setRange(0, self.__vertical_max)
+            self.__vertical_bar.setValue(self.__previous_vertical_value)
+        self.__previous_vertical_value = self.__vertical_bar.value()
 
     @property
     def __current_item(self):
@@ -712,11 +728,16 @@ class ExerciseChooser(AbstractCoExChooser):
             title += " " + _("(saved proof)")
         description = exercise.description
 
+        # vertical_value = self.__vertical_bar.value()
+        # vertical_max = self.vertical_bar.maximum()
         super().set_preview(main_widget=main_widget, title=title,
                             subtitle=None, details=None,
                             description=description, expand_details=False)
+        # self.vertical_bar.setRange(0, vertical_max)
+        # self.vertical_bar.setValue(vertical_value)
+        # print(f"Setting to max = {vertical_max}, value = {vertical_value}")
 
-        self.exercise_previewed.emit()
+        # self.exercise_previewed.emit()
 
     def create_widget(self):
         """
