@@ -23,7 +23,7 @@ local attribute [instance] classical.prop_decidable
 Title
     Arithmétique
 Author
-    Frédéric Le Roux, Thomas Richard
+    Frédéric Le Roux
 Institution
     Université du monde
 Description

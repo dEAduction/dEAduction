@@ -18,15 +18,27 @@ Simplifier lemmas for basic arithmetic operations
 variables {u: Type} [add_comm_group u]
 
 @[simp_arith]
+lemma sub0 (a: u) : -(-a) = a :=
+begin
+  exact neg_neg a,
+end
+
+@[simp_arith]
 lemma sub1 (a: u) : a-a = 0 :=
 begin
-  simp only [sub_self],
+  exact sub_self a
+end
+
+@[simp_arith]
+lemma sub1b (a: u) : a + (-a) = 0 :=
+begin
+  exact add_right_neg a
 end
 
 @[simp_arith]
 lemma sub2 (a b: u) : a + b - b = a :=
 begin
-  simp only [add_sub_cancel]
+  exact add_sub_cancel a b
 end
 
 @[simp_arith]
