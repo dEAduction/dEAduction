@@ -39,17 +39,6 @@ global _
 # Here int stands for metavars ('?1' in pattern --> 1 in display),
 # to display children use tuples, e.g. '(1, )' means second child.
 latex_from_app_pattern = {
-    # For functions, two patterns: (f circ g)(x) and (f circ g).
-    # "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    # "?5: FUNCTION(?1, ?2), ?6)": ((-3,), r'\circ', (-2,), r"\parentheses",
-    #                               (-1,)),
-    # "APP(CONSTANT/name=composition, ?1, ?2, ?3, ?4: FUNCTION(?2, ?3), "
-    # "?5: FUNCTION(?1, ?2))": ((-2,), r'\circ', (-1,)),
-    # # This is just for the calculator:
-    # "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
-    # "?5: FUNCTION(?1, ?2))": ((1, ), r'\circ', (2,)),
-    # "APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
-    # "?5: FUNCTION(?1, ?2), ?6)": ((1, ), r'\circ', (2,), r'\parentheses', 3),
     # TODO: test Id, Id(x)
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
 
@@ -74,56 +63,16 @@ latex_from_app_pattern = {
 # TODO: english translation
 # Negative value = from end of children list
 latex_from_constant_name = {
-    # "symmetric_difference": (-2, r'\Delta', -1),
-    # "composition": (4, r'\circ', 5),  # APP(compo, X, Y, Z, g, f)
-    # "prod": (1, r'\times', 2),
     "Identite": ("Id",),# FIXME: use Id for name...
     "identite": ("Id",),
-    # "ne": (2, r" \neq ", 3),  # Lean name for ≠
     "interval": (r"\[", -2, ",", -1, r"\]"),
-
-    # FIXME: translate to english in Lean files
-    # "majorant": (-1, r'\text_is', " majorant de ", -2),
-    # "minorant": (-1, r'\text_is', " minorant de ", -2),
-    # "continuous_at": (-2, r'\text_is', _("continuous at") + " ", -1),
-    #
-    # "est_majore": (-1, r'\text_is', " majoré"),
-    # "est_minore": (-1, r'\text_is', " minoré"),
-    # "est_borne": (-1, r'\text_is', " borné"),
-    #
-    # "limit": ("lim ", -2, " = ", -1), # FIXME: does not work in special_shape???
-    # "borne_sup": ("Sup ", -2, " = ", -1),
-    # "borne_inf": ("Inf ", -2, " = ", -1),
-    # "limit_plus_infinity": ("lim ", -1, " = +∞"),
-    # "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
-
-
-    # "converging_seq": (-1, r'\text_is', _(" converging")),
-    # "increasing_seq": (-1, r'\text_is', _(" non decreasing")),
-    # "bounded_above": (-1, r'\text_is', " " + _("bounded from above")),
-    # "bounded_below": (-1, r'\text_is', " " + _("bounded from below")),
-    # "bounded_sequence": (-1, r'\text_is', " " + _("bounded")),
-    # "continuous": (-1, r'\text_is', _("continuous")),
-    # "uniformly_continuous": (-1, r'\text_is', _("uniformly continuous")),
-    # "cauchy": (-1, r'\text_is', _("a Cauchy sequence")),
-    # "abs": ('|', -1, '|'),  # FIXME: does not work in special_shape???
-    # "max": ("Max", r'\parentheses', -2, ",", -1),
-    # "min": ("Min", r'\parentheses', -2, ",", -1),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
-    # "product": (-2, ".", -1),
     "image": (-1, " = ", -3, "(", -2, ")"),
-    # "relation_equivalence": (-1, r'\text_is', _("an equivalence relation")),
     "classe_equivalence": (r"\[", (-1, ), r"\]", ['_', (1, )]),
     "disjoint": (-2, " " + _("and") + " ", -1, " " + _("are disjoint")),
     "powerset": (r'\set_of_subsets', [r"\parentheses", (-1, )]),
-    # "partition": (-1, r'\text_is', _("a partition of") + " ", -2),
-    # "application": (-1, r'\text_is', _("an application") + " "),
-    # "application_bijective":  (-1, r'\text_is', _("a bijective application") + " "),
     "RealSubGroup": (r"\real", ),
     "IntegerSubGroup": (r"\integer", ),
-    # "even":  (-1,  r'\text_is', " " + _("even")),
-    # "odd":  (-1,  r'\text_is', " " + _("odd")),
-    # "divides": (-2, ' | ', -1),
     "connexe": (-2, r'\text_is', " " + _("connected")),
     "connexePartie": (-1, r'\text_is', " " + _("connected")),
 }
@@ -185,25 +134,6 @@ def app_pattern_from_constants(additional_data=None):
     latex_from_app_pattern.update(latex_from_app_constant_patterns)
 
     # latex_from_app_pattern.update(generic_app_dict)
-
-
-# def app_functional_shape(math_object, lean_format=False):
-#
-#     lean_name = math_object.name()
-#     pretty_name, toto,  nb_args = PatternMathDisplay.constants[lean_name]
-#     if lean_format:
-#         shape = [lean_name]
-#         for i in range(len(math_object.children[-nb_args:])):
-#             shape.extend([i - nb_args, " "])
-#         return shape
-#
-#     else:
-#         shape = [pretty_name, '(']
-#         for i in range(len(math_object.children[-nb_args:])):
-#             shape.extend([i - nb_args, ", "])
-#         # Replace last comma
-#         shape[-1] = ')'
-#         return shape
 
 
 class PatternMathDisplay:
@@ -352,6 +282,9 @@ class PatternMathDisplay:
 
         names = (cls.fcts_one_var + cls.fcts_two_var + cls.unary_predicate
                  + list(cls.infix.keys()) + list(cls.special_latex_shapes.keys()))
+
+
+
         return names
 
     @staticmethod

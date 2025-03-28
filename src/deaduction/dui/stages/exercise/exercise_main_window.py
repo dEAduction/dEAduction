@@ -372,6 +372,7 @@ class ExerciseMainWindow(QMainWindow):
 
         log.info("Closing ExerciseMainWindow")
 
+        StatementsTreeWidgetItem.from_lean_name = dict()
         # Save window geometry
         # FIXME: does not work
         settings = QSettings("deaduction")

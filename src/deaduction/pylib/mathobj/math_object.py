@@ -2127,15 +2127,15 @@ class MathObject:
         debugging.
         """
         # FIXME:
-        display = self.__repr__()
-        # try:
-        #     display = self.to_display(format_="utf8", text=text,
-        #                               is_type=is_type)
-        # except RecursionError:
-        #     if self.name:
-        #         display = self.name
-        #     else:
-        #         display = str(self)
+        # display = self.__repr__()
+        try:
+            display = self.to_display(format_="utf8", text=text,
+                                      is_type=is_type)
+        except RecursionError:
+            if self.name:
+                display = self.name
+            else:
+                display = str(self)
         return display
 
     def math_type_to_display(self, format_="html", text=False,

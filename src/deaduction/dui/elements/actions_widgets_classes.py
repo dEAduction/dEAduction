@@ -569,7 +569,6 @@ class ActionButtonsGroup(QGroupBox):
     This class is a QGroupbox with a title containing one or several
     ActionButtonLines.
 
-    TODO:
     The title could be made clickable (e.g. a checkbox) to allow hide/show
     the box.
     """
