@@ -207,6 +207,19 @@ class CalculatorTarget(MathTextWidget):
         """
 
         key = event.key()
+
+        key_sequence = QKeySequence(key)
+        # print(key_sequence)
+        # log.debug("Key event -> Trying Return and Space")
+        if key_sequence == QKeySequence("Return"):
+            self.button_box.button(QDialogButtonBox.Ok).animateClick()
+            return
+
+        if self.lean_mode:
+            super().keyPressEvent(event)
+            self.enable_actions()  # Unfreeze OK button
+            return
+
         if int(event.modifiers()) & int(Qt.ControlModifier):
             # print("CTRL")
             key += Qt.CTRL
@@ -223,16 +236,6 @@ class CalculatorTarget(MathTextWidget):
             key += Qt.META
 
         key_sequence = QKeySequence(key)
-        # print(key_sequence)
-        # log.debug("Key event -> Trying Return and Space")
-        if key_sequence == QKeySequence("Return"):
-            self.button_box.button(QDialogButtonBox.Ok).animateClick()
-            return
-
-        if self.lean_mode:
-            super().keyPressEvent(event)
-            self.enable_actions()  # Unfreeze OK button
-            return
 
         if key_sequence == QKeySequence("Space"):
             self.key_buffer_timeout()
