@@ -895,7 +895,8 @@ class CalculatorController:
 
     @property
     def targets_are_numbers(self):
-        return all(t_type.is_number() for t_type in self.target_types)
+        return all(t_type and t_type.is_number()
+                   for t_type in self.target_types)
 
     def __show_intro(self):
         cname = "dialogs.calculator_intro"
@@ -1141,7 +1142,7 @@ class CalculatorController:
 
     @property
     def current_lean_code(self):
-        return self.current_target_wdg.toPlainText()
+        return self.current_target_wdg.toPlainText().strip()
 
     @property
     def current_target(self):
@@ -1181,31 +1182,31 @@ class CalculatorController:
         else:
             # Entering Lean mode, modify display
             self.enable_actions()
-            self.set_target()
+            self.display_target()
 
     @property
     def lean_mode(self) -> bool:
         mode = self.lean_mode_wdg.isChecked()
         return mode
 
-    @property
-    def html_target(self):
+    def target_to_text(self):
         if self.lean_mode:
             text = self.target.to_display(format_='lean')
             text = text.replace('?', ' ')
+            text = text.strip()
         else:
             text = self.target.to_display(format_='html',
                                           pretty_parentheses=False)
         return text
 
-    @property
-    def current_html_target(self):
-        if self.lean_mode:
-            text = self.current_target.to_display(format_='lean')
-        else:
-            text = self.current_target.to_display(format_='html',
-                                                  pretty_parentheses=False)
-        return text
+    # @property
+    # def current_html_target(self):
+    #     if self.lean_mode:
+    #         text = self.current_target.to_display(format_='lean')
+    #     else:
+    #         text = self.current_target.to_display(format_='html',
+    #                                               pretty_parentheses=False)
+    #     return text
 
     @property
     def navigation_bar(self):
@@ -1354,8 +1355,15 @@ class CalculatorController:
         self.target = target
 
     @Slot()
-    def set_target(self):
-        self.current_target_wdg.setHtml(self.html_target)
+    def display_target(self):
+        text = self.target_to_text()
+        if self.lean_mode:
+            self.current_target_wdg.clear()
+            # self.current_target_wdg.currentCharFormat().clearBackground()
+            # self.current_target_wdg.currentCharFormat().clearForeground()
+            self.current_target_wdg.setPlainText(text)
+        else:
+            self.current_target_wdg.setHtml(text)
         # self.calculator_ui.set_html(self.html_target)
 
     def virtual_cursor_position(self):
@@ -1455,7 +1463,7 @@ class CalculatorController:
             self.targets_widget.setFocus()
 
     def set_target_and_update_ui(self):
-        self.set_target()
+        self.display_target()
         # self.update_bound_vars()
         self.update_cursor()
         self.enable_actions()
@@ -1581,12 +1589,10 @@ class CalculatorController:
         if self.lean_mode:
             text_wdg = self.current_target_wdg
             # FIXME: better formatting in Lean mode?
-            # code = pattern_s[0].to_display(format_='lean')
-            # code.replace('?', ' ')
             lean_symbol = MathDisplay.latex_to_lean(latex_symbol)
             text_wdg.insertPlainText(lean_symbol)
-            self.set_lean_target()
-            self.history_update()
+            # self.set_lean_target()
+            # self.history_update()
             return
 
         potential_bv = pattern_s[0]
