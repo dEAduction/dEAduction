@@ -290,7 +290,7 @@ class MathDisplay:
         '*INEQUALITY': ("",),  # Is this useful?
         '*NUMBER_TYPES': ("",),
         '*INT_OR_NAT': ("",),
-        '*TYPE': ("",)
+        '*TYPE': ("",),
     }
     # (r'\{', 0, r'\}')
     # Only those lean symbols that are distinct from the latex_to_utf8 dict
@@ -379,6 +379,7 @@ class MathDisplay:
         cls.latex_to_utf8_dic = {
             # r'\and': " " + _("and") + " ",
             # r'\or': " " + _("or") + " ",
+            r"\dots": "...",
             r"\ms": "",
             r"\equal": "=",
             r'\backslash': '\\',
@@ -439,6 +440,7 @@ class MathDisplay:
     @classmethod
     def update_text_dict(cls):
         cls.latex_to_text = {
+            r"\dots": "...",
             r'\and': " " + _("and") + " ",
             r'\or': " " + _("or") + " ",
             r'\Leftrightarrow': " " + _("if and only if") + " ",

@@ -72,7 +72,8 @@ class ContextMathObject(MathObject):
         # Tags
         self.has_been_used_in_proof = False
         self.is_hidden = (self.name in self.invisible_name_list
-                          or self.name.startswith("_inst_"))
+                          or self.name.startswith("_inst_")
+                          or self.name.startswith("HIDDEN"))
 
     def __repr__(self):
         return self.debug_repr('CMO')

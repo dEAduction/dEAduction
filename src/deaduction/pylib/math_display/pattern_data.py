@@ -129,11 +129,28 @@ def is_type(math_object):
         return math_object.name in ["ℕ", "ℤ", "ℚ", "ℝ"]
 
 
+def is_joker(math_object):
+    """
+    Jokers are local constants or constants with name
+    "JOKER_0", "JOKER_1", ..., "HIDDENJOKER_0", ...
+    They can also be in APP and then no child is displayed, e.g.
+    "APP(JOKER a b c)" --> display "...".
+    """
+    name = ""
+    if math_object.is_application() and math_object.children:
+        math_object = math_object.children[0]
+    if math_object.is_constant() or math_object.is_local_constant():
+        name = math_object.display_name
+
+    return name.startswith('JOKER') or name.startswith('HIDDENJOKER')
+
+
 metanodes = {'*INEQUALITY': is_inequality,
              '*NUMBER_TYPES': is_number_type,  # FIXME: just call *NUMBER
              '*INT_OR_NAT': is_int_or_nat,
              '*HAS_ADD': has_add,  # TODO: improve
-             '*TYPE': is_type}
+             '*TYPE': is_type,
+             '*JOKER': is_joker}
 
 
 ###############
@@ -226,6 +243,7 @@ def set_quant_pattern():
 
 # The '!' means type must match (NO_MATH_TYPE not allowed)
 latex_from_pattern_string = {
+    "*JOKER(...)": (r"\dots", ),
     "LOCAL_CONSTANT: !SET_PRODUCT(...)": (),
     "LOCAL_CONSTANT: !SET_FAMILY(?3, ?4)(?0, ?1, ?2)":
         # ("toto",),
