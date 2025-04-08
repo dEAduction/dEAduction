@@ -266,18 +266,37 @@ class GoalTextWidget(MathTextWidget):
 
 
 class ExerciseStatementWindow(QDialog):
-    def __init__(self, goal, parent):
+    """
+    A class to display a reminder of the exercise's statement. To be
+    displayed at the beginning of the proof process.
+    """
+    def __init__(self, exercise, parent):
         super().__init__(parent=parent)
         self.setWindowTitle(_("Reminder of the exercise statement"))
 
-        goal_widget = GoalTextWidget(goal, to_prove=True)
+        goal = exercise.goal()
+        to_prove = not exercise.is_complete_statement
 
+        goal_widget = GoalTextWidget(goal, to_prove=to_prove)
         font = goal_widget.font()
         font.setPointSize(20)
         goal_widget.setFont(font)
         goal_widget.setReadOnly(True)
 
         lyt = QVBoxLayout()
+        title = exercise.pretty_name
+        description = exercise.description
+        if title:
+            title_wgt = QLabel(title)
+            title_wgt.setStyleSheet('font-weight: bold;'
+                                    'font-size:   17pt;')
+            lyt.addWidget(title_wgt)
+        if description:
+            description_wgt = QLabel(description)
+            description_wgt.setStyleSheet('font-size:   15pt;')
+            description_wgt.setWordWrap(True)
+            lyt.addWidget(description_wgt)
+
         lyt.addWidget(goal_widget)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok)

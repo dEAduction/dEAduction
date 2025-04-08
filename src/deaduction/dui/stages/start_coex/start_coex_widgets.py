@@ -68,7 +68,8 @@ from deaduction.dui.elements        import (CoursesLW,
                                             StatementsTreeWidget,
                                             StatementsTreeWidgetItem,
                                             GoalTextWidget,
-                                            GoalMathWidget)
+                                            GoalMathWidget,
+                                            GoalWidget)
 
 from deaduction.dui.elements.start_coex_widget_classes import ChooseExerciseWidgetItem
 
@@ -203,6 +204,7 @@ class AbstractCoExChooser(QWidget):
             layout.addLayout(subtitle_lyt)
         if description:
             description_wgt = QLabel(description)
+            description_wgt.setStyleSheet('font-size:   15pt;')
             description_wgt.setWordWrap(True)
             layout.addWidget(description_wgt)
         if details:
@@ -591,7 +593,6 @@ class ExerciseChooser(AbstractCoExChooser):
         self.__vertical_bar = exercises_tree.verticalScrollBar()
         self.__previous_vertical_value = 0
         self.__vertical_max = -1
-        self.__text_mode_checkbox = None
         self.__main_widget_lyt    = None
         self.__goal_widget        = None
         self.__text_wgt           = None
@@ -683,25 +684,14 @@ class ExerciseChooser(AbstractCoExChooser):
 
         if exercise.initial_proof_state:
 
-            # Checkbox
-            self.__text_mode_checkbox = QCheckBox(_('Text mode'))
-            self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
-            # self.__history_checkbox = QCheckBox(_('Show saved exercises'))
-            # self.__history_checkbox.clicked.connect(self.toggle_history)
             btns_lyt = QHBoxLayout()
-            # btns_lyt.addWidget(self.__history_checkbox)
-            btns_lyt.addStretch()
-            btns_lyt.addWidget(self.__text_mode_checkbox)
-
             main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
-            # Toggle text mode if needed
-            text_mode = cvars.get('display.text_mode_in_chooser_window', False)
-            self.__text_mode_checkbox.setChecked(text_mode)
-
-            # Create goal widget, either in text mode or in deaduction mode,
-            # according to self.__text_mode_checkbox.
+            # Create goal widget and Toggle text mode if needed
             self.__goal_widget = self.create_widget()
+            text_mode = cvars.get('display.text_mode_in_chooser_window', False)
+            self.__goal_widget.text_mode_checkbox.setChecked(text_mode)
+
             main_widget_lyt.addWidget(self.__goal_widget)
             main_widget_lyt.addStretch()  # -> check box at bottom
             main_widget_lyt.addLayout(btns_lyt)
@@ -722,8 +712,7 @@ class ExerciseChooser(AbstractCoExChooser):
 
         # ───────────────────── Others ───────────────────── #
 
-        # TODO: Add subtitle, task…
-        title       = exercise.pretty_name
+        title = exercise.pretty_name
         if exercise.history_date():
             title += " " + _("(saved proof)")
         description = exercise.description
@@ -748,53 +737,17 @@ class ExerciseChooser(AbstractCoExChooser):
         """
         # Logical data
         exercise = self.exercise
-        proofstate = exercise.initial_proof_state
-        goal = proofstate.goals[0]  # Only one goal
+        proof_state = exercise.initial_proof_state
+        goal = proof_state.goals[0]  # Only one goal
 
-        # ────────────────────── Rest ────────────────────── #
-        if self.__text_mode_checkbox.isChecked():
-            ###############
-            # Text widget #
-            ###############
-            # The goal is presented in a single widget.
-            open_problem = exercise.is_open_question
-            self.__text_wgt = GoalTextWidget(goal,
-                                             open_problem=open_problem,
-                                             to_prove=True)
-            widget = self.__text_wgt
-            # self.__text_wgt.setReadOnly(True)
-            # # self.__text_wgt.setFont(self.math_fonts)
-            # text = goal.goal_to_text(format_="html",
-            #                          text_mode=True,
-            #                          open_problem=exercise.is_open_question)
-            # self.__text_wgt.setHtml(text)
-            # widget = self.__text_wgt
-        else:
-            #############
-            # UI widget #
-            #############
-            # The widget with lists for math. objects and properties
-            # and a QLAbel for the target.
-            open_problem = exercise.is_open_question
-            self.__ui_wgt = GoalMathWidget(goal, to_prove=True,
-                                           open_problem=open_problem)
-            widget = self.__ui_wgt
+        open_problem = exercise.is_open_question
+        to_prove = not exercise.is_complete_statement
 
-        return widget
-
-    #########
-    # Slots #
-    #########
-
-    @Slot()
-    def toggle_text_mode(self):
-        """
-        Toggle the text mode for the previewed goal (see self docstring).
-        """
-        cvars.set('display.text_mode_in_chooser_window',
-                  self.__text_mode_checkbox.isChecked())
-        self.preview_exercise()
-        # NB: cvars will be saved only when (and if) exercise starts
+        return GoalWidget(goal=goal,
+                          to_prove=to_prove,
+                          open_problem=open_problem,
+                          display_empty_context=True,
+                          apply_statement=False)
 
     @Slot()
     def __check_proof_state_for_preview(self):

@@ -779,6 +779,19 @@ class Exercise(Theorem):
     def is_open_question(self):
         return self.info.get('open_question', False)
 
+    @property
+    def is_complete_statement(self):
+        return self.info.get('complete_statement', False)
+
+    def statements_for_prover(self) -> [str]:
+        """
+        Return a list of statements names to be used for automatic proving.
+        This is used to check statements with jokers, to be completed by usr.
+        """
+        statements = self.info.get('statements_for_prover', "")
+        statements = statements.split()
+        return statements
+
     def current_name_space(self):
         current_name_space, _, end = self.lean_name.partition(".exercise.")
         return current_name_space

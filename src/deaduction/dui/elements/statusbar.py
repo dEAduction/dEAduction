@@ -96,10 +96,15 @@ class DeaductionStatusBar(QStatusBar):
     @Slot()
     def add_point(self):
         """
-        Add a point (.) at the end of the msg.
+        Add a point (.) at the end of the msg, remove all points if more than 100.
         """
+        max_ = 100
         msg = self.messageWidget.text()
-        self.messageWidget.setText(msg + '.')
+        nb = max_-msg.count('·')
+        if msg.endswith("."*nb):
+            msg = msg[:-nb] + "·"
+        if nb != 0:
+            self.messageWidget.setText(msg + '.')
 
     def display_thinking_bar(self):
         self.set_message(_("    Thinking"))

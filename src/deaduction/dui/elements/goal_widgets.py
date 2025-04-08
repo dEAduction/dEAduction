@@ -138,19 +138,21 @@ class GoalWidget(QWidget):
     """
 
     def __init__(self, goal=None, math_object=None,
-                 to_prove=False, open_problem=False):
+                 to_prove=False, open_problem=False,
+                 display_empty_context=False,
+                 apply_statement=True):
         super().__init__()
 
         # (1) Buttons layout with text mode checkbox
-        self.__text_mode_checkbox = QCheckBox(_('Text mode'))
-        self.__text_mode_checkbox.setChecked(True)
-        self.__text_mode_checkbox.clicked.connect(self.toggle_text_mode)
+        self.text_mode_checkbox = QCheckBox(_('Text mode'))
+        self.text_mode_checkbox.setChecked(True)
+        self.text_mode_checkbox.clicked.connect(self.toggle_text_mode)
         # self.__history_checkbox = QCheckBox(_('Show saved exercises'))
         # self.__history_checkbox.clicked.connect(self.toggle_history)
         btns_lyt = QHBoxLayout()
         # btns_lyt.addWidget(self.__history_checkbox)
         btns_lyt.addStretch()
-        btns_lyt.addWidget(self.__text_mode_checkbox)
+        btns_lyt.addWidget(self.text_mode_checkbox)
 
         # main_widget_lyt.setContentsMargins(0, 0, 0, 0)
 
@@ -165,16 +167,16 @@ class GoalWidget(QWidget):
             goal_text_wdg = GoalTextWidget(goal=goal,
                                            to_prove=to_prove,
                                            open_problem=open_problem,
-                                           apply_statement=True)
+                                           apply_statement=apply_statement)
         elif math_object:
             goal_text_wdg = GoalTextWidget(math_object=math_object,
                                            to_prove=to_prove,
                                            open_problem=open_problem,
-                                           apply_statement=True)
+                                           apply_statement=apply_statement)
 
         else:
             raise ValueError("GoalWidget needs either a goal or a math_object")
-        if goal and goal.context:
+        if goal and (goal.context or display_empty_context):
             goal_math_wdg = GoalMathWidget(goal, to_prove=to_prove,
                                            open_problem=open_problem)
         else:
@@ -193,7 +195,7 @@ class GoalWidget(QWidget):
         self.setLayout(main_lyt)
 
     def toggle_text_mode(self):
-        if self.__text_mode_checkbox.isChecked():
+        if self.text_mode_checkbox.isChecked():
             self.goal_lyt.setCurrentIndex(0)
         else:
             self.goal_lyt.setCurrentIndex(1)

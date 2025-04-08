@@ -267,7 +267,7 @@ class Coordinator(QObject):
         if proof_state:
             goal = proof_state.goals[0]
             self.emw.ecw.update_goal(goal, [], history_nb=0)
-            if not exercise.negate_statement:
+            if not exercise.negate_statement and not self.history_mode:
                 self.show_exercise_statement()
         elif exercise.negate_statement:
             ##############################################
@@ -783,14 +783,13 @@ class Coordinator(QObject):
         self.lean_editor.code_set(self.lean_file.inner_contents)
 
     def show_exercise_statement(self):
-        # esw = ExerciseStatementWindow(self.proof_step.goal,
-        #                               parent=self.emw)
-        # esw.exec_()
+        """
+        Display exercise's statement in an alert window.
+        """
         if not self.exercise.initial_proof_state:
             return
         if not self.statement_window:
-            goal = self.exercise.initial_proof_state.goals[0]
-            self.statement_window = ExerciseStatementWindow(goal,
+            self.statement_window = ExerciseStatementWindow(self.exercise,
                                                             parent=self.emw)
             geometry = self.emw.frameGeometry()
             scale_geometry(geometry, h_factor=.9, v_factor=0.6)
