@@ -399,7 +399,7 @@ lean_from_pattern_string = {
     # ∀x ∈ A, ...
     "QUANT_∀(?0: !SET(?3), ?1, ?2)":
         (r"\forall",  (1,), r"\in", (0,), ", ", (2,)),
-    "QUANT_∃(?0: SET(?3: !SET(?4)), ?1, ?2)":
+    "QUANT_∃(!SET(?3: !SET(?4)), ?1, ?2)":
         (r"\exists", (1,), r" \subset ", (0, 0), ", ", (2,)),
     "QUANT_∃(?0: !SET(?3), ?1, ?2)":
         (r"\exists",  (1,), r"\in", (0,), ", ", (2,)),
