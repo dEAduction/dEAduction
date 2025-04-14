@@ -88,6 +88,9 @@ class CalculatorRequest(IntEnum):
     EnterObject = 41
     ApplyFunction = 42
 
+    # Fill-in joker
+    FillInJoker = 50
+
 
 class MissingCalculatorOutput(MissingParametersError):
     """
@@ -161,6 +164,14 @@ class MissingCalculatorOutput(MissingParametersError):
             self.title = _("Define an object")
         elif self.request_type is CalculatorRequest.ApplyFunction:
             self.title = _("Apply a function")
+        elif self.request_type is CalculatorRequest.FillInJoker:
+            if proof_step.target_selected:
+                if proof_step.selection:
+                    self.title += _("Complete hypothesis and goal")
+                else:
+                    self.title = _("Complete goal")
+            else:
+                self.title = _("Complete hypothesis")
 
     def task_title(self):
         if self.request_type is CalculatorRequest.ApplyProperty:
@@ -264,8 +275,13 @@ class MissingCalculatorOutput(MissingParametersError):
 
         return types_n_vars
 
-    def targets_types_n_titles(self):
-        types = []
+    def targets_n_titles(self):
+        """
+        Return the list of target math_objects (or math_types) and titles to
+        be used by the Calculator.
+        """
+        targets = []
+        are_math_type = []
         titles = []
         if self.request_type in (CalculatorRequest.EnterObject,
                                  CalculatorRequest.ApplyFunction,
@@ -274,10 +290,10 @@ class MissingCalculatorOutput(MissingParametersError):
                                  CalculatorRequest.EnterProp,
                                  CalculatorRequest.ProofByCases
                                  ):
-            types = [self.target_type()]
+            targets = [self.target_type()]
             titles = []  # No individual title
 
-        if self.request_type in (CalculatorRequest.ApplyProperty,
+        elif self.request_type in (CalculatorRequest.ApplyProperty,
                                  CalculatorRequest.ApplyStatement):
             types_n_vars = self.extract_types_n_vars()
             for math_type, var in types_n_vars:
@@ -289,35 +305,26 @@ class MissingCalculatorOutput(MissingParametersError):
                     title = _("Which object plays the role of {}?").format(name)
                 else:
                     title = _("To which object shall we apply this property?")
-                types.append(math_type)
+                targets.append(math_type)
                 titles.append(title)
-        if self.request_type is CalculatorRequest.ProveExists:
+        elif self.request_type is CalculatorRequest.ProveExists:
             explicit_type = self.explicit_math_type_of_prop
             if explicit_type:
                 math_type, var, body = explicit_type.children
-                types = [math_type]
+                targets = [math_type]
                 name = var.to_display(format_='html')
                 title = _("Which object plays the role of {}?").format(name)
                 titles = [title]
 
-        return types, titles
+        elif self.request_type is CalculatorRequest.FillInJoker:
+            # FIXME: should be more subtle, depending on selection
+            targets = [self.proof_step.goal.target.math_type]
+            titles = ["Fill-in target"]
+            are_math_type = [False]
 
-    # def task_description(self):
-    #     """
-    #     Provide a display of self.prop or self.statement after
-    #     unfolding definition to reveal quantifiers if necessary.
-    #     """
-    #
-    #     # FIXME: not really used?
-    #     task = None
-    #     if self.request_type in (CalculatorRequest.ApplyProperty,
-    #                              CalculatorRequest.ProveExists):
-    #         math_obj = self.prop.math_type.explicit_quant()
-    #         task = math_obj.to_display(format_='html')
-    #     elif self.request_type is CalculatorRequest.ApplyStatement:
-    #         math_obj = self.statement.to_math_object().explicit_quant()
-    #         task = math_obj.to_display(format_='html')
-    #     return task
+        if not are_math_type:  # True by default
+            are_math_type = [True] * len(targets)
+        return targets, are_math_type, titles
 
 
 class WrongUserInput(Exception):

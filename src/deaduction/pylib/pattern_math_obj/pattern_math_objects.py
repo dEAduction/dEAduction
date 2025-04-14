@@ -36,7 +36,7 @@ from .pattern_parser import tree_from_str
 from deaduction.pylib.math_display.nodes import Node
 # from deaduction.pylib.mathobj import MathObject, BoundVar
 
-from deaduction.pylib.math_display import PatternInit
+from deaduction.pylib.math_display import PatternInit, is_joker, joker_name
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 
@@ -256,6 +256,33 @@ class PatternMathObject(MathObject):
             return new_metavar
 
     @classmethod
+    def metavar_from_joker(cls, joker: MathObject,
+                           turn_lc_into_mvar=False):
+        """
+        Turn a joker MathObject into a metavar.
+        """
+        if joker.math_type is MathObject.NO_MATH_TYPE:
+            math_type = PatternMathObject.NO_MATH_TYPE
+        else:
+            math_type = cls.__from_math_object(joker.math_type,
+                                               turn_lc_into_mvar=turn_lc_into_mvar)
+
+        new_metavar = cls.new_metavar(math_type)
+        new_metavar.info['name'] = joker_name(joker)
+        return new_metavar
+
+    # def metavars_in_self(self) -> list:
+    #     """
+    #     Return the list of all metavars in self (not including types).
+    #     """
+    #     metavars = []
+    #     if self.is_metavar:
+    #         metavars.append(self)
+    #     for child in self.children:
+    #         metavars.extend(child.metavars_in_self())
+    #     return metavars
+
+    @classmethod
     def __from_math_object(cls, math_object: MathObject,
                            turn_lc_into_mvar):
         """
@@ -270,6 +297,9 @@ class PatternMathObject(MathObject):
         # log.debug(f"Patterning mo {math_object.to_display()}")
         # metavars = cls.__tmp_metavars_csts
         # loc_csts = cls.__tmp_loc_csts_for_metavars
+
+        if is_joker(math_object):
+            return cls.metavar_from_joker(math_object)
 
         if math_object.is_bound_var:
             # Copy bound var ONCE, and then always refer to the same duplicate.
@@ -714,9 +744,12 @@ class MetaVar(PatternMathObject):
 
         # if not math_type or math_type is MathObject.NO_MATH_TYPE:
         #     math_type = PatternMathObject.NO_MATH_TYPE
+        if not info:
+            info = dict()
         MetaVar.metavar_nb += 1
+        info.update({'nb': MetaVar.metavar_nb})
         super().__init__(node='METAVAR',
-                         info={'nb': MetaVar.metavar_nb},
+                         info=info,
                          children=[],
                          math_type=math_type)
 
@@ -732,6 +765,10 @@ class MetaVar(PatternMathObject):
         rep = f"MV n°{self.nb}" if not math_obj else \
             f"assigned MV n°{self._info.get('nb')}= {math_obj}"
         return rep
+
+    @property
+    def metavar_name(self):
+        return self._info.get('name')
 
     @property
     def nb(self):

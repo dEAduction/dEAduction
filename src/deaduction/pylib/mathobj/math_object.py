@@ -472,9 +472,9 @@ class MathObject:
             idx = original_metavars.index(self)
             return copied_metavars[idx]
 
-        new_info = deepcopy(self.info)
         # Consider self._math_type, NOT self.math_type, cf metavar
         # but beware this can be NONE
+        new_info = deepcopy(self._info)
         math_type: cls = self._math_type
         children: [cls] = self.children  # Real type could be different
         new_math_type = (math_type if (math_type is None or
@@ -903,6 +903,21 @@ class MathObject:
     def has_name(self, name: str):
         return self.display_name == name
 
+    def search_in_name(self, name):
+        """
+        Return all sub-objects whose name contains name.
+        Do not use assigned_math_objects name.
+        """
+        math_objects = []
+        self_name = self._info.get('name')
+        if self_name and name in self_name:
+            math_objects.append(self)
+
+        for child in self.children:
+            math_objects.extend(child.search_in_name(name))
+
+        return math_objects
+
 ##########################################
 # Tests for equality and related methods #
 ##########################################
@@ -1090,10 +1105,10 @@ class MathObject:
         if MathObject.__eq__(self, other):
             return 1
         else:
-            for child in self.children:
-                test = child.contains(other)
-                # if test:
-                #     print("debug")
+            # for child in self.children:
+            #     test = child.contains(other)
+            #     # if test:
+            #     #     print("debug")
 
             return sum([child.contains(other) for child in self.children])
 
@@ -1114,6 +1129,27 @@ class MathObject:
                 if child.contains_including_types(other):
                     return True
             return False
+
+    def jokers_n_vars(self) -> []:
+        """
+        Return the list of jokers and their vars in self.
+        Search recursively in children, but not in jokers (that are assumed
+        to be non-assigned).
+        NB: APP(JOKER0, a, b, c) --> [ (JOKER0, [a,b,c] ) ]
+        """
+        if self.is_application() and self.children:
+            joke = self.children[0]
+            name = joke.display_name
+            if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+                variables = self.variables_of_app()
+                return [(self, variables)]
+
+        elif self.is_constant() or self.is_local_constant():
+            name = self.display_name
+            if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+                return [(self, [])]
+
+        return sum([child.jokers_n_vars() for child in self.children] , [])
 
     @classmethod
     def substitute(cls, old_var, new_var, math_object):
@@ -1576,7 +1612,7 @@ class MathObject:
 
     def is_bounded_quant_op(self, is_math_type=False) -> bool:
         """
-        Test if (math_type of) self is an inequality.
+        Test if (math_type of) self can be used for bounded quantification.
         """
         if is_math_type:
             math_type = self
@@ -1812,6 +1848,21 @@ class MathObject:
             return name
         else:
             return None
+
+    def variables_of_app(self):
+        """
+        If self is app, then return all ending children of self which are local
+        constant (except first child).
+        """
+        if not self.is_application():
+            return None
+        variables = []
+        for idx in range(len(self.children)).__reversed__():
+            if idx != 0:
+                child = self.children[idx]
+                if child.is_local_constant():
+                    variables.append(child)
+        return variables
 
     # Determine some important classes of MathObjects
     def can_be_used_for_substitution(self, is_math_type=False) -> (bool,

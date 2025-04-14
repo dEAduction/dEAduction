@@ -145,6 +145,8 @@ __tooltips = {
     "associativity": [_("Use an associativity rule")],
     "transitivity":  [_("Use a transitivity rule, e.g. for chaining "
                         "inequalities")],
+    'complete': [_('Replace "..." in object, property or goal by a '
+                   'suitable formula')]
 }
 
 for key in ('forall', 'exists', 'implies', 'and', 'or'):

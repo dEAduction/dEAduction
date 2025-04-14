@@ -360,8 +360,9 @@ class CalculatorTargets(QWidget):
 
     steal_focus_from_list = []
 
-    def __init__(self,  # window_title,
-                 target_types: [],  # MathObject
+    def __init__(self,
+                 targets: [],  # Only length is used!
+                 # are_math_type: [bool],
                  titles: [str],
                  task_title=None,
                  # task_description=None,
@@ -374,19 +375,14 @@ class CalculatorTargets(QWidget):
         """
 
         log.debug("Init Calculator Targets Widget")
-        assert target_types
-        if len(titles) < len(target_types):
-            titles += [None]*(len(target_types) - len(titles))
+        if len(titles) < len(targets):
+            titles += [None]*(len(targets) - len(titles))
 
         super().__init__()
-        # self.setWindowTitle(window_title + " — d∃∀duction")
-        # self.setWindowModality(Qt.WindowModal)
-        # self.setWindowModality(Qt.NonModal)
 
         # Toolbar
         self.toolbar = CalculatorToolbar()
         self.status_bar = DeaductionStatusBar(self)
-        # self.status_bar.pending_msg_time_interval = 1000
 
         ####################
         # Detailed context #
@@ -434,7 +430,7 @@ class CalculatorTargets(QWidget):
         ###########
         title_wdgs = []
         self.target_wdgs: [CalculatorTarget] = []
-        for title, target_type in zip(titles, target_types):
+        for title in titles:
             if title:
                 title_wdg = QLabel(title)
                 title_wdg.setTextFormat(Qt.TextFormat.RichText)

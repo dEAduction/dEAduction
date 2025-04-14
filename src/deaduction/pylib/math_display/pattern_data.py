@@ -129,7 +129,7 @@ def is_type(math_object):
         return math_object.name in ["ℕ", "ℤ", "ℚ", "ℝ"]
 
 
-def is_joker(math_object):
+def joker_name(math_object):
     """
     Jokers are local constants or constants with name
     "JOKER_0", "JOKER_1", ..., "HIDDENJOKER_0", ...
@@ -140,9 +140,17 @@ def is_joker(math_object):
     if math_object.is_application() and math_object.children:
         math_object = math_object.children[0]
     if math_object.is_constant() or math_object.is_local_constant():
-        name = math_object.display_name
+        name = math_object._info.get('name')
 
-    return name.startswith('JOKER') or name.startswith('HIDDENJOKER')
+    if not name:
+        return ""
+
+    if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+        return name
+
+
+def is_joker(math_object):
+    return bool(joker_name(math_object))
 
 
 metanodes = {'*INEQUALITY': is_inequality,

@@ -806,22 +806,31 @@ class CalculatorController:
     ################
 
     def __init__(self,
-                 target_types,
-                 # target_type=None,
+                 targets,
+                 are_math_type,
                  goal=None,
-                 # calculator_groups=None,
                  window_title="Logical Calculator",
                  task_title=None,
                  titles=None,
-                 # task_description=None,
                  task_goal=None,
                  prop=None):
+        """
 
+        @param targets: list of targets (or type, as indicated by
+        are_math_type) to be filled by usr
+        @param goal: the current goal
+        @param window_title:
+        @param task_title:
+        @param titles: titles corresponding to target types
+        @param task_goal:
+        @param prop:
+        """
         self.goal = goal
         self.targets = []
-        self.target_types = target_types
+        self.are_math_type = are_math_type
+        self.pre_targets = targets
         self.calculator_groups = []
-        nb = self.nb_of_targets
+        nb = len(targets)
         # One history empty list per target, but they must be distinct lists!
         self.histories: [[MarkedPatternMathObject]] = []
         for idx in range(nb):
@@ -829,7 +838,8 @@ class CalculatorController:
         # First target history will be updated immediately (so set at -1)
         self.history_indices = [0] * nb
 
-        targets_widget = CalculatorTargets(target_types=target_types,
+        targets_widget = CalculatorTargets(targets=targets,
+                                           # are_math_type=are_math_type,
                                            titles=titles,
                                            task_title=task_title,
                                            # task_description=task_description,
@@ -895,8 +905,10 @@ class CalculatorController:
 
     @property
     def targets_are_numbers(self):
-        return all(t_type and t_type.is_number()
-                   for t_type in self.target_types)
+        all_types = [mo if is_type else mo.math_type
+                     for mo, is_type in zip (self.pre_targets,
+                                             self.are_math_type)]
+        return all(t_type and t_type.is_number() for t_type in all_types)
 
     def __show_intro(self):
         cname = "dialogs.calculator_intro"
@@ -913,42 +925,6 @@ class CalculatorController:
                                                       parent=self.main_window)
             calc_intro_box.exec()
 
-    # @classmethod
-    # def get_item(cls, goal, target_type, title) -> (Union[PatternMathObject,
-    #                                                       str],
-    #                                                 bool):
-    #     """
-    #     Execute a CalculatorController and send the choice.
-    #     The choice is either a PatternMathObject to be converted to Lean code,
-    #     or a string (of Lean code) if the calculator i in Lean mode.
-    #     """
-    #     # FIXME: obsolete
-    #
-    #     if target_type:
-    #         log.debug(f"Calculator with target type = "
-    #                   f"{target_type.to_display(format_='utf8')}")
-    #     calculator_controller = cls(goal=goal,
-    #                                 target_type=target_type,
-    #                                 window_title=title)
-    #     # Execute the ButtonsDialog and wait for results
-    #     OK = calculator_controller.calculator_ui.exec()
-    #
-    #     # After exec
-    #     choice = calculator_controller.target
-    #     choice.unmark()
-    #
-    #     if calculator_controller.lean_mode:
-    #         choice = calculator_controller.current_target.toPlainText()
-    #         math_object = MathObject(node="RAW_LEAN_CODE",
-    #                                  info={'name': '(' + choice + ')'},
-    #                                  children=[],
-    #                                  math_type=None)
-    #     else:
-    #         # choice = MarkedPatternMathObject.generic_parentheses(choice.assigned_math_object)
-    #         math_object = choice.assigned_math_object
-    #
-    #     return math_object, OK
-
     @classmethod
     def get_items(cls, goal=None,
                   missing_output: MissingCalculatorOutput = None,
@@ -958,14 +934,15 @@ class CalculatorController:
         """
         window_title = missing_output.title
         task_title = missing_output.task_title()
-        target_types, titles = missing_output.targets_types_n_titles()
+        targets, are_math_type, titles = missing_output.targets_n_titles()
         # task_description = missing_output.task_description()
         statement = missing_output.statement
         task_goal = statement.goal() if statement else None
         prop = missing_output.explicit_math_type_of_prop
 
         log.debug(f"Calculator with target types")
-        cc = cls(target_types=target_types,
+        cc = cls(targets=targets,
+                 are_math_type=are_math_type,
                  goal=goal,
                  window_title=window_title,
                  task_title=task_title,
@@ -974,12 +951,10 @@ class CalculatorController:
                  task_goal=task_goal,
                  prop=prop)
 
-        # Execute the ButtonsDialog and wait for results
-        # OBSOLETE: cc.buttons_window.show()
-        OK = cc.main_window.exec()  # FIXME
+        # Execute the CalculatorMainWindow and wait for results
+        OK = cc.main_window.exec()
 
         if not OK:
-            # cc.targets_window_closed()  # FIXME
             cc.main_window.close()
             return [], OK
         ############################
@@ -990,10 +965,11 @@ class CalculatorController:
 
         for target in targets:
             target.unmark()
-            if not target.assigned_math_object:
-                # No more data from this point
-                break
-            elif cc.lean_mode:
+            if target.is_metavar:
+                if not target.assigned_math_object:
+                    # No more data from this point
+                    break
+            if cc.lean_mode:
                 lean_code = cc.polished_lean_code()
                 math_object = MathObject.raw_lean_code(lean_code)
             else:
@@ -1011,16 +987,20 @@ class CalculatorController:
         """
         self.targets = []
         idx = 0
-        for target_type in self.target_types:
-            if target_type:
-                target_mvar = MetaVar(math_type=target_type)
+        for target, is_type in zip(self.pre_targets, self.are_math_type):
+            if is_type:
+                if target:
+                    target_mvar = MetaVar(math_type=target)
+                else:
+                    target_mvar = MetaVar(math_type=None)
+                target_mmvar = MarkedMetavar.from_mvar(target_mvar)
             else:
-                target_mvar = MetaVar(math_type=None)
-            target = MarkedMetavar.from_mvar(target_mvar)
-            target.mark()
-            text = target.to_display(format_='html')
+                target_mmvar = MarkedPatternMathObject.from_math_object(target)
+
+            target_mmvar.mark()
+            text = target_mmvar.to_display(format_='html')
             self.targets_widget.target_wdgs[idx].setHtml(text)
-            self.targets.append(target)
+            self.targets.append(target_mmvar)
             idx += 1
 
     def __init_multiple_signals(self):
@@ -1107,11 +1087,7 @@ class CalculatorController:
 
     @property
     def nb_of_targets(self):
-        return len(self.target_types)
-        # if self.target_types:
-        #     return len(self.target_types)
-        # else:
-        #     return 1
+        return len(self.targets)
 
     @property
     def current_target_idx(self):
@@ -1418,8 +1394,8 @@ class CalculatorController:
         # Has usr filled-in enough targets?
         #  All place_holders must be at the end,
         #  i.e. no assigned_math_object after unassigned
-        assigned_math_objects = [var.assigned_math_object
-                                 for var in self.targets]
+        assigned_math_objects = [var.assigned_math_object if var.is_metavar
+                                 else var for var in self.targets]
         # Take into account current target may be in Lean mode
         if self.lean_mode:
             idx = self.current_target_idx

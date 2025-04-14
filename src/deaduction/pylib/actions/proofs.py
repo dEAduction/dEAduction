@@ -42,12 +42,14 @@ from deaduction.pylib.actions import (InputType,
                                       CalculatorRequest,
                                       WrongUserInput,
                                       action,
-                                      CodeForLean)
+                                      CodeForLean,
+                                      test_selection)
 from deaduction.pylib.actions.logic import use_or
 
 from deaduction.pylib.mathobj import MathObject
-from deaduction.pylib.give_name import get_new_hyp
+from deaduction.pylib.give_name import get_new_hyp, get_new_hyps
 
+from deaduction.pylib.math_display.pattern_data import joker_name
 from deaduction.pylib.math_display import new_objects, new_properties
 
 log = logging.getLogger(__name__)
@@ -233,8 +235,9 @@ def method_case_based(proof_step,
             h0 = (prop.to_display(format_='lean')
                   if isinstance(prop, MathObject) else prop)
 
-            h1 = get_new_hyp(proof_step)
-            h2 = get_new_hyp(proof_step)
+            new_hyp_names = get_new_hyps(proof_step)
+            h1 = new_hyp_names[0]
+            h2 = new_hyp_names[1]
             code = CodeForLean.from_string(f"cases (classical.em ({h0})) "
                                            f"with {h1} {h2}")
             code.add_success_msg(_("Proof by cases"))
@@ -335,12 +338,6 @@ def method_induction(proof_step,
 
     var_name = proof_step.goal.provide_good_name(math_type,
                                                  var.preferred_letter())
-    # h = get_new_hyp(proof_step)
-    # code_s = f"intro {name}, induction {name} with {name} {h}"
-
-    # code_s = "apply induction.simple_induction"
-    # code = CodeForLean.from_string(code_s)
-    # code.add_success_msg(f"Proof by induction on {name}")
 
     code = CodeForLean.empty_code()
     if len(user_input) < 2:
@@ -366,40 +363,6 @@ def method_sorry(proof_step,
     Close the current sub-goal by sending the 'sorry' code.
     """
     return CodeForLean.from_string('sorry')
-
-
-# def introduce_new_subgoal(proof_step) -> CodeForLean:
-#     selected_objects = proof_step.selection
-#     user_input = proof_step.user_input
-#     sub_goal = None
-#     codes = CodeForLean()
-#
-#     # (A) Sub-goal from selection
-#     if selected_objects:
-#         premise = selected_objects[0].premise()
-#         if premise:
-#             # FIXME: make format_='lean' functional
-#             sub_goal = premise.to_display(format_='lean')
-#
-#     # (B) User enter sub-goal
-#     elif len(user_input) == 1:
-#         output = new_properties
-#         raise MissingParametersError(InputType.Text,
-#                                      title=_("Introduce a new subgoal"),
-#                                      output=output)
-#     elif len(user_input) == 2:
-#         sub_goal = pre_process_lean_code(user_input[1])
-#
-#     # (C) Code:
-#     if sub_goal:
-#         new_hypo_name = get_new_hyp(proof_step)
-#         codes = CodeForLean.from_string(f"have {new_hypo_name}:"
-#                                         f" ({sub_goal})")
-#         codes.add_success_msg(_("New target will be added to the context "
-#                                 "after being proved"))
-#         codes.add_subgoal(sub_goal)
-#
-#     return codes
 
 
 def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
@@ -428,8 +391,6 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
                 hf = get_new_hyp(proof_step)
                 name = proof_step.goal.provide_good_name(math_type)
 
-                # f = give_global_name(math_type=math_type,
-                #                      proof_step=proof_step)
                 code = CodeForLean.from_string(f'cases '
                                                f'classical.axiom_of_choice '
                                                f'{h} with {name} {hf}, '
@@ -488,23 +449,12 @@ def action_new_object(proof_step) -> CodeForLean:
                 raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
                                               new_name=new_name,
                                               proof_step=proof_step)
-                # raise MissingParametersError(InputType.Calculator,
-                #                              title=_("Introduce a new object"),
-                #                              target=None)
-                # raise MissingParametersError(InputType.Text,
-                #                                  title=_("Introduce a new object"),
-                #                                  output=output)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
-            new_hypo_name = get_new_hyp(proof_step, name='Def')
+            new_hypo_name = get_new_hyp(proof_step, prefix='Def')
 
             # Process object from auto_step or from Calculator:
             math_object = user_input[2][0]
-            # if isinstance(math_object, str):
-            #     math_object = MathObject(node="RAW_LEAN_CODE",
-            #                              info={'name': '(' + math_object + ')'},
-            #                              children=[],
-            #                              math_type=None)
 
             new_object = math_object.to_display(format_='lean')
             codes = CodeForLean.from_string(f"let {name} := {new_object}")
@@ -581,3 +531,110 @@ def add_type_indication(item: Union[str, MathObject],
                     and hasattr(item, 'info')):
                 item.info['name'] = f"({name}:{number_type})"
         return item
+
+
+@action()
+def action_complete(proof_step,
+                    complete_statement=False,
+                    user_proves_statement=False,
+                    statements_for_prover=None) -> CodeForLean:
+    """
+    This is called when user wants to fill-in a context objects or the target
+    which contains a joker. There are several cases:
+
+    - Usr fills in a joker that she has introduced before. Then the proof
+    should just go on.
+    - Usr fills in a definition, or a statement, or formalizes a statement
+    that should be checked by automatic solving the first time all jokers have
+    been complete. The statement should be logically equivalent to one of the
+    statement provided in the metadata field StatementsForProver.
+    There should be three kind of response:
+    - the statement has no meaning,
+    - the statement has a meaning but I am unable to check that it is correct,
+    - OK.
+    - Afterwards usr will maybe have to prove the statement.
+    """
+
+    # FIXME: this is valid only for action_complete_statements.
+    #  The 'complete' button should be associated to the right action on
+    #  creation.
+    selected_objects = proof_step.selection
+    settings = cvars.get('functionality.target_selected_by_default')
+    target_selected = proof_step.target_selected or settings
+    goal = proof_step.proof_state.goals[0]
+    user_input = proof_step.user_input
+
+    # FIXME:
+    #  check joker in selected objects or target
+    #  If no selected objects nor target_selected:
+    #  Select all objects with joker
+
+    jokers_n_vars = []
+    selected_objects_with_jokers = []
+    for cmo in (selected_objects + [goal.target.math_type] if target_selected
+                                                else selected_objects):
+        more_jokers = cmo.jokers_n_vars()
+        if more_jokers:
+            jokers_n_vars.extend(more_jokers)
+            selected_objects_with_jokers.append(cmo)
+
+    if not user_input:  # FIXME: pass selected_jokers to Calculator
+        raise MissingCalculatorOutput(CalculatorRequest.FillInJoker,
+                                      proof_step=proof_step,
+                                      msg_if_no_calculator="")
+
+    # Find jokers that have been assigned
+    completed_jokers = []
+    for mpmo in user_input[0]:
+        more_jokers = mpmo.search_in_name("JOKER")
+        for joker in more_jokers:
+            assigned_mo = joker.assigned_math_object
+            if assigned_mo:
+                completed_jokers.append(joker)
+
+    if not completed_jokers:
+        raise WrongUserInput(error=_("No joker completed"))
+
+    # Find variables
+    variables = [[]]*len(completed_jokers)
+    idx = 0
+    for completed_joker in completed_jokers:
+        for joker, vars_ in jokers_n_vars:
+            if joker_name(joker) == completed_joker.metavar_name:
+                variables[idx] = vars_
+                break
+        idx += 1
+
+    # if len(completed_jokers) != len(variables):
+    #     raise WrongUserInput(error="bad variables length")
+
+    # Check variables
+    # for joker, vars_ in zip(completed_jokers, variables):
+    #     for var in vars_:
+    #         # FIXME: this does not work because MMVAR.equal_to is used
+    #         if not joker.contains(var):
+    #             msg = _("Joker {} should use variable {}")
+    #             raise WrongUserInput(error=msg.format(joker.name,
+    #                                                   var.name))
+
+    hyp_names = get_new_hyps(proof_step,
+                             prefix="HIDDEN",
+                             nb=len(completed_jokers))
+    code = CodeForLean.empty_code()
+    nb = 0
+    for joker, vars_ in zip(completed_jokers, variables):
+        name = joker.metavar_name
+        vars_.reverse()
+        var_names = [var.name for var in vars_]
+        body = joker.assigned_math_object.to_display(format_="lean")
+        content = "λ " + " ".join(var_names) + ", " + body
+        hypo = hyp_names[nb]
+        code = code.and_then(f"have {hypo}: {name} = {content}, by todo")
+        code = code.and_then(f"rw {hypo} at *, "
+                             "try{simp}, " 
+                             f"clear {hypo}")
+        nb += 1
+
+    # TODO: automatic solver
+    #  and error/success msgs
+    return code

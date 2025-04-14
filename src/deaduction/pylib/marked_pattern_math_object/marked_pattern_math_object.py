@@ -79,7 +79,7 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from copy import copy
+from copy import copy, deepcopy
 import logging
 
 if __name__ == '__main__':
@@ -870,6 +870,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     use_assigned_math_obj=False,
                     return_msg=False) -> (bool, str):
 
+        # FIXME: this is odd
         if hasattr(other, "is_metavar") and other.is_metavar:
             if not other.assigned_math_object:
                 return True, ""
@@ -931,6 +932,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                                         keep_name=True)
         elif pmo.is_metavar:
             marked_pmo = MarkedMetavar(math_type=marked_type)
+            if pmo.info:
+                marked_pmo._info = deepcopy(pmo.info)
             p_amo = pmo.assigned_math_object
             if p_amo:
                 amo = p_amo.deep_copy(p_amo)
@@ -966,7 +969,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
         Set the MathCursor corresponding to current target, with the address
         of marked_descendant (which will be marked).
-        Th potential marked_descendant is unmarked during the computation of
+        The potential marked_descendant is unmarked during the computation of
         MathCursor, to avoid perturbing formatters ('highlight').
         """
 
@@ -1659,7 +1662,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         after cursor pos.
         """
 
-        # FIXME: debug
+        # Debug:
         # print("Insert:")
         # print(type(new_pmo))
         # print(new_pmo.is_bound_var)
@@ -1679,17 +1682,15 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                 if success:
                     return mvar
 
-            parent_mvar = self.parent_of(mvar)
-
-            while mvar:
+            # parent_mvar = self.parent_of(mvar)
+            while mvar and mvar.is_metavar:
+                if mvar and not mvar.is_metavar:
+                    continue
                 success = self.insert_if_you_can(new_pmo_copy, mvar)
                 if success:
                     return mvar
-
-                mvar = parent_mvar
-                parent_mvar = self.parent_of(parent_mvar)
-                if mvar and not mvar.is_metavar:
-                    continue
+                # mvar = parent_mvar
+                mvar = self.parent_of(mvar)
 
     def insert_application(self, pattern=None):
         """
