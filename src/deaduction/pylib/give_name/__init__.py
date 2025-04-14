@@ -24,4 +24,4 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .get_new_hyp import get_new_hyp
+from .get_new_hyp import get_new_hyps, get_new_hyp

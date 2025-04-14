@@ -28,6 +28,7 @@ function action_* in the present file.
 
 To add a new action,
 - define the function here with decorator @action,
+- add tooltip in text/tooltips
 - incorporate action button in UI (see Exercise.available_logic, etc.)
 - add name to auto_steps.button_dict
 
@@ -78,7 +79,7 @@ from deaduction.pylib.actions     import (action,
 
 from deaduction.pylib.mathobj     import  MathObject
 
-from deaduction.pylib.give_name import    get_new_hyp
+from deaduction.pylib.give_name import    get_new_hyps, get_new_hyp
 from deaduction.pylib.config.request_method import from_previous_state_method
 
 log = logging.getLogger("logic")
@@ -254,32 +255,9 @@ def prove_exists(proof_step, witness: MathObject) -> CodeForLean:
     #  then here witness should be MathObject (not [MathObject])
     proof_step.prove_or_use = "prove"
 
-    # if not witness:
-    #     # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
-    #     # raise MissingParametersError(InputType.Text,
-    #     #                              title=_("Exist"),
-    #     #                              output=output)
-    #     # if not goal.target.is_exists(implicit=False):
-    #     #     # implicit exists
-    #     # input_target = target.type_of_explicit_quant()
-    #     # raise MissingParametersError(InputType.Calculator,
-    #     #                              title=_("Prove an existential property"),
-    #     #                              target=input_target)
-    #     raise MissingCalculatorOutput(CalculatorRequest.ProveExists,
-    #                                   proof_step=proof_step,
-    #                                   prop=proof_step.goal.target)
-
-    # ui = witness[0]
-    # x = ui[0] if isinstance(ui, list) else ui
     x = witness
     x_lean = x.to_display(format_='lean')
     x = x.to_display(format_='utf8')
-    # if isinstance(x, MathObject):
-    #     x_lean = x.to_display(format_='lean')
-    #     x = x.to_display(format_='utf8')
-    # elif isinstance(x, str):
-    #     x_lean = x.strip('()')
-    #     x = x_lean
     code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
@@ -332,10 +310,11 @@ def use_exists(proof_step, selected_object: [MathObject]) -> CodeForLean:
     #                      math_type=selected_hypo.children[0],
     #                      hints=[hint],
     #                      strong_hint=hint)
-    new_hypo_name1 = get_new_hyp(proof_step)
+    new_hyps = get_new_hyps(proof_step)
+    new_hypo_name1 = new_hyps[0]
 
     if selected_hypo.children[2].node == "PROP_∃":
-        new_hypo_name2 = get_new_hyp(proof_step)
+        new_hypo_name2 = new_hyps[1]
         code = f'rcases {hypo_name} with ' \
                 f'⟨ {name}, ⟨ {new_hypo_name1}, {new_hypo_name2} ⟩ ⟩'
     else:
@@ -361,21 +340,23 @@ def prove_exists_on_hyp(proof_step,
 
     x = selected_objects[0].info["name"]
     hx = selected_objects[1].info["name"]
+    new_hypo_name = get_new_hyp(proof_step)
+
     if (not selected_objects[0].math_type.is_prop()) \
             and selected_objects[1].math_type.is_prop():
-        new_hypo = get_new_hyp(proof_step)
-        code_string = f'have {new_hypo} := exists.intro {x} {hx}'
+        # new_hypo = new_hyps[0]
+        code_string = f'have {new_hypo_name} := exists.intro {x} {hx}'
     elif (not selected_objects[1].math_type.is_prop()) \
             and selected_objects[0].math_type.is_prop():
         x, hx = hx, x
-        new_hypo = get_new_hyp(proof_step)
-        code_string = f'have {new_hypo} := exists.intro {x} {hx}'
+        # new_hypo = new_hyps[0]
+        code_string = f'have {new_hypo_name} := exists.intro {x} {hx}'
     else:
         error = _("I cannot build an existential property with this")
         raise WrongUserInput(error)
     code = CodeForLean.from_string(code_string)
     code.add_success_msg(_("Get new existential property {}").format(
-                           new_hypo))
+                           new_hypo_name))
 
     code.add_used_properties(selected_objects)
 
@@ -512,78 +493,6 @@ def use_implies(proof_step, implication: [MathObject]) -> CodeForLean:
     code.outcome_operator = implication
 
     return code
-
-
-# def have_new_property(arrow: MathObject,
-#                       variable_names: [str],
-#                       new_hypo_name: str,
-#                       success_msg=None,
-#                       iff_direction='') -> CodeForLean:
-#     """
-#     Compute Lean code to apply an implication or a universal property to a
-#     property or a variable.
-# 
-#     :param arrow:           a MathObject which is either an implication or a
-#                             universal property
-#     :param variable_names:  a list of names of variables (or properties) to
-#                             which "arrow" will be applied
-#     :param new_hypo_name:   a fresh name for the new property
-# 
-#     :param success_msg:     A success msg, if None then the standard one will be
-#                             used.
-# 
-#     :param iff_direction:   = 'mp' if arrow is an iff that we want to use as an
-#                             implication, 'mpr' for reverse direction,
-#                             '' if arrow is an implication.
-#     return:                 Lean Code to produce the wanted new property,
-#                             taking into account implicit parameters
-#     """
-# 
-#     # TODO: add smart guess for placeholders, by matching math types
-#     #  May even try to guess parameters from the context
-#     #  (e.g. if we need a function and there is only one in the context)
-# 
-#     # try with up to 4 implicit parameters
-#     # implicit_codes = [command + ' ' + arguments,
-#     #                   command + ' _ ' + arguments,
-#     #                   command + ' _ _ ' + arguments,
-#     #                   command + ' _ _ _ ' + arguments,
-#     #                   command + ' _ _ _ _ ' + arguments]
-#     #
-#     # explicit_codes = [command_explicit + ' ' + arguments,
-#     #                   command_explicit + ' _ ' + arguments,
-#     #                   command_explicit + ' _ _ ' + arguments,
-#     #                   command_explicit + ' _ _ _ ' + arguments,
-#     #                   command_explicit + ' _ _ _ _ ' + arguments]
-# 
-#     # Try several codes, e.g. "have H10 := (@H1 _ _ ).mp H2"
-#     # (new_hypo_name = "H10", arrow = "H1", arguments = ["H2"], iff_direction
-#     # = "mp")
-#     selected_hypo = arrow.info["name"]
-#     have = f'have {new_hypo_name} := '
-#     arguments = ' '.join(variable_names)
-#     implicit_codes = []
-#     explicit_codes = []
-#     for nb in range(6):
-#         imp_code = f'{selected_hypo} ' + '_ '*nb
-#         exp_code = f'@{selected_hypo} ' + '_ '*nb
-#         if iff_direction:
-#             if nb > 0:
-#                 imp_code = '(' + imp_code + ')'
-#                 exp_code = '(' + exp_code + ')'
-#             imp_code = imp_code + '.' + iff_direction + ' '
-#             exp_code = exp_code + '.' + iff_direction + ' '
-#         implicit_codes.append(have + imp_code + arguments)
-#         explicit_codes.append(have + exp_code + arguments)
-# 
-#     code = CodeForLean.or_else_from_list(implicit_codes + explicit_codes)
-#     if success_msg is None:
-#         success_msg = _("Property {} added to the context").format(new_hypo_name)
-#     if success_msg:
-#         code.add_success_msg(success_msg)
-# 
-#     code.operator = arrow
-#     return code
 
 
 def use_implies_to_hyp(proof_step,
@@ -866,8 +775,10 @@ def use_and(proof_step, selected_objects) -> CodeForLean:
     proof_step.prove_or_use = "use"
 
     selected_hypo = selected_objects[0].info["name"]
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
+    # h1 = get_new_hyp(proof_step)
+    # h2 = get_new_hyp(proof_step)
+    new_hyp_names = get_new_hyps(proof_step)
+    h1, h2, = new_hyp_names[0], new_hyp_names[1]
     code = CodeForLean.from_string(f'cases {selected_hypo} with {h1} {h2}')
     code.add_success_msg(_("Split property {} into {} and {}").
                          format(selected_hypo, h1, h2))
@@ -1044,8 +955,9 @@ def use_or(proof_step,
                 code = CodeForLean.from_string(code_str)
             left, right = right, left
 
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
+    new_hyp_names = get_new_hyps(proof_step)
+    h1 = new_hyp_names[0]
+    h2 = new_hyp_names[1]
     # Destruct the disjunction
     code = code.and_then(f'cases {selected_hypo.info["name"]} with {h1} {h2}')
     code.add_success_msg(_("Proof by cases"))
@@ -1099,7 +1011,6 @@ def prove_or_on_hyp(proof_step,
         user_input = []
     possible_codes = []
     first_hypo_name = selected_property[0].info["name"]
-    # hypo = selected_property[0].math_type.to_display()
 
     if len(selected_property) == 2:
         if not (selected_property[0].math_type.is_prop()
@@ -1108,7 +1019,6 @@ def prove_or_on_hyp(proof_step,
             raise WrongUserInput(error)
         else:
             selected_prop_2 = selected_property[1]
-            # second_name = selected_prop_2.info["name"]
             lean_code_2 = selected_prop_2.math_type.to_display(format_='lean')
             user_input.append(0)  # Artificially choose side
 
@@ -1129,10 +1039,6 @@ def prove_or_on_hyp(proof_step,
         elif len(user_input) == 1:  # Usr has to enter 2nd property
             raise MissingCalculatorOutput(CalculatorRequest.EnterProp,
                                           proof_step)
-            # raise MissingParametersError(
-            #     InputType.Text,
-            #     title=_("Obtain 'P OR Q'"),
-            #     output=_("Enter the property you want to use:"))
         else:
             prop_2 = user_input[1][0]
             lean_code_2 = prop_2.to_display(format_='lean')
@@ -1360,8 +1266,9 @@ def use_iff(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     """
     possible_codes = []
     hypo_name = selected_objects[0].info["name"]
-    h1 = get_new_hyp(proof_step)
-    h2 = get_new_hyp(proof_step)
+    new_hyp_names = get_new_hyps(proof_step)
+    h1 = new_hyp_names[0]
+    h2 = new_hyp_names[1]
     possible_codes.append(f'cases (iff_def.mp {hypo_name}) with {h1} {h2}')
     code = CodeForLean.or_else_from_list(possible_codes)
     code.add_success_msg(_("Property {} split into {} and {}").

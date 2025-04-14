@@ -40,18 +40,27 @@ import deaduction.pylib.config.vars as cvars
 log = logging.getLogger(__name__)
 
 
-def get_new_hyp(proof_step, name=None) -> str:
+# FIXME: proof_step.property_counter is obsolete???
+
+def get_new_hyps(proof_step, prefix=None, nb=10) -> [str]:
     """
-    Call get_new_hyp_from_forbidden_names with a list of forbidden names
-    that are the current goal's variables' names.
-    :param proof_step: current proof_step, contains goal and property_counter
-    :return: name for a new property, like 'H3'.
-    :param name: name to be used.
+    Return a list of valid hypotheses names, e.g.
+    H<i+1> H<i+2>, ...
+    where i is the max nb such that H<i> is in the context.
     """
-    forbidden_names = proof_step.goal.extract_vars_names()
-    return get_new_hyp_from_forbidden_names(proof_step,
-                                            forbidden_names,
-                                            name)
+    if not prefix:
+        prefix="H"
+    last_nb = proof_step.goal.last_hypothesis_number(prefix=prefix)
+    return [prefix + str(last_nb+i+1) for i in range(nb)]
+
+    # forbidden_names = proof_step.goal.extract_vars_names()
+    # return get_new_hyp_from_forbidden_names(proof_step,
+    #                                         forbidden_names,
+    #                                         name)
+
+
+def get_new_hyp(proof_step, prefix=None) -> str:
+    return get_new_hyps(proof_step, prefix, nb=1)[0]
 
 
 def get_new_hyp_from_forbidden_names(proof_step,
@@ -67,6 +76,7 @@ def get_new_hyp_from_forbidden_names(proof_step,
     :param forbidden_names: list of names of variables in the context
     :return:                str, a fresh name
     :param name: name to be used.
+    FIXME: not used anymore.
     """
     counter = proof_step.property_counter
     potential_name = name + str(counter) if name else 'H' + str(counter)

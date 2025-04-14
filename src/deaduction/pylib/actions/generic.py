@@ -192,18 +192,6 @@ def apply_theorem(proof_step) -> CodeForLean:
             more_codes.outcome_operator = theorem
 
         else:
-            # Up to 4 implicit arguments
-            # more_codes = [command + arguments,
-            #               command_implicit + arguments,
-            #               command + ' _ ' + arguments,
-            #               command_implicit + ' _ ' + arguments,
-            #               command + ' _ _ ' + arguments,
-            #               command_implicit + ' _ _ ' + arguments,
-            #               command + ' _ _ _ ' + arguments,
-            #               command_implicit + ' _ _ _ ' + arguments,
-            #               command + ' _ _ _ _ ' + arguments,
-            #               command_implicit + ' _ _ _ _ ' + arguments
-            #               ]
             success_msg = (_('Theorem') + ' ' + _('applied to') + ' '
                            + arguments)
             more_codes = have_new_property(operator=theorem,

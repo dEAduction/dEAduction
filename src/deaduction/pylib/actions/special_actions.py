@@ -75,3 +75,4 @@ def drag_n_drop(premise: ContextMathObject, operator: ContextMathObject,
         raise WrongUserInput(_("I don't know what to do!"))
 
     return names
+

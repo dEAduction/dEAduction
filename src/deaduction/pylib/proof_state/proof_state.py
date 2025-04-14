@@ -147,8 +147,7 @@ class Goal:
     @property
     def context(self):
         """
-        Return only non-hidden ContextMathObjects, except if include_hidden.
-        Remove double properties.
+        Return only non-hidden ContextMathObjects.
         """
 
         return [obj for obj in self._context if not obj.is_hidden]
@@ -819,11 +818,28 @@ class Goal:
     def extract_vars_names(self) -> List[str]:
         """
         Provides the list of names of all variables in the context,
-        including names of hypotheses (but NOT bound variables).
+        including names of hypotheses (but NOT bound variables),
+        and included hidden variables.
         """
         names = [math_object.info['name'] for math_object in
-                 self.context]
+                 self.context_included_hidden()]
         return names
+
+    def last_hypothesis_number(self, prefix="H"):
+        """
+        Return the greatest number n such that there is a context object
+        named H<n> (or JOKER<n> if prefix = 'JOKER').
+        If no such hypo in context, return -1.
+        """
+        # In case prefix=None:
+        if not prefix:
+            prefix = "H"
+
+        names = self.extract_vars_names()
+        nbs = [name[len(prefix):]
+               for name in names if name.startswith(prefix)]
+        nbs = [int(nb) for nb in nbs if nb.isdigit()] + [-1]
+        return max(nbs)
 
     ###################
     # Display methods #

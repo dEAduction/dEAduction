@@ -43,7 +43,7 @@ from deaduction.pylib.actions import (CalculatorRequest,
 
 from deaduction.pylib.config.request_method import from_previous_state_method
 
-from deaduction.pylib.give_name import get_new_hyp
+from deaduction.pylib.give_name import get_new_hyps, get_new_hyp
 from deaduction.pylib.actions.utils import (add_type_indication,
                                             extract_var)
 from deaduction.pylib.actions.magic import compute
@@ -72,24 +72,10 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
 
     # (B) User enter sub-goal
     elif len(user_input) == 1:
-        # output = new_properties
-        # raise MissingParametersError(InputType.Text,
-        #                              title=_("Introduce a new subgoal"),
-        #                              output=output)
         msg = _("Action not available")
         raise MissingCalculatorOutput(CalculatorRequest.StateSubGoal,
                                       proof_step=proof_step,
                                       msg_if_no_calculator=msg)
-        # raise MissingParametersError(InputType.Calculator,
-        #                              title=_("Introduce a new subgoal"),
-        #                              target=MathObject.PROP)  # FIXME
-        # raise MissingParametersError(InputType.Text,
-        #                                  title=_("Introduce a new object"),
-        #                                  output=output)
-        # else:  # Send code
-        #     name = pre_process_lean_code(user_input[1])
-        #     new_hypo_name = get_new_hyp(proof_step, name='Def')
-        #     new_object = user_input[2].to_display(format_='lean')
     elif len(user_input) == 2:
         sub_goal = user_input[1][0]
         if isinstance(sub_goal, MathObject):
@@ -117,50 +103,50 @@ def rw_with_defi(definition, object_=None) -> CodeForLean:
     return code
 
 
-# FIXME: obsolete
-def inequality_from_pattern_matching(math_object: MathObject,
-                                     variable: MathObject) -> Optional[MathObject]:
-    """
-    Check if math_object.math_type has the form
-    ∀ x:X, (x R ... ==> ...)
-    where R is some inequality relation, and if this statement may be
-    applied to variable. If so, return inequality with x replaced by variable
-    """
-
-    # inequality = None
-    # if not math_object.is_for_all(implicit=True):
-    #     return None
-    #
-    # if not math_object.is_for_all(is_math_type=False):
-    #     # Implicit "for all"
-    #     math_object = MathObject.last_rw_object
-    # else:
-    #     math_object = math_object.math_type
-    #
-    # math_type, var, body = math_object.children
-    # # NB: following line does not work because of coercions
-    # # if var.math_type == variable.math_type:
-    # if body.is_implication(is_math_type=True):
-    #     premise = body.children[0]  # children (2,0)
-    #     if (premise.is_inequality(is_math_type=True) and
-    #             var == premise.children[0]):
-    #         children = [variable, premise.children[1]]
-    #         inequality = MathObject(node=premise.node,
-    #                                 info={},
-    #                                 children=children,
-    #                                 math_type=premise.math_type)
-    math_object = math_object.math_type
-    p_n_b = math_object.bound_prop_n_actual_body_of_bounded_quant()
-    if p_n_b:
-        inequality, body = p_n_b
-        if inequality.is_inequality(is_math_type=True):
-            children = [variable, inequality.children[1]]
-            new_inequality = MathObject(node=inequality.node,
-                                        info={},
-                                        children=children,
-                                        math_type=inequality.math_type)
-
-            return new_inequality
+# # FIXME: obsolete
+# def inequality_from_pattern_matching(math_object: MathObject,
+#                                      variable: MathObject) -> Optional[MathObject]:
+#     """
+#     Check if math_object.math_type has the form
+#     ∀ x:X, (x R ... ==> ...)
+#     where R is some inequality relation, and if this statement may be
+#     applied to variable. If so, return inequality with x replaced by variable
+#     """
+#
+#     # inequality = None
+#     # if not math_object.is_for_all(implicit=True):
+#     #     return None
+#     #
+#     # if not math_object.is_for_all(is_math_type=False):
+#     #     # Implicit "for all"
+#     #     math_object = MathObject.last_rw_object
+#     # else:
+#     #     math_object = math_object.math_type
+#     #
+#     # math_type, var, body = math_object.children
+#     # # NB: following line does not work because of coercions
+#     # # if var.math_type == variable.math_type:
+#     # if body.is_implication(is_math_type=True):
+#     #     premise = body.children[0]  # children (2,0)
+#     #     if (premise.is_inequality(is_math_type=True) and
+#     #             var == premise.children[0]):
+#     #         children = [variable, premise.children[1]]
+#     #         inequality = MathObject(node=premise.node,
+#     #                                 info={},
+#     #                                 children=children,
+#     #                                 math_type=premise.math_type)
+#     math_object = math_object.math_type
+#     p_n_b = math_object.bound_prop_n_actual_body_of_bounded_quant()
+#     if p_n_b:
+#         inequality, body = p_n_b
+#         if inequality.is_inequality(is_math_type=True):
+#             children = [variable, inequality.children[1]]
+#             new_inequality = MathObject(node=inequality.node,
+#                                         info={},
+#                                         children=children,
+#                                         math_type=inequality.math_type)
+#
+#             return new_inequality
 
 
 def permute_arguments(arguments) -> []:
@@ -268,7 +254,7 @@ def have_new_property(operator,  #: Union[MathObject, Statement]
 
 def use_forall_with_ineq(proof_step, arguments,
                          universal_property_or_statement, inequality,
-                         new_hypo_name=None,
+                         new_hyp_names=None,
                          no_place_holder=False) -> CodeForLean:
     """
     Try to use last selected property, assumed to be a universal prop matching
@@ -286,8 +272,8 @@ def use_forall_with_ineq(proof_step, arguments,
 
     proof_step.prove_or_use = "use"
 
-    if not new_hypo_name:
-        new_hypo_name = get_new_hyp(proof_step)
+    if not new_hyp_names:
+        new_hyp_names = get_new_hyps(proof_step)
 
     goal = proof_step.goal
     # if isinstance(universal_property_or_statement, MathObject):
@@ -321,7 +307,7 @@ def use_forall_with_ineq(proof_step, arguments,
     else:
         # If not, assert inequality as a new goal:
         ineq_in_ctxt = False
-        inequality_name = new_hypo_name
+        inequality_name = new_hyp_names[0]
         variables.append(inequality_name)
         unsolved_inequality_counter += 1
         # Add type indication to the variable in inequality
@@ -344,8 +330,9 @@ def use_forall_with_ineq(proof_step, arguments,
     # (2) Apply universal_property, with no success_msg #
     # Add remaining variables:
     variables.extend(arguments[1:])
-    if not ineq_in_ctxt:  # Hypo_name has been used
-        new_hypo_name = get_new_hyp(proof_step)
+    nb_new_hyp = 0 if ineq_in_ctxt else 1
+    new_hypo_name = new_hyp_names[nb_new_hyp]
+
     have = have_new_property(universal_property_or_statement, variables,
                              new_hypo_name, success_msg="",
                              no_more_place_holder=no_place_holder)
@@ -414,13 +401,13 @@ def use_forall(proof_step, arguments: [MathObject],
     proof_step.prove_or_use = "use"
 
     # universal_property = selected_objects[-1]  # The property to be applied
-    new_hypo_name = get_new_hyp(proof_step)
+    new_hypo_names = get_new_hyps(proof_step)
     # variables = selected_objects[:-1]
 
     # If first arg is an equality, replace by left term:
     arguments[0] = extract_var(arguments[0])
     simple_code = have_new_property(universal_property_or_statement, arguments,
-                                    new_hypo_name,
+                                    new_hypo_names[0],
                                     no_more_place_holder=no_more_place_holder)
 
     # Add SyntheticProofStep data:
@@ -435,23 +422,18 @@ def use_forall(proof_step, arguments: [MathObject],
 
     universal_property = universal_property_or_statement.to_math_object()
 
-    # Bounded quantification?
-    # inequality = inequality_from_pattern_matching(universal_property,
-    #                                               arguments[0])
-
     inequality = universal_property.bounded_quant(arguments[0])
     # (Case 1) No inequality to solve
     auto_solve = cvars.get("functionality.auto_solve_inequalities_"
                            "in_bounded_quantification", False)
     if not inequality or not auto_solve:
         code = simple_code
-        # return simple_code
 
     # (Cas 2) Inequality: try to solve it, turn to simple code if it fails
     else:
         complex_code = use_forall_with_ineq(proof_step, arguments,
                                             universal_property_or_statement,
-                                            inequality, new_hypo_name,
+                                            inequality, new_hypo_names,
                                             no_place_holder=no_more_place_holder)
         sps2 = SyntheticProofStep(type_=sps_type,
                                   operator=universal_property_or_statement,
@@ -514,52 +496,4 @@ def provide_name_for_new_vars(proof_step,
                                                        preferred_letters)
 
     return new_names
-
-
-# def get_arguments_to_use_forall(proof_step, universal_property) -> [MathObject]:
-#     """
-#     This method assume that universal_property is a universal property
-#     (up to unfolding implicit definitions?)
-#     and that no other object has been selected. It calls the Calculator
-#     to get the argument(s) to which the universal property should be applied.
-#     Universal property and arguments should be sent to the use_forall() method.
-#     """
-#
-#     # TODO: adapt to get several arguments from Calculator
-#     #  --> several user_inputs
-#
-#     user_input = proof_step.user_input
-#     # selected_objects = proof_step.selection
-#
-#     if not user_input:
-#         # quant = selected_objects[-1].math_type
-#         # input_target = universal_property.type_of_explicit_quant()
-#         raise MissingCalculatorOutput(CalculatorRequest.ApplyProperty,
-#                                       proof_step, prop=universal_property)
-#     else:
-#         arguments = [arg if arg.is_place_holder()
-#                      else arg.between_parentheses(arg)
-#                      for arg in user_input[0]]
-#
-#         # This will be a str either from Calculator in "Lean mode",
-#         #   or from history file.
-#         #  In this case we artificially change this to a "MathObject".
-#         # In any case we add parentheses, e.g. in
-#         #  have H2 := H (ε/2)
-#         #  the parentheses are mandatory
-#         # if isinstance(math_object, str):
-#         #     math_object = MathObject(node="RAW_LEAN_CODE",
-#         #                              info={'name': '(' + math_object + ')'},
-#         #                              children=[],
-#         #                              math_type=None)
-#         # else:
-#         #     math_object = MathObject(node='GENERIC_PARENTHESES',
-#         #                              info={},
-#         #                              children=[math_object],
-#         #                              math_type=math_object.math_type)
-#         # user_input[0] = math_object
-#         # arguments = [user_input[0]]
-#         # code = use_forall(proof_step, arguments, universal_property)
-#         # return code
-#         return arguments
 
