@@ -242,12 +242,13 @@ class CodeForLean:
         return other
 
     @classmethod
-    def empty_code(cls, error_msg: str = ''):
+    def empty_code(cls, error_msg: str = '', success_msg: str = ''):
         """
         Create an empty code, useful to initialize a sequence of codes
         """
         return cls(instructions=[],
-                   error_msg=error_msg)
+                   error_msg=error_msg,
+                   _success_msg=success_msg)
 
     @classmethod
     def from_string(cls,

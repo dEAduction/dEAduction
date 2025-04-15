@@ -558,32 +558,38 @@ def action_complete(proof_step,
     # FIXME: this is valid only for action_complete_statements.
     #  The 'complete' button should be associated to the right action on
     #  creation.
+    # ---- (1) Handle selection ---- #
     selected_objects = proof_step.selection
     settings = cvars.get('functionality.target_selected_by_default')
     target_selected = proof_step.target_selected or settings
     goal = proof_step.proof_state.goals[0]
+    target = goal.target.math_type
+    extended_selected_objects = (selected_objects + [target]
+                                 if target_selected else selected_objects)
+    # If no selection, select everything:
+    if not extended_selected_objects:
+        extended_selected_objects = goal.context + goal.target.math_type
+
     user_input = proof_step.user_input
 
-    # FIXME:
-    #  check joker in selected objects or target
-    #  If no selected objects nor target_selected:
-    #  Select all objects with joker
-
-    jokers_n_vars = []
-    selected_objects_with_jokers = []
-    for cmo in (selected_objects + [goal.target.math_type] if target_selected
-                                                else selected_objects):
+    # ---- (2) Check for jokers in selection ---- #
+    # hypos_jokers_n_vars is a list with entries (hypo, [(joker, vars)] ) where
+    # joker appears in hypo with variables vars
+    # e.g. even n <=> lam n, JOKER n      --> variable = n
+    hypos_jokers_n_vars = []
+    hypos_with_jokers = []
+    for cmo in extended_selected_objects:
         more_jokers = cmo.jokers_n_vars()
         if more_jokers:
-            jokers_n_vars.extend(more_jokers)
-            selected_objects_with_jokers.append(cmo)
+            hypos_jokers_n_vars.append((cmo, more_jokers))
+            hypos_with_jokers.append(cmo)
 
-    if not user_input:  # FIXME: pass selected_jokers to Calculator
+    if not user_input:  # FIXME: pass hypos_with_jokers to Calculator
         raise MissingCalculatorOutput(CalculatorRequest.FillInJoker,
                                       proof_step=proof_step,
                                       msg_if_no_calculator="")
 
-    # Find jokers that have been assigned
+    # ---- (3) Find jokers that have been assigned ---- #
     completed_jokers = []
     for mpmo in user_input[0]:
         more_jokers = mpmo.search_in_name("JOKER")
@@ -595,20 +601,20 @@ def action_complete(proof_step,
     if not completed_jokers:
         raise WrongUserInput(error=_("No joker completed"))
 
-    # Find variables
+    # Find hypos containing this joker, and their variables
     variables = [[]]*len(completed_jokers)
+    pertinent_hypos = [[]]*len(completed_jokers)
     idx = 0
     for completed_joker in completed_jokers:
-        for joker, vars_ in jokers_n_vars:
-            if joker_name(joker) == completed_joker.metavar_name:
-                variables[idx] = vars_
-                break
+        for hypo, jokers_n_vars in hypos_jokers_n_vars:
+            for joker, vars_ in jokers_n_vars:
+                if joker_name(joker) == completed_joker.metavar_name:
+                    variables[idx] = vars_
+                    pertinent_hypos[idx] = hypo
+                    break
         idx += 1
 
-    # if len(completed_jokers) != len(variables):
-    #     raise WrongUserInput(error="bad variables length")
-
-    # Check variables
+    # ---- (4) Check variables ---- #
     # for joker, vars_ in zip(completed_jokers, variables):
     #     for var in vars_:
     #         # FIXME: this does not work because MMVAR.equal_to is used
@@ -617,24 +623,28 @@ def action_complete(proof_step,
     #             raise WrongUserInput(error=msg.format(joker.name,
     #                                                   var.name))
 
+    # ---- (5) Write Lean code ---- #
     hyp_names = get_new_hyps(proof_step,
                              prefix="HIDDEN",
                              nb=len(completed_jokers))
-    code = CodeForLean.empty_code()
+
+    success_msg = _("Joker completed")
+    error_msg = _("Syntax error in the completed property")
+    code = CodeForLean.empty_code(error_msg=error_msg,
+                                  success_msg=success_msg)
     nb = 0
-    for joker, vars_ in zip(completed_jokers, variables):
+    for joker, vars_ , hypo in zip(completed_jokers, variables, pertinent_hypos):
         name = joker.metavar_name
         vars_.reverse()
         var_names = [var.name for var in vars_]
+        at_hypo = "" if hypo == target else f" at {hypo.name}"
         body = joker.assigned_math_object.to_display(format_="lean")
         content = "λ " + " ".join(var_names) + ", " + body
         hypo = hyp_names[nb]
         code = code.and_then(f"have {hypo}: {name} = {content}, by todo")
-        code = code.and_then(f"rw {hypo} at *, "
-                             "try{simp}, " 
+        code = code.and_then(f"rw {hypo}" + at_hypo + ", "
+                             f"try{{simp{at_hypo}}}, " 
                              f"clear {hypo}")
         nb += 1
 
-    # TODO: automatic solver
-    #  and error/success msgs
     return code
