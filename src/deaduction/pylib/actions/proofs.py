@@ -648,19 +648,24 @@ def action_complete(proof_step,
         at_hypos.append(at_hypo)
 
         # Have code:
-        body = joker.assigned_math_object.to_display(format_="lean")
-        content = "λ " + " ".join(var_names) + ", " + body
+        content = joker.assigned_math_object.to_display(format_="lean")
+        if vars_:
+            content = "λ " + " ".join(var_names) + ", " + content
         hypo = hyp_names[nb]
         have_code = CodeForLean.from_string(f"have {hypo}: {name} = {content}")
         have_codes.append(have_code)
 
         # Check code: supposed to solve axiom_name = hypo as current goal
-        axiom_name = "AXIOM" + name
-        check_code = CodeForLean.and_then_from_list(
-                                             [f"rw {axiom_name}",
+        # axiom_name = "AXIOM" + name, or "AXIOM0" + name, and so on
+        try_rw_axioms = ["rw AXIOM" + name] + \
+                        ["rw AXIOM" + str(idx) + name for idx in range(10)]
+
+        check_code = [CodeForLean.and_then_from_list(
+                                             [rw_axioms,
                                               "try{ext}",  # eliminate lambdas
-                                              "tautology"])
-        check_codes.append(check_code)
+                                              "try{tautology}"]).solve1()
+                      for rw_axioms in try_rw_axioms]
+        check_codes.append(CodeForLean.or_else_from_list(check_code))
 
         # Rw code:
         rw_code = CodeForLean.and_then_from_list([f"rw {hypo}" + at_hypo,
@@ -713,7 +718,7 @@ def action_complete(proof_step,
             hypo = (f"hypothesis {at_hypo[3:]}" if at_hypo  # Remove 'at'
                     else "the goal")
             not_correct = hypo + _(" is not correct")
-        next_success_msg = (what_you_entered + " " + _("is meaningful")
+        next_success_msg = (what_you_entered + " " + _("is meaningful") + " "
                             + _(f"but I suspect") + " " + not_correct)
         idx -= 1
 
