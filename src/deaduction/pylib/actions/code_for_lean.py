@@ -332,6 +332,40 @@ class CodeForLean:
                              global_success_msg=global_success_msg)
 
     @property
+    def success_msg(self):
+        """
+        Return self's success_msg, or, if self is and_then, the first
+        success_msg found in self's instructions.
+        """
+        if self._success_msg:
+            return self._success_msg
+        elif self.is_and_then():
+            for instruction in self.instructions:
+                msg = instruction.success_msg
+                if msg:
+                    return msg
+
+    @success_msg.setter
+    def success_msg(self, msg: str):
+        self._success_msg = msg
+
+    def add_error_msg(self, error_msg: str):
+        """
+        Add error_message to self, and if self.is_or_else, also add it to
+        all the alternatives.
+        """
+        if self.is_or_else():
+            for code in self.instructions:
+                code.add_error_msg(error_msg)
+        self.error_msg = error_msg
+
+    def add_success_msg(self, success_msg: str):
+        if self.is_or_else():
+            for code in self.instructions:
+                code.add_success_msg(success_msg)
+        self.success_msg = success_msg
+
+    @property
     def synthetic_proof_step(self):
         """
         Return the synthetic_proof_step attribute of the first SingleCode
@@ -393,7 +427,7 @@ class CodeForLean:
     @property
     def rw_item(self):
         """
-        Return the operator attribute of the first SingleCode found in self.
+        Return the rw_item attribute of the first SingleCode found in self.
         """
         if not self.instructions:
             return None
@@ -436,24 +470,43 @@ class CodeForLean:
             instruction = self.instructions[0]
             instruction.outcome_operator = outcome_operator
 
-    @property
-    def success_msg(self):
+    def add_conjunction(self, p_and_q, p=None, q=None):
         """
-        Return self's success_msg, or, if self is and_then, the first
-        success_msg found in self's instructions.
+        Indicate that self will split a target conjunction 'P and Q',
+        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
+        as the children of p_and_q.
         """
-        if self._success_msg:
-            return self._success_msg
-        elif self.is_and_then():
-            for instruction in self.instructions:
-                msg = instruction.success_msg
-                if msg:
-                    return msg
+        if not p:
+            p = p_and_q.children[0]
+        if not q:
+            q = p_and_q.children[1]
+        self.conjunction = (p_and_q, p, q)
 
-    @success_msg.setter
-    def success_msg(self, msg: str):
-        self._success_msg = msg
+    def add_disjunction(self, p_or_q, p=None, q=None):
+        """
+        Indicate that self will split a target disjunction 'P or Q',
+        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
+        as the children of p_or_q.
+        """
+        if not p:
+            p = p_or_q.children[0]
+        if not q:
+            q = p_or_q.children[1]
+        self.disjunction = (p_or_q, p, q)
 
+    def add_subgoal(self, subgoal):
+        """
+        Indicate that self will create a new subgoal.
+
+        :param subgoal: str or MathObject
+        """
+
+        # FIXME: obsolete?
+        self.subgoal = subgoal
+
+    #############################
+    # ------ Combinators ------ #
+    #############################
     def or_else(self, other, success_msg=""):
         """
         Combine 2 CodeForLean with an or_else combinator.
@@ -549,6 +602,9 @@ class CodeForLean:
                            success_msg=success_msg)
         return code
 
+    ###################################
+    # ------ Writing Lean code ------ #
+    ###################################
     def to_code(self, exclude_no_meta_vars=False,
                 exclude_skip=False) -> str:
         """
@@ -733,56 +789,9 @@ class CodeForLean:
             success_msg = self.success_msg
         return success_msg
 
-    def add_error_msg(self, error_msg: str):
-        """
-        Add error_message to self, and if self.is_or_else, also add it to
-        all the alternatives.
-        """
-        if self.is_or_else():
-            for code in self.instructions:
-                code.add_error_msg(error_msg)
-        self.error_msg = error_msg
-
-    def add_success_msg(self, success_msg: str):
-        if self.is_or_else():
-            for code in self.instructions:
-                code.add_success_msg(success_msg)
-        self.success_msg = success_msg
-
-    def add_conjunction(self, p_and_q, p=None, q=None):
-        """
-        Indicate that self will split a target conjunction 'P and Q',
-        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
-        as the children of p_and_q.
-        """
-        if not p:
-            p = p_and_q.children[0]
-        if not q:
-            q = p_and_q.children[1]
-        self.conjunction = (p_and_q, p, q)
-
-    def add_disjunction(self, p_or_q, p=None, q=None):
-        """
-        Indicate that self will split a target disjunction 'P or Q',
-        and store 'P and Q', 'P', 'Q'. If not provided, P and Q are computed
-        as the children of p_or_q.
-        """
-        if not p:
-            p = p_or_q.children[0]
-        if not q:
-            q = p_or_q.children[1]
-        self.disjunction = (p_or_q, p, q)
-
-    def add_subgoal(self, subgoal):
-        """
-        Indicate that self will create a new subgoal.
-
-        :param subgoal: str or MathObject
-        """
-
-        # FIXME: obsolete?
-        self.subgoal = subgoal
-
+    #######################
+    # ------ Tests ------ #
+    #######################
     def is_empty(self):
         return self.instructions == []
 
@@ -870,6 +879,9 @@ class CodeForLean:
 
         return up
 
+    ##############################
+    # ------ Constructors ------ #
+    ##############################
     @classmethod
     def skip(cls):
         return cls("skip")
@@ -970,12 +982,6 @@ class CodeForLean:
                    else operator.lean_name)
         op_name = '@' + op_name if explicit else op_name
 
-        # arg_names = ['(' + arg + ')' if isinstance(arg, str)
-        #              else
-        #              arg.add_leading_parentheses(arg).to_display(format_='lean')
-        #              for arg in arguments]
-        # arg_names = (['_'] * nb_place_holders) + arg_names
-
         # Arguments
         arg_names = cls.arguments_to_str(arguments, nb_place_holders)
 
@@ -1006,43 +1012,6 @@ class CodeForLean:
         return code
 
 
-# class Induction(CodeForLean):
-#
-#     def __init__(self, var_name):
-#         ins = ApplyStatement("induction.simple_induction")
-#         super().__init__(instructions=[ins])
-#         self.add_success_msg(f"Proof by induction on {var_name}")
-
-
-# _VAR_NB = 0
-# _FUN_NB = 0
-#
-#
-# def get_new_var():
-#     global _VAR_NB
-#     _VAR_NB += 1
-#     return "x{0}".format(_VAR_NB)
-#
-#
-# def get_new_fun():
-#     global _FUN_NB
-#     _FUN_NB += 1
-#     return "f{0}".format(_FUN_NB)
-#
-#
-# # OBSOLETE : see mathobj.give_name.get_new_hyp()
-# def get_new_hyp():
-#     global _VAR_NB
-#     _VAR_NB += 1
-#     return "h{0}".format(_VAR_NB)
-#
-#
-# def solve1_wrap(string: str) -> str:
-#     # (obsolete)
-#     return "solve1 {" + string + "}"
-
-
-# NO_META_VARS = CodeForLean("all_goals_no_meta_vars")
 SKIP = CodeForLean.from_string("skip")
 
 

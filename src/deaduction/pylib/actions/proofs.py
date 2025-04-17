@@ -27,6 +27,7 @@ This file is part of dEAduction.
 """
 
 import logging
+from sndhdr import whathdr
 from typing import Union
 from enum import IntEnum
 
@@ -624,27 +625,118 @@ def action_complete(proof_step,
     #                                                   var.name))
 
     # ---- (5) Write Lean code ---- #
+    # e.g. have HIDDEN0: HIDDENJOKER_0 = λ n, ∃ a, n = 2*a
+    # Here vars = [n], joker.assigned_math_object = "∃ a, n = 2*a"
     hyp_names = get_new_hyps(proof_step,
                              prefix="HIDDEN",
                              nb=len(completed_jokers))
 
-    success_msg = _("Joker completed")
-    error_msg = _("Syntax error in the completed property")
-    code = CodeForLean.empty_code(error_msg=error_msg,
-                                  success_msg=success_msg)
     nb = 0
+    # List of CodeForLeans respectively for
+    # - declaration of usr joker completions,
+    # - checking completion is correct,
+    # - rewriting hypos/goal using completion
+    have_codes = []
+    check_codes = []
+    rw_codes = []
+    at_hypos = []
     for joker, vars_ , hypo in zip(completed_jokers, variables, pertinent_hypos):
         name = joker.metavar_name
         vars_.reverse()
         var_names = [var.name for var in vars_]
         at_hypo = "" if hypo == target else f" at {hypo.name}"
+        at_hypos.append(at_hypo)
+
+        # Have code:
         body = joker.assigned_math_object.to_display(format_="lean")
         content = "λ " + " ".join(var_names) + ", " + body
         hypo = hyp_names[nb]
-        code = code.and_then(f"have {hypo}: {name} = {content}, by todo")
-        code = code.and_then(f"rw {hypo}" + at_hypo + ", "
-                             f"try{{simp{at_hypo}}}, " 
-                             f"clear {hypo}")
+        have_code = CodeForLean.from_string(f"have {hypo}: {name} = {content}")
+        have_codes.append(have_code)
+
+        # Check code: supposed to solve axiom_name = hypo as current goal
+        axiom_name = "AXIOM" + name
+        check_code = CodeForLean.and_then_from_list(
+                                             [f"rw {axiom_name}",
+                                              "try{ext}",  # eliminate lambdas
+                                              "tautology"])
+        check_codes.append(check_code)
+
+        # Rw code:
+        rw_code = CodeForLean.and_then_from_list([f"rw {hypo}" + at_hypo,
+                                                  f"try{{simp{at_hypo}}}"])
+                                                  # f"clear {hypo}"])
+        rw_codes.append(rw_code)
         nb += 1
 
+    # To get appropriate success_msg, try have_codes
+    # successively: all codes, all except last one, and so on
+
+    first_have_codes = []  # e.g. [ [hc0, hc1, hc2], [hc0, hc1], [hc0] ]
+    while have_codes:
+        first_have_codes.append(have_codes[:])
+        have_codes.pop()
+
+    first_check_codes = []  # e.g. [ [cc2, cc1, cc0], [cc1, cc0], [cc0] ]
+    check_codes.reverse()
+    while check_codes:
+        first_check_codes.append(check_codes[:])
+        check_codes.pop(0)
+
+    first_rw_codes = []  # e.g. [ [rwc0, rwc1, rwc2], [rwc0, rwc1], [rwc0] ]
+    while rw_codes:
+        first_rw_codes.append(rw_codes[:])
+        rw_codes.pop()
+
+    codes = []
+    nb_jokers = len(completed_jokers)
+
+    what_you_entered = (_("Your proposal") if nb_jokers == 0
+                        else _("Everything you entered"))
+
+    # ----- (5.a) Declarations + correctness ----- #
+    idx = nb_jokers-1
+    next_success_msg = what_you_entered + " " + _("is correct!")
+    for have_codes, check_codes, rw_codes in zip(first_have_codes,
+                                                 first_check_codes,
+                                                 first_rw_codes):
+        code_str = have_codes + check_codes + rw_codes
+        more_code = CodeForLean.and_then_from_list(code_str)
+        more_code.add_success_msg(next_success_msg)
+        codes.append(more_code)
+
+        # Write "success" msg (= failure of the next or_else!)
+        if nb_jokers == 1:
+            not_correct = _("it is not correct")
+        else:
+            at_hypo = at_hypos[idx]
+            hypo = (f"hypothesis {at_hypo[3:]}" if at_hypo  # Remove 'at'
+                    else "the goal")
+            not_correct = hypo + _(" is not correct")
+        next_success_msg = (what_you_entered + " " + _("is meaningful")
+                            + _(f"but I suspect") + " " + not_correct)
+        idx -= 1
+
+    # ----- (5.b) Just declarations ----- #
+    idx = nb_jokers-1
+    for have_codes, rw_codes in zip(first_have_codes, first_rw_codes):
+        code_str = have_codes + ['todo']*(idx+1) + rw_codes
+        more_code = CodeForLean.and_then_from_list(code_str)
+        more_code.add_success_msg(next_success_msg)
+        codes.append(more_code)
+
+        # Write "success" msg (= failure of the next or_else!)
+        if nb_jokers == 1:
+            your_proposal = _("Your proposal")
+        else:
+            at_hypo = at_hypos[idx]
+            hypo = (f"hypothesis {at_hypo[3:]}" if at_hypo  # Remove 'at'
+                    else "the goal")
+            your_proposal = _("Your proposal for") + " " + hypo
+        next_success_msg = (your_proposal + " " + _("is not meaningful") + ", "
+                            + _("maybe a syntax error?"))
+        idx -= 1
+
+    code = CodeForLean.or_else_from_list(codes)
+    code.add_error_msg(next_success_msg)
     return code
