@@ -235,7 +235,10 @@ class MissingCalculatorOutput(MissingParametersError):
                 self.explicit_math_type_of_prop = prop
 
     def extract_types_n_vars(self):
-
+        """
+        Determine the vars and their types to be complete by usr, typically
+        to apply a property.
+        """
         # (1) Get all initial universal dummy vars
         if self.request_type is CalculatorRequest.ApplyProperty:
             math_object = self.explicit_math_type_of_prop
@@ -247,9 +250,6 @@ class MissingCalculatorOutput(MissingParametersError):
         types_n_vars = math_object.types_n_vars_of_univ_prop()
         if not types_n_vars:
             return None
-        # if not types_n_vars:  # Include implicit vars if no explicit var
-        #     types_n_vars = math_object.types_n_vars_of_univ_prop(
-        #         include_initial_implicit_vars=True)
 
         # (2) replace initial vars by place_holders if they can be inferred
         #  from the following ones
@@ -324,6 +324,37 @@ class MissingCalculatorOutput(MissingParametersError):
 
         if not are_math_type:  # True by default
             are_math_type = [True] * len(targets)
+        return targets, are_math_type, titles
+
+
+class MissingJoker(MissingCalculatorOutput):
+    """
+    hypos_with_jokers contain all the hypothesis selected by usr,
+    including maybe target at the end, which contains some joker to be
+    completed.
+    """
+    def __init__(self, proof_step, hypos_with_jokers):
+        super().__init__(request_type=CalculatorRequest.FillInJoker,
+                         proof_step=proof_step)
+
+        self.hypos_with_jokers = hypos_with_jokers
+        if proof_step.target_selected:
+            if proof_step.selection:
+                self.title += _("Complete hypothesis and goal")
+            else:
+                self.title = _("Complete goal")
+        else:
+            self.title = _("Complete hypothesis")
+
+    def targets_n_titles(self):
+        targets = [hypo.math_type for hypo in self.hypos_with_jokers]
+        goal_target = self.proof_step.goal.target
+        nb_hypos = len(targets)
+        are_math_type = [False] * nb_hypos
+        titles = [_("Complete goal") if hypo is goal_target
+                  else _("Complete hypothesis {}").format(hypo.name)
+                  for hypo in self.hypos_with_jokers]
+
         return targets, are_math_type, titles
 
 

@@ -42,6 +42,7 @@ from deaduction.pylib.actions import (InputType,
                                       MissingCalculatorOutput,
                                       CalculatorRequest,
                                       WrongUserInput,
+                                      MissingJoker,
                                       action,
                                       CodeForLean,
                                       test_selection)
@@ -556,20 +557,23 @@ def action_complete(proof_step,
     - Afterwards usr will maybe have to prove the statement.
     """
 
-    # FIXME: this is valid only for action_complete_statements.
+    # FIXME: this is valid only for action_complete_statements,
+    #  not for Jokers created by usr.
     #  The 'complete' button should be associated to the right action on
     #  creation.
+
     # ---- (1) Handle selection ---- #
     selected_objects = proof_step.selection
-    settings = cvars.get('functionality.target_selected_by_default')
-    target_selected = proof_step.target_selected or settings
+    # settings = cvars.get('functionality.target_selected_by_default')
+    target_selected = proof_step.target_selected
+                       # or (settings and not selected_objects))
     goal = proof_step.proof_state.goals[0]
-    target = goal.target.math_type
+    target = goal.target
     extended_selected_objects = (selected_objects + [target]
                                  if target_selected else selected_objects)
     # If no selection, select everything:
     if not extended_selected_objects:
-        extended_selected_objects = goal.context + goal.target.math_type
+        extended_selected_objects = goal.context + [target]
 
     user_input = proof_step.user_input
 
@@ -580,15 +584,18 @@ def action_complete(proof_step,
     hypos_jokers_n_vars = []
     hypos_with_jokers = []
     for cmo in extended_selected_objects:
-        more_jokers = cmo.jokers_n_vars()
+        # FIXME: no math_type for context objects?
+        more_jokers = cmo.math_type.jokers_n_vars()
         if more_jokers:
             hypos_jokers_n_vars.append((cmo, more_jokers))
             hypos_with_jokers.append(cmo)
 
-    if not user_input:  # FIXME: pass hypos_with_jokers to Calculator
-        raise MissingCalculatorOutput(CalculatorRequest.FillInJoker,
-                                      proof_step=proof_step,
-                                      msg_if_no_calculator="")
+    if not hypos_with_jokers:
+        raise WrongUserInput(error=_("There is nothing to complete"))
+
+    if not user_input:
+        raise MissingJoker(proof_step=proof_step,
+                           hypos_with_jokers=hypos_with_jokers)
 
     # ---- (3) Find jokers that have been assigned ---- #
     completed_jokers = []
@@ -660,16 +667,20 @@ def action_complete(proof_step,
         try_rw_axioms = ["rw AXIOM" + name] + \
                         ["rw AXIOM" + str(idx) + name for idx in range(10)]
 
-        check_code = [CodeForLean.and_then_from_list(
-                                             [rw_axioms,
-                                              "try{ext}",  # eliminate lambdas
-                                              "try{tautology}"]).solve1()
+        check_list = ["try{ext}",  # eliminate lambdas
+                      "try{tautology}",
+                      "try{simp only [not_and, not_or, not_not, not_forall, "
+                      "not_exists, eq_iff_iff,not_imp_not]}"]
+
+        check_code = [CodeForLean.and_then_from_list([rw_axioms] +
+                                                     check_list).solve1() 
                       for rw_axioms in try_rw_axioms]
         check_codes.append(CodeForLean.or_else_from_list(check_code))
 
         # Rw code:
         rw_code = CodeForLean.and_then_from_list([f"rw {hypo}" + at_hypo,
-                                                  f"try{{simp{at_hypo}}}"])
+                                                  "try{dsimp only"
+                                                  f" {at_hypo}" + "}"])
                                                   # f"clear {hypo}"])
         rw_codes.append(rw_code)
         nb += 1
