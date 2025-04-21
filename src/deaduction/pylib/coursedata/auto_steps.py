@@ -26,14 +26,14 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dataclasses import dataclass
-from typing import Union
+# from dataclasses import dataclass
+# from typing import Union
 
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.pylib.mathobj import MathObject
-import deaduction.pylib.actions.logic
-import deaduction.pylib.actions.magic
+# import deaduction.pylib.actions.logic
+# import deaduction.pylib.actions.magic
 import logging
 
 log = logging.getLogger(__name__)
@@ -94,6 +94,20 @@ button_dict = {
                 'assoc': 'associativity',
                 'triangle': 'triangular_inequality',
                }
+
+
+def recursive_display(user_input):
+    """
+    Recursively replace in user_input, which may be a list, a string or a
+    MathObject,
+    the MathObject by their display.
+    """
+    if isinstance(user_input, list):
+        return [recursive_display(item) for item in user_input]
+    elif isinstance(user_input, MathObject):
+        return user_input.to_display(format_='lean')
+    else:  # Probably a string
+        return str(user_input)
 
 
 class UserAction:
@@ -230,7 +244,7 @@ class AutoStep(UserAction):
     # statement:  str
     # user_input: [str]
 
-    raw_string: str = ""
+    raw_string: str = ""  # FIXME: obsolete
 
     # Response:
     error_type: int = 0  # 0 = WrongUserInput, 1 = FailedRequestError
@@ -248,7 +262,8 @@ class AutoStep(UserAction):
                  10: 'unknown error'}
 
     def __init__(self, selection, button_name, statement_name, user_input,
-                 target_selected, raw_string, error_type, error_msg, success_msg):
+                 target_selected, raw_string,
+                 error_type, error_msg, success_msg):
 
         UserAction.__init__(self, selection, button_name, None,
                             statement_name, user_input, target_selected)
@@ -256,6 +271,33 @@ class AutoStep(UserAction):
         self.error_type = error_type
         self.error_msg = error_msg
         self.success_msg = success_msg
+
+    @classmethod
+    def from_toml_data(cls, toml_data):
+        """
+        Return an AutoStep from toml data from the Lean file.
+        User_input must be processed:
+        - lists, coming from the calculator, are replaced by
+        MathObject (either placeholders or from Lean code)
+        - decimal strings are replaced by integers.
+        """
+        user_input = [[MathObject.place_holder() if new_item == '_'
+                       else MathObject.raw_lean_code(new_item)
+                       for new_item in item]
+                      if isinstance(item, list)
+                      else int(item) if item.isdecimal()
+                      else item
+                      for item in toml_data.get('user_input')]
+
+        return cls(selection=toml_data.get('selection'),
+                   button_name=toml_data.get('button'),
+                   statement_name=toml_data.get('statement'),
+                   user_input=user_input,
+                   target_selected=toml_data.get('target_selected'),
+                   raw_string='',
+                   error_type=-1,
+                   error_msg=toml_data.get('error_msg'),
+                   success_msg=toml_data.get('success_msg'))
 
     @classmethod
     def from_string(cls, string):
@@ -277,6 +319,7 @@ class AutoStep(UserAction):
             Goal!
 
         cf some history files for more elaborated examples.
+        FIXME: should not be used anymore.
         """
 
         string.replace("\\n", " ")
@@ -407,9 +450,9 @@ class AutoStep(UserAction):
                 if item_str is not None:
                     selection.append(item_str)
 
-        # Target selected ?
-        if user_action.target_selected:
-            selection.append("target")
+        # Target selected ? Obsolete
+        # if user_action.target_selected:
+        #     selection.append("target")
 
         ####################################
         # Store action: button / statement #
@@ -438,50 +481,71 @@ class AutoStep(UserAction):
         #  (e.g. coming from Calculator)
         #  they are stored as '[ <item1> <item2> ... ]'
         # (1) Flatten list items
-        user_input = []
-        for item in user_action.user_input:
-            if isinstance(item, list):
-                user_input.append('[')
-                user_input.extend(item)
-                user_input.append(']')
-            else:
-                user_input.append(item)
-        # (2) Replace by str
-        user_input_str = [item.to_display(format_='lean')
-                          if isinstance(item, MathObject)
-                          else str(item) for item in user_input]
-        # (3) Replace spaces inside items by '__'
-        user_input_str = [item.replace(' ', '__')
-                          for item in user_input_str]
+        # user_input = []
+        # for item in user_action.user_input:
+        #     if isinstance(item, list):
+        #         user_input.append('[')
+        #         user_input.extend(item)
+        #         user_input.append(']')
+        #     else:
+        #         user_input.append(item)
+        # # (2) Replace by str
+        # user_input_str = [item.to_display(format_='lean')
+        #                   if isinstance(item, MathObject)
+        #                   else str(item) for item in user_input]
+        # # (3) Replace spaces inside items by '__'
+        # user_input_str = [item.replace(' ', '__')
+        #                   for item in user_input_str]
 
-        error_msg = proof_step.error_msg
-        if error_msg:
-            error_msg = error_msg.split(',')[0]  # No ',' allowed in AutoStep
-            error_msg = 'error=' + error_msg.replace(' ', '_')
-        success_msg = proof_step.success_msg
-        if success_msg:
-            success_msg = success_msg.split(',')[0]
-            success_msg = 'success=' + success_msg.replace(' ', '_')
+        # error_msg = proof_step.error_msg
+        # if error_msg:
+        #     error_msg = error_msg.split(',')[0]  # No ',' allowed in AutoStep
+        #     error_msg = 'error=' + error_msg.replace(' ', '_')
+        # success_msg = proof_step.success_msg
+        # if success_msg:
+        #     success_msg = success_msg.split(',')[0]
+        #     success_msg = 'success=' + success_msg.replace(' ', '_')
 
         # Computing string
-        string = ''
-        if selection:
-            string = ' '.join(selection) + ' '
-        string += button + statement
-        if user_input_str:
-            # Replace spaces by '__' to be able to retrieve items
-            string += ' ' + ' '.join(user_input_str)
-        if proof_step.is_error():
-            string += ' ' + AutoStep.error_dic[proof_step.error_type]
-            string += ' ' + error_msg
-        if success_msg:
-            string += ' ' + success_msg
+        # string = ''
+        # if selection:
+        #     string = ' '.join(selection) + ' '
+        # string += button + statement
+        # if user_input_str:
+        #     # Replace spaces by '__' to be able to retrieve items
+        #     string += ' ' + ' '.join(user_input_str)
+        # if proof_step.is_error():
+        #     string += ' ' + AutoStep.error_dic[proof_step.error_type]
+        #     string += ' ' + error_msg
+        # if success_msg:
+        #     string += ' ' + success_msg
 
+        user_input = recursive_display(user_action.user_input)
+        string = ""  # FIXME: obsolete
         target_selected = proof_step.target_selected
 
-        return cls(selection, button, statement, user_input, target_selected,
+        return cls(selection, button, statement, user_input,
+                   target_selected,
                    string, proof_step.error_type, proof_step.error_msg,
                    proof_step.success_msg)
+
+    def toml_repr(self):
+        """
+        Return a dict to be saved into metadata in a Lean file by the
+        toml.dumps() method.
+        """
+
+        statement_name = self.statement_name
+        statement_name = '.'.join(statement_name.split('.')[-2:])
+        self_dict = {'selection':  self.selection,
+                     'target_selected': self.target_selected,
+                     'button': self.button_name,
+                     'statement': statement_name,
+                     'user_input': self.user_input,
+                     'error_msg': self.error_msg,
+                     'success_msg': self.success_msg
+                     }
+        return self_dict
 
 
 if __name__ == '__main__':

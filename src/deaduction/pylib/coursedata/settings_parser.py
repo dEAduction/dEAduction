@@ -36,6 +36,7 @@ This file is part of d∃∀duction.
 
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
+    FIXME: the whole file is obsolete.
 """
 
 from typing import Union, Tuple
@@ -143,6 +144,7 @@ def metadata_str_from_cvar_keys(keys: [str]):
     Given a list of keys, retrieve the corresponding values in cvars and
     convert these data into a string that can be inserted in Lean's file
     metadata with field name 'Settings'.
+    FIXME: obsolete
     """
 
     settings_line = []

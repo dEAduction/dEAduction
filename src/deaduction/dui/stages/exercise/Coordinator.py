@@ -29,26 +29,26 @@ This file is part of d∃∀duction.
 #                                   ContextMathObjects instead of WidgetItems,
 #                                   ...)
 
-import                logging
-import                qtrio
+import logging
+import qtrio
 import trio
-from copy import      copy, deepcopy
+from copy import copy, deepcopy
 from typing import Optional
 
-from PySide2.QtCore import ( QObject,
-                             Signal,
-                             Slot,
-                             QTimer,
-                             Qt)
+from PySide2.QtCore import (QObject,
+                            Signal,
+                            Slot,
+                            QTimer,
+                            Qt)
 from PySide2.QtWidgets import (QInputDialog,
                                QMessageBox,
                                QCheckBox,
                                QLineEdit)
 
 # Configs, utils
-import deaduction.pylib.config.dirs as          cdirs
+# import deaduction.pylib.config.dirs as          cdirs
 import deaduction.pylib.config.vars as          cvars
-from deaduction.pylib.utils.filesystem import   check_dir
+# from deaduction.pylib.utils.filesystem import   check_dir
 import deaduction.pylib.text.text as text
 
 # DUI
@@ -56,16 +56,16 @@ from deaduction.dui.primitives import           (ButtonsDialog,
                                                  ExerciseStatementWindow,
                                                  scale_geometry)
 from deaduction.dui.stages.exercise import      ExerciseMainWindow
-from deaduction.dui.elements import             ActionButton
+# from deaduction.dui.elements import             ActionButton
 from deaduction.dui.stages.calculator import    CalculatorController
 
 # Server
 from deaduction.pylib.server import             ServerInterface, Task
 
-from deaduction.pylib.utils import save_object
+# from deaduction.pylib.utils import save_object
 
 # Maths
-from deaduction.pylib.coursedata.settings_parser import metadata_str_from_cvar_keys
+# from deaduction.pylib.coursedata.settings_parser import metadata_str_from_cvar_keys
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
@@ -1471,15 +1471,17 @@ class Coordinator(QObject):
             if all_goals_solved:
                 additional_metadata["all_goals_solved"] = 'True'
 
-        # (2) Retrieve AutoSteps string
+        # (2) Retrieve AutoSteps
         proof_steps = self.proof_tree.proof_steps()
-        auto_steps = [step.auto_step for step in proof_steps
+        auto_steps = [step.auto_step.toml_repr() for step in proof_steps
                       if step is not None and step.auto_step is not None]
-        auto_steps_str = ''
-        for step in auto_steps:
-            auto_steps_str += '    ' + step.raw_string + ',\n'
 
-        additional_metadata['auto_test'] = auto_steps_str
+        # auto_steps_str = ''
+        # for step in auto_steps:
+        #     auto_steps_str += '    ' + step.raw_string + ',\n'
+        #
+        # additional_metadata['auto_test'] = auto_steps_str
+        additional_metadata['auto_test'] = auto_steps
 
         # (3) Metadata Settings
         # First remove default level to allow free settings
@@ -1487,7 +1489,9 @@ class Coordinator(QObject):
         default_key = 'functionality.default_functionality_level'
         default_level = cvars.get(default_key)
         cvars.set(default_key, 'Free settings')
-        settings = metadata_str_from_cvar_keys(keys)
+        # settings = metadata_str_from_cvar_keys(keys)
+        settings = {key: cvars.get(key) for key in keys
+                    if cvars.get(key) is not None}
         if settings:
             additional_metadata.update({'Settings': settings})
 
@@ -1495,7 +1499,7 @@ class Coordinator(QObject):
         if self.exercise.negate_statement:
             additional_metadata['negate_statement'] = '  True'
 
-        log.debug(additional_metadata)
+        # log.debug(additional_metadata)
         lean_code = self.lean_file.inner_contents
 
         # (6) Save

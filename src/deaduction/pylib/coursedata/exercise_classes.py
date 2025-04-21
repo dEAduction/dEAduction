@@ -31,6 +31,7 @@ from typing import List, Dict, Any, Optional
 import logging
 from time import strftime
 from copy import      copy
+import tomli_w
 
 import deaduction.pylib.config.vars             as cvars
 
@@ -88,9 +89,12 @@ class StructuredContent:
         Format metadata dict for Lean files. Indent values if needed.
         """
 
-        metadata_str = metadata_to_str(self.raw_metadata)
+        # metadata_str = metadata_to_str(self.raw_metadata)
+        metadata_str = metadata_to_toml(self.raw_metadata)
 
-        return '/- dEAduction\n' + metadata_str + '-/\n'
+        packed_metadata = '/- dEAduction\n' + metadata_str + '-/\n'
+        print(f"Exercise metadata: {packed_metadata}")
+        return packed_metadata
 
     @property
     def lemma_content(self) -> str:
@@ -197,7 +201,7 @@ class Statement:
     __negated_goal:         Any                     = None
 
     # auto_steps: str                         = ''
-    auto_test: str                                 = ''
+    auto_test: list                                 = None
     __refined_auto_steps: Optional[List[AutoStep]] = None
     _raw_metadata: Dict[str, str]                  = None
 
@@ -420,27 +424,28 @@ class Statement:
     @property
     def refined_auto_steps(self) -> [AutoStep]:
         """
-        Turn the raw string parsed from the lean file into a list of AutoStep.
-        FIXME: adapt to toml format.
+        Turn the toml data parsed from the lean file into a list of AutoStep.
         """
         if self.__refined_auto_steps:
             return self.__refined_auto_steps
 
         # if not self.auto_steps:
         if not self.auto_test:
-            return ''
+            return []
         else:
-            auto_steps_strings = self.auto_test
-        auto_steps_strings = auto_steps_strings.replace('\\n', ' ')
-        auto_steps_strings = auto_steps_strings.split(',')
-        auto_steps = []
-        for string in auto_steps_strings:
-            string = string.strip()
-            if string != '':
-                auto_steps.append(AutoStep.from_string(string))
-        # Remove None steps:
-        # auto_steps = [step for step in auto_steps if step]
-        self.__refined_auto_steps = auto_steps
+            auto_steps = [AutoStep.from_toml_data(step)
+                          for step in self.auto_test]
+
+        # auto_steps_strings = auto_steps_strings.replace('\\n', ' ')
+        # auto_steps_strings = auto_steps_strings.split(',')
+        # auto_steps = []
+        # for string in auto_steps_strings:
+        #     string = string.strip()
+        #     if string != '':
+        #         auto_steps.append(AutoStep.from_string(string))
+        # # Remove None steps:
+        # # auto_steps = [step for step in auto_steps if step]
+        # self.__refined_auto_steps = auto_steps
         return auto_steps
 
     @refined_auto_steps.setter
@@ -774,7 +779,10 @@ class Exercise(Theorem):
         # more_vars.update(exercise_settings)
 
         more_vars = self.course.metadata.get('settings')
-        more_vars.update(self.settings)
+        if more_vars is None:
+            more_vars = dict()
+        if self.settings:
+            more_vars.update(self.settings)
 
         if more_vars:
             # old_vars = {key: cvars.get(key)
@@ -783,6 +791,8 @@ class Exercise(Theorem):
             #             and (cvars.get(key) != more_vars[key])}
             old_vars = cvars.recursive_update(more_vars)
             return old_vars
+        else:
+            return dict()
 
     @property
     def is_open_question(self):
@@ -1382,6 +1392,14 @@ def metadata_to_str(metadata: Dict[str, str]):
         metadata_str += indent(value) + '\n'
 
     return metadata_str
+
+
+def metadata_to_toml(metadata: dict) -> str:
+    if not metadata:
+        return ""
+    # print(metadata)
+    toml = tomli_w.dumps(metadata)
+    return toml
 
 
 if __name__ == "__main__":
