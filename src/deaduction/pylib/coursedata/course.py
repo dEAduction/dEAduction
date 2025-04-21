@@ -358,23 +358,24 @@ class Course:
             alt_key = metadata_nice_text[key] if key in metadata_nice_text \
                                               else key
             value = self.metadata[key]
-            if value in metadata_nice_text:
-                alt_value = metadata_nice_text[value]
-            else:
-                words = value.strip().split(' ')
-                alt_words = []
-                except_ = False
-                for word in words:
-                    if word.startswith("-"):
-                        word = word[1:]
-                        except_ = True
-                    word = metadata_nice_text[word] if word in metadata_nice_text \
-                        else word
-                    alt_words.append(word)
-                if except_:
-                    alt_words.insert(1, _('except'))
-                alt_value = ' '.join(alt_words)
-            nice_dict[alt_key] = alt_value
+            if isinstance(value, str):
+                if value in metadata_nice_text:
+                    alt_value = metadata_nice_text[value]
+                else:
+                    words = value.strip().split(' ')
+                    alt_words = []
+                    except_ = False
+                    for word in words:
+                        if word.startswith("-"):
+                            word = word[1:]
+                            except_ = True
+                        word = metadata_nice_text[word] if word in metadata_nice_text \
+                            else word
+                        alt_words.append(word)
+                    if except_:
+                        alt_words.insert(1, _('except'))
+                    alt_value = ' '.join(alt_words)
+                nice_dict[alt_key] = alt_value
 
         return nice_dict
 

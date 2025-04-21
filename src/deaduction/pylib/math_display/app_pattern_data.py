@@ -107,14 +107,22 @@ def app_pattern_from_constants(additional_data=None):
     """
     Construct APPLICATION patterns from constant dictionary, and also their
     negations when appropriate.
+    additional_data may come from the metadata in the Lean file, with field
+    name = "display". Note that lists are already turned into tuples by
+    parser_course.
     """
     latex_from_app_constant_patterns = {}
     if additional_data:
-        tree = display_grammar.parse(additional_data)
-        additional_dic = DisplayPatternVisitor().visit(tree)
-        latex_from_constant_name.update(additional_dic)
+        # Obsolete:
+        # tree = display_grammar.parse(additional_data)
+        # additional_dic = DisplayPatternVisitor().visit(tree)
+        # Done in parser_course:
+        # Change lists to tuples
+        # additional_dic = {key: tuple(value) for key, value in
+        #                   additional_data.items()}
+        latex_from_constant_name.update(additional_data)
         log.info("Adding display data from metadata of the lean file:")
-        log.info(additional_dic)
+        log.info(additional_data)
     for key, value in latex_from_constant_name.items():
         # Modify key:
         # if key in ('divise', 'pair'):
@@ -204,7 +212,8 @@ class PatternMathDisplay:
                               'divides': _('divides'),
                               'sqrt': _('sqrt'),
                               'segment': _("segment"),
-                              'prime': _('prime')
+                              'prime': _('prime'),
+                              'rel_prime': _('relatively prime'),
                               }
 
     # NB: int will be turned to tuples
@@ -226,7 +235,9 @@ class PatternMathDisplay:
                             "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
                             # "sqrt":  ("√", -1),
                             "segment": ("[", -2, ", ", -1, "]"),
-                            "bit0": (-1, " + ", -1)
+                            "bit0": (-1, " + ", -1),
+                            "rel_prime": (-2, _(" and "), -1, " " + _(
+                                "relatively prime")),
                             }
 
     # TODO: add a "special_patterns" if both pattern and shape are special??

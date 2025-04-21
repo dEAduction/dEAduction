@@ -125,9 +125,55 @@ def restore(initial_cvars):
 
 
 def update(new_settings: dict):
+    """
+    Adapted to dotted format.
+
+    Update cvars with new_settings, a dict where keys may refer to dict using
+    the dot notation. Beware that if value is a dict then the dict will be
+    replaced by value, not updated.
+    """
     if new_settings:
         for (key, value) in new_settings.items():
             set(key, value)
+
+
+def recursive_update(new_settings: dict, original_dic=None,
+                     remove_id_values=True):
+    """
+    Adapted to format with nested dicts.
+
+    Update cvars with new_settings.
+    Return the part of cvar that have been modified.
+
+    e.g.
+    original_dic = {'functionality': {'Lean_method: True, 'Toto': 0},
+                    'others': 123}
+    new_settings = {'functionality': {Lean_method': False, 'Jean-Pierre': 1},
+                    'others': 123}
+
+    -->
+    original_dic = {'functionality': {'Lean_method: False, 'Toto': 0,
+                                        'Jean-Pierre': 1}
+    return {'functionality': {Lean_method': True, 'Jean-Pierre': None}}
+
+    """
+    global __dict_user
+    if not original_dic:
+        original_dic = __dict_user
+
+    modified_original_dict = dict()
+    for key, value in new_settings.items():
+        if not isinstance(value, dict) or key not in original_dic.keys():
+            original_value = original_dic.get(key)
+            if original_value != value:
+                modified_original_dict[key] = original_value
+                original_dic[key] = value
+        else:
+            more_mod_dic = recursive_update(value, original_dic[key])
+            if more_mod_dic:
+                modified_original_dict[key] = more_mod_dic
+
+    return modified_original_dict
 
 
 def save():

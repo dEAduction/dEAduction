@@ -718,6 +718,8 @@ class ServerInterface(QObject):
                                   proof_step=proof_step,
                                   exercise=exercise)
         self.lean_file = request.lean_file
+        # self.log.debug("Lean file content:")
+        # self.log.debug(self.lean_file.contents)
 
         await self.__get_response_for_request(request=request)
 

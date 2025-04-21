@@ -48,18 +48,19 @@ def dotset( r, k, v, if_not_exists=False ):
     if not isinstance(r,dict): raise TypeError("Excepted dict value")
 
     keys = list(k.split("."))
-    dst  = r # Destination
-    for idx in range(0,len(keys)-1):
+    dst = r  # Destination
+    for idx in range(0, len(keys)-1):
         kp = keys[idx]
-        if not kp in dst : dst[kp] = dict()
+        if not kp in dst: dst[kp] = dict()
         dst = dst[kp]
 
     # If key not in last subdict, so the item doesn't exist yet
     klast = keys[-1]
-    if (not klast in dst) or (not if_not_exists) :
+
+    if (not klast in dst) or (not if_not_exists):
         dst[klast] = v
         return True
-    else : return False
+    else: return False
 
 
 def dotget(r, k, default_value=None):

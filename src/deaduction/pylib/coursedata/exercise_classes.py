@@ -179,6 +179,7 @@ class Statement:
     pretty_name:            str
     # 'Union d'intersections'
     description:            str             = None
+    settings:               dict            = None
     # "L'union est distributive par rapport à l'intersection"
     text_book_identifier:   str             = None
     lean_begin_line_number: int             = None
@@ -228,6 +229,7 @@ class Statement:
         # keep only the relevant data, i.e. the keys which corresponds to
         # attribute of the class. The remaining information are put in
         # the self.info dictionary
+        #FIXME: obsolete
         for field_name in data:  # replace string by bool if needed
             if data[field_name] == 'True':
                 data[field_name] = True
@@ -419,6 +421,7 @@ class Statement:
     def refined_auto_steps(self) -> [AutoStep]:
         """
         Turn the raw string parsed from the lean file into a list of AutoStep.
+        FIXME: adapt to toml format.
         """
         if self.__refined_auto_steps:
             return self.__refined_auto_steps
@@ -565,8 +568,9 @@ class Exercise(Theorem):
     # in the original course file:
     original_exercise                           = None
 
+    # NB: settings are treated in self.update_cvars_from_metadata()
     non_pertinent_course_metadate = ('_raw_metadata', 'description',
-                                     'pretty_name')
+                                     'pretty_name', 'settings')
 
     __launch_in_history_mode = None
     # def __init__(self, **data: dict):
@@ -759,20 +763,25 @@ class Exercise(Theorem):
     def update_cvars_from_metadata(self) -> dict:
         """
         Update cvars with entries in metadata['settings'], and return a
-        dictionary with the values that have been replaced.
+        (recursive) dictionary with the keys that have been replaced,
+        and their previous values.
         """
 
-        raw_course_settings: str = self.course.metadata.get('settings')
-        more_vars: dict = vars_from_metadata(raw_course_settings)
-        raw_exercise_settings: str = self.raw_metadata.get('settings')
-        exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
-        more_vars.update(exercise_settings)
+        # raw_course_settings: str = self.course.metadata.get('settings')
+        # more_vars: dict = vars_from_metadata(raw_course_settings)
+        # raw_exercise_settings: str = self.raw_metadata.get('settings')
+        # exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
+        # more_vars.update(exercise_settings)
+
+        more_vars = self.course.metadata.get('settings')
+        more_vars.update(self.settings)
 
         if more_vars:
-            old_vars = {key: cvars.get(key)
-                        for key in more_vars
-                        if cvars.get(key) != more_vars.get(key)}
-            cvars.update(more_vars)
+            # old_vars = {key: cvars.get(key)
+            #             for key in more_vars
+            #             if key in more_vars.keys()
+            #             and (cvars.get(key) != more_vars[key])}
+            old_vars = cvars.recursive_update(more_vars)
             return old_vars
 
     @property

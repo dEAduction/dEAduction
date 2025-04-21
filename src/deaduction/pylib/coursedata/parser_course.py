@@ -45,6 +45,13 @@ This file is part of d∃∀duction.
     You should have received a copy of the GNU General Public License along
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
+# from deaduction.pylib.actions.utils import value
+# from deaduction.pylib.math_display.display_parser import display
+
+try:  # From Python 3.11
+    import tomllib
+except ModuleNotFoundError:  # For previous versions
+    import tomli as tomllib
 
 from typing import List, Tuple
 from pathlib import Path
@@ -167,8 +174,10 @@ def extract_core_statement(statement: str) -> Tuple[str, str]:
 ################
 # Course rules #
 ################
+# NB: end_of_line is crucial for counting line numbers.
+
 course_rules = """course = 
-            (something_else metadata)?
+            (something_else new_metadata)?
             (something_else? 
              space_or_eol*   (open_open / namespace_open_or_close / statement))+
             (something_else space_or_eol*)?
@@ -177,14 +186,14 @@ course_rules = """course =
 something_else_rules = """
 something_else = (line_comment / 
 ((non_coding any_char_but_eol)* end_of_line)  )*
-non_coding = !namespace_open_or_close !statement !metadata !open_open
+non_coding = !namespace_open_or_close !statement !new_metadata !open_open
 """
 
 namespace_rules = """
 namespace_open_or_close = open_namespace / close_namespace
 
 open_namespace = "namespace" space+ namespace_identifier
-                (interlude metadata)?
+                (interlude new_metadata)?
 
 close_namespace = "end" space+ namespace_identifier
 """
@@ -200,14 +209,14 @@ exercise  = "lemma" space_or_eol+
                     exercise_name space_or_eol+
                     lean_statement
                 separator_equal_def
-                    (space_or_eol+ metadata)?
+                    (space_or_eol+ new_metadata)?
                     space_or_eol+ proof
 
 definition_or_theorem = "lemma" space_or_eol+
                     (definition_name / theorem_name) space_or_eol+
                     lean_statement
                 separator_equal_def
-                    ((space_or_eol+ metadata)?
+                    ((space_or_eol+ new_metadata)?
                     space_or_eol+ proof)?
                     
     definition_name = "definition." identifier 
@@ -226,23 +235,34 @@ proof = begin_proof core_proof end_proof
     end_proof = "end" space_or_eol
 """
 
-metadata_rules = """
-metadata =  open_metadata
-            metadata_field+
+# metadata_rules = """
+# metadata =  open_metadata
+#             metadata_field+
+#             close_metadata
+#
+#     metadata_field = metadata_field_name  end_of_line  metadata_field_content
+#
+#         metadata_field_name = (!space !close_metadata any_char_but_eol)+ space*
+#         metadata_field_content = ((space+ metadata_content_line end_of_line)
+#                                   /end_of_line)+
+#         metadata_content_line = !close_metadata any_char_but_eol*
+#     open_metadata = "/-" space+ "dEAduction" space_or_eol+
+#     close_metadata = "-/"
+# """
+
+new_metadata_rules = """
+new_metadata =  open_metadata
+            metadata_core
             close_metadata
             
-    metadata_field = metadata_field_name  end_of_line  metadata_field_content
+    metadata_core = (!close_metadata (any_char_but_eol / end_of_line))*
         
-        metadata_field_name = (!space !close_metadata any_char_but_eol)+ space*
-        metadata_field_content = ((space+ metadata_content_line end_of_line) 
-                                  /end_of_line)+
-        metadata_content_line = !close_metadata any_char_but_eol*
     open_metadata = "/-" space+ "dEAduction" space_or_eol+
     close_metadata = "-/"
 """
 
 interlude_rules = """
-interlude = ((!metadata !"lemma" !"namespace" any_char_but_eol)* 
+interlude = ((!new_metadata !"lemma" !"namespace" any_char_but_eol)* 
                     space_or_eol*)*
 """
 # may be empty
@@ -270,7 +290,7 @@ end_of_line = "\\n"
 rules = course_rules + something_else_rules \
         + namespace_rules + open_rules \
         + statement_rules + proof_rules + interlude_rules \
-        + metadata_rules \
+        + new_metadata_rules \
         + line_comment_rules \
         + identifier_rules + basic_rules
 
@@ -390,81 +410,113 @@ class LeanCourseVisitor(NodeVisitor):
         insert(course_history, event)
         return course_history, data
 
+    ################
+    # NEW Metadata #
+    ################
+    def visit_new_metadata(self, node, visited_children):
+        """
+        Return the joined data of all children.
+        """
+        course_history, metadata = get_info(visited_children)
+        # log.debug(f"Got METADATA: {data['metadata']}")
+        return course_history, metadata
+
+    def visit_metadata_core(self, node, visited_children):
+        course_history, data = get_info(visited_children)
+        content = node.text  # replace('¬', "\n")
+        try:
+            toml_content = tomllib.loads(content)
+        except tomllib.TOMLDecodeError as error:
+            log.error(f"TOMLDecodeError while parsing Lean file: the "
+                      f"following metadata has a syntax error"
+                      f"\n{node.text}at the following location:")
+            log.error(str(error))
+            log.error("Refer to toml syntax guide.")
+            quit()
+
+        if "display" in toml_content:  # Turn lists into tuples
+            display_dic = toml_content['display']
+            toml_content['display'] = {key: tuple(value)
+                                       for key, value in display_dic.items()}
+        data['metadata'] = toml_content
+        return course_history, data
+
+
     ############
     # Metadata #
     ############
-    def visit_metadata(self, node, visited_children):
-        """
-        Return the joined data of all children
-        NB : keys are changed from Lean-deaduction file format
-        to PEP8 conventions, e.g. PrettyName -> pretty_name
-        """
-
-        course_history, metadata = get_info(visited_children)
-        metadata['_raw_metadata'] = metadata.copy()
-        data = {"metadata": metadata}
-        # event = "begin_metadata", None
-        # insert(course_history, event)
-        log.debug(f"got metadata {data}")
-        return course_history, data
-
-    def visit_metadata_field(self, node, visited_children):
-        """Return the joined data of all children."""
-        course_history, data = get_info(visited_children)
-
-        # The following collects the metadata in the corresponding field.
-        # This is the only info from children, so it is passed as data.
-        metadata = {}
-        if "metadata_field_content" in data.keys():
-            field_name = change_name(data["metadata_field_name"])
-            # e.g. PrettyName -> pretty_name
-            metadata[field_name] = data["metadata_field_content"]
-        return course_history, metadata
-
-    def visit_metadata_field_name(self, node, visited_children):
-        """
-        Collect metadata field name.
-        :param node: {text}, name of the field, collected at this level of the
-        parsed tree.
-        :param visited_children: data from children (none at this level).
-        :return: course_history and data.
-        """
-        course_history, data = get_info(visited_children)
-        data["metadata_field_name"] = node.text.strip()
-        return course_history, data
-
-    def visit_metadata_field_content(self, node, visited_children):
-        """
-        Collect metadata field content.
-        :param node: {text}, content of the field, collected at this level
-        of the parsed tree.
-        :param visited_children: data from children (none at this level).
-        :return: course_history and data.
-        """
-        course_history, data = get_info(visited_children)
-        data["metadata_field_content"] = ""
-        # If the metadata content spreads on several lines, then get_info
-        # gets only the last line...
-        for _, child_data in visited_children:
-            if 'metadata_content_line' in child_data:
-                more_content = child_data['metadata_content_line']
-                if data["metadata_field_content"]:
-                    data["metadata_field_content"] += " " + more_content
-                else:
-                    data["metadata_field_content"] = more_content
-        return course_history, data
-
-    def visit_metadata_content_line(self, node, visited_children):
-        """
-        Collect individual lines of metadata
-        :param node:
-        :param visited_children:
-        :return:
-        """
-        course_history, data = get_info(visited_children)
-        # NB: course_history may contain some EOL events
-        data["metadata_content_line"] = node.text.strip()
-        return course_history, data
+    # def visit_metadata(self, node, visited_children):
+    #     """
+    #     Return the joined data of all children
+    #     NB : keys are changed from Lean-deaduction file format
+    #     to PEP8 conventions, e.g. PrettyName -> pretty_name
+    #     """
+    #
+    #     course_history, metadata = get_info(visited_children)
+    #     metadata['_raw_metadata'] = metadata.copy()
+    #     data = {"metadata": metadata}
+    #     # event = "begin_metadata", None
+    #     # insert(course_history, event)
+    #     log.debug(f"got metadata {data}")
+    #     return course_history, data
+    #
+    # def visit_metadata_field(self, node, visited_children):
+    #     """Return the joined data of all children."""
+    #     course_history, data = get_info(visited_children)
+    #
+    #     # The following collects the metadata in the corresponding field.
+    #     # This is the only info from children, so it is passed as data.
+    #     metadata = {}
+    #     if "metadata_field_content" in data.keys():
+    #         field_name = change_name(data["metadata_field_name"])
+    #         # e.g. PrettyName -> pretty_name
+    #         metadata[field_name] = data["metadata_field_content"]
+    #     return course_history, metadata
+    #
+    # def visit_metadata_field_name(self, node, visited_children):
+    #     """
+    #     Collect metadata field name.
+    #     :param node: {text}, name of the field, collected at this level of the
+    #     parsed tree.
+    #     :param visited_children: data from children (none at this level).
+    #     :return: course_history and data.
+    #     """
+    #     course_history, data = get_info(visited_children)
+    #     data["metadata_field_name"] = node.text.strip()
+    #     return course_history, data
+    #
+    # def visit_metadata_field_content(self, node, visited_children):
+    #     """
+    #     Collect metadata field content.
+    #     :param node: {text}, content of the field, collected at this level
+    #     of the parsed tree.
+    #     :param visited_children: data from children (none at this level).
+    #     :return: course_history and data.
+    #     """
+    #     course_history, data = get_info(visited_children)
+    #     data["metadata_field_content"] = ""
+    #     # If the metadata content spreads on several lines, then get_info
+    #     # gets only the last line...
+    #     for _, child_data in visited_children:
+    #         if 'metadata_content_line' in child_data:
+    #             more_content = child_data['metadata_content_line']
+    #             if data["metadata_field_content"]:
+    #                 data["metadata_field_content"] += " " + more_content
+    #             else:
+    #                 data["metadata_field_content"] = more_content
+    #     return course_history, data
+    #
+    # def visit_metadata_content_line(self, node, visited_children):
+    #     """
+    #     Collect individual lines of metadata
+    #     :param node:
+    #     :param visited_children:
+    #     :return:
+    #     """
+    #     course_history, data = get_info(visited_children)
+    #     # NB: course_history may contain some EOL events
+    #     data["metadata_content_line"] = node.text.strip()
+    #     return course_history, data
 
     ##############
     # Namespaces #
