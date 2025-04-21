@@ -29,25 +29,20 @@ local attribute [instance] classical.prop_decidable
 -------------------------
 
 /- dEAduction
-Title
-    Tutoriel
-Author
-    Camille Lichère
-Institution
-    Université de France
-Description
-    Ce fichier contient quelques exercices faciles et progressifs de théorie élémentaire
-    des ensembles. Il peut être utilisé comme tutoriel pour d∃∀duction ; en particulier,
-    les boutons logiques sont introduits progressivement.
-DefaultAvailableLogic
-    ALL -not -exists -map -equal -iff
-AvailableProof
-    ALL -new_object
-AvailableCompute
-    NONE
-Settings
-    functionality.allow_induction --> false
-    functionality.calculator_available --> false
+title = "Tutoriel"
+author = "Camille Lichère"
+institution = "Université de France"
+description = """
+Ce fichier contient quelques exercices faciles et progressifs de théorie élémentaire
+des ensembles. Il peut être utilisé comme tutoriel pour d∃∀duction ; en particulier,
+les boutons logiques sont introduits progressivement.
+"""
+default_available_logic = "ALL -not -exists -map -equal -iff"
+available_proof = "ALL -new_object"
+available_compute = "NONE"
+[settings]
+functionality.allow_induction = false
+functionality.calculator_available = false
 -/
 
 /- Notes for exercise makers.
@@ -76,20 +71,17 @@ open set
 ------------------------
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 namespace inclusions_egalites
 /- dEAduction
-PrettyName
-    Inclusions, égalités
+pretty_name = "Inclusions, égalités"
 -/
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
-ImplicitUse
-    True
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -111,10 +103,8 @@ end
 lemma definition.double_inclusion (A A' : set X) :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A):=
 /- dEAduction
-PrettyName
-    Double inclusion
-ImplicitUse
-    True
+pretty_name = "Double inclusion"
+implicit_use = true
 -/
 begin
     exact subset.antisymm_iff,
@@ -123,16 +113,13 @@ end inclusions_egalites
 
 namespace unions_intersections
 /- dEAduction
-PrettyName
-    Unions, intersections
+pretty_name = "Unions, intersections"
 -/
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -141,10 +128,8 @@ end
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Union de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -170,10 +155,8 @@ lemma exercise.intersection_inclus_ensemble
 A ∩ B ⊆ A
 :=
 /- dEAduction
-PrettyName
-    Un ensemble contient son intersection avec un autre
-Description
-    Voici un premier exercice !
+pretty_name = "Un ensemble contient son intersection avec un autre"
+description = "Voici un premier exercice !"
 -/
 begin
     todo,
@@ -185,10 +168,8 @@ lemma exercise.inclus_dans_les_deux_implique_dans_lintersection
 (C ⊆ A) ∧ (C ⊆ B) → C ⊆ A ∩ B
 :=
 /- dEAduction
-PrettyName
-    Inclus dans les deux implique inclus dans l'intersection
-Description
-    Voici un deuxième exercice !
+pretty_name = "Inclus dans les deux implique inclus dans l'intersection"
+description = "Voici un deuxième exercice !"
 -/
 begin
     todo,
@@ -199,10 +180,8 @@ lemma exercise.inclusion_transitive
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
 :=
 /- dEAduction
-PrettyName
-    Transitivité de l'inclusion
-Description
-    Voici un troisième exercice !
+pretty_name = "Transitivité de l'inclusion"
+description = "Voici un troisième exercice !"
 -/
 begin
     todo,
@@ -213,10 +192,8 @@ lemma exercise.ensemble_inclus_union
 B ⊆ A ∪ B
 :=
 /- dEAduction
-PrettyName
-    Ensemble inclus dans l'union
-Description
-    Le bouton ∨ ("ou"), permet notamment de montrer un but de la forme "P ou Q" en choisissant si on veut montrer "P" ou "Q".
+pretty_name = "Ensemble inclus dans l'union"
+description = 'Le bouton ∨ ("ou"), permet notamment de montrer un but de la forme "P ou Q" en choisissant si on veut montrer "P" ou "Q".'
 -/
 begin
     todo,
@@ -227,11 +204,11 @@ lemma exercise.ensemble_inclus_intersection
 A ⊆ A ∩ B  → (A ∪ B) = B
 :=
 /- dEAduction
-PrettyName
-    Ensemble inclus dans l'intersection
-Description
-    Utilisez la double inclusion pour montrer une égalité entre ensembles.
-    Le bouton ∨ ("ou") permet également, appliqué à une hypothèse du type "P ou Q" de faire une disjonction de cas selon si on a "P" ou "Q".
+pretty_name = "Ensemble inclus dans l'intersection"
+description = """
+Utilisez la double inclusion pour montrer une égalité entre ensembles.
+Le bouton ∨ ("ou") permet également, appliqué à une hypothèse du type "P ou Q" de faire une disjonction de cas selon si on a "P" ou "Q".
+"""
 -/
 begin
     todo,
@@ -242,10 +219,8 @@ lemma exercise.inter_distributive_union
 A ∪ (B ∩ C) = (A ∪ B) ∩ (A ∪ C)
 :=
 /- dEAduction
-PrettyName
-    Union avec une intersection
-Description
-    Utilisez l'aperçu de preuve pour ne pas vous perdre dans les différents cas.
+pretty_name = "Union avec une intersection"
+description = "Utilisez l'aperçu de preuve pour ne pas vous perdre dans les différents cas."
 -/
 begin
     todo,
@@ -256,13 +231,12 @@ lemma exercise.exercice_bilan
 A ⊆ B ↔ A ∩ B = A
 :=
 /- dEAduction
-PrettyName
-    Exercice bilan
-Description
-    Dans cet exercice, deux nouveaux boutons apparaissent.
-    On peut utiliser une égalité pour remplacer l'un des termes par l'autre.
-AvailableLogic
-    ALL -not -exists -map
+pretty_name = "Exercice bilan"
+description = """
+Dans cet exercice, deux nouveaux boutons apparaissent.
+On peut utiliser une égalité pour remplacer l'un des termes par l'autre.
+"""
+available_logic = "ALL -not -exists -map"
 -/
 begin
     todo

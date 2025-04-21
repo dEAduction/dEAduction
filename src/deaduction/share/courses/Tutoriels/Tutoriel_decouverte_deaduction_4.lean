@@ -24,29 +24,22 @@ local attribute [instance] classical.prop_decidable
 
 
 /- dEAduction
-Title
-    Tutoriel partie 4 : méthodes de preuves
-Author
-    Isabelle Dubois / inspiré du fichier tutoriel de Frédéric
-Institution
-    Université de Lorraine
-Description
-    Tutoriel d'utilisation du logiciel dans un contexte de manipulations des entiers ou réels
-    - Partie 4 : méthodes de preuves
-AvailableExercises
-    NONE
-DefaultAvailableLogic
-    ALL -mapsto
-DefaultAvailableProof
-    proof_methods 
-DefaultAvailableMagic
-    Assumption
-AvailableCompute
-    NONE
-Display
-   estquotiententier --> ( -2, " / ", -1, " est entier") 
-Settings
-    functionality.calculator_available --> true
+title = "Tutoriel partie 4 : méthodes de preuves"
+author = "Isabelle Dubois / inspiré du fichier tutoriel de Frédéric"
+institution = "Université de Lorraine"
+description = """
+Tutoriel d'utilisation du logiciel dans un contexte de manipulations des entiers ou réels
+- Partie 4 : méthodes de preuves
+"""
+available_exercises = "NONE"
+default_available_logic = "ALL -mapsto"
+default_available_proof = "proof_methods"
+default_available_magic = "Assumption"
+available_compute = "NONE"
+[display]
+estquotiententier = [ -2, " / ", -1, " est entier"]
+[settings]
+functionality.calculator_available = true
 -/
 
 ---------------------------------------------
@@ -68,16 +61,14 @@ variables {m n k: ℕ}
 
 namespace decouverte_methodes_preuves
 /- dEAduction
-PrettyName
- Découverte des méthodes de preuves
+pretty_name = "Découverte des méthodes de preuves"
 -/
 
 lemma theorem.simplifier (H: m ≠ 0):
  (m*m = n*m)  → (m=n)
 :=
 /- dEAduction
-PrettyName
-    Simplifier une égalité entre produits
+pretty_name = "Simplifier une égalité entre produits"
 -/
 begin
     todo
@@ -87,13 +78,9 @@ lemma exercise.cas1 (H1 : m*m = n*m) :
   (m=0) \or (m=n)
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par cas (1) -  Entiers  
-Description
-    Raisonnement par cas (1) : on choisira de discuter suivant la valeur de m
-  
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par cas (1) -  Entiers"
+description = "Raisonnement par cas (1) : on choisira de discuter suivant la valeur de m"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -103,8 +90,7 @@ lemma theorem.valeur_absolue_de_positif :
 ∀ x : ℝ,
 ((0 ≤ x) → (abs x = x)) :=
 /- dEAduction
-PrettyName
-  Valeur absolue d'un nombre positif
+pretty_name = "Valeur absolue d'un nombre positif"
 -/
 begin
   intro x, exact abs_of_nonneg,
@@ -114,8 +100,7 @@ lemma theorem.valeur_absolue_de_negatif :
 ∀ x : ℝ,
 ((x < 0) → (abs x = -x)) :=
 /- dEAduction
-PrettyName
-  Valeur absolue d'un nombre négatif
+pretty_name = "Valeur absolue d'un nombre négatif"
 -/
 begin
   todo
@@ -128,15 +113,10 @@ lemma exercise.cas2 {x : ℝ}
 (x=10/3) \or (x = -2/3)
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par cas (2) -  Réels 
-Description
-    Raisonnement par cas (2) (et contradiction dans hypothèses) -  Réels - Défi : Se ramener à 3 cas seulement !
-AvailableProof
-   proof_methods
-
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par cas (2) -  Réels"
+description = "Raisonnement par cas (2) (et contradiction dans hypothèses) -  Réels - Défi : Se ramener à 3 cas seulement !"
+available_proof = "proof_methods"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -148,13 +128,9 @@ lemma exercise.contraposee0 {x y : ℝ} :
  ( not(x=y)) → (not( (x-1)*(y+1) = (x+1)*(y-1)))
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par contraposée (0) - Réels.
-Description
-    Raisonnement par contraposée - Réels
-
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par contraposée (0) - Réels."
+description = "Raisonnement par contraposée - Réels"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -167,13 +143,9 @@ lemma exercise.contraposee0b
 (not(x=-1) \and not(y=-1)) → (not( (x+ x*y)+ (1+ y) =0))
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par contraposée (0 bis) - Réels.
-Description
-    Raisonnement par contraposée (0 bis) - Réels 
-
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par contraposée (0 bis) - Réels."
+description = "Raisonnement par contraposée (0 bis) - Réels"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -188,10 +160,8 @@ def impair (m: nat) := ∃ k, m = 2*k + 1
 
 lemma definition.pair {m:nat} : (pair m) ↔ ∃ k, m = 2*k :=
 /- dEAduction
-PrettyName
-  Pair
-ImplicitUse
-  True
+pretty_name = "Pair"
+implicit_use = true
 -/
 begin
   todo
@@ -199,10 +169,8 @@ end
 
 lemma definition.impair {m:nat} : (impair m) ↔ ∃ k, m = 2*k + 1 :=
 /- dEAduction
-PrettyName
-  Impair
-ImplicitUse
-  True
+pretty_name = "Impair"
+implicit_use = true
 -/
 begin
   todo
@@ -210,10 +178,8 @@ end
 
 lemma theorem.nonimpair {m:nat} : (not((impair m))) ↔ (pair m) :=
 /- dEAduction
-PrettyName
-  Non (Impair )
-ImplicitUse
-  True
+pretty_name = "Non (Impair )"
+implicit_use = true
 -/
 begin
  todo
@@ -221,10 +187,8 @@ end
 
 lemma theorem.nonpair {m:nat} : (not((pair m))) ↔ (impair m) :=
 /- dEAduction
-PrettyName
-  Non (Pair )
-ImplicitUse
-  True
+pretty_name = "Non (Pair )"
+implicit_use = true
 -/
 begin
  todo
@@ -235,13 +199,9 @@ lemma exercise.contraposee1  {n : ℕ}:
  (impair (n*n) ) → (impair n)
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par contraposée (1) - Entiers.
-Description
-    Raisonnement par contraposée (1) - Entiers - Parité.
-
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par contraposée (1) - Entiers."
+description = "Raisonnement par contraposée (1) - Entiers - Parité."
+available_magic = "assumption"
 -/
 begin
     todo
@@ -251,13 +211,9 @@ lemma exercise.contraposee2 {n : ℕ}:
  (pair (n*n) ) → (pair n)
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par contraposée (2) - Entiers
-Description
-    Raisonnement par contraposée (2) - Entiers - Parité.
-
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par contraposée (2) - Entiers"
+description = "Raisonnement par contraposée (2) - Entiers - Parité."
+available_magic = "assumption"
 -/
 begin
     todo
@@ -269,16 +225,11 @@ lemma exercise.contraposee3 {a : ℝ}:
  (∀ y > (0:ℝ), a <= y) → (a<=0)
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par contraposée  - Réels.
-Description
-    Raisonnement par contraposée  - Réels.
-AvailableDefinitions
-	NONE
-AvailableTheorems
-	NONE
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par contraposée  - Réels."
+description = "Raisonnement par contraposée  - Réels."
+available_definitions = "NONE"
+available_theorems = "NONE"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -292,16 +243,11 @@ lemma exercise.absurde1
 not( (x+1) / (x+3) =1 )
 :=
 /- dEAduction
-PrettyName
-    Raisonnement par l'absurde (1) - Réels
-Description
-    Raisonnement par l'absurde (1) - Réels
-AvailableDefinitions
-	NONE
-AvailableTheorems
-	NONE
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par l'absurde (1) - Réels"
+description = "Raisonnement par l'absurde (1) - Réels"
+available_definitions = "NONE"
+available_theorems = "NONE"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -313,10 +259,8 @@ lemma theorem.produit_egal_un
 {m n :ℤ} : (m*n = 1)  <-> (((m=1) \and (n=1)) \or ((m=-1) \and (n=-1)))
 :=
 /- dEAduction
-PrettyName
-  Produit d'entiers relatif égal à 1
-ImplicitUse
-  True
+pretty_name = "Produit d'entiers relatif égal à 1"
+implicit_use = true
 -/
 begin
  todo
@@ -326,19 +270,12 @@ lemma exercise.absurde2 {m n : ℤ} :
 not(18*m +6*n = 1)
 :=
 /- dEAduction
-PrettyName
-     Raisonnement par l'absurde (2) - Entiers relatifs
-Description
-     Raisonnement par l'absurde (2) - Entiers relatifs - Attention : Introduire un nouveau but si nécessaire !
-AvailableDefinitions
-	NONE
-AvailableTheorems
-	produit_egal_un
-
-AvailableProof
-    proof_methods new_object
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par l'absurde (2) - Entiers relatifs"
+description = "Raisonnement par l'absurde (2) - Entiers relatifs - Attention : Introduire un nouveau but si nécessaire !"
+available_definitions = "NONE"
+available_theorems = "produit_egal_un"
+available_proof = "proof_methods new_object"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -348,10 +285,8 @@ lemma theorem.identite_remarquable {a b : ℤ} :
 a^2 - b^2 = (a-b)*(a+b)
 :=
 /- dEAduction
-PrettyName
-  Identité Remarquable a^2 -b^2
-ImplicitUse
-  True
+pretty_name = "Identité Remarquable a^2 -b^2"
+implicit_use = true
 -/
 begin
  todo
@@ -362,18 +297,12 @@ lemma exercise.absurde3
 not(∃ m, n^2 +1 = m^2)
 :=
 /- dEAduction
-PrettyName
-     Raisonnement par l'absurde (3) - Entiers 
-Description
-     Raisonnement par l'absurde (3) - Entiers  - Attention : Introduire un nouveau but si nécessaire !
-AvailableDefinitions
-	NONE
-AvailableTheorems
-	produit_egal_un, identite_remarquable
-AvailableProof
-    proof_methods new_object
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par l'absurde (3) - Entiers"
+description = "Raisonnement par l'absurde (3) - Entiers  - Attention : Introduire un nouveau but si nécessaire !"
+available_definitions = "NONE"
+available_theorems = "produit_egal_un, identite_remarquable"
+available_proof = "proof_methods new_object"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -387,10 +316,8 @@ lemma definition.estquotiententier {m: nat} {n: nat} :
 (estquotiententier m n ) ↔ (∃ k : ℕ, m = k*n) 
 :=
 /- dEAduction
-PrettyName
-  Est Quotient entier
-ImplicitUse
-  True
+pretty_name = "Est Quotient entier"
+implicit_use = true
 -/
 begin
  todo
@@ -399,10 +326,8 @@ end
 lemma theorem.condition_etre_pair :
 ∀ m :ℕ, ( (∃ k, m = 2*k ) -> (pair m) ) :=
 /- dEAduction
-PrettyName
-  Condition pour être pair
-ImplicitUse
-  True
+pretty_name = "Condition pour être pair"
+implicit_use = true
 -/
 begin
   todo
@@ -413,16 +338,13 @@ lemma exercise.absurde4
 not(estquotiententier n m )
 :=
 /- dEAduction
-PrettyName
-     Raisonnement par l'absurde (4) - Entiers
-Description
-     Raisonnement par l'absurde (4)  - Entiers - 
-     
-     Indication : Utiliser le nouveau théorème "condition pour être pair" (une implication de la définition), ou alors introduire un nouveau but.
-AvailableProof
-    proof_methods new_object
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par l'absurde (4) - Entiers"
+description = """
+Raisonnement par l'absurde (4)  - Entiers -
+Indication : Utiliser le nouveau théorème "condition pour être pair" (une implication de la définition), ou alors introduire un nouveau but.
+"""
+available_proof = "proof_methods new_object"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -434,10 +356,8 @@ lemma definition.intersection_deux_ensembles
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B)
 :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     todo
@@ -456,10 +376,8 @@ lemma definition.ensemble_non_vide
 ((A ≠ ∅) ) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
-AuxiliaryDefinitions
-  auxiliary_definition.ensemble_non_vide
-ImplicitUse
-  True
+auxiliary_definitions = "auxiliary_definition.ensemble_non_vide"
+implicit_use = true
 -/
 begin
     todo
@@ -470,8 +388,7 @@ lemma definition.difference
 x ∈ (A \ B) ↔ x ∈ A ∧ x ∉ B
 :=
 /- dEAduction
-PrettyName
-    Différence de deux ensembles
+pretty_name = "Différence de deux ensembles"
 -/
 begin
     todo
@@ -482,18 +399,12 @@ lemma exercise.absurde5
 A  ∩ ( B \ A)  = ∅ 
 :=
 /- dEAduction
-PrettyName
-     Raisonnement par l'absurde (5) - Ensembles  
-Description
-     Raisonnement par l'absurde (5) - Ensembles  
-AvailableTheorems
-	NONE
-AvailableDefinitions
-	intersection_deux_ensembles, difference, ensemble_non_vide	
-AvailableProof
-    proof_methods
-AvailableMagic
-    assumption
+pretty_name = "Raisonnement par l'absurde (5) - Ensembles"
+description = "Raisonnement par l'absurde (5) - Ensembles"
+available_theorems = "NONE"
+available_definitions = "intersection_deux_ensembles, difference, ensemble_non_vide"
+available_proof = "proof_methods"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -503,4 +414,3 @@ end
 end decouverte_methodes_preuves
 
 end course
-

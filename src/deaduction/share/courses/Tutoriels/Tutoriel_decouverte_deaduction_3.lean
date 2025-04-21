@@ -24,27 +24,20 @@ local attribute [instance] classical.prop_decidable
 
 
 /- dEAduction
-Title
-    Tutoriel partie 3 : découverte des Définitions et Théorèmes
-Author
-    Isabelle Dubois / inspiré du fichier tutoriel de Frédéric
-Institution
-    Université de Lorraine
-Description
-    Tutoriel d'utilisation du logiciel dans un contexte de manipulations des entiers ou réels 
-    - Partie 3 - Découverte des Définitions et Théorèmes
-DefaultAvailableLogic
-    ALL -map
-AvailableExercises
-    NONE
-DefaultAvailableProof
-    NONE
-DefaultAvailableMagic
-    Assumption
-AvailableCompute
-    NONE
-Settings
-    functionality.calculator_available --> true
+title = "Tutoriel partie 3 : découverte des Définitions et Théorèmes"
+author = "Isabelle Dubois / inspiré du fichier tutoriel de Frédéric"
+institution = "Université de Lorraine"
+description = """
+Tutoriel d'utilisation du logiciel dans un contexte de manipulations des entiers ou réels
+- Partie 3 - Découverte des Définitions et Théorèmes
+"""
+default_available_logic = "ALL -map"
+available_exercises = "NONE"
+default_available_proof = "NONE"
+default_available_magic = "Assumption"
+available_compute = "NONE"
+[settings]
+functionality.calculator_available = true
 -/
 
 ---------------------------------------------
@@ -68,8 +61,7 @@ lemma theorem.croissance1
 ((0 <= x) \and (0<=y) \and (x <=y)) → x^2 <= y^2
 :=
 /- dEAduction
-PrettyName
-  Croissance de la fonction carré - Réels positifs
+pretty_name = "Croissance de la fonction carré - Réels positifs"
 -/
 begin
   todo
@@ -79,15 +71,10 @@ lemma exercise.utilisation_th { x y : ℝ} (H : 0 <=x)  :
 (x <= y) → ((0<=y) \and (x^2 <= y^2))
 :=
 /- dEAduction
-PrettyName
-    Utilisation d'un théorème dans le but - Fonction carrée. 
-Description
-    Utilisation d'un théorème dans le but - Fonction carrée. 
-
-AvailableLogic
-     and  implies
-AvailableMagic
-    assumption
+pretty_name = "Utilisation d'un théorème dans le but - Fonction carrée."
+description = "Utilisation d'un théorème dans le but - Fonction carrée."
+available_logic = "and  implies"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -99,8 +86,7 @@ lemma theorem.decroissance
 ((x <= 0) \and (y<=0) \and (x <=y)) → y^2 <= x^2
 :=
 /- dEAduction
-PrettyName
-  Décroissance de la fonction carré - Réels négatifs
+pretty_name = "Décroissance de la fonction carré - Réels négatifs"
 -/
 begin
   todo
@@ -110,14 +96,10 @@ lemma exercise.utilisation_thd2 { x y : ℝ} (H : x <=0)  :
 (x <= -2) → ((-2)^2 <= x^2)
 :=
 /- dEAduction
-PrettyName
-    Utilisation d'un théorème à choisir parmi deux dans le But - Fonction carrée.
-Description
-    Utilisation d'un théorème à choisir parmi deux dans le But - Fonction carrée.
-AvailableLogic
-      and implies
-AvailableMagic
-    assumption
+pretty_name = "Utilisation d'un théorème à choisir parmi deux dans le But - Fonction carrée."
+description = "Utilisation d'un théorème à choisir parmi deux dans le But - Fonction carrée."
+available_logic = "and implies"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -128,8 +110,7 @@ lemma theorem.eqproduit
 (x*y=0) ↔ ( (x=0) \or (y=0) )
 :=
 /- dEAduction
-PrettyName
-  Equation produit
+pretty_name = "Equation produit"
 -/
 begin
   todo
@@ -143,16 +124,11 @@ lemma exercise.eq2 { x y : ℝ}  :
 ((x-1) * x)*y = 0 → ( (x=1) \or (x=0) \or (y=0) )
 :=
 /- dEAduction
-PrettyName
-    Utilisation d'un théorème dans une hypothèse  - Equation
-Description
-    Utilisation d'un théorème dans une hypothèse - Equation.
-AvailableLogic
-     or  implies
-AvailableTheorems
-  eqproduit
-AvailableMagic
-    assumption
+pretty_name = "Utilisation d'un théorème dans une hypothèse  - Equation"
+description = "Utilisation d'un théorème dans une hypothèse - Equation."
+available_logic = "or  implies"
+available_theorems = "eqproduit"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -173,16 +149,11 @@ lemma exercise.def  { x  : ℝ} (H: x=1) :
 F (x) = 0
 :=
 /- dEAduction
-PrettyName
-    Utilisation d'une définition dans un but
-Description
-    Utilisation d'une définition dans un but
-AvailableLogic
-     equal  implies
-AvailableTheorems
-  eqproduit
-AvailableMagic
-    assumption
+pretty_name = "Utilisation d'une définition dans un but"
+description = "Utilisation d'une définition dans un but"
+available_logic = "equal  implies"
+available_theorems = "eqproduit"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -192,16 +163,11 @@ lemma exercise.defbilan  { x  : ℝ} :
 ( F (x) = 0 ) \iff ( (x=1) \or (x=-2) )
 :=
 /- dEAduction
-PrettyName
-    Utilisation d'une définition, d'un théorème
-Description
-    Utilisation d'une définition, d'un théorème
-AvailableLogic
-    or and equal  implies iff 
-AvailableTheorems
-  eqproduit
-AvailableMagic
-    assumption
+pretty_name = "Utilisation d'une définition, d'un théorème"
+description = "Utilisation d'une définition, d'un théorème"
+available_logic = "or and equal  implies iff"
+available_theorems = "eqproduit"
+available_magic = "assumption"
 -/
 begin
     todo
@@ -210,4 +176,3 @@ end
 
 
 end course
-

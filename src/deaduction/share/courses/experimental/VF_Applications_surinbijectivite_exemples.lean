@@ -18,16 +18,11 @@ local attribute [instance] classical.prop_decidable
 
 
 /- dEAduction
-Title
-    VRAI/FAUX : Injectivité, surjectivité, bijectivité
-Author
-    Isabelle Dubois 
-Institution
-    Université de Lorraine
-Description
-    Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles. Partie Applications.
-AvailableExercises
-	NONE
+title = "VRAI/FAUX : Injectivité, surjectivité, bijectivité"
+author = "Isabelle Dubois"
+institution = "Université de Lorraine"
+description = 'Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles. Partie Applications.'
+available_exercises = "NONE"
 -/
 
 
@@ -45,8 +40,7 @@ open nat
 
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions : Injectivité, surjectivité, bijectivité
+pretty_name = "Définitions : Injectivité, surjectivité, bijectivité"
 -/
 
 ------------------------
@@ -62,10 +56,8 @@ lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
 /- dEAduction
-PrettyName
-    Application injective
-ImplicitUse
-    True
+pretty_name = "Application injective"
+implicit_use = true
 -/
 begin
     refl,
@@ -75,10 +67,8 @@ lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
-PrettyName
-    Application surjective
-ImplicitUse
-    True
+pretty_name = "Application surjective"
+implicit_use = true
 -/
 begin
     refl,
@@ -91,8 +81,7 @@ lemma definition.bijectivite_1 :
 bijective f ↔ (injective f ∧ surjective f)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (première définition)
+pretty_name = "Application bijective (première définition)"
 -/
 begin
     todo
@@ -103,8 +92,7 @@ lemma definition.existe_un_unique
 (∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x' = x)))
 :=
 /- dEAduction
-PrettyName
-    ∃! : existence et unicité
+pretty_name = "∃! : existence et unicité"
 -/
 begin
     todo
@@ -114,8 +102,7 @@ lemma definition.bijectivite_2 :
 bijective f ↔ ∀ y : Y, exists_unique (λ x, y = f x)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (seconde définition)
+pretty_name = "Application bijective (seconde définition)"
 -/
 begin
     refl,
@@ -128,8 +115,7 @@ end definitions
 
 namespace injectivite_surjectivite_bijectivite
 /- dEAduction
-PrettyName
-    VRAI/FAUX : Injectivité, surjectivité, bijectivité d'une application
+pretty_name = "VRAI/FAUX : Injectivité, surjectivité, bijectivité d'une application"
 -/
 
 open definitions
@@ -146,12 +132,9 @@ lemma exercise.inj_nplus1  :
 injective (λ (n:ℕ) , n+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℕ → ℕ, f(n) = n+1, est-elle injective ?
-PrettyName
-    Injectivité de f(n) = n+1 - Entiers naturels
-OpenQuestion
-	True
+description = "La fonction f : ℕ → ℕ, f(n) = n+1, est-elle injective ?"
+pretty_name = "Injectivité de f(n) = n+1 - Entiers naturels"
+open_question = true
 -/
 begin
     todo
@@ -161,12 +144,9 @@ lemma exercise.surj_nplus1  :
 surjective (λ (n:ℕ) , n+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℕ → ℕ, f(n) = n+1, est-elle surjective ?
-PrettyName
-    Surjectivité de f(n) = n+1 - Entiers naturels
-OpenQuestion
-	True
+description = "La fonction f : ℕ → ℕ, f(n) = n+1, est-elle surjective ?"
+pretty_name = "Surjectivité de f(n) = n+1 - Entiers naturels"
+open_question = true
 -/
 begin
     todo
@@ -176,12 +156,9 @@ lemma exercise.bij_nplus1 :
 bijective (λ (n:ℕ) , n+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℕ → ℕ, f(x) = n+1, est-elle bijective ?
-PrettyName
-    Bijectivité de f(n) = n+1 - Entiers naturels
-OpenQuestion
-	True
+description = "La fonction f : ℕ → ℕ, f(x) = n+1, est-elle bijective ?"
+pretty_name = "Bijectivité de f(n) = n+1 - Entiers naturels"
+open_question = true
 -/
 begin
     todo
@@ -191,12 +168,9 @@ lemma exercise.inj_kplus1  :
 injective (λ (k :ℤ) , k+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = k+1, est-elle injective ?
-PrettyName
-    Injectivité de f(k) = k+1 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = k+1, est-elle injective ?"
+pretty_name = "Injectivité de f(k) = k+1 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -206,12 +180,9 @@ lemma exercise.surj_kplus1  :
 surjective (λ (k :ℤ) , k+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = k+1, est-elle surjective ?
-PrettyName
-    Surjectivité de f(k) = k+1 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = k+1, est-elle surjective ?"
+pretty_name = "Surjectivité de f(k) = k+1 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -221,12 +192,9 @@ lemma exercise.bij_kplus1 :
 bijective (λ (k :ℤ) , k+1)
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = k+1, est-elle bijective ?
-PrettyName
-    Bijectivité de f(k) = k+1 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = k+1, est-elle bijective ?"
+pretty_name = "Bijectivité de f(k) = k+1 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -236,12 +204,9 @@ lemma exercise.inj_2k  :
 injective (λ (k :ℤ) , 2*k +3)
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = 2*k+3, est-elle injective ?
-PrettyName
-    Injectivité de f(k) = 2*k +3 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = 2*k+3, est-elle injective ?"
+pretty_name = "Injectivité de f(k) = 2*k +3 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -251,12 +216,9 @@ lemma exercise.surj_2k  :
 surjective (λ (k :ℤ) , 2*k +3 )
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = 2*k +3 , est-elle surjective ?
-PrettyName
-    Surjectivité de f(k) = 2*k+3 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = 2*k +3 , est-elle surjective ?"
+pretty_name = "Surjectivité de f(k) = 2*k+3 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -266,12 +228,9 @@ lemma exercise.bij_2k :
 bijective (λ (k :ℤ) , 2*k +3 )
 :=
 /- dEAduction
-Description
-   La fonction f : ℤ → ℤ, f(k) = 2*k +3, est-elle bijective ?
-PrettyName
-    Bijectivité de f(k) = 2*k+3 - Entiers relatifs
-OpenQuestion
-	True
+description = "La fonction f : ℤ → ℤ, f(k) = 2*k +3, est-elle bijective ?"
+pretty_name = "Bijectivité de f(k) = 2*k+3 - Entiers relatifs"
+open_question = true
 -/
 begin
     todo
@@ -281,12 +240,9 @@ lemma exercise.inj_pol  :
 injective (λ (x : ℝ ) , 2*x^2 +3)
 :=
 /- dEAduction
-Description
-   La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle injective ?
-PrettyName
-    Injectivité de  f(x) = 2*x^2 +3 - Réels
-OpenQuestion
-	True
+description = "La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle injective ?"
+pretty_name = "Injectivité de  f(x) = 2*x^2 +3 - Réels"
+open_question = true
 -/
 begin
     todo
@@ -296,12 +252,9 @@ lemma exercise.surj_pol  :
 surjective (λ (x : ℝ ) , 2*x^2 +3)
 :=
 /- dEAduction
-Description
-   La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle surjective ?
-PrettyName
-    Surjectivité de  f(x) = 2*x^2 +3 - Réels
-OpenQuestion
-	True
+description = "La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle surjective ?"
+pretty_name = "Surjectivité de  f(x) = 2*x^2 +3 - Réels"
+open_question = true
 -/
 begin
     todo
@@ -311,12 +264,9 @@ lemma exercise.bij_pol  :
 bijective (λ (x : ℝ ) , 2*x^2 +3)
 :=
 /- dEAduction
-Description
-   La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle bijective ?
-PrettyName
-    Bijectivité de  f(x) = 2*x^2 +3 - Réels
-OpenQuestion
-	True
+description = "La fonction f : ℝ  → ℝ , f(x) = 2*x^2 +3, est-elle bijective ?"
+pretty_name = "Bijectivité de  f(x) = 2*x^2 +3 - Réels"
+open_question = true
 -/
 begin
     todo

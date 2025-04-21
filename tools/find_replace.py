@@ -175,6 +175,7 @@ if __name__ == '__main__':
     # file = "/home/leroux/PycharmProjects/dEAduction/src/deaduction/share/courses/snippets/arithmetique_bookproof_part2_chap4.lean"
     # process_file(filepath=file)
     # directory = "/home/leroux/PycharmProjects/dEAduction/src/deaduction/share/courses"
-    directory = "/home/leroux/VSCProjects/dEAduction-lean/src/exercises_deaduction_synchro"
+    # directory = "/home/leroux/VSCProjects/dEAduction-lean/src/exercises_deaduction_synchro"
+    directory = "/home/leroux/PycharmProjects/dEAduction/src/deaduction/share/courses"
     brose(directory)
 

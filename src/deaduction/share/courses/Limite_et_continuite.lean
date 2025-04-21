@@ -26,18 +26,16 @@ local attribute [instance] classical.prop_decidable
 -- dEAduction METADATA --
 -------------------------
 /- dEAduction
-Title
-    Limite et continuité
-Author
-    Frédéric Le Roux
-Institution
-    Université du monde
-Description
-    Des exercices sur les limites des suites
-    et la continuité des fonctions 
-Settings
-    functionality.calculator_available --> true
-    others.Lean_request_method --> "from_previous_proof_state"
+title = "Limite et continuité"
+author = "Frédéric Le Roux"
+institution = "Université du monde"
+description = """
+Des exercices sur les limites des suites
+et la continuité des fonctions
+"""
+[settings]
+functionality.calculator_available = true
+others.Lean_request_method = "from_previous_proof_state"
 -/
 
 
@@ -90,22 +88,19 @@ open tactic.interactive
 -----------------
 namespace definitions
 /- dEAduction
-PrettyName
-  Définitions
+pretty_name = "Définitions"
 -/
 
 
 namespace generalites
 /- dEAduction
-PrettyName
-  Généralités
+pretty_name = "Généralités"
 -/
 
 lemma theorem.archimedien : ∀ x:ℝ, ∃ n:ℕ, x < n
 :=
 /- dEAduction
-PrettyName
-  ℝ est archimédien
+pretty_name = "ℝ est archimédien"
 -/
 begin
   todo
@@ -208,8 +203,7 @@ lemma theorem.valeur_absolue_de_positif
 (x : RealSubGroup) :
 ((0 ≤ x) → (abs x = x)) :=
 /- dEAduction
-PrettyName
-  Valeur absolue d'un nombre positif
+pretty_name = "Valeur absolue d'un nombre positif"
 -/
 begin
   exact abs_of_nonneg,
@@ -219,8 +213,7 @@ lemma theorem.valeur_absolue_de_negatif
 (x : RealSubGroup) :
 ((x ≤ 0) → (abs x = -x)) :=
 /- dEAduction
-PrettyName
-  Valeur absolue d'un nombre négatif
+pretty_name = "Valeur absolue d'un nombre négatif"
 -/
 begin
   exact abs_of_nonpos,
@@ -231,8 +224,7 @@ lemma theorem.majoration_valeur_absolue
 (abs x < r) ↔ ((-r < x) ∧ (x < r))
 := 
 /- dEAduction
-PrettyName
-  Majoration d'une valeur absolue
+pretty_name = "Majoration d'une valeur absolue"
 -/
 begin
   exact abs_lt
@@ -244,8 +236,7 @@ lemma theorem.inegalite_triangulaire
 |x + y| ≤ |x| + |y|
 := 
 /- dEAduction
-PrettyName
-  Inégalité triangulaire
+pretty_name = "Inégalité triangulaire"
 -/
 begin
   exact abs_add x y 
@@ -255,8 +246,7 @@ lemma theorem.valeur_absolue_produit :
 ∀ x y : RealSubGroup,  |x * y| = |x| * |y|
 := 
 /- dEAduction
-PrettyName
-  Valeur absolue d'un produit
+pretty_name = "Valeur absolue d'un produit"
 -/
 begin
   intros x y, exact abs_mul x y 
@@ -278,10 +268,8 @@ lemma definition.limit
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
 := 
 /- dEAduction
-PrettyName
-  Limite d'une suite
-ImplicitUse
-  True
+pretty_name = "Limite d'une suite"
+implicit_use = true
 -/
 begin
   refl
@@ -293,10 +281,8 @@ lemma definition.converging_seq
 ∃ l, limit u l
 := 
 /- dEAduction
-PrettyName
-  Suite convergente
-ImplicitUse
-  True
+pretty_name = "Suite convergente"
+implicit_use = true
 -/
 begin
   refl
@@ -306,10 +292,8 @@ lemma definition.limit_plus_infinity
 {u : ℕ → ℝ} :
 (limit_plus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M := 
 /- dEAduction
-PrettyName
-  Limite infinie d'une suite
-ImplicitUse
-  True
+pretty_name = "Limite infinie d'une suite"
+implicit_use = true
 -/
 begin
   refl
@@ -321,10 +305,8 @@ lemma definition.increasing_seq
 ∀ p q, p ≤ q → u p ≤ u q
 := 
 /- dEAduction
-PrettyName
-  Suite croissante
-ImplicitUse
-  True
+pretty_name = "Suite croissante"
+implicit_use = true
 -/
 begin
   refl
@@ -336,10 +318,8 @@ lemma definition.bounded_above
 ∃ M:ℝ, ∀ n,  u n ≤ M
 := 
 /- dEAduction
-PrettyName
-  Suite majorée
-ImplicitUse
-  True
+pretty_name = "Suite majorée"
+implicit_use = true
 -/
 begin
   refl
@@ -366,10 +346,8 @@ lemma definition.bounded
 ∃ M>0, ∀ n, | u n | ≤ M
 := 
 /- dEAduction
-PrettyName
-  Suite bornée
-ImplicitUse
-  True
+pretty_name = "Suite bornée"
+implicit_use = true
 -/
 begin
   refl
@@ -390,10 +368,8 @@ lemma definition.limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) :
 limit_function f a l ↔ 
 ( ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε ) ):=
 /- dEAduction
-PrettyName
-  Limite d'une fonction
-ImplicitUse
-  True
+pretty_name = "Limite d'une fonction"
+implicit_use = true
 -/
 begin
   refl
@@ -402,8 +378,7 @@ end
 lemma definition.continuous_at (f : ℝ → ℝ) (a : ℝ) :
 (continuous_at f a) ↔ (limit_function f a (f a)) :=
 /- dEAduction
-PrettyName
-  Continuité en un point
+pretty_name = "Continuité en un point"
 -/
 begin
   refl
@@ -412,10 +387,8 @@ end
 lemma definition.continuous (f: ℝ → ℝ) :
 (continuous f) ↔ ∀ a, continuous_at f a :=
 /- dEAduction
-PrettyName
-  Continuité
-ImplicitUse
-  True
+pretty_name = "Continuité"
+implicit_use = true
 -/
 begin
   refl
@@ -432,15 +405,13 @@ end definitions
 
 namespace preliminaires
 /- dEAduction
-PrettyName
-  Un exercice préliminaire
+pretty_name = "Un exercice préliminaire"
 -/
 
 lemma exercise.plus_petit_que_tout_pos (x: ℝ):
 (∀ ε>0, x < ε) → x ≤ 0 :=
 /- dEAduction
-PrettyName
-  Plus petit que tout
+pretty_name = "Plus petit que tout"
 -/
 begin
   todo
@@ -450,8 +421,7 @@ end preliminaires
 
 namespace exercices_suites_I
 /- dEAduction
-PrettyName
-  Exercices sur les suites I
+pretty_name = "Exercices sur les suites I"
 -/
 
 -- open definitions
@@ -500,12 +470,12 @@ lemma exercise.limit_constante
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
 converging_seq u :=
 /- dEAduction
-PrettyName
-  La limite d'une suite constante !
-Description
-  Dans ce premier exercice,
-  il s'agit de démontrer, dans un cas très simple,
-  l'existence d'une limite.
+pretty_name = "La limite d'une suite constante !"
+description = """
+Dans ce premier exercice,
+il s'agit de démontrer, dans un cas très simple,
+l'existence d'une limite.
+"""
 -/
 begin
   todo,
@@ -542,11 +512,11 @@ lemma exercise.croissante_non_majoree
 (u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
 limit_plus_infinity u :=
 /- dEAduction
-PrettyName
-  Une suite croissante non majorée tend vers plus l'infini
-Description
-  Dans ce deuxième exercice,
-  il s'agit à nouveau de démontrer une limite, mais infinie.
+pretty_name = "Une suite croissante non majorée tend vers plus l'infini"
+description = """
+Dans ce deuxième exercice,
+il s'agit à nouveau de démontrer une limite, mais infinie.
+"""
 -/
 begin
   todo,
@@ -559,11 +529,11 @@ lemma exercise.limite_positive
 ∃ N, ∀ n ≥ N, u n > 0
 :=
 /- dEAduction
-PrettyName
-  Suite dont la limite est strictement positive
-Description
-  Dans ce troisième exercice,
-  il s'agit d'utiliser une hypothèse de limite.
+pretty_name = "Suite dont la limite est strictement positive"
+description = """
+Dans ce troisième exercice,
+il s'agit d'utiliser une hypothèse de limite.
+"""
 -/
 begin
   -- have W := exercise.limit_constante,
@@ -578,12 +548,12 @@ lemma exercise.limite_inegalites
 (∀n, u n ≤ v n ) → l ≤ l'
 :=
 /- dEAduction
-PrettyName
-  Passage à la limite dans une inégalité (*)
-Description
-  Comment démarrer ??
-  Comment avoir un epsilon pertinent auquel appliquer nos
-  définitions de limites ?...
+pretty_name = "Passage à la limite dans une inégalité (*)"
+description = """
+Comment démarrer ??
+Comment avoir un epsilon pertinent auquel appliquer nos
+définitions de limites ?...
+"""
 -/
 begin
   todo,
@@ -595,8 +565,7 @@ end exercices_suites_I
 
 namespace exercices_suites_II
 /- dEAduction
-PrettyName
-  Exercices sur les suites II
+pretty_name = "Exercices sur les suites II"
 -/
 
 lemma exercise.couper_epsilon_en_deux
@@ -605,11 +574,11 @@ lemma exercise.couper_epsilon_en_deux
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < 2*ε
 :=
 /- dEAduction
-PrettyName
-  Couper les epsilons en deux
-Description
-  Nous avons maintenant une limite dans les hypothèses,
-  et une limite dans la conclusion !
+pretty_name = "Couper les epsilons en deux"
+description = """
+Nous avons maintenant une limite dans les hypothèses,
+et une limite dans la conclusion !
+"""
 -/
 begin
   todo,
@@ -622,11 +591,11 @@ lemma exercise.couper_epsilon_en_100
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < 100*ε
 :=
 /- dEAduction
-PrettyName
-  Couper les epsilons en cent !
-Description
-  Simple variante du précédent,
-  pour voir si vous avez compris...
+pretty_name = "Couper les epsilons en cent !"
+description = """
+Simple variante du précédent,
+pour voir si vous avez compris...
+"""
 -/
 begin
   todo,
@@ -638,11 +607,11 @@ lemma exercise.limite_somme
 limit (λn, u n + v n) (l+l')
 :=
 /- dEAduction
-PrettyName
-  Limite d'une somme
-Description
-  Aide : il peut être judicieux d'utiliser le résultat
-  d'un exercice précédent...
+pretty_name = "Limite d'une somme"
+description = """
+Aide : il peut être judicieux d'utiliser le résultat
+d'un exercice précédent...
+"""
 -/
 
 
@@ -655,11 +624,11 @@ lemma exercise.limite_unique
 l = l' 
 :=
 /- dEAduction
-PrettyName
-  Unicité de la limite (*)
-Description
-  Ici il peut être judicieux de raisonner par l'absurde,
-  et de traiter séparément les cas l < l' et l' < l 
+pretty_name = "Unicité de la limite (*)"
+description = """
+Ici il peut être judicieux de raisonner par l'absurde,
+et de traiter séparément les cas l < l' et l' < l
+"""
 -/
 begin
   todo,
@@ -673,8 +642,7 @@ lemma exercise.gendarmes
 limit v l
 :=
 /- dEAduction
-PrettyName
-  Théorème des gendarmes (*)
+pretty_name = "Théorème des gendarmes (*)"
 -/
 begin
   todo,
@@ -687,8 +655,7 @@ lemma exercise.borne_fois_zero
 limit (λn, (u n) * (v n)) 0
 :=
 /- dEAduction
-PrettyName
-  (**) Limite d'un produit (cas particulier)
+pretty_name = "(**) Limite d'un produit (cas particulier)"
 -/
 begin
   todo,
@@ -711,8 +678,7 @@ end exercices_suites_II
 
 namespace exercices_fonctions
 /- dEAduction
-PrettyName
-  Exercices sur les fonctions
+pretty_name = "Exercices sur les fonctions"
 -/
 
 open definitions
@@ -724,10 +690,8 @@ lemma exercise.limite_positive
 (H0: continuous f) (H1: f(0) = 1):
 ∃ δ>(0:ℝ), ∀ x, |x| < δ → f(x) >0 :=
 /- dEAduction
-PrettyName
-  Limite positive
-Description
-  Deux limites en hypothèse, une en conclusion...
+pretty_name = "Limite positive"
+description = "Deux limites en hypothèse, une en conclusion..."
 -/
 begin
   todo,
@@ -739,10 +703,8 @@ lemma exercise.composition_limite_fonction
 (H1: limit_function (λ y, g y) b c):
 limit_function (λ x, g ( f ( x)) ) a c :=
 /- dEAduction
-PrettyName
-  Limite et composition
-Description
-  Deux limites en hypothèse, une en conclusion...
+pretty_name = "Limite et composition"
+description = "Deux limites en hypothèse, une en conclusion..."
 -/
 begin
   todo
@@ -753,8 +715,7 @@ lemma exercise.composition_continuite (f: ℝ →  ℝ) (g: ℝ → ℝ)
 (H: continuous f) (H': continuous g):
 continuous (function.comp g f) :=
 /- dEAduction
-PrettyName
-  Continuité et composition
+pretty_name = "Continuité et composition"
 -/
 begin 
   todo,
@@ -765,10 +726,8 @@ lemma exercise.image_convergente (u: ℕ → ℝ) (l : ℝ) (f: ℝ → ℝ)
 (H: limit u l) (H': continuous f):
 limit (λ n, f (u n)) (f l) :=
 /- dEAduction
-PrettyName
-  Image d'une suite convergente
-Description
-  Deux limites en hypothèse, une en conclusion...
+pretty_name = "Image d'une suite convergente"
+description = "Deux limites en hypothèse, une en conclusion..."
 -/
 begin 
   todo,
@@ -780,8 +739,7 @@ end exercices_fonctions
 
 namespace suites_de_Cauchy
 /- dEAduction
-PrettyName
-  Suites de Cauchy
+pretty_name = "Suites de Cauchy"
 -/
 
 
@@ -790,10 +748,8 @@ lemma definition.suite_de_cauchy
 cauchy u ↔ ∀ ε>0, ∃ N: ℕ, ∀ p≥N, ∀ q≥N, |u p - u q | < ε
 :=
 /- dEAduction
-PrettyName
-  Suites de Cauchy
-ImplicitUse
-  True
+pretty_name = "Suites de Cauchy"
+implicit_use = true
 -/
 begin
   refl,
@@ -803,8 +759,7 @@ end
 lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ): 
 converging_seq u → cauchy u :=
 /- dEAduction
-PrettyName
-  Une suite convergente est de Cauchy
+pretty_name = "Une suite convergente est de Cauchy"
 -/
 begin
   todo,
@@ -816,8 +771,7 @@ end suites_de_Cauchy
 
 namespace continuite_uniforme
 /- dEAduction
-PrettyName
-  Continuité uniforme
+pretty_name = "Continuité uniforme"
 -/
 
 lemma definition.uniformly_continuous
@@ -826,10 +780,8 @@ lemma definition.uniformly_continuous
 (|x - y| < δ → |f x - f y | < ε)
 :=
 /- dEAduction
-PrettyName
-  Continuité uniforme
-ImplicitUse
-  True
+pretty_name = "Continuité uniforme"
+implicit_use = true
 -/
 begin
   refl,
@@ -839,8 +791,7 @@ lemma exercise.continue_de_uniformement_continue
 (f: ℝ → ℝ) (H0: uniformly_continuous f):
 continuous f :=
 /- dEAduction
-PrettyName
-  Uniformément continu implique continu
+pretty_name = "Uniformément continu implique continu"
 -/
 begin
   todo,
@@ -852,8 +803,7 @@ lemma exercise.cauchy_uniformement_continue
 cauchy (λ n:ℕ, f (u n))
 :=
 /- dEAduction
-PrettyName
-  Image d'une suite de Cauchy
+pretty_name = "Image d'une suite de Cauchy"
 -/
 begin
   todo,

@@ -37,24 +37,20 @@ import set_definitions
 -- proof methods names ['cbr', 'contrapose', 'absurdum', 'sorry']
 
 /- dEAduction
-Title
-    Théorie des ensembles : applications - FONCTION CARREE sur ℝ
-Author
-    Isabelle Dubois 
-Institution
-    Université de Lorraine
-Description
-    Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles. Partie Applications.
-    
-    Il propose de travailler les différentes notions avec l'aide de la fonction
-    carrée définie sur ℝ.
-Settings
-    functionality.calculator_available --> true
-    others.Lean_request_method --> "normal"    
-AvailableExercises
-	NONE
-Display
-    segment --> ( "[",-2, " , ", -1, "]")
+title = "Théorie des ensembles : applications - FONCTION CARREE sur ℝ"
+author = "Isabelle Dubois"
+institution = "Université de Lorraine"
+description = """
+Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles. Partie Applications.
+Il propose de travailler les différentes notions avec l'aide de la fonction
+carrée définie sur ℝ.
+"""
+available_exercises = "NONE"
+[display]
+segment = [ "[",-2, " , ", -1, "]"]
+[settings]
+functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 /- RESTES
@@ -85,8 +81,7 @@ notation `[`a `, ` b `]` := segment a b
 
 namespace generalites
 /- dEAduction
-PrettyName
-    Généralités
+pretty_name = "Généralités"
 -/
 
 ------------------------
@@ -100,14 +95,12 @@ variables (g : Y → Z) (h : X → Z)
 
 namespace generalites_ensembles
 /- dEAduction
-PrettyName
-    Généralités sur les ensembles
+pretty_name = "Généralités sur les ensembles"
 -/
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
-ImplicitUse
-    True
+implicit_use = true
 -/
 begin
     todo
@@ -116,10 +109,8 @@ end
 lemma definition.egalite_deux_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
-PrettyName
-    Egalité de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Egalité de deux ensembles"
+implicit_use = true
 -/
 begin
      todo
@@ -127,10 +118,8 @@ end
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -141,10 +130,8 @@ end
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Union de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -154,8 +141,7 @@ lemma theorem.double_inclusion (A A' : set X) :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) 
 :=
 /- dEAduction
-PrettyName
-    Egalité de deux ensembles : double inclusion
+pretty_name = "Egalité de deux ensembles : double inclusion"
 -/
 begin
     todo
@@ -174,8 +160,7 @@ lemma definition.ensemble_extension {X: Type}  {P : X → Prop} {x:X} :
  x ∈ {x | P x} ↔ P x
 :=
 /- dEAduction
-PrettyName
-    Ensemble défini en extension
+pretty_name = "Ensemble défini en extension"
 -/
 begin
     todo
@@ -192,10 +177,8 @@ end
 lemma definition.singleton {X : Type} {x y : X}: x ∈ ({y} : set X) ↔ x = y
 :=
 /- dEAduction
-PrettyName
-    Ensemble singleton
-AuxiliaryDefinitions
-  generalites.generalites_ensembles.auxiliary_definition.singleton
+pretty_name = "Ensemble singleton"
+auxiliary_definitions = "generalites.generalites_ensembles.auxiliary_definition.singleton"
 -/
 begin
     todo
@@ -213,10 +196,8 @@ end
 lemma definition.paire {X : Type} {x y z : X}: z ∈ ({x, y} : set X) ↔ (z=x ∨ z = y)
 :=
 /- dEAduction
-PrettyName
-    Ensemble paire d'éléments
-AuxiliaryDefinitions
-  generalites.generalites_ensembles.auxiliary_definition.paire
+pretty_name = "Ensemble paire d'éléments"
+auxiliary_definitions = "generalites.generalites_ensembles.auxiliary_definition.paire"
 -/
 begin
     todo
@@ -230,8 +211,7 @@ end generalites_ensembles
 
 namespace generalites_applications
 /- dEAduction
-PrettyName
-    Généralités sur les applications
+pretty_name = "Généralités sur les applications"
 -/
 
 
@@ -254,10 +234,8 @@ lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
 /- dEAduction
-PrettyName
-    Application injective
-ImplicitUse
-    True
+pretty_name = "Application injective"
+implicit_use = true
 -/
 begin
     refl,
@@ -267,10 +245,8 @@ lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
-PrettyName
-    Application surjective
-ImplicitUse
-    True
+pretty_name = "Application surjective"
+implicit_use = true
 -/
 begin
     refl,
@@ -283,8 +259,7 @@ lemma definition.bijectivite_1 :
 bijective f ↔ (injective f ∧ surjective f)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (première définition)
+pretty_name = "Application bijective (première définition)"
 -/
 begin
     todo
@@ -294,8 +269,7 @@ lemma definition.bijectivite_2 :
 bijective f ↔ ∀ y : Y, exists_unique (λ x, y = f x)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (seconde définition)
+pretty_name = "Application bijective (seconde définition)"
 -/
 begin
     refl,
@@ -306,8 +280,7 @@ lemma definition.existe_un_unique
 (∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x' = x)))
 :=
 /- dEAduction
-PrettyName
-    ∃! : existence et unicité
+pretty_name = "∃! : existence et unicité"
 -/
 begin
     todo
@@ -322,8 +295,7 @@ end generalites
 ---------------
 namespace proprietes_fonction_carree
 /- dEAduction
-PrettyName
-    Propriétés de la fonction carrée sur ℝ
+pretty_name = "Propriétés de la fonction carrée sur ℝ"
 -/
 -- Ancien titre : Images directes et réciproques, in/sur/bi/jectivité
 open generalites
@@ -345,8 +317,7 @@ lemma exercise.image_directe_0 ( f : ℝ → ℝ ) { B : set ℝ}  (H : ∀ x:�
 ∀ A : set ℝ  , (f '' A ) ⊆ B
 :=
 /- dEAduction
-PrettyName
-    L'image directe d'un ensemble est inclus dans ℝ_+
+pretty_name = "L'image directe d'un ensemble est inclus dans ℝ_+"
 -/
 begin
     todo
@@ -357,8 +328,7 @@ lemma exercise.image_directe_singleton  (a : ℝ) ( f : ℝ → ℝ ) (H : ∀ x
 ∃ b : ℝ, f '' ( { a} ) =  { b}
 :=
 /- dEAduction
-PrettyName
-    L'image directe d'un singleton est un singleton
+pretty_name = "L'image directe d'un singleton est un singleton"
 -/
 begin
     todo
@@ -368,8 +338,7 @@ lemma exercise.image_directe_paire ( f : ℝ → ℝ ) (a : ℝ)  (H : ∀ x:ℝ
 ∃ b : ℝ, f '' ( { -a, a} ) =  { b}
 :=
 /- dEAduction
-PrettyName
-    L'image directe d'une paire peut être un singleton
+pretty_name = "L'image directe d'une paire peut être un singleton"
 -/
 begin
     todo
@@ -381,8 +350,7 @@ lemma exercise.image_reciproque_singleton1 ( f : ℝ → ℝ ) (H : ∀ x:ℝ, f
 ∃ a : ℝ, ∃ b : ℝ, f  ⁻¹'  ( { a} ) =  { b}
 :=
 /- dEAduction
-PrettyName
-    L'image réciproque d'un singleton peut être un singleton
+pretty_name = "L'image réciproque d'un singleton peut être un singleton"
 -/
 begin
     todo
@@ -392,8 +360,7 @@ lemma exercise.image_reciproque_singleton2 ( f : ℝ → ℝ ) (H : ∀ x:ℝ, f
 ∃ a : ℝ, ∃ b : ℝ, ∃ c ≠ b, { b, c} ⊆ f  ⁻¹'  ( { a} ) 
 :=
 /- dEAduction
-PrettyName
-    L'image réciproque d'un singleton peut contenir deux éléments
+pretty_name = "L'image réciproque d'un singleton peut contenir deux éléments"
 -/
 begin
     todo
@@ -403,8 +370,7 @@ lemma exercise.image_reciproque_singleton3 ( f : ℝ → ℝ ) (H : ∀ x:ℝ, f
 ∃ a : ℝ, f  ⁻¹'  ( { a} ) =  ∅
 :=
 /- dEAduction
-PrettyName
-    L'image réciproque d'un singleton peut être vide
+pretty_name = "L'image réciproque d'un singleton peut être vide"
 -/
 begin
     todo
@@ -416,8 +382,7 @@ lemma definition.sqrt {x y:ℝ}:
  ( y = (sqrt x) ) ↔ ( ( 0 ≤ x) and ( 0 ≤ y) and y^2 = x )
 :=
 /- dEAduction
-PrettyName
-    Racine carrée
+pretty_name = "Racine carrée"
 -/
 begin
    todo
@@ -430,8 +395,7 @@ lemma theorem.sqrt_reel :
  ∀  x:ℝ, (( 0 ≤ x) → (sqrt x) ∈ ( univ : set ℝ)  )
 := 
 /- dEAduction
-PrettyName
-    Racine carrée est un réel
+pretty_name = "Racine carrée est un réel"
 -/
 begin
    todo
@@ -447,8 +411,7 @@ lemma theorem.sqrt_positif  :
 ∀ x:ℝ, ( ( 0 ≤  x ) →  (0 ≤  sqrt x )  )
 := 
 /- dEAduction
-PrettyName
-   Racine carrée est positive
+pretty_name = "Racine carrée est positive"
 -/
 begin
    todo
@@ -459,8 +422,7 @@ lemma theorem.sqrt_au_carre :
 ∀ x:ℝ, (( 0 ≤ x) → ( (sqrt x)^2 = x ))
 := 
 /- dEAduction
-PrettyName
-   Racine carrée mise au carré
+pretty_name = "Racine carrée mise au carré"
 -/
 begin
   todo
@@ -472,15 +434,12 @@ lemma exercise.image_directe_R ( f : ℝ → ℝ ) ( B : set ℝ ) (H1 : ∀ x:�
 f '' ( univ ) =  B
 :=
 /- dEAduction
-Description
-    L'image directe de ℝ est ℝ_+. Conseils : se servir de la double inclusion pour l'égalité d'ensemble, et d'un exercice précédent mis à disposition.
-    
-    A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
-PrettyName
-    L'image directe de ℝ est ℝ_+ 
-    
-AvailableExercises
-	image_directe_0
+description = """
+L'image directe de ℝ est ℝ_+. Conseils : se servir de la double inclusion pour l'égalité d'ensemble, et d'un exercice précédent mis à disposition.
+A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
+"""
+pretty_name = "L'image directe de ℝ est ℝ_+"
+available_exercises = "image_directe_0"
 -/
 begin
     todo
@@ -495,9 +454,7 @@ lemma theorem.sqrt_carres  :
   ∀ x:ℝ, ( (0 ≤ x) → sqrt ( x^2 ) = x )
 := 
 /- dEAduction
-PrettyName
-    Racine carrée d'un carré parfait
-    
+pretty_name = "Racine carrée d'un carré parfait"
 -/
 begin
    todo
@@ -508,8 +465,7 @@ lemma theorem.sqrt_croissance  :
  ∀ x:ℝ, ( (0 ≤ x) → ( ∀ y:ℝ, (( x ≤ y) → (sqrt x ≤ sqrt y ))) )
 := 
 /- dEAduction
-PrettyName
-    Racine carrée est croissante
+pretty_name = "Racine carrée est croissante"
 -/
 begin
    todo
@@ -519,10 +475,8 @@ lemma definition.segment {x:ℝ} (a b : ℝ) :
  x ∈ segment a b ↔ ( a ≤ x ∧ x ≤ b )
 := 
 /- dEAduction
-PrettyName
-    Segment réel
-ImplicitUse
-    True
+pretty_name = "Segment réel"
+implicit_use = true
 -/
 begin
     refl,
@@ -537,14 +491,13 @@ lemma exercise.image_directe_segment ( f : ℝ → ℝ ) (H : ∀ x:ℝ, f x = x
 ∃ a : ℝ, ∃ b: ℝ, f '' ( [ (-2) , 1] ) =  [ a , b]
 :=
 /- dEAduction
-Description
-    Quelle est l'image directe du segment [-2;1] ?
-    
-    A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
-PrettyName
-    Quelle est l'image directe du segment [-2;1] ?
-
-
+description = """
+Quelle est l'image directe du segment [-2;1] ?
+A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
+"""
+pretty_name = "Quelle est l'image directe du segment [-2;1] ?"
+ = """
+"""
 -/
 begin
     todo
@@ -554,12 +507,11 @@ lemma exercise.image_reciproque_segment ( f : ℝ → ℝ ) (H : ∀ x:ℝ, f x 
 ∃ a : ℝ, ∃ b: ℝ,  f  ⁻¹'  ( [ (-2) , 1] ) =  [ a , b]
 :=
 /- dEAduction
-Description
-    Quelle est l'image réciproque  du segment [-2;1] ?
-    
-    A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
-PrettyName
-    Quelle est l'image réciproque  du segment [-2;1] ?
+description = """
+Quelle est l'image réciproque  du segment [-2;1] ?
+A disposition : la fonction sqrt carrée, sous la forme sqrt (x), si 0 ≤ x.
+"""
+pretty_name = "Quelle est l'image réciproque  du segment [-2;1] ?"
 -/
 begin
     todo
@@ -570,10 +522,8 @@ lemma exercise.surjectivite   :
 (surjective (λ (x: ℝ) , x^2) )
 :=
 /- dEAduction
-PrettyName
-    La fonction f :  ℝ → ℝ, f(x) = x², est-elle surjective ?
-OpenQuestion
-	True
+pretty_name = "La fonction f :  ℝ → ℝ, f(x) = x², est-elle surjective ?"
+open_question = true
 -/
 begin
     todo
@@ -583,11 +533,8 @@ lemma exercise.injectivite  :
  (injective (λ (x: ℝ) , x^2) )
 :=
 /- dEAduction
-PrettyName
-    La fonction f :  ℝ → ℝ, f(x) = x², est-elle injective ?
-
-OpenQuestion
-	True
+pretty_name = "La fonction f :  ℝ → ℝ, f(x) = x², est-elle injective ?"
+open_question = true
 -/
 begin
     todo
@@ -599,14 +546,11 @@ lemma exercise.bijectivite    :
  (bijective (λ (x: ℝ) , x^2) )
 :=
 /- dEAduction
-PrettyName
-    La fonction f :  ℝ → ℝ, f(x) = x², est-elle bijective ?
-    
-    On peut essayer les deux définitions équivalentes à disposition
-    
-
-OpenQuestion
-	True
+pretty_name = """
+La fonction f :  ℝ → ℝ, f(x) = x², est-elle bijective ?
+On peut essayer les deux définitions équivalentes à disposition
+"""
+open_question = true
 -/
 begin
     todo
@@ -618,5 +562,4 @@ end proprietes_fonction_carree
 
 
 end course
-
 

@@ -25,33 +25,28 @@ local attribute [instance] classical.prop_decidable
 -- dEAduction METADATA --
 -------------------------
 /- dEAduction
-Title
-    Ensembles et applications
-Author
-    Frédéric Le Roux, Camille Lichère, Zoé Mesnil
-Institution
-    Université du monde
-Description
-    Ce fichier contient une série d'exercices concernant les opérations ensemblistes
-    préservées par image directe ou réciproque par une application.
-    ATTENTION, certains énoncés sont faux ! Si vous n'arrivez pas à démontrer un énoncé, 
-    cherchez un contre-exemple...
-AvailableProof
-    proof_methods new_object
-AvailableCompute
-    NONE
-AvailableExercises
-  UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
-  -image_de_image_reciproque_I -image_reciproque_de_image_II
-  -injective_si_compo_injective_I -surjective_si_compo_surjective_II
-  -image_directe_et_intersection_VI
-AvailableDefinitions
-  UNTIL_NOW -singleton -paire -identite -egalite_fonctions
-AvailableTheorems
-  UNTIL_NOW -image_singleton -image_paire
-Settings
-    functionality.allow_induction --> false
-    functionality.calculator_available --> true
+title = "Ensembles et applications"
+author = "Frédéric Le Roux, Camille Lichère, Zoé Mesnil"
+institution = "Université du monde"
+description = """
+Ce fichier contient une série d'exercices concernant les opérations ensemblistes
+préservées par image directe ou réciproque par une application.
+ATTENTION, certains énoncés sont faux ! Si vous n'arrivez pas à démontrer un énoncé,
+cherchez un contre-exemple...
+"""
+available_proof = "proof_methods new_object"
+available_compute = "NONE"
+available_exercises = """
+UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -image_directe_et_intersection_II
+-image_de_image_reciproque_I -image_reciproque_de_image_II
+-injective_si_compo_injective_I -surjective_si_compo_surjective_II
+-image_directe_et_intersection_VI
+"""
+available_definitions = "UNTIL_NOW -singleton -paire -identite -egalite_fonctions"
+available_theorems = "UNTIL_NOW -image_singleton -image_paire"
+[settings]
+functionality.allow_induction = false
+functionality.calculator_available = true
 -/
 
 ---------------------------------------------
@@ -68,16 +63,14 @@ open set
 ------------------
 namespace ensembles_et_applications
 /- dEAduction
-PrettyName
-    Ensembles et applications
+pretty_name = "Ensembles et applications"
 -/
 
 namespace logique
 
 lemma definition.iff {P Q : Prop} : (P ↔ Q) ↔ ((P → Q) ∧ (Q → P)) :=
 /- dEAduction
-PrettyName
-    Equivalence logique
+pretty_name = "Equivalence logique"
 -/
 begin
   exact iff_def,
@@ -87,8 +80,7 @@ lemma theorem.disjonction_eqv_implication (P Q: Prop) :
 (P ∨ Q) ↔ ((not P) → Q)
 := 
 /- dEAduction
-PrettyName
-    Disjonction sous forme d'implication
+pretty_name = "Disjonction sous forme d'implication"
 -/
 begin
   tautology,
@@ -98,20 +90,17 @@ end logique
 
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 namespace generalites
 
 /- dEAduction
-PrettyName
-    Généralités
+pretty_name = "Généralités"
 -/
 
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
-ImplicitUse
-  True
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -127,10 +116,8 @@ end
 lemma definition.egalite_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
-PrettyName
-    Egalité de deux ensembles
-AuxiliaryDefinitions
-  auxiliary_definition.negation_egalite_ensembles
+pretty_name = "Egalité de deux ensembles"
+auxiliary_definitions = "auxiliary_definition.negation_egalite_ensembles"
 -/
 begin
      exact set.ext_iff
@@ -146,12 +133,9 @@ end
 lemma definition.double_inclusion {A A' : set X} :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
-PrettyName
-    Double inclusion
-ImplicitUse
-  True
-AuxiliaryDefinitions
-  auxiliary_definition.negation_double_inclusion
+pretty_name = "Double inclusion"
+implicit_use = true
+auxiliary_definitions = "auxiliary_definition.negation_double_inclusion"
 -/
 begin
     exact set.subset.antisymm_iff
@@ -178,10 +162,8 @@ lemma definition.ensemble_non_vide
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
-AuxiliaryDefinitions
-  auxiliary_definition.ensemble_non_vide
-ImplicitUse
-  True
+auxiliary_definitions = "auxiliary_definition.ensemble_non_vide"
+implicit_use = true
 -/
 begin
     todo
@@ -217,10 +199,8 @@ variables {A B C : set X}
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -229,10 +209,8 @@ end
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Union de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -251,8 +229,7 @@ variables {f: X → Y} {B B': set Y}
 lemma definition.egalite_fonctions {f' : X → Y} :
 f = f' ↔ ∀ x, f x = f' x :=
 /- dEAduction
-PrettyName
-    Egalité de deux fonctions
+pretty_name = "Egalité de deux fonctions"
 -/
 begin
     exact function.funext_iff,
@@ -262,8 +239,7 @@ end
 lemma definition.identite {f₀: X → X} :
 f₀ = Identite ↔ ∀ x, f₀ x = x :=
 /- dEAduction
-PrettyName
-    Application identité
+pretty_name = "Application identité"
 -/
 begin
     apply definition.egalite_fonctions,
@@ -305,10 +281,8 @@ lemma definition.injectivite :
 injective f ↔ ∀ {x x' : X}, (f x = f x' → x = x')
 :=
 /- dEAduction
-PrettyName
-    Application injective
-ImplicitUse
-    True
+pretty_name = "Application injective"
+implicit_use = true
 -/
 begin
     refl,
@@ -318,10 +292,8 @@ lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
-PrettyName
-    Application surjective
-ImplicitUse
-    True
+pretty_name = "Application surjective"
+implicit_use = true
 -/
 begin
     refl,
@@ -332,8 +304,7 @@ lemma theorem.image_singleton :
  f '' {x_0} = {f(x_0)}
 :=
 /- dEAduction
-PrettyName
-  Image d'un singleton
+pretty_name = "Image d'un singleton"
 -/
 begin
     todo
@@ -344,8 +315,7 @@ lemma theorem.image_paire :
  f '' (pair x_0 x_1) = pair (f x_0) (f x_1)
 :=
 /- dEAduction
-PrettyName
-  Image d'une paire
+pretty_name = "Image d'une paire"
 -/
 begin
   todo
@@ -405,8 +375,7 @@ lemma exercise.composition_image_directe
 (function.comp g f) '' A = g '' (f '' A)
 :=
 /- dEAduction
-PrettyName
-    Image directe par une composition
+pretty_name = "Image directe par une composition"
 -/
 begin
     todo
@@ -418,8 +387,7 @@ lemma exercise.composition_image_reciproque
 (function.comp g f) ⁻¹' C = f ⁻¹' (g ⁻¹' C)
 :=
 /- dEAduction
-PrettyName
-    Image réciproque par une composition
+pretty_name = "Image réciproque par une composition"
 -/
 begin
     todo
@@ -429,16 +397,14 @@ end composition_et_images
 
 namespace image_et_image_reciproque
 /- dEAduction
-PrettyName
-  Image et image réciproque
+pretty_name = "Image et image réciproque"
 -/
 
 lemma exercise.image_reciproque_de_image_I :
 ∀ A, A ⊆ f ⁻¹' (f '' (A))
 :=
 /- dEAduction
-PrettyName
-  Image réciproque de l'image
+pretty_name = "Image réciproque de l'image"
 -/
 begin
   todo
@@ -448,8 +414,7 @@ lemma exercise.image_reciproque_de_image_II :
 ∀ A, f ⁻¹' (f '' (A)) ⊆ A
 :=
 /- dEAduction
-PrettyName
-  Image réciproque de l'image : inclusion réciproque
+pretty_name = "Image réciproque de l'image : inclusion réciproque"
 -/
 begin
   todo
@@ -459,8 +424,7 @@ lemma exercise.image_de_image_reciproque_I :
 ∀ B, B ⊆ f '' (f ⁻¹' (B))
 :=
 /- dEAduction
-PrettyName
-  Image de l'image réciproque
+pretty_name = "Image de l'image réciproque"
 -/
 begin
   todo
@@ -470,8 +434,7 @@ lemma exercise.image_de_image_reciproque_II :
 ∀ B, f '' (f ⁻¹' (B)) ⊆ B
 :=
 /- dEAduction
-PrettyName
-  Image de l'image réciproque : inclusion réciproque
+pretty_name = "Image de l'image réciproque : inclusion réciproque"
 -/
 begin
   todo
@@ -487,16 +450,14 @@ end image_et_image_reciproque
 ---------------------------------
 namespace images_inclusion
 /- dEAduction
-PrettyName
-  Images et inclusion
+pretty_name = "Images et inclusion"
 -/
 
 lemma exercise.image_directe_et_inclusion :
 ∀ A A': set X, A ⊆ A' → f '' (A) ⊆ f '' (A')
 :=
 /- dEAduction
-PrettyName
-  Image directe et inclusion
+pretty_name = "Image directe et inclusion"
 -/
 begin
   todo
@@ -517,8 +478,7 @@ lemma exercise.image_reciproque_et_inclusion :
 ∀ B B': set Y, B ⊆ B' → f ⁻¹' (B) ⊆ f ⁻¹' (B')
 :=
 /- dEAduction
-PrettyName
-  Image réciproque et inclusion
+pretty_name = "Image réciproque et inclusion"
 -/
 begin
   todo
@@ -540,16 +500,14 @@ end images_inclusion
 
 namespace images_union
 /- dEAduction
-PrettyName
-  Images et union
+pretty_name = "Images et union"
 -/
 
 lemma exercise.image_directe_union :
 ∀ A A' : set X, f '' ( A ∪ A') = f '' (A) ∪ f '' (A')
 :=
 /- dEAduction
-PrettyName
-  Image directe et union
+pretty_name = "Image directe et union"
 -/
 begin
   todo
@@ -559,8 +517,7 @@ lemma exercise.image_reciproque_union :
 ∀ B B' : set Y, f ⁻¹' ( B ∪ B') = f ⁻¹' (B) ∪ f ⁻¹' (B')
 :=
 /- dEAduction
-PrettyName
-  Image réciproque et union
+pretty_name = "Image réciproque et union"
 -/
 begin
   todo
@@ -575,8 +532,7 @@ end images_union
 
 namespace injectivite_surjectivite_composition
 /- dEAduction
-PrettyName
-    Injectivité/surjectivité et composition
+pretty_name = "Injectivité/surjectivité et composition"
 -/
 
 lemma exercise.composition_injections
@@ -585,8 +541,7 @@ lemma exercise.composition_injections
 injective (function.comp g f)
 :=
 /- dEAduction
-PrettyName
-    Composition d'injections
+pretty_name = "Composition d'injections"
 -/
 begin
     todo
@@ -597,8 +552,7 @@ lemma exercise.composition_surjections
 surjective (function.comp g f)
 :=
 /- dEAduction
-PrettyName
-    Composition de surjections
+pretty_name = "Composition de surjections"
 -/
 begin
     todo
@@ -609,8 +563,7 @@ lemma exercise.injective_si_compo_injective_I
 injective g
 :=
 /- dEAduction
-PrettyName
-    Injective si composition injective (i) 
+pretty_name = "Injective si composition injective (i)"
 -/
 begin
     todo
@@ -621,8 +574,7 @@ lemma exercise.injective_si_compo_injective_II
 injective f
 :=
 /- dEAduction
-PrettyName
-    Injective si composition injective (ii)
+pretty_name = "Injective si composition injective (ii)"
 -/
 begin
     todo
@@ -633,8 +585,7 @@ lemma exercise.surjective_si_compo_surjective_I
 surjective g
 :=
 /- dEAduction
-PrettyName
-    Surjective si composition surjective (i)
+pretty_name = "Surjective si composition surjective (i)"
 -/
 begin
     todo
@@ -645,8 +596,7 @@ lemma exercise.surjective_si_coompo_surjective_II
 surjective f
 :=
 /- dEAduction
-PrettyName
-    Surjective si composition surjective (ii)
+pretty_name = "Surjective si composition surjective (ii)"
 -/
 begin
     todo
@@ -660,16 +610,14 @@ end injectivite_surjectivite_composition
 -------------------------------------------------
 namespace image_intersection
 /- dEAduction
-PrettyName
-  Image de l'intersection
+pretty_name = "Image de l'intersection"
 -/
 
 lemma exercise.image_directe_et_intersection_I :
 ∀ A B: set X, f '' (A ∩ B) ⊆ f '' (A) ∩ f '' (B)
 :=
 /- dEAduction
-PrettyName
-  Image directe et intersection (i)
+pretty_name = "Image directe et intersection (i)"
 -/
 begin
   todo
@@ -679,8 +627,7 @@ lemma exercise.image_directe_et_intersection_II :
 ∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
 :=
 /- dEAduction
-PrettyName
-  Image directe et intersection (ii)
+pretty_name = "Image directe et intersection (ii)"
 -/
 begin
   todo
@@ -691,8 +638,7 @@ lemma exercise.image_directe_et_intersection_III
 ∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
 :=
 /- dEAduction
-PrettyName
-  Image directe et intersection (iii)
+pretty_name = "Image directe et intersection (iii)"
 -/
 begin
   todo
@@ -703,8 +649,7 @@ lemma exercise.image_directe_et_intersection_VI
 ∀ A B: set X,  f '' (A) ∩ f '' (B) ⊆ f '' (A ∩ B)
 :=
 /- dEAduction
-PrettyName
-  Image directe et intersection (iv)
+pretty_name = "Image directe et intersection (iv)"
 -/
 begin
   todo
@@ -714,8 +659,7 @@ lemma exercise.image_reciproque_inter :
 ∀ A' B' : set Y, f ⁻¹' ( A' ∩ B') = f ⁻¹' (A') ∩ f ⁻¹' (B')
 :=
 /- dEAduction
-PrettyName
-  Image réciproque et intersection
+pretty_name = "Image réciproque et intersection"
 -/
 begin
   todo
@@ -726,16 +670,14 @@ end image_intersection
 
 namespace image_et_image_reciproque_II
 /- dEAduction
-PrettyName
-  Image et image réciproque II
+pretty_name = "Image et image réciproque II"
 -/
 
 lemma exercise.image_reciproque_de_image_III :
 (injective f) → ∀ A, f ⁻¹' (f '' (A)) ⊆ A
 :=
 /- dEAduction
-PrettyName
-  Image réciproque de l'image, et injectivité
+pretty_name = "Image réciproque de l'image, et injectivité"
 -/
 begin
   todo
@@ -745,8 +687,7 @@ lemma exercise.image_reciproque_de_image_IV :
 (surjective f) → ∀ A, f ⁻¹' (f '' (A)) ⊆ A
 :=
 /- dEAduction
-PrettyName
-  Image réciproque de l'image, et surjectivité
+pretty_name = "Image réciproque de l'image, et surjectivité"
 -/
 begin
   todo
@@ -756,8 +697,7 @@ lemma exercise.image_de_image_reciproque_III :
 (injective f) → ∀ B, B ⊆ f '' (f ⁻¹' (B))
 :=
 /- dEAduction
-PrettyName
-  Image de l'image réciproque, et injectivité
+pretty_name = "Image de l'image réciproque, et injectivité"
 -/
 begin
   todo
@@ -767,8 +707,7 @@ lemma exercise.image_de_image_reciproque_IV :
 (surjective f) → ∀ B, B ⊆ f '' (f ⁻¹' (B))
 :=
 /- dEAduction
-PrettyName
-  Image de l'image réciproque, et surjectivité
+pretty_name = "Image de l'image réciproque, et surjectivité"
 -/
 begin
   todo
@@ -779,20 +718,16 @@ end image_et_image_reciproque_II
 
 namespace injectivite_surjectivite_caracterisation
 /- dEAduction
-PrettyName
-  Formules caractérisant l'injectivité et la surjectivité
+pretty_name = "Formules caractérisant l'injectivité et la surjectivité"
 -/
 
 lemma exercise.caracterisation_injectivite :
 ∀ f: X→Y, (∀ A: set X, A = f ⁻¹' (f '' A)) → injective f
 :=
 /- dEAduction
-PrettyName
-  Une caractérisation de l'injectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Une caractérisation de l'injectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
     todo
@@ -802,12 +737,9 @@ lemma exercise.caracterisation_surjectivite :
 ∀ f: X→Y, (∀ B: set Y, B = f '' (f ⁻¹' B) ) → surjective f
 :=
 /- dEAduction
-PrettyName
-  Une caractérisation de la surjectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Une caractérisation de la surjectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
   todo
@@ -817,12 +749,9 @@ lemma exercise.caracterisation_injectivite_II :
 ∀ f: X→Y, (∀ A A': set X, f '' A ⊆ f '' A' → A ⊆ A' ) → injective f
 :=
 /- dEAduction
-PrettyName
-  Une autre caractérisation de l'injectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Une autre caractérisation de l'injectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
   todo
@@ -832,12 +761,9 @@ lemma exercise.caracterisation_injectivite_III :
 ∀ f: X→Y, (∀ A A': set X, f '' (A ∩  A') = f '' A ∩ f '' A' ) → injective f
 :=
 /- dEAduction
-PrettyName
-  Une autre caractérisation de l'injectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Une autre caractérisation de l'injectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
   todo
@@ -847,12 +773,9 @@ lemma exercise.caracterisation_surjectivite_II :
 ∀ f: X→Y, (∀ B B': set Y, (f ⁻¹' B ⊆ f ⁻¹' B' → B ⊆ B') ) → surjective f
 :=
 /- dEAduction
-PrettyName
-  Une autre caractérisation de la surjectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Une autre caractérisation de la surjectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
   todo
@@ -863,8 +786,7 @@ end injectivite_surjectivite_caracterisation
 
 namespace injectivite_surjectivite_autres
 /- dEAduction
-PrettyName
-  Injectivité/surjectivité : divers
+pretty_name = "Injectivité/surjectivité : divers"
 -/
  
 lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
@@ -873,12 +795,9 @@ lemma exercise.injectivite_surjecivite (f: X → Y) (g: Y → Z)
 injective g
 :=
 /- dEAduction
-PrettyName
-    Injectivité et surjectivité
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Injectivité et surjectivité"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
     todo
@@ -890,12 +809,9 @@ lemma exercise.injectivite_categorielle
 (injective f) → (∀X__: Type, ∀ g h : X__ → Y, (function.comp f g) = (function.comp f h) → g = h)
 :=
 /- dEAduction
-PrettyName
-    Injectivité catégorielle
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Injectivité catégorielle"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
     todo
@@ -906,12 +822,9 @@ lemma exercise.surjectivite_categorielle
 (surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (function.comp g f ) = (function.comp h f ) → g = h)
 :=
 /- dEAduction
-PrettyName
-    Surjectivité catégorielle
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Surjectivité catégorielle"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
     todo
@@ -920,12 +833,9 @@ end
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (function.comp f F) = Identite :=
 /- dEAduction
-PrettyName
-    (*) Surjectivité et inverse à droite
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "(*) Surjectivité et inverse à droite"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
     todo
@@ -935,12 +845,9 @@ lemma exercise.image_directe_et_inclusion_III :
 (injective f) →  (∀ A B: set X,  f '' (A) ⊆ f '' (B) → A ⊆ B)
 :=
 /- dEAduction
-PrettyName
-  Image directe et inclusion (iii)
-AvailableDefinitions
-  UNTIL_NOW
-AvailableTheorems
-  UNTIL_NOW
+pretty_name = "Image directe et inclusion (iii)"
+available_definitions = "UNTIL_NOW"
+available_theorems = "UNTIL_NOW"
 -/
 begin
   todo
@@ -950,8 +857,7 @@ lemma exercise.image_reciproque_et_inclusion_III :
 (surjective f) → (∀ A' B': set Y,  f ⁻¹' (A') ⊆ f ⁻¹' (B') → A' ⊆ B')
 :=
 /- dEAduction
-PrettyName
-  Image réciproque et inclusion (iii)
+pretty_name = "Image réciproque et inclusion (iii)"
 -/
 begin
   todo

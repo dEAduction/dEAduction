@@ -6,6 +6,41 @@ Author: Frédéric Le Roux
 
 import tactic
 
+
+----------------------------------------------
+------------- tactic swap_goals --------------
+----------------------------------------------
+
+/- 
+first_goal p brings goal p to the first position.
+-/
+meta def first_goal (p : ℕ) : tactic unit :=
+do
+  goals ← tactic.get_goals,
+  match list.nth goals p with
+  | none := tactic.fail "first_goal: index out of bounds"
+  | some g := do
+    let before_p := list.take p goals,    -- Goals before position p
+    let after_p := list.drop (p + 1) goals,  -- Goals after position p
+    let new_goals := [g] ++ before_p ++ after_p,
+    tactic.set_goals new_goals
+    end
+
+/- 
+Swap_goals p q permutes goals p and q in the current list of unsolved goals.
+-/
+meta def swap_goals (p q : ℕ) : tactic unit :=
+do
+  -- Get the current list of goals
+  goals ← tactic.get_goals,
+  g_p ← goals.nth p,
+  g_q ← goals.nth q,
+  -- Create the new goal list
+  let goals' := goals.update_nth p g_q,
+  let goals'' := goals'.update_nth q g_p,
+  -- Update the tactic state with the swapped goals
+  tactic.set_goals goals''
+
 ------------------------------------------------
 ------------- tactic no_meta_vars --------------
 ------------------------------------------------

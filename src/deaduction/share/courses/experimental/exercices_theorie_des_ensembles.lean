@@ -26,16 +26,11 @@ local attribute [instance] classical.prop_decidable
 -------------------------
 
 /- dEAduction
-Title
-    Théorie des ensembles
-Author
-    Frédéric Le Roux
-Institution
-    Université de France
-Description
-    Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles.
-AvailableCompute
-    None
+title = "Théorie des ensembles"
+author = "Frédéric Le Roux"
+institution = "Université de France"
+description = 'Ce cours correspond à un cours standard de théorie "élémentaire" des ensembles.'
+available_compute = "None"
 -/
 
 local attribute [instance] classical.prop_decidable
@@ -54,14 +49,12 @@ open set
 ------------------
 namespace theorie_des_ensembles
 /- dEAduction
-PrettyName
-    Théorie des ensembles
+pretty_name = "Théorie des ensembles"
 -/
 
 namespace generalites
 /- dEAduction
-PrettyName
-    Généralités
+pretty_name = "Généralités"
 -/
 
 ------------------------
@@ -69,8 +62,7 @@ PrettyName
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, (x ∈ A) → x ∈ B :=
 /- dEAduction
-ImplicitUse
-    True
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -89,8 +81,7 @@ lemma definition.ensemble_extension {X: Type}  {P : X → Prop} {x:X} :
  x ∈ {x | P x} ↔ P x
 :=
 /- dEAduction
-PrettyName
-    Ensemble en extension
+pretty_name = "Ensemble en extension"
 -/
 begin
     refl
@@ -107,10 +98,8 @@ end
 lemma definition.egalite_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
-PrettyName
-    Egalité de deux ensembles
-AuxiliaryDefinitions
-  auxiliary_definition.negation_egalite_ensembles
+pretty_name = "Egalité de deux ensembles"
+auxiliary_definitions = "auxiliary_definition.negation_egalite_ensembles"
 -/
 begin
      exact set.ext_iff
@@ -126,12 +115,9 @@ end
 lemma definition.double_inclusion {A A' : set X} :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
-PrettyName
-    Double inclusion
-ImplicitUse
-  True
-AuxiliaryDefinitions
-  auxiliary_definition.negation_double_inclusion
+pretty_name = "Double inclusion"
+implicit_use = true
+auxiliary_definitions = "auxiliary_definition.negation_double_inclusion"
 -/
 begin
     exact set.subset.antisymm_iff
@@ -158,10 +144,8 @@ lemma definition.ensemble_non_vide
 (A ≠ ∅) ↔ ∃ x : X, x ∈ A
 :=
 /- dEAduction
-AuxiliaryDefinitions
-  auxiliary_definition.ensemble_non_vide
-ImplicitUse
-  True
+auxiliary_definitions = "auxiliary_definition.ensemble_non_vide"
+implicit_use = true
 -/
 begin
     todo
@@ -174,8 +158,7 @@ lemma exercise.inclusion_transitive
 (A ⊆ B ∧ B ⊆ C) → A ⊆ C
 :=
 /- dEAduction
-PrettyName
-    Transitivité de l'inclusion
+pretty_name = "Transitivité de l'inclusion"
 -/
 begin
     todo
@@ -196,17 +179,14 @@ variables {A B C : set X}
 -----------------
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -215,13 +195,13 @@ end
 lemma definition.intersection_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
 (x ∈ set.Inter E) ↔ (∀ i:I, x ∈ E i) :=
 /- dEAduction
-PrettyName
-    Intersection d'une famille quelconque d'ensembles
-MatchPattern
-    IFF(
-    ∈(?0, SET_INTER+(?1) )
-    ∀(TYPE, ?2, ∈(?0, APP(?1, ?2) ) ) 
-    )
+pretty_name = "Intersection d'une famille quelconque d'ensembles"
+match_pattern = """
+IFF(
+∈(?0, SET_INTER+(?1) )
+∀(TYPE, ?2, ∈(?0, APP(?1, ?2) ) )
+)
+"""
 -/
 begin
     exact set.mem_Inter
@@ -230,10 +210,8 @@ end
 lemma definition.union_deux_ensembles  {A : set X} {B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Union de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl
@@ -242,8 +220,7 @@ end
 lemma definition.union_quelconque_ensembles {I : index_set} {E : I → set X}  {x : X} :
 (x ∈ set.Union E) ↔ (∃ i:I, x ∈ E i) :=
 /- dEAduction
-PrettyName
-    Union d'une famille quelconque d'ensembles
+pretty_name = "Union d'une famille quelconque d'ensembles"
 -/
 begin
     exact set.mem_Union
@@ -260,8 +237,7 @@ lemma exercise.intersection_inclus_ensemble :
 A ∩ B ⊆ A
 :=
 /- dEAduction
-PrettyName
-    Un ensemble contient son intersection avec un autre
+pretty_name = "Un ensemble contient son intersection avec un autre"
 -/
 begin
     todo
@@ -270,20 +246,13 @@ end
 
 lemma exercise.union_distributive_inter : A ∩ (B ∪ C)  = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
-PrettyName
-    Intersection avec une union
-Description
-    L'intersection est distributive par rapport à l'union
-AvailableLogic
-    $ALL
-AvailableProofs
-    $ALL
-AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
-AvailableTheorems
-    double_inclusion
-ExpectedVarsNumber
-    X=3, A=1, B=1
+pretty_name = "Intersection avec une union"
+description = "L'intersection est distributive par rapport à l'union"
+available_logic = "$ALL"
+available_proofs = "$ALL"
+available_definitions = "$UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles"
+available_theorems = "double_inclusion"
+expected_vars_number = "X=3, A=1, B=1"
 -/
 begin
     rw generalites.definition.egalite_deux_ensembles,
@@ -303,12 +272,9 @@ end
 
 lemma exercise.inter_distributive_union : A ∪ (B ∩ C)  = (A ∪ B) ∩ (A ∪ C) :=
 /- dEAduction
-PrettyName
-    Union avec une intersection
-Description
-    L'union est distributive par rapport à l'intersection
-AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+pretty_name = "Union avec une intersection"
+description = "L'union est distributive par rapport à l'intersection"
+available_definitions = "$UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles"
 -/
 begin
     todo
@@ -325,8 +291,7 @@ end unions_et_intersections
 ---------------
 namespace complementaire
 /- dEAduction
-PrettyName
-    Complémentaire
+pretty_name = "Complémentaire"
 -/
 
 
@@ -340,8 +305,7 @@ variables {I : index_set} {E F : I → set X}
 -----------------
 lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ x ∉ A :=
 /- dEAduction
-PrettyName
-    Complémentaire
+pretty_name = "Complémentaire"
 -/
 begin
     finish
@@ -352,12 +316,9 @@ end
 ---------------
 lemma exercise.complement_complement : (set.compl (set.compl A)) = A :=
 /- dEAduction
-PrettyName
-    Complémentaire du complémentaire
-Description
-    Tout ensemble est égal au complémentaire de son complémentaire
-AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+pretty_name = "Complémentaire du complémentaire"
+description = "Tout ensemble est égal au complémentaire de son complémentaire"
+available_definitions = "$UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles"
 -/
 begin
     todo
@@ -366,12 +327,9 @@ end
 lemma exercise.complement_union_deux :
 set.compl (A ∪ B) = (set.compl A) ∩ (set.compl B) :=
 /- dEAduction
-PrettyName
-    Complémentaire d'union I
-Description
-    Le complémentaire de l'union de deux ensembles égale l'intersection des complémentaires
-AvailableDefinitions
-    $UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles
+pretty_name = "Complémentaire d'union I"
+description = "Le complémentaire de l'union de deux ensembles égale l'intersection des complémentaires"
+available_definitions = "$UNTIL_NOW -union_quelconque_ensembles -intersection_quelconque_ensembles"
 -/
 begin
     todo
@@ -380,10 +338,8 @@ end
 lemma exercise.complement_union_quelconque :
 set.compl (set.Union (λ i, E i)) = set.Inter (λ i, set.compl (E i)) :=
 /- dEAduction
-PrettyName
-    Complémentaire d'union II
-Description
-    Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires
+pretty_name = "Complémentaire d'union II"
+description = "Le complémentaire d'une réunion quelconque égale l'intersection des complémentaires"
 -/
 begin
     todo
@@ -394,10 +350,8 @@ lemma exercise.inclusion_complement_I :
 A ⊆ B → set.compl B ⊆ set.compl A
 :=
 /- dEAduction
-PrettyName
-    Le passage au complémentaire renverse les inclusions, implication
-Description
-    Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
+pretty_name = "Le passage au complémentaire renverse les inclusions, implication"
+description = "Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B"
 -/
 begin
     todo
@@ -407,10 +361,8 @@ lemma exercise.inclusion_complement_II :
 A ⊆ B ↔ set.compl B ⊆ set.compl A
 :=
 /- dEAduction
-PrettyName
-    Le passage au complémentaire renverse les inclusions, équivalence
-Description
-    Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B
+pretty_name = "Le passage au complémentaire renverse les inclusions, équivalence"
+description = "Si A est inclus dans B, alors le complémentaire de A contient le complémentaire de B"
 -/
 begin
     todo
@@ -426,8 +378,7 @@ end complementaire
 
 namespace produits_cartesiens
 /- dEAduction
-PrettyName
-    Produits cartésiens
+pretty_name = "Produits cartésiens"
 -/
 
 
@@ -436,8 +387,7 @@ lemma theorem.type_produit :
 ∀ z:X × Y, ∃ x:X, ∃ y:Y, z = (x,y)
 :=
 /- dEAduction
-PrettyName
-    Element d'un produit cartésien de deux ensembles
+pretty_name = "Element d'un produit cartésien de deux ensembles"
 -/
 begin
     todo
@@ -449,8 +399,7 @@ lemma definition.produit_de_parties {A : set X} {B : set Y}
 (x,y) ∈ set.prod A B ↔ x ∈ A ∧ y ∈ B
 :=
 /- dEAduction
-PrettyName
-    Produit cartésien de deux parties
+pretty_name = "Produit cartésien de deux parties"
 -/
 begin
     todo
@@ -472,8 +421,7 @@ end produits_cartesiens
 ---------------
 namespace applications_I
 /- dEAduction
-PrettyName
-    Applications et opérations ensemblistes
+pretty_name = "Applications et opérations ensemblistes"
 -/
 
 
@@ -495,8 +443,7 @@ variables (g : Y → Z) (h : X → Z)
 -----------------
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 lemma definition.image_directe (y : Y) :  y ∈ f '' A ↔ ∃ x : X, x ∈ A ∧  f x = y :=
@@ -519,8 +466,7 @@ end
 lemma definition.egalite_fonctions (f' : X → Y) :
 f = f' ↔ ∀ x, f x = f' x :=
 /- dEAduction
-PrettyName
-    Egalité de deux fonctions
+pretty_name = "Egalité de deux fonctions"
 -/
 begin
     exact function.funext_iff,
@@ -530,8 +476,7 @@ end
 lemma definition.Identite (f₀: X → X) :
 f₀ = Identite ↔ ∀ x, f₀ x = x :=
 /- dEAduction
-PrettyName
-    Application identité
+pretty_name = "Application identité"
 -/
 begin
     apply definition.egalite_fonctions,
@@ -544,15 +489,13 @@ end definitions
 ---------------
 namespace exercices
 /- dEAduction
-PrettyName
-    Exercices
+pretty_name = "Exercices"
 -/
 open applications_I.definitions
 
 lemma exercise.image_de_reciproque : f '' (f ⁻¹' B)  ⊆ B :=
 /- dEAduction
-PrettyName
-    Image de l'image réciproque
+pretty_name = "Image de l'image réciproque"
 -/
 begin
     todo
@@ -560,8 +503,7 @@ end
 
 lemma exercise.reciproque_de_image : A ⊆ f ⁻¹' (f '' A) :=
 /- dEAduction
-PrettyName
-    Image réciproque de l'image
+pretty_name = "Image réciproque de l'image"
 -/
 begin
     todo
@@ -569,8 +511,7 @@ end
 
 lemma exercise.image_reciproque_inter :  f ⁻¹'  (B∩B') = f ⁻¹'  (B) ∩ f ⁻¹'  (B') :=
 /- dEAduction
-PrettyName
-    Image réciproque d'une intersection de deux ensembles
+pretty_name = "Image réciproque d'une intersection de deux ensembles"
 -/
 begin
     todo
@@ -579,8 +520,7 @@ end
 lemma  exercise.image_reciproque_union  : f ⁻¹' (B ∪ B') = f ⁻¹' B ∪ f ⁻¹' B'
 :=
 /- dEAduction
-PrettyName
-    Image réciproque d'une union de deux ensembles
+pretty_name = "Image réciproque d'une union de deux ensembles"
 -/
 begin
     todo
@@ -592,8 +532,7 @@ lemma exercise.image_reciproque_inter_quelconque :
 -- (f ⁻¹'  (set.Inter (λ i, F i))) = set.Inter (λ i, f ⁻¹' (F i))
 :=
 /- dEAduction
-PrettyName
-    Image réciproque d'une intersection quelconque
+pretty_name = "Image réciproque d'une intersection quelconque"
 -/
 begin
     todo
@@ -603,8 +542,7 @@ lemma exercise.image_reciproque_union_quelconque :
 (f ⁻¹'  (set.Union (λ i, F i))) = set.Union (λ i, f ⁻¹' (F i))
 :=
 /- dEAduction
-PrettyName
-    Image réciproque d'une union quelconque
+pretty_name = "Image réciproque d'une union quelconque"
 -/
 begin
     todo
@@ -614,8 +552,7 @@ lemma exercise.image_inter_inclus_inter_images :
 f '' (A∩A') ⊆ f '' (A) ∩ f '' (A')
 :=
 /- dEAduction
-PrettyName
-    Image d'une intersection
+pretty_name = "Image d'une intersection"
 -/
 begin
     todo
@@ -626,8 +563,7 @@ lemma exercise.reciproque_complementaire_I :
 f ⁻¹' (set.compl B) ⊆ set.compl (f ⁻¹' B)
 :=
 /- dEAduction
-PrettyName
-    Image réciproque du complémentaire, inclusion
+pretty_name = "Image réciproque du complémentaire, inclusion"
 -/
 begin
     todo
@@ -637,8 +573,7 @@ lemma exercise.reciproque_complementaire_II :
 f ⁻¹' (set.compl B) = set.compl (f ⁻¹' B)
 :=
 /- dEAduction
-PrettyName
-    Image réciproque du complémentaire, égalité
+pretty_name = "Image réciproque du complémentaire, égalité"
 -/
 begin
     todo
@@ -661,8 +596,7 @@ end applications_I
 ----------------
 namespace applications_II
 /- dEAduction
-PrettyName
-    Injections et surjections
+pretty_name = "Injections et surjections"
 -/
 
 -- variables injections_surjections --
@@ -673,18 +607,15 @@ variables (f: X → Y) (g : Y → Z) (h : X → Z)
 -----------------
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 lemma definition.injectivite :
 injective f ↔ ∀ x y : X, (f x = f y → x = y)
 :=
 /- dEAduction
-PrettyName
-    Application injective
-ImplicitUse
-    True
+pretty_name = "Application injective"
+implicit_use = true
 -/
 begin
     refl,
@@ -694,10 +625,8 @@ lemma definition.surjectivite :
 surjective f ↔ ∀ y : Y, ∃ x : X, y = f x
 :=
 /- dEAduction
-PrettyName
-    Application surjective
-ImplicitUse
-    True
+pretty_name = "Application surjective"
+implicit_use = true
 -/
 begin
     refl,
@@ -709,8 +638,7 @@ lemma definition.existe_un_unique
 (∃! (λx,  P x)) ↔  (∃ x : X, (P x ∧ (∀ x' : X, P x' → x' = x)))
 :=
 /- dEAduction
-PrettyName
-    ∃! : existence et unicité
+pretty_name = "∃! : existence et unicité"
 -/
 begin
     todo
@@ -720,8 +648,7 @@ lemma definition.bijectivite_1 :
 bijective f ↔ (injective f ∧ surjective f)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (première définition)
+pretty_name = "Application bijective (première définition)"
 -/
 begin
     todo
@@ -731,8 +658,7 @@ lemma definition.bijectivite_2 :
 bijective f ↔ ∀ y : Y, exists_unique (λ x, y = f x)
 :=
 /- dEAduction
-PrettyName
-    Application bijective (seconde définition)
+pretty_name = "Application bijective (seconde définition)"
 -/
 begin
     refl,
@@ -747,8 +673,7 @@ end definitions
 ---------------
 namespace exercices
 /- dEAduction
-PrettyName
-    Exercices
+pretty_name = "Exercices"
 -/
 
 open applications_II.definitions
@@ -759,8 +684,7 @@ lemma exercise.composition_injections
 injective (function.comp g f)
 :=
 /- dEAduction
-PrettyName
-    Composition d'injections
+pretty_name = "Composition d'injections"
 -/
 begin
     todo
@@ -771,8 +695,7 @@ lemma exercise.composition_surjections
 surjective (function.comp g f)
 :=
 /- dEAduction
-PrettyName
-    Composition de surjections
+pretty_name = "Composition de surjections"
 -/
 begin
     todo
@@ -783,8 +706,7 @@ lemma exercise.injective_si_compo_injective
 injective f
 :=
 /- dEAduction
-PrettyName
-    Injective si composition injective
+pretty_name = "Injective si composition injective"
 -/
 begin
     todo
@@ -795,8 +717,7 @@ lemma exercise.surjective_si_compo_surjective
 surjective g
 :=
 /- dEAduction
-PrettyName
-    Surjective si composition surjective
+pretty_name = "Surjective si composition surjective"
 -/
 begin
     todo
@@ -805,8 +726,7 @@ end
 lemma exercise.injective_ssi_inverse_gauche : (injective f) ↔
 ∃ F: Y → X, (function.comp F f) = Identite :=
 /- dEAduction
-PrettyName
-    (x) Injectivité et inverse à gauche
+pretty_name = "(x) Injectivité et inverse à gauche"
 -/
 begin
     todo
@@ -815,8 +735,7 @@ end
 lemma exercise.surjective_ssi_inverse_droite : (surjective f) ↔
 ∃ F: Y → X, (function.comp f F) = Identite :=
 /- dEAduction
-PrettyName
-    (*) Surjectivité et inverse à droite
+pretty_name = "(*) Surjectivité et inverse à droite"
 -/
 begin
     todo
@@ -827,8 +746,7 @@ lemma exercise.bijective_ssi_inverse :
 function.comp g f = Identite ∧ function.comp f g  = Identite
 :=
 /- dEAduction
-PrettyName
-    (**) Bijectivité et existence d'une application réciproque
+pretty_name = "(**) Bijectivité et existence d'une application réciproque"
 -/
 begin
     todo
@@ -839,8 +757,7 @@ lemma exercise.unicite_inverse :
 function.comp g f = Identite)
 :=
 /- dEAduction
-PrettyName
-    (+) Unicité de la réciproque d'une application bijective
+pretty_name = "(+) Unicité de la réciproque d'une application bijective"
 -/
 begin
     todo
@@ -852,8 +769,7 @@ lemma exercise.Cantor (f : X → set X):
  ¬ surjective f
 :=
 /- dEAduction
-PrettyName
-    (+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties
+pretty_name = "(+) Théorème de Cantor : il n'y a pas de surjection d'un ensemble vers l'ensemble de ses parties"
 -/
 begin
     -- by_contradiction H14,
@@ -901,8 +817,7 @@ lemma exercise.exercice_ensembles_1
 A ⊆ B ↔ A ∩ B = A
 :=
 /- dEAduction
-PrettyName
-    Caractérisation de l'inclusion par l'intersection
+pretty_name = "Caractérisation de l'inclusion par l'intersection"
 -/
 begin
     todo
@@ -913,8 +828,7 @@ lemma exercise.complement_intersection_2
 set.compl (A ∩  B) = (set.compl A) ∪ (set.compl B)
 :=
 /- dEAduction
-PrettyName
-    Complémentaire d'une intersection
+pretty_name = "Complémentaire d'une intersection"
 -/
 begin
     todo
@@ -926,8 +840,7 @@ lemma exercise.exercice_ensembles_3
 A ∩ B = A ∪ B → A = B
 :=
 /- dEAduction
-PrettyName
-    Quand l'intersection égale l'union
+pretty_name = "Quand l'intersection égale l'union"
 -/
 begin
     todo
@@ -938,8 +851,7 @@ lemma exercise.exercice_ensembles_4a
 A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B ⊆ C
 :=
 /- dEAduction
-PrettyName
-    Caractérisation par intersection avec A et son complémentaire, I
+pretty_name = "Caractérisation par intersection avec A et son complémentaire, I"
 -/
 begin
     todo
@@ -950,8 +862,7 @@ lemma exercise.exercice_ensembles_4b
 A ∩ B = A ∩ C ∧ (set.compl A) ∩ B = (set.compl A) ∩ C → B = C
 :=
 /- dEAduction
-PrettyName
-    Caractérisaton par intersection avec A et son complémentaire, II
+pretty_name = "Caractérisaton par intersection avec A et son complémentaire, II"
 -/
 begin
     todo
@@ -963,8 +874,7 @@ lemma exercise.exercice_ensembles_5
 A ∩ B = A ∩ C ∧ A ∪ B = A ∪ C → B = C
 :=
 /- dEAduction
-PrettyName
-    Même union et même intersection
+pretty_name = "Même union et même intersection"
 -/
 begin
     todo
@@ -978,14 +888,12 @@ end
 
 namespace difference_et_difference_symetrique
 /- dEAduction
-PrettyName
-    Différence et différence symétrique
+pretty_name = "Différence et différence symétrique"
 -/
 
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 
@@ -994,8 +902,7 @@ lemma definition.difference
 x ∈ (A \ B) ↔ x ∈ A ∧ x ∉ B
 :=
 /- dEAduction
-PrettyName
-    Différence de deux ensembles
+pretty_name = "Différence de deux ensembles"
 -/
 begin
     refl,
@@ -1007,8 +914,7 @@ lemma definition.difference_symetrique
 (A Δ B) =  (A ∪ B) \ (A ∩ B)
 :=
 /- dEAduction
-PrettyName
-    Différence symétrique de deux ensembles
+pretty_name = "Différence symétrique de deux ensembles"
 -/
 begin
     refl,
@@ -1019,8 +925,7 @@ end definitions
 
 namespace exercices
 /- dEAduction
-PrettyName
-    Exercices
+pretty_name = "Exercices"
 -/
 
 lemma exercise.difference_symetrique_1
@@ -1028,8 +933,7 @@ lemma exercise.difference_symetrique_1
 (A Δ B) = (A \ B) ∪ (B \ A)
 :=
 /- dEAduction
-PrettyName
-    Différence symétrique I
+pretty_name = "Différence symétrique I"
 -/
 begin
     todo
@@ -1041,8 +945,7 @@ lemma exercise.difference_symetrique_2
 (A Δ B) = (B Δ A)
 :=
 /- dEAduction
-PrettyName
-    (*) Différence symétrique II
+pretty_name = "(*) Différence symétrique II"
 -/
 begin
     todo
@@ -1054,8 +957,7 @@ lemma exercise.difference_symetrique_3
 ((A Δ B) Δ C) = (A Δ (B Δ C))
 :=
 /- dEAduction
-PrettyName
-    (**) Différence symétrique III
+pretty_name = "(**) Différence symétrique III"
 -/
 begin
     todo
@@ -1065,8 +967,7 @@ end
 lemma exercise.difference_symetrique_4 :
 ∃! (λE : set X, ∀ A : set X, (A Δ E) = A) :=
 /- dEAduction
-PrettyName
-    (+) Différence symétrique VI
+pretty_name = "(+) Différence symétrique VI"
 -/
 begin
     todo
@@ -1077,8 +978,7 @@ lemma exercise.difference_symetrique_5 (A : set X) :
 exists_unique (λA' : set X, (A Δ A') = set.univ)
 :=
 /- dEAduction
-PrettyName
-    (+) Différence symétrique V
+pretty_name = "(+) Différence symétrique V"
 -/
 begin
     todo
@@ -1091,8 +991,7 @@ lemma exercise.difference_symetrique_6
 (A Δ B) = ∅ ↔ A = B
 :=
 /- dEAduction
-PrettyName
-    (+) Différence symétrique VI
+pretty_name = "(+) Différence symétrique VI"
 -/
 begin
     todo
@@ -1112,8 +1011,7 @@ lemma exercise.exercice_applications_1
 A ⊆ B → f '' A ⊆ f '' B
 :=
 /- dEAduction
-PrettyName
-    Image directe et inclusion
+pretty_name = "Image directe et inclusion"
 -/
 begin
     todo
@@ -1124,8 +1022,7 @@ lemma exercise.exercice_applications_2
 f '' (A ∪ B)  = f '' A ∪ f '' B
 :=
 /- dEAduction
-PrettyName
-    Image d'une union
+pretty_name = "Image d'une union"
 -/
 begin
     todo
@@ -1137,8 +1034,7 @@ lemma exercise.exercice_factorisation_I
 (∃ f: X → Y, h = (function.comp g f)) ↔ h '' set.univ ⊆ g '' set.univ
 :=
 /- dEAduction
-PrettyName
-    (+) Factorisation I
+pretty_name = "(+) Factorisation I"
 -/
 begin
     todo
@@ -1150,8 +1046,7 @@ lemma exercise.exercice_factorisation_II
 (∃ g: Y → Z, h = (function.comp g f)) ↔ (∀ x y, (f x = f y → h x = h y))
 :=
 /- dEAduction
-PrettyName
-    (+) Factorisation II
+pretty_name = "(+) Factorisation II"
 -/
 begin
     todo
@@ -1166,8 +1061,7 @@ lemma exercise.injectivite_surjecivite_1 (f: X → Y) (g: Y → Z)
 injective g
 :=
 /- dEAduction
-PrettyName
-    Injectivité et surjectivité I
+pretty_name = "Injectivité et surjectivité I"
 -/
 begin
     todo
@@ -1179,8 +1073,7 @@ lemma exercise.injectivite_surjecivite_2 (f: X → Y) (g: Y → Z)
 surjective f
 :=
 /- dEAduction
-PrettyName
-    Injectivité et surjectivité II
+pretty_name = "Injectivité et surjectivité II"
 -/
 begin
     todo
@@ -1193,8 +1086,7 @@ lemma exercise.injectivite_categorielle
 (injective f) → (∀X: Type, ∀ g h : X → Y, (function.comp f g) = (function.comp f h) → g = h)
 :=
 /- dEAduction
-PrettyName
-    Injectivité catégorielle
+pretty_name = "Injectivité catégorielle"
 -/
 begin
     todo
@@ -1205,8 +1097,7 @@ lemma exercise.surjectivite_categorielle
 (surjective f) →  (∀Z: Type, ∀ g h : Y → Z, (function.comp g f ) = (function.comp h f ) → g = h)
 :=
 /- dEAduction
-PrettyName
-    Surjectivité catégorielle
+pretty_name = "Surjectivité catégorielle"
 -/
 begin
     todo

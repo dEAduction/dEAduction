@@ -20,20 +20,16 @@ local attribute [instance] classical.prop_decidable
 -- dEAduction METADATA --
 -------------------------
 /- dEAduction
-Title
-    Arithmétique
-Author
-    Frédéric Le Roux
-Institution
-    Université du monde
-Description
-    Premier essai d'arithmétique
-Display
-    prime --> (-1, " est premier")
-    puissancede2 --> (-1, " est une puissance de 2")
-Settings
-    functionality.calculator_available --> true
-    others.Lean_request_method --> "normal"
+title = "Arithmétique"
+author = "Frédéric Le Roux"
+institution = "Université du monde"
+description = "Premier essai d'arithmétique"
+[display]
+prime = [-1, " est premier"]
+puissancede2 = [-1, " est une puissance de 2"]
+[settings]
+functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 ---------------------------------------------
@@ -88,8 +84,7 @@ open set
 ---------------------
 namespace definitions
 /- dEAduction
-PrettyName
-    Définitions
+pretty_name = "Définitions"
 -/
 
 variables {IntegerSubGroup:Type} [has_add IntegerSubGroup] 
@@ -112,10 +107,8 @@ def divides (a b: IntegerSubGroup) := ∃ c, b = a * c
 
 lemma definition.even {a: IntegerSubGroup} : (even a) ↔ ∃ (b: IntegerSubGroup), a = 2*b :=
 /- dEAduction
-PrettyName
-  Pair
-ImplicitUse
-  True
+pretty_name = "Pair"
+implicit_use = true
 -/
 begin
   refl
@@ -128,12 +121,9 @@ end
 
 lemma definition.odd {a: IntegerSubGroup} : (odd a) ↔ ∃ (b: IntegerSubGroup), a = 2*b + 1 :=
 /- dEAduction
-PrettyName
-  Impair
-ImplicitUse
-  True
-AuxiliaryDefinitions
-  auxiliary_theorem.nat_odd
+pretty_name = "Impair"
+implicit_use = true
+auxiliary_definitions = "auxiliary_theorem.nat_odd"
 -/
 begin
   refl
@@ -145,10 +135,8 @@ axiom AX: IntegerSubGroup = ℕ ∨ IntegerSubGroup = ℤ
 lemma theorem.not_even_is_odd {a: IntegerSubGroup} :
 (not (even a)) ↔ odd a :=
 /- dEAduction
-PrettyName
-  Pair et impair
-AuxiliaryDefinitions
-  auxiliary_theorem.nat_not_even_is_odd
+pretty_name = "Pair et impair"
+auxiliary_definitions = "auxiliary_theorem.nat_not_even_is_odd"
 -/
 begin
   todo
@@ -159,8 +147,7 @@ lemma theorem.signe_parite_pair  :
 ∀ n:ℕ, ((even n) → ((-1:ℤ)^n = 1 ))
 := 
 /- dEAduction
-PrettyName
-   (-1) puissance pair
+pretty_name = "(-1) puissance pair"
 -/
 begin
    todo
@@ -170,8 +157,7 @@ lemma theorem.signe_parite_impair  :
 ∀ n:ℕ, ((odd n) → ((-1:ℤ)^n = -1 ))
 := 
 /- dEAduction
-PrettyName
-   (-1) puissance impair
+pretty_name = "(-1) puissance impair"
 -/
 begin
    todo
@@ -180,10 +166,8 @@ end
 
 lemma definition.divides {a b : IntegerSubGroup} : (divides a b) ↔ (∃ (c: IntegerSubGroup), b = a * c) :=
 /- dEAduction
-PrettyName
-  Divise
-ImplicitUse
-  True
+pretty_name = "Divise"
+implicit_use = true
 -/
 begin
   refl
@@ -193,10 +177,8 @@ def puissancede2 (a :ℕ) := ∃ b : ℕ, a = 2^b
 
 lemma definition.puissancede2 {a:ℕ} : (puissancede2 a) ↔ ∃ b:ℕ, a = 2^b :=
 /- dEAduction
-PrettyName
-  Puissance de 2
-ImplicitUse
-  True
+pretty_name = "Puissance de 2"
+implicit_use = true
 -/
 begin
   refl
@@ -206,8 +188,7 @@ end
 -- Nb premier
 lemma definition.prime {p: ℕ} : (prime p) ↔ (p≥ 2 ∧ (∀ n:ℕ, divides n p → (n=1 or n=p))) :=
 /- dEAduction
-PrettyName
-  Nombre premier
+pretty_name = "Nombre premier"
 -/
 begin
   todo
@@ -244,14 +225,12 @@ II - Types de preuves
 --------------------------------
 namespace preuve_d_existence
 /- dEAduction
-PrettyName
-  Preuves d'existence
+pretty_name = "Preuves d'existence"
 -/
 
 lemma exercise.quatorze : even (14:ℤ) :=
 /- dEAduction
-PrettyName
-  Quatorze est pair
+pretty_name = "Quatorze est pair"
 -/
 begin
   todo
@@ -259,8 +238,7 @@ end
 
 lemma exercise.existe_pair : ∃(a:ℤ), (even a) :=
 /- dEAduction
-PrettyName
-  Il existe un entier pair
+pretty_name = "Il existe un entier pair"
 -/
 begin
   todo
@@ -268,8 +246,7 @@ end
 
 lemma exercise.existe_impair : ∃(a:ℤ), (odd a) :=
 /- dEAduction
-PrettyName
-  Il existe un entier impair
+pretty_name = "Il existe un entier impair"
 -/
 begin
   todo
@@ -277,8 +254,7 @@ end
 
 lemma exercise.divise : divides 7 42 :=
 /- dEAduction
-PrettyName
-  Sept divise quarante-deux.
+pretty_name = "Sept divise quarante-deux."
 -/
 begin
   todo
@@ -288,8 +264,7 @@ lemma exercise.nombre_8  :
 (even 8) ∧ (puissancede2 8)
  :=
 /- dEAduction
-PrettyName
- 8 est pair et une puissance de 2 
+pretty_name = "8 est pair et une puissance de 2"
 -/
 begin
   todo
@@ -305,10 +280,8 @@ namespace implications
 lemma exercise.carre_pair1 (n: ℤ) :
 (even n) → (even (n^2)) :=
 /- dEAduction
-PrettyName
-  Carré d'un nombre pair
-Description
-  Le carré d'un nombre pair est pair
+pretty_name = "Carré d'un nombre pair"
+description = "Le carré d'un nombre pair est pair"
 -/
 begin
   todo
@@ -320,8 +293,7 @@ variables {IntegerSubGroup:Type} [has_add IntegerSubGroup]
 lemma exercise.divise_transitive (a b c : IntegerSubGroup) :
 (divides a b) ∧ (divides b c) → (divides a c) :=
 /- dEAduction
-PrettyName
-  La divisibilité est transitive  
+pretty_name = "La divisibilité est transitive"
 -/
 begin
   todo
@@ -330,8 +302,7 @@ end
 lemma exercise.produit_pairs (n m:ℤ) :
 (even n ∧ even m) → even (n*m) :=
 /- dEAduction
-PrettyName
-  Pair fois pair
+pretty_name = "Pair fois pair"
 -/
 begin
   todo
@@ -340,8 +311,7 @@ end
 lemma exercise.produit_impairs (n m:ℤ) :
 (odd n ∧ odd m) → odd (n*m) :=
 /- dEAduction
-PrettyName
-  Impair fois impair
+pretty_name = "Impair fois impair"
 -/
 begin
   todo
@@ -353,17 +323,14 @@ end implications
 --------------------------------
 namespace preuves_universelles
 /- dEAduction
-PrettyName
-  Preuves d'énoncés universels
+pretty_name = "Preuves d'énoncés universels"
 -/
 
 lemma exercise.carre_pair1 :
 ∀{n:ℤ}, (even n) → (even (n^2)) :=
 /- dEAduction
-PrettyName
-  Carré d'un nombre pair
-Description
-  Le carré d'un nombre pair est pair
+pretty_name = "Carré d'un nombre pair"
+description = "Le carré d'un nombre pair est pair"
 -/
 begin
   todo
@@ -371,8 +338,7 @@ end
 
 lemma exercise.mul_divides  : ∀ {a b c : ℤ}, divides a b → divides a (b*c) :=
 /- dEAduction
-PrettyName
-  Diviseurs d'un multiple
+pretty_name = "Diviseurs d'un multiple"
 -/
 begin
   todo
@@ -388,18 +354,15 @@ end preuves_universelles
 --------------------------------
 namespace intervertion_quantificateurs
 /- dEAduction
-PrettyName
-  Intervertion de quantificateurs
+pretty_name = "Intervertion de quantificateurs"
 -/
 
 lemma exercise.pour_tout_il_existe   :
 ∀ n:ℤ, ∃  m:ℤ, m=n+5
 :=
 /- dEAduction
-PrettyName
- Pour tout suivi de Il existe 
-OpenQuestion
- True
+pretty_name = "Pour tout suivi de Il existe"
+open_question = true
 -/
 begin
   todo
@@ -411,10 +374,8 @@ lemma exercise.il_existe_pour_tout :
  ∃  m:ℤ, ∀ n:ℤ, m=n+5
  :=
 /- dEAduction
-PrettyName
- Il existe suivi de Pour tout
-OpenQuestion
- True
+pretty_name = "Il existe suivi de Pour tout"
+open_question = true
 -/
 begin
   todo
@@ -428,8 +389,7 @@ namespace preuve_par_cas
 lemma exercise.multiple_de_quatre (n:ℕ) :
 divides 4 (1+((-1:ℤ))^n*(2*n-1)) :=
 /- dEAduction
-PrettyName
-  Des multiples de quatre
+pretty_name = "Des multiples de quatre"
 -/
 begin
   todo
@@ -438,8 +398,7 @@ end
 lemma exercise.impair (n: ℤ) :
 odd (5*n^2 + 3*n + 7) :=
 /- dEAduction
-PrettyName
-  Tous impairs!
+pretty_name = "Tous impairs!"
 -/
 begin
   todo
@@ -452,17 +411,14 @@ end preuve_par_cas
 --------------------------------
 namespace preuves_par_contrapposee
 /- dEAduction
-PrettyName
-  Preuves par contrapposée
+pretty_name = "Preuves par contrapposée"
 -/
 
 lemma exercise.pair_impair {n : ℤ} :
 (even (n^2 - 6*n + 5)) → (odd n) :=
 /- dEAduction
-PrettyName
-  Pair et impair
-Description
-  Essayer la preuve directe... puis la contrapposée !
+pretty_name = "Pair et impair"
+description = "Essayer la preuve directe... puis la contrapposée !"
 -/
 begin
   todo
@@ -470,10 +426,8 @@ end
 
 lemma exercise.carre_pair {n : ℤ} : (even (n^2)) → (even n) :=
 /- dEAduction
-PrettyName
-  Carré pair implique pair
-Description
-  Tout nombre dont le carré est pair est pair.
+pretty_name = "Carré pair implique pair"
+description = "Tout nombre dont le carré est pair est pair."
 -/
 begin
   todo
@@ -481,10 +435,8 @@ end
 
 lemma exercise.carre_impair {n : ℤ} : (odd (n^2)) → (odd n) :=
 /- dEAduction
-PrettyName
-  Carré impair implique impair
-Description
-  Un nombre dont le carré est impair est impair.
+pretty_name = "Carré impair implique impair"
+description = "Un nombre dont le carré est impair est impair."
 -/
 begin
   todo
@@ -493,10 +445,8 @@ end
 lemma exercise.parite3 {a b : ℤ} :
 (odd (a^2*(b^2-2*b))) → (odd a ∧ odd b) :=
 /- dEAduction
-PrettyName
-  Parité III
-Description
-  Tous impairs
+pretty_name = "Parité III"
+description = "Tous impairs"
 -/
 begin
   todo
@@ -506,8 +456,7 @@ lemma exercise.divise1 {a b c : ℤ}:
 (not (divides a (b*c))) → not (divides a b)
 :=
 /- dEAduction
-PrettyName
-  Divise I
+pretty_name = "Divise I"
 -/
 begin
   todo
@@ -517,8 +466,7 @@ lemma exercise.divise2 {a : ℤ}:
 (not (divides 4 (a^2) )) → (odd a)
 :=
 /- dEAduction
-PrettyName
-  Impair si divise pas
+pretty_name = "Impair si divise pas"
 -/
 begin
   todo
@@ -528,10 +476,8 @@ lemma exercise.somme_et_produit {a b : ℤ}:
 (even (a*b) ∧ even (a+b)) → (even a ∧ even b)
 :=
 /- dEAduction
-PrettyName
-  Somme et produit
-Description
-  Ici, la contrapposée va nous conduire à une preuve par cas.
+pretty_name = "Somme et produit"
+description = "Ici, la contrapposée va nous conduire à une preuve par cas."
 -/
 begin
   todo
@@ -542,17 +488,14 @@ end preuves_par_contrapposee
 --------------------------
 namespace preuve_par_absurde
 /- dEAduction
-PrettyName
-  Preuve par l'absurde
+pretty_name = "Preuve par l'absurde"
 -/
 
 lemma exercise.inegalite (a b : ℤ) :
 a^2 - 4*b ≠ 2 :=
 /- dEAduction
-PrettyName
-  Non égal à deux
-Description
-  Par l'absurde, montrer d'abord que a² doit être pair, en introduisant un but intermédiaire.
+pretty_name = "Non égal à deux"
+description = "Par l'absurde, montrer d'abord que a² doit être pair, en introduisant un but intermédiaire."
 -/
 begin
   todo
@@ -566,10 +509,8 @@ namespace equivalence_logique
 
 lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
 /- dEAduction
-PrettyName
-  Pair ssi carré pair
-Description
-  Un nombre est pair si et seulement si son carré est pair.
+pretty_name = "Pair ssi carré pair"
+description = "Un nombre est pair si et seulement si son carré est pair."
 -/
 begin
   todo
@@ -577,11 +518,11 @@ end
 
 lemma exercise.difference_carres {n : ℤ} : (odd n) ↔ (∃m, n=(m+1)^2 - m^2) :=
 /- dEAduction
-PrettyName
-  Différence de deux carrés consécutifs
-Description
-  Un nombre peut s'écrire comme une différence de deux carrés consécutifs
-  si et seulement si il est impair.
+pretty_name = "Différence de deux carrés consécutifs"
+description = """
+Un nombre peut s'écrire comme une différence de deux carrés consécutifs
+si et seulement si il est impair.
+"""
 -/
 begin
   todo
@@ -593,8 +534,7 @@ end equivalence_logique
 -------------------------------
 namespace preuve_par_recurrence
 /- dEAduction
-PrettyName
-  Preuve par récurrence
+pretty_name = "Preuve par récurrence"
 -/
 
 -- TODO: sommes quelconques, 
@@ -602,10 +542,8 @@ PrettyName
 
 lemma exercise.even_or_odd : ∀n: nat, (even n or odd n) :=
 /- dEAduction
-PrettyName
-  Pair ou impair I
-AvailableTheorem
-  ALL -not_even_is_odd
+pretty_name = "Pair ou impair I"
+available_theorem = "ALL -not_even_is_odd"
 -/
 begin
   -- apply induction.simple_induction, rotate,
@@ -623,10 +561,8 @@ end
 
 lemma exercise.even_or_odd2 : ∀n: nat, (not (even n)) ↔ odd n :=
 /- dEAduction
-PrettyName
-  Pair ou impair II
-AvailableTheorem
-  ALL -not_even_is_odd
+pretty_name = "Pair ou impair II"
+available_theorem = "ALL -not_even_is_odd"
 -/
 begin
     todo
@@ -637,14 +573,12 @@ end preuve_par_recurrence
 
 namespace contre_exemples
 /- dEAduction
-PrettyName
-  Contre-exemples
+pretty_name = "Contre-exemples"
 -/
 lemma exercise.prime :
 not(∀n: nat, prime (n^2 - n + 11)) :=
 /- dEAduction
-PrettyName
-  Premier ?
+pretty_name = "Premier ?"
 -/
 begin
     todo

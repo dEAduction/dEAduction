@@ -27,17 +27,14 @@ import set_definitions
 
 
 /- dEAduction
-Title
-    exercices de mathématiques discretes.
-Author
-    Alice Laroche
-Institution
-    Sorbonne Université
-AvailableCompute
-    NONE
-Description
-    Exercices d'un cours de maths discrètes à Sorbonne Université.
-    Les numéros de questions font référence à la feuille de TD.
+title = "exercices de mathématiques discretes."
+author = "Alice Laroche"
+institution = "Sorbonne Université"
+available_compute = "NONE"
+description = """
+Exercices d'un cours de maths discrètes à Sorbonne Université.
+Les numéros de questions font référence à la feuille de TD.
+"""
 -/
 
 namespace set
@@ -118,14 +115,12 @@ notation R `dot` S := relation.product R S
 ------------------
 namespace math_discretes
 /- dEAduction
-PrettyName
-    Mathématiques discrètes
+pretty_name = "Mathématiques discrètes"
 -/
 
 namespace generalites
 /- dEAduction
-PrettyName
-    Généralités
+pretty_name = "Généralités"
 -/
 
 ------------------------
@@ -133,10 +128,8 @@ PrettyName
 ------------------------
 lemma definition.inclusion {A B : set X} : A ⊆ B ↔ ∀ {x:X}, x ∈ A → x ∈ B :=
 /- dEAduction
-PrettyName
-    Inclusion
-ImplicitUse
-    True    
+pretty_name = "Inclusion"
+implicit_use = true
 -/
 begin
     todo,
@@ -145,10 +138,8 @@ end
 lemma definition.egalite_deux_ensembles {A A' : set X} :
 (A = A') ↔ ( ∀ x, x ∈ A ↔ x ∈ A' ) :=
 /- dEAduction
-PrettyName
-    Egalité de deux ensembles
-ImplicitUse
-    False
+pretty_name = "Egalité de deux ensembles"
+implicit_use = false
 -/
 begin
     exact set.ext_iff,
@@ -176,8 +167,7 @@ lemma definition.ensemble_extension {X: Type}  {P : X → Prop} {x:X} :
  x ∈ {x | P x} ↔ P x
 :=
 /- dEAduction
-PrettyName
-    Ensemble en extension
+pretty_name = "Ensemble en extension"
 -/
 begin
     refl,
@@ -186,8 +176,7 @@ end
 lemma definition.singleton {X : Type} {x y : X}: x ∈ ({y} : set X) ↔ x = y
 :=
 /- dEAduction
-PrettyName
-    Singleton
+pretty_name = "Singleton"
 -/
 begin
     exact mem_singleton_iff,
@@ -196,10 +185,8 @@ end
 lemma definition.double_inclusion (A A' : set X) :
 A = A' ↔ (A ⊆ A' ∧ A' ⊆ A) :=
 /- dEAduction
-PrettyName
-    Double inclusion
-ImplicitUse
-    True
+pretty_name = "Double inclusion"
+implicit_use = true
 -/
 begin
     exact set.subset.antisymm_iff,
@@ -209,8 +196,7 @@ lemma definition.ensemble_partie (A A' : set X) :
 A' ∈ 𝒫(A) ↔  A' ⊆ A
 := 
 /- dEAduction
-PrettyName
-    Ensemble des parties
+pretty_name = "Ensemble des parties"
 -/
 begin
     refl,
@@ -221,8 +207,7 @@ end generalites
 
 namespace union_intersection
 /- dEAduction
-PrettyName
-    Unions et intersections
+pretty_name = "Unions et intersections"
 -/
 
 ------------------------
@@ -232,10 +217,8 @@ PrettyName
 lemma definition.intersection_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∩ B ↔ ( x ∈ A ∧ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Intersection de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Intersection de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -244,10 +227,8 @@ end
 lemma definition.union_deux_ensembles {A B : set X} {x : X} :
 x ∈ A ∪ B ↔ ( x ∈ A ∨ x ∈ B) :=
 /- dEAduction
-PrettyName
-    Union de deux ensembles
-ImplicitUse
-    True
+pretty_name = "Union de deux ensembles"
+implicit_use = true
 -/
 begin
     exact iff.rfl,
@@ -257,8 +238,7 @@ end
 lemma theorem.intersection_union (A B C : set X) :
 A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C) :=
 /- dEAduction
-PrettyName
-   Intersection avec une union
+pretty_name = "Intersection avec une union"
 -/
 begin
   exact set.inter_distrib_left A B C,
@@ -269,8 +249,7 @@ lemma definition.partition
  partition P ↔ (∀A₁ ∈ P , A₁ ≠ ∅) ∧ (∀A₁ A₂ ∈ P, (A₁ ∩ A₂ = ∅) ∨ A₁ = A₂) ∧ (∀x, ∃A₁ ∈ P, x ∈ A₁)
 :=
 /- dEAduction
-PrettyName
-   Partition
+pretty_name = "Partition"
 -/
 begin
     todo
@@ -351,8 +330,7 @@ end union_intersection
 
 namespace complementaire
 /- dEAduction
-PrettyName
-    Complémentaire
+pretty_name = "Complémentaire"
 -/
 
 ------------------------
@@ -361,10 +339,8 @@ PrettyName
 
 lemma definition.complement {A : set X} {x : X} : x ∈ set.compl A ↔ not (x ∈ A) :=
 /- dEAduction
-PrettyName
-    Complementaire
-ImplicitUse
-    False
+pretty_name = "Complementaire"
+implicit_use = false
 -/
 begin
     -- split, intro H, targets_analysis,
@@ -373,10 +349,8 @@ end
 
 lemma definition.difference {A A' : set X} {x : X} : x ∈ set.diff A A' ↔ x ∈ A ∧ x ∉ A' :=
 /- dEAduction
-PrettyName
-    Différence
-ImplicitUse
-    False
+pretty_name = "Différence"
+implicit_use = false
 -/
 begin
     finish,
@@ -444,8 +418,7 @@ end complementaire
 
 namespace produits_cartesiens
 /- dEAduction
-PrettyName
-    Produits cartésiens
+pretty_name = "Produits cartésiens"
 -/
 
 -- lemma definition.type_produit :
@@ -462,10 +435,8 @@ PrettyName
 lemma definition.produit_de_parties {A : set X} {B : set Y} {a: X × Y}:
 a ∈ set.prod A B ↔ ∃x ∈ A, ∃y ∈ B, a= (x,y) :=
 /- dEAduction
-PrettyName
-    Produit cartésien de deux parties
-ImplicitUse
-    False
+pretty_name = "Produit cartésien de deux parties"
+implicit_use = false
 -/
 begin
     todo
@@ -475,8 +446,7 @@ end produits_cartesiens
 
 namespace relations
 /- dEAduction
-PrettyName
-    Relations
+pretty_name = "Relations"
 -/
 
 ------------------------
@@ -486,8 +456,7 @@ PrettyName
 lemma definition.inv {R : set (X × Y)} {x : X} {y : Y} :
 (y,x) ∈ (inv R) ↔ (x,y) ∈ R :=
 /- dEAduction
-PrettyName
-    Inverse d'une relation
+pretty_name = "Inverse d'une relation"
 -/
 begin
     refl,
@@ -496,10 +465,8 @@ end
 lemma definition.prod {R : set (X × Y)} {S : set (Y × Z)} {x : X} {z : Z} :
 (x,z) ∈ (product R S) ↔ ∃y, (x,y) ∈ R ∧ (y,z) ∈ S :=
 /- dEAduction
-PrettyName
-    Produit de deux relations
-ImplicitUse
-    True
+pretty_name = "Produit de deux relations"
+implicit_use = true
 -/
 begin
     refl,
@@ -508,8 +475,7 @@ end
 lemma definition.id {x : X} {y : X} :
 (x,y) ∈ (identite : set (X × X))  ↔ x = y :=
 /- dEAduction
-PrettyName
-    Relation identité
+pretty_name = "Relation identité"
 -/
 begin
     refl,
@@ -518,8 +484,7 @@ end
 lemma theorem.id :
 ∀ x:X,  (x,x) ∈ (identite : set (X × X)) :=
 /- dEAduction
-PrettyName
-    Relation identité
+pretty_name = "Relation identité"
 -/
 begin
     intro x, rw definition.id,
@@ -528,10 +493,8 @@ end
 lemma definition.reflexive {R : set (X × X)} :
 reflexive R ↔ ∀x, (x, x) ∈ R :=
 /- dEAduction
-PrettyName
-    Réflexivité
-ImplicitUse
-    True
+pretty_name = "Réflexivité"
+implicit_use = true
 -/
 begin
     refl,
@@ -540,10 +503,8 @@ end
 lemma definition.transitive {R : set (X × X)} :
 transitive R ↔ ∀x y z, (x, y) ∈ R ∧ (y, z) ∈ R → (x, z) ∈ R :=
 /- dEAduction
-PrettyName
-    Transitivité
-ImplicitUse
-    True
+pretty_name = "Transitivité"
+implicit_use = true
 -/
 begin
     refl,
@@ -552,10 +513,8 @@ end
 lemma definition.symetrique {R : set (X × X)} :
 symetrique R ↔ ∀x y, (x, y) ∈ R → (y, x) ∈ R:=
 /- dEAduction
-PrettyName
-    Symétrie
-ImplicitUse
-    True
+pretty_name = "Symétrie"
+implicit_use = true
 -/
 begin
     refl,
@@ -564,8 +523,7 @@ end
 lemma definition.antisymetrique {R : set (X × X)} :
 antisymetrique R ↔ ∀x y, (x, y) ∈ R ∧ (y, x) ∈ R → x = y :=
 /- dEAduction
-PrettyName
-    Antisymétrie
+pretty_name = "Antisymétrie"
 -/
 begin
     refl,
@@ -574,10 +532,8 @@ end
 lemma definition.equivalence {R : set (X × X)} :
 relation_equivalence R ↔ reflexive R ∧ transitive R ∧ symetrique R :=
 /- dEAduction
-PrettyName
-    Relation d'équivalence
-ImplicitUse
-    True
+pretty_name = "Relation d'équivalence"
+implicit_use = true
 -/
 begin
     refl,
@@ -586,8 +542,7 @@ end
 lemma definition.ordre {R : set (X × X)} :
 relation_ordre R ↔ reflexive R ∧ transitive R ∧ antisymetrique R :=
 /- dEAduction
-PrettyName
-    Relation d'ordre
+pretty_name = "Relation d'ordre"
 -/
 begin
     refl,
@@ -596,8 +551,7 @@ end
 lemma definition.classe_equivalence {x y : X} {R : set (X × X)} {H1 : relation_equivalence R}:
 y ∈ classe_equivalence R H1 x ↔ (x, y) ∈ R :=
 /- dEAduction
-PrettyName
-    Classe d'équivalence
+pretty_name = "Classe d'équivalence"
 -/
 begin
     refl,
@@ -703,23 +657,20 @@ end relations
 ---------------
 namespace exercices 
 /- dEAduction
-PrettyName
-    Exercices
+pretty_name = "Exercices"
 -/
 
 variables  {A B C : set X}
 
 namespace exercice2
 /- dEAduction
-PrettyName
-    Exercice 2
+pretty_name = "Exercice 2"
 -/
 
 lemma exercise.question1 :
 (A ∩ compl (A ∩ B)) = (A ∩ compl B) :=
 /- dEAduction
-PrettyName
-    Question 1
+pretty_name = "Question 1"
 -/
 begin
     todo,
@@ -728,8 +679,7 @@ end
 lemma exercise.question2 :
 A ∩ B = A ∩ C → A ∩ compl B = A ∩ compl C :=
 /- dEAduction
-PrettyName
-    Question 2
+pretty_name = "Question 2"
 -/
 begin
     todo,
@@ -738,10 +688,8 @@ end
 lemma exercise.question3 :
 A ∩ B = A ∩ C ↔ A ∩ (compl B) = A ∩ (compl C) :=
 /- dEAduction
-PrettyName
-    Question 3
-Description
-    Deduire de la question précedente l'équivalence des deux énoncés.
+pretty_name = "Question 3"
+description = "Deduire de la question précedente l'équivalence des deux énoncés."
 -/
 begin
     todo,
@@ -750,8 +698,7 @@ end
 lemma exercise.question4 :
 A ∪ B ⊆ A ∪ C ∧ A ∩ B ⊆ A ∩ C → B ⊆ C :=
 /- dEAduction
-PrettyName
-    Question 4
+pretty_name = "Question 4"
 -/
 begin
     todo,
@@ -760,8 +707,7 @@ end
 lemma exercise.question5 : 
 set.prod A (B ∪ C) = set.prod A B ∪ set.prod A C :=
 /- dEAduction
-PrettyName
-    Question 5
+pretty_name = "Question 5"
 -/ 
 begin
     -- rw generalites.definition.double_inclusion, split,
@@ -785,8 +731,7 @@ end
 lemma exercise.question62 :
 𝒫(A ∩ B) = 𝒫(A) ∩ 𝒫(B) :=  
 /- dEAduction
-PrettyName
-    Question 6.2
+pretty_name = "Question 6.2"
 -/
 begin
     todo,
@@ -796,8 +741,7 @@ end
 lemma exercise.question7 (F : Type) (E : set F) (x : F) (h : x ∉ E) :
 𝒫(E ∪ {x}) = 𝒫(E) ∪ {A' | ∃A ⊆ E, A' = A ∪ {x}} :=
 /- dEAduction
-PrettyName
-    Question 7
+pretty_name = "Question 7"
 -/
 begin
     todo,
@@ -807,8 +751,7 @@ end exercice2
 
 namespace exercice5
 /- dEAduction
-PrettyName
-    Exercice 5
+pretty_name = "Exercice 5"
 -/
 
 lemma exercise.question2_produit_inverse (X Y Z : Type) (R : set (X × Y)) (S : set (Y × Z)) :
@@ -824,15 +767,13 @@ end exercice5
 
 namespace exercice6
 /- dEAduction
-PrettyName
-    Exercice 6
+pretty_name = "Exercice 6"
 -/
 
 lemma exercise.question1 (X: Type) (R : set (X × X)) :
 reflexive R ↔ identite ⊆ R :=
 /- dEAduction
-PrettyName
-    Question 1
+pretty_name = "Question 1"
 -/
 begin
     todo,
@@ -841,8 +782,7 @@ end
 lemma exercise.question2 (X: Type) (R : set (X × X)) :
 symetrique R ↔ R = inv R  :=
 /- dEAduction
-PrettyName
-    Question 2
+pretty_name = "Question 2"
 -/
 begin
     todo,
@@ -851,8 +791,7 @@ end
 lemma exercise.question3 (X: Type) (R : set (X × X)) :
 antisymetrique R ↔ (R ∩ (inv R)) ⊆ identite :=
 /- dEAduction
-PrettyName
-    Question 3
+pretty_name = "Question 3"
 -/
 begin
     todo,
@@ -861,8 +800,7 @@ end
 lemma exercise.question4 (X: Type) (R : set (X × X)) :
 transitive R ↔ (product R R) ⊆ R :=
 /- dEAduction
-PrettyName
-    Question 4
+pretty_name = "Question 4"
 -/
 begin
     todo,
@@ -871,8 +809,7 @@ end
 lemma exercise.question5 (X: Type) (R : set (X × X)) :
 reflexive R → R ⊆ (R dot R) ∧ reflexive (R dot R) :=
 /- dEAduction
-PrettyName
-    Question 5
+pretty_name = "Question 5"
 -/
 begin
     todo,
@@ -881,8 +818,7 @@ end
 lemma exercise.question6 (X: Type) (R : set (X × X)) :
 symetrique R → (R ⁻¹ dot R) = (R dot R ⁻¹) :=
 /- dEAduction
-PrettyName
-    Question 6
+pretty_name = "Question 6"
 -/
 begin
     todo,
@@ -891,8 +827,7 @@ end
 lemma exercise.question7 (X: Type) (R : set (X × X)) :
 transitive R → transitive (R dot R) :=
 /- dEAduction
-PrettyName
-    Question 7
+pretty_name = "Question 7"
 -/
 begin
     todo,
@@ -901,15 +836,13 @@ end exercice6
 
 namespace exercice8
 /- dEAduction
-PrettyName
-    Exercice 8
+pretty_name = "Exercice 8"
 -/
 
 lemma exercise.question1 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) :
 ∀a, a ∈ classe_equivalence R H1 a :=
 /- dEAduction
-PrettyName
-    Question 1
+pretty_name = "Question 1"
 -/
 begin
     todo,
@@ -918,8 +851,7 @@ end
 lemma exercise.question2 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) (a b : A) :
 classe_equivalence R H1 a = classe_equivalence R H1 b ↔ (a,b) ∈ R :=
 /- dEAduction
-PrettyName
-    Question 2
+pretty_name = "Question 2"
 -/
 begin
     todo,
@@ -928,8 +860,7 @@ end
 lemma exercise.question3 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) (a b : A) :
 classe_equivalence R H1 a ≠ classe_equivalence R H1 b → classe_equivalence R H1 a ∩ classe_equivalence R H1 b = ∅ :=
 /- dEAduction
-PrettyName
-    Question 3
+pretty_name = "Question 3"
 -/
 begin
     todo,
@@ -938,8 +869,7 @@ end
 lemma exercise.question5 (A : Type) (R : set (A × A)) (H1 : relation_equivalence R) :
 partition {A₁ | ∃x, A₁ = classe_equivalence R H1 x} :=
 /- dEAduction
-PrettyName
-    Question 5
+pretty_name = "Question 5"
 -/
 begin
     todo,
@@ -967,15 +897,13 @@ end exercice8
 
 namespace exercice22
 /- dEAduction
-PrettyName
-    Exercice 22
+pretty_name = "Exercice 22"
 -/
 
 lemma exercise.question1 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀x x', (x, x') ∈ R ↔ f x = f x') :
 relation_equivalence R :=
 /- dEAduction
-PrettyName
-    Question 1
+pretty_name = "Question 1"
 -/
 begin
     todo,
@@ -985,8 +913,7 @@ lemma exercise.question3 (X Y : Type) (f : X → Y) (R : set (X × X)) (H1 : ∀
 (H2: relation_equivalence R) :
 ∀x y, x ∈ classe_equivalence R H2 y → classe_equivalence R H2 x = classe_equivalence R H2 y :=
 /- dEAduction
-PrettyName
-    Question 3
+pretty_name = "Question 3"
 -/
 begin
     todo,
@@ -1065,4 +992,3 @@ end exercices
 
 end math_discretes
 end course
-
