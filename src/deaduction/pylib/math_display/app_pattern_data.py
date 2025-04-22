@@ -252,7 +252,8 @@ class PatternMathDisplay:
     latex_from_name_in_lean_metadata = {}
 
     # To be updated:
-    calculator_definitions = None
+    more_calculator_definitions = None
+    restricted_calculator_definitions = None
 
     @classmethod
     def usr_n_special_latex_shapes(cls):
@@ -445,6 +446,21 @@ class PatternMathDisplay:
         return shape
 
     @classmethod
+    def update_calculator_definitions(cls, defs: []):
+        """
+        Check if the definitions whose names are in defs are in
+        cls.latex_from_name_in_lean_metadata, and if not,
+        add a standard latex shape.
+        """
+        if not defs:
+            defs = []
+        cls.more_calculator_definitions = defs
+        for name in defs:
+            if name not in cls.latex_from_name_in_lean_metadata.keys():
+                shape = cls.latex_shape_for_predicate(name)
+                cls.latex_from_name_in_lean_metadata[name] = shape
+
+    @classmethod
     def populate_app_pattern_dict(cls):
         """
         Populate the latex_from_app_constant_patterns and
@@ -476,6 +492,8 @@ class PatternMathDisplay:
 
             fake_pattern = cls.fake_app_pattern_from_cst_name(name)
             cls.fake_app_constant_patterns[name] = fake_pattern
+            log.debug(f"Added {name} in PatternMathDisplay.fake_app_constant_patterns")
+        pass
 
     @classmethod
     def adjust_special_shape_dict(cls):

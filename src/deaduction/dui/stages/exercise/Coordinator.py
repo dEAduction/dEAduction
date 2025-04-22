@@ -255,18 +255,16 @@ class Coordinator(QObject):
 
         # Update PatternMathDisplay for the Calculator
         display_constant = dict()
-        display_constant.update(course.metadata.get('display', dict()))
-        display_constant.update(exercise.metadata.get('display', dict()))
+        display_constant.update(exercise.metadata_get('display'))
         if display_constant:
             PatternMathDisplay.latex_from_name_in_lean_metadata = display_constant
-        calculator_definitions = exercise.metadata.get('calculator_definitions')
-        if calculator_definitions:
-            if not isinstance(calculator_definitions, list):
-                calculator_definitions = calculator_definitions.split()
-            PatternMathDisplay.calculator_definitions = calculator_definitions
-        else:
-            # Cancel previous exercise's list!
-            PatternMathDisplay.calculator_definitions = None
+
+        more_defs = exercise.calculator_definitions()
+        if more_defs:
+            PatternMathDisplay.update_calculator_definitions(more_defs)
+            PatternMathDisplay.populate_app_pattern_dict()
+        restricted_defs = exercise.restricted_calculator_definitions()
+        PatternMathDisplay.restricted_calculator_definitions = restricted_defs
 
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a

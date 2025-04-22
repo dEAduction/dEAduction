@@ -247,6 +247,7 @@ class Course:
 
         return mixed_exercises
 
+    # ----- Some metadata ----- #
     @property
     def title(self) -> str:
         """
@@ -281,6 +282,26 @@ class Course:
             return self.metadata['description']
         else:
             return _("no description")
+
+    def restricted_calculator_definitions(self) -> []:
+        """
+        Return None if does not appear in metadata.
+        """
+        restricted_defs = self.metadata.get('restricted_calculator_definitions')
+        if restricted_defs:
+            if isinstance(restricted_defs, str):
+                restricted_defs = restricted_defs.split()
+        return restricted_defs
+
+    def more_calculator_definitions(self) -> []:
+        """
+        Return None if does not appear in metadata.
+        """
+        defs = self.metadata.get('more_calculator_definitions')
+        if defs:
+            if isinstance(defs, str):
+                defs = defs.split()
+        return defs
 
     def print_metadata(self):
         for field_name, field_content in self.metadata.items():

@@ -1134,7 +1134,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     @classmethod
     def populate_app_marked_patterns(cls):
         patterns = PatternMathDisplay.fake_app_constant_patterns
-        calculator_defs = PatternMathDisplay.calculator_definitions
+        calculator_defs = PatternMathDisplay.restricted_calculator_definitions
         for name, pattern_str in patterns.items():
             if not calculator_defs or name in calculator_defs:
                 cls.app_patterns[name] = cls.from_string(pattern_str)

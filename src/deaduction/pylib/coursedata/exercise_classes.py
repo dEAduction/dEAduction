@@ -164,7 +164,7 @@ class StructuredContent:
     def has_identical_core_lemma_content(self, other):
         return (self.hypotheses.strip(), self.conclusion.strip()) == \
             (other.hypotheses.strip(), other.conclusion.strip())
-    
+
 
 @dataclass
 class Statement:
@@ -217,6 +217,59 @@ class Statement:
     @property
     def metadata(self):
         return self.info
+
+    def metadata_get(self, name):
+        """
+        Get metadata by looking in self.metadata, and then by default in
+        course.metadata.
+        """
+        self_metadata = self.metadata.get('name')
+        if self_metadata:
+            return self_metadata
+
+        return self.course.metadata.get(name)
+
+    def restricted_calculator_definitions(self):
+        """
+        If self has restricted_calculator_definitions in metadata,
+        then return the list.
+        Else if this happens in self.course, return this list.
+        """
+
+        if self.metadata.get('more_definitions'):
+            return None
+
+        restricted_defs = self.metadata_get('restricted_calculator_definitions')
+
+        if restricted_defs:
+            if isinstance(restricted_defs, str):
+                restricted_defs = restricted_defs.split()
+            return restricted_defs
+        elif restricted_defs in ("", []):
+            return []
+
+        return self.course.restricted_calculator_definitions()
+
+    def calculator_definitions(self):
+        """
+        Return self's more_definitions if there are some, maybe augmented
+        with course defs.
+        Else return self's restricted def.
+        """
+        restricted_defs = self.restricted_calculator_definitions()
+        restricted_courses_defs = self.course.restricted_calculator_definitions()
+        course_defs = self.course.more_calculator_definitions()
+        defs = self.metadata.get('more_calculator_definitions')
+        if defs:
+            if isinstance(defs, str):
+                defs = defs.split()
+            if restricted_courses_defs:
+                defs += restricted_courses_defs
+            if course_defs:
+                defs += course_defs
+            return defs
+
+        return restricted_defs
 
     @classmethod
     def from_parser_data(cls, **data):
