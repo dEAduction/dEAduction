@@ -60,10 +60,10 @@ latex_from_app_pattern = {
     #     (-1, r'\text_is', _('a metric space'))
 }
 
-# TODO: english translation
+# The following is used to update latex_from_app_pattern
 # Negative value = from end of children list
 latex_from_constant_name = {
-    "Identite": ("Id",),# FIXME: use Id for name...
+    "Identite": ("Id",),
     "identite": ("Id",),
     "interval": (r"\[", -2, ",", -1, r"\]"),
     "inv": ([r'\parentheses', (-1, )], [r'^', '-1']),
@@ -244,7 +244,25 @@ class PatternMathDisplay:
 
     latex_from_app_constant_patterns = {}
     lean_from_app_constant_patterns = {}
+
+    # Used by Calculator to display definitions:
     fake_app_constant_patterns = {}
+
+    # To be updated with the display metadata:
+    latex_from_name_in_lean_metadata = {}
+
+    # To be updated:
+    calculator_definitions = None
+
+    @classmethod
+    def usr_n_special_latex_shapes(cls):
+        """
+        Merge usr (from the lean file metadata 'display') and latex dict.
+        """
+        dict_ = {}
+        dict_.update(cls.special_latex_shapes)
+        dict_.update(cls.latex_from_name_in_lean_metadata)
+        return dict_
 
     @staticmethod
     def pattern_from_cst_name(name):
@@ -267,7 +285,10 @@ class PatternMathDisplay:
     def fake_app_pattern_from_cst_name(cls, name):
         """
         FIXME: more than 3 args !!!
-        This used for calculator only (?).
+        This is used only in Calculator to determine where to put the
+        metavar.
+        In general it does NOT corresponds to the actual pattern as used in
+        Lean, since it omits all non displayed arguments.
         """
         cst_pattern = cls.pattern_from_cst_name(name)
         nb_args = cls.nb_args(name)
@@ -292,9 +313,7 @@ class PatternMathDisplay:
         """
 
         names = (cls.fcts_one_var + cls.fcts_two_var + cls.unary_predicate
-                 + list(cls.infix.keys()) + list(cls.special_latex_shapes.keys()))
-
-
+                 + list(cls.infix.keys()) + list(cls.usr_n_special_latex_shapes().keys()))
 
         return names
 
@@ -323,8 +342,8 @@ class PatternMathDisplay:
         elif name in (cls.fcts_two_var + list(cls.infix.keys())):
             return 2
 
-        elif name in cls.special_latex_shapes.keys():
-            shape = cls.special_latex_shapes[name]
+        elif name in cls.usr_n_special_latex_shapes().keys():
+            shape = cls.usr_n_special_latex_shapes()[name]
             # nbs = list(item for item in shape if isinstance(item, int))
             nbs = PatternMathDisplay.exhaustive_nb_list(shape)
             if nbs:
@@ -378,10 +397,14 @@ class PatternMathDisplay:
         e.g.   "converging_seq": ((-1, ), r'\text_is_not', _(" converging")).
         """
 
-        display = cls.special_latex_shapes.get(name)
+        display = cls.usr_n_special_latex_shapes().get(name)
         if display:
             if r'\text_is' in display:
                 display_not = [r'\text_is_not' if item == r'\text_is'
+                               else item for item in display]
+                return display_not
+            if r'\text_are' in display:
+                display_not = [r'\text_are_not' if item == r'\text_are'
                                else item for item in display]
                 return display_not
             else:
@@ -404,7 +427,7 @@ class PatternMathDisplay:
         elif name in cls.unary_predicate:
             return cls.latex_shape_for_predicate(name)
         else:
-            return cls.special_latex_shapes.get(name)
+            return cls.usr_n_special_latex_shapes().get(name)
 
     @classmethod
     def lean_shape_for_app_of_cst(cls, name):
@@ -426,6 +449,11 @@ class PatternMathDisplay:
         """
         Populate the latex_from_app_constant_patterns and
         lean_from_app_constant_patterns dicts.
+        The fake_app_constant_patterns is used by the
+        Calculator to decide which definitions should be displayed.
+
+        Shapes are computed by looking for the name entry in the unary,
+        binary, infix, ... dict.
         """
 
         # TODO: special negation patterns/shapes
@@ -442,7 +470,7 @@ class PatternMathDisplay:
                 cls.latex_from_app_constant_patterns[key_not] = value_not
             if lean_value:
                 cls.lean_from_app_constant_patterns[key] = lean_value
-            # TODO: move elsewhere?
+
             cst_key = cls.pattern_from_cst_name(name)
             cls.lean_from_app_constant_patterns[cst_key] = (display_name, )
 
@@ -451,10 +479,13 @@ class PatternMathDisplay:
 
     @classmethod
     def adjust_special_shape_dict(cls):
-        for key, value in cls.special_latex_shapes.items():
+        """
+        Replace single int by tuple (e.g. '3' --> '(3, )'.
+        """
+        for key, value in cls.usr_n_special_latex_shapes().items():
             new_value = tuple((item, ) if isinstance(item, int)
                               else item for item in value)
-            cls.special_latex_shapes[key] = new_value
+            cls.usr_n_special_latex_shapes()[key] = new_value
 
     @classmethod
     def update_dicts(cls):

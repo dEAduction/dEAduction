@@ -51,6 +51,7 @@ global _
 # NUMBERS
 numbers = {str(n): f'NUMBER/value={n}: *NUMBER_TYPES' for n in range(11)}
 
+# Dict of symbol / pattern for CalculatorPatternLines
 calculator_pattern_strings = {
                    '+': 'SUM: *NUMBER_TYPES()(?0: *NUMBER_TYPES, ?1: *NUMBER_TYPES)',
                     # FIXME: OPPOSITE vs DIFFERENCE??  -1 vs 2-3
@@ -196,6 +197,7 @@ class CalculatorPatternLines:
     bound_vars_title = _('Bound variables')
     context_title = _('Context')
 
+    # Dict of symbol / MarkedPMO
     marked_patterns = OrderedDict()
     for symbol, string in calculator_pattern_strings.items():
         marked_pmo = MarkedPatternMathObject.from_string(string, [])
@@ -206,7 +208,10 @@ class CalculatorPatternLines:
 
     def __init__(self, title: str, lines: [],
                  patterns=None):
-
+        """
+        Lines is a list of symbols which are keys for the cls.marked_patterns
+        dict, which is updated with the optional patterns argument.
+        """
         # FIXME: marked_patterns should be just patterns??
         #  turned into marked_patterns when inserted
         self.title = title
@@ -242,11 +247,19 @@ class CalculatorPatternLines:
         appears in the PatternMathDisplay class list of constants.
         """
 
+        # Max and abs already with numbers
         excluded_names = ('max', 'abs', 'limit_function')
 
+        # Get all definitions from statements in Lean file
         csts_dict = DefinitionMathObject.get_constants()
+        # Get patterns for those definitions
+        MarkedPatternMathObject.populate_app_marked_patterns()
         patterns_dict = MarkedPatternMathObject.app_patterns
+
+        # Cosmetic
         pretty_names = PatternMathDisplay.constants_pretty_names
+
+        # Get nodes with some type indications
         definition_node_names = [node.node_name for node in
                                  DefinitionNode.calculator_nodes]
         cpls = []
@@ -258,9 +271,6 @@ class CalculatorPatternLines:
                     if name in patterns_dict and name not in excluded_names:
                         marked_pmo = patterns_dict[name]
                         symbol = pretty_names.get(name, name)
-                        # idx, symbol = marked_pmo.main_shape_symbol()
-                        # if symbol == 'max':
-                        #     print(marked_pmo.math_type)
                         # Not twice in the same section:
                         if symbol not in symbols:
                             symbols.append(symbol)

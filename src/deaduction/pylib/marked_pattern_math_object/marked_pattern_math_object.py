@@ -1134,14 +1134,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
     @classmethod
     def populate_app_marked_patterns(cls):
         patterns = PatternMathDisplay.fake_app_constant_patterns
+        calculator_defs = PatternMathDisplay.calculator_definitions
         for name, pattern_str in patterns.items():
-            cls.app_patterns[name] = cls.from_string(pattern_str)
-        # FIXME
-        # pat1 = ("APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))")
-        # pat2 = ("APP(APP(CONSTANT/name=composition, ?4: FUNCTION(?2, ?3), "
-        #         "?5: FUNCTION(?1, ?2)), ?6: ?1)")
-        # # cls.app_patterns['composition'] = cls.from_string(pat1)
-        # cls.app_patterns['application_of_composition'] = cls.from_string(pat2)
+            if not calculator_defs or name in calculator_defs:
+                cls.app_patterns[name] = cls.from_string(pattern_str)
 
     @classmethod
     def generic_node(cls, left_child=None, right_child=None, node=None):
@@ -2113,9 +2109,6 @@ class MarkedBoundVar(BoundVar, MarkedPatternMathObject):
             lean_name = self.info.get('lean_name')
             name = '[' + lean_name + ']' if lean_name else '[?]'
         return name
-
-
-MarkedPatternMathObject.populate_app_marked_patterns()
 
 
 if __name__ == "__main__":

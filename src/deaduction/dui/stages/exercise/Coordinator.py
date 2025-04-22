@@ -66,6 +66,7 @@ from deaduction.pylib.server import             ServerInterface, Task
 
 # Maths
 # from deaduction.pylib.coursedata.settings_parser import metadata_str_from_cvar_keys
+from deaduction.pylib.math_display import      PatternMathDisplay
 from deaduction.pylib.coursedata import        (Exercise,
                                                 Definition,
                                                 Theorem,
@@ -245,14 +246,31 @@ class Coordinator(QObject):
         to get the negated Lean statement, we need to wait for the initial
         proof state to be set. This is the reason why this is an async method.
         """
+
         log.debug("Initializing exercise")
+        exercise = self.exercise
+        course = exercise.course
         self.__init_tutorials()
-        self.exercise.course.load_initial_proof_states()
+        course.load_initial_proof_states()
+
+        # Update PatternMathDisplay for the Calculator
+        display_constant = dict()
+        display_constant.update(course.metadata.get('display', dict()))
+        display_constant.update(exercise.metadata.get('display', dict()))
+        if display_constant:
+            PatternMathDisplay.latex_from_name_in_lean_metadata = display_constant
+        calculator_definitions = exercise.metadata.get('calculator_definitions')
+        if calculator_definitions:
+            if not isinstance(calculator_definitions, list):
+                calculator_definitions = calculator_definitions.split()
+            PatternMathDisplay.calculator_definitions = calculator_definitions
+        else:
+            # Cancel previous exercise's list!
+            PatternMathDisplay.calculator_definitions = None
 
         # Try to display initial proof state of self.exercise prior to anything
         #  (so that user may start thinking, even if UI stay frozen for a
         #  while.)
-        exercise = self.exercise
         log.debug("New ProofTree:")
         self.proof_tree = ProofTree()
         log.debug("Proof Tree Controller:")

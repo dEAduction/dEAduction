@@ -69,6 +69,10 @@ class PatternInit:
     PatternMathObject. Instead, the module containing the PatternMathObject
     class import the present class, and call the pattern_init()
     method, providing the from_string() method as an argument.
+
+    The useful attributes are pattern_latex, pattern_lean, pattern_text.
+    These are lists of triples, e.g. (pattern, latex_shape, metavars).
+    They are used in MathDisplay.
     """
 
     pattern_from_string: callable = None  # To be set in pattern_math_object
@@ -122,6 +126,7 @@ class PatternInit:
         """
         set_quant_pattern()
         app_pattern_from_constants(additional_data=additional_constants)
+        PatternMathDisplay.populate_app_pattern_dict()
         cls.string_to_pattern()
 
     @classmethod

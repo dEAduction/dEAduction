@@ -183,7 +183,6 @@ class Statement:
     pretty_name:            str
     # 'Union d'intersections'
     description:            str             = None
-    settings:               dict            = None
     # "L'union est distributive par rapport à l'intersection"
     text_book_identifier:   str             = None
     lean_begin_line_number: int             = None
@@ -214,6 +213,10 @@ class Statement:
     def __str__(self):
         s = "Statement " + self.pretty_name
         return s
+
+    @property
+    def metadata(self):
+        return self.info
 
     @classmethod
     def from_parser_data(cls, **data):
@@ -559,6 +562,8 @@ class Exercise(Theorem):
         (in each three categories, resp. logic, proof and magic buttons)
     - the list of statements that will be available for this specific exercise.
     """
+
+    settings:                   dict            = None
     available_logic:            List[Action]    = None
     available_magic:            List[Action]    = None
     available_proof:            List[Action]    = None
@@ -583,6 +588,10 @@ class Exercise(Theorem):
     #     for (key, value) in data.items():
     #         print(str(key))
     #         self.key = value
+
+    @property
+    def display(self):
+        return self.info.get('display')
 
     @property
     def initial_proof_state(self):

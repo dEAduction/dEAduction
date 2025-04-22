@@ -90,7 +90,8 @@ class DefinitionMathObject(MathObject, Definition):
     @classmethod
     def get_constants(cls):
         """
-        Add all CONSTANTS in self to the all_constants list.
+        Return all instances organized in dict whose keys are
+        hierarchies of sections.
         """
 
         all_constants = dict()
