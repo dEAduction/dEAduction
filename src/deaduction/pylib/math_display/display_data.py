@@ -409,6 +409,8 @@ class MathDisplay:
             r'\text_is': " ",
             # " " + _("is") + " " ? Anyway 'is' will be removed?
             r'\text_is_not': " " + _('not') + " ",  # Idem
+            r'\text_are': " ",
+            r'\text_are_not': " " + _('not') + " ",  # Idem
             r'\no_text': "",
             # r'\text': "",
             r'\symbol_parentheses': r'\parentheses',
@@ -493,6 +495,8 @@ class MathDisplay:
             r'\in_quant': " " + _("in") + " ",
             r'\text_is': " " + _('is') + " ",
             r'\text_is_not': " " + _('is not') + " ",
+            r'\text_are': " " + _('are') + " ",
+            r'\text_are_not': " " + _('are not') + " ",
             r'\symbol_parentheses': "",  # Parentheses but for symbols only
             r'\type_subset': _("a subset of") + " ",
             r'\type_sequence': _("a sequence in") + " ",
