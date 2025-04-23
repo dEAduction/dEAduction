@@ -149,10 +149,11 @@ def process_file(filepath):
     with open(filepath) as f:
         s = f.read()
         new_s = find_replace(s)
-    with open(filepath, "w") as f:
-        f.write(new_s)
-    # print("------------------------------")
-    # print(new_s)
+    # Uncomment the next 2 lines to actually modify the files:
+    # with open(filepath, "w") as f:
+    #     f.write(new_s)
+    print("------------------------------")
+    print(new_s)
 
 
 def brose(directory):
