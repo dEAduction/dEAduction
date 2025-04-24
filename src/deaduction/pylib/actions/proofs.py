@@ -364,7 +364,13 @@ def method_sorry(proof_step,
     """
     Close the current sub-goal by sending the 'sorry' code.
     """
-    return CodeForLean.from_string('sorry')
+
+    goals_nb = len(proof_step.proof_state.goals)
+    if goals_nb == 1:
+        error = _("This is pertinent only when there are several targets")
+        raise WrongUserInput(error)
+    else:
+        return CodeForLean.from_string('sorry')
 
 
 def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
@@ -559,8 +565,6 @@ def action_complete(proof_step,
 
     # FIXME: this is valid only for action_complete_statements,
     #  not for Jokers created by usr.
-    #  The 'complete' button should be associated to the right action on
-    #  creation.
 
     # ---- (1) Handle selection ---- #
     selected_objects = proof_step.selection
