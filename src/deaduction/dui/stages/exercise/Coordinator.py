@@ -254,8 +254,7 @@ class Coordinator(QObject):
         course.load_initial_proof_states()
 
         # Update PatternMathDisplay for the Calculator
-        display_constant = dict()
-        display_constant.update(exercise.metadata_get('display'))
+        display_constant = exercise.metadata_get('display')
         if display_constant:
             PatternMathDisplay.latex_from_name_in_lean_metadata = display_constant
 
