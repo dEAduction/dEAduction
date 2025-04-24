@@ -40,6 +40,7 @@ This file is part of d∃∀duction.
 """
 
 import logging
+from functools import partial
 from typing import Dict, Optional
 from trio import sleep
 
@@ -56,21 +57,22 @@ from PySide2.QtCore    import ( Signal,
                                 QModelIndex, QMimeData,
                                 QTimer,
                                 QRect)
-from PySide2.QtWidgets import ( QHBoxLayout,
-                                QVBoxLayout,
-                                QPushButton,
-                                QWidget,
-                                QAbstractItemView,
-                                QLabel,
-                                QGroupBox,
-                                QStackedLayout,
-                                QCheckBox)
+from PySide2.QtWidgets import (QHBoxLayout,
+                               QVBoxLayout,
+                               QPushButton,
+                               QWidget,
+                               QAbstractItemView,
+                               QLabel,
+                               QGroupBox,
+                               QStackedLayout,
+                               QMenu, QAction, QToolButton)
 
 from PySide2.QtWidgets import ( QTreeWidget,
                                 QTreeWidgetItem,
                                 QToolTip,
                                 QSizePolicy)
 
+from deaduction.dui.primitives import RichTextToolButton, deaduction_fonts
 from deaduction.pylib.text        import ( button_symbol,
                                            button_tool_tip)
 import deaduction.pylib.config.dirs as cdirs
@@ -98,7 +100,7 @@ global _
 # instances of ActionButton coded as an instance of ActionButtonsLine.
 
 
-class ActionButton(QPushButton):
+class ActionButton(QToolButton):
     """
     Class for so-called 'action buttons' (e.g. '∀' button). Each
     instance of this class is associated to an instance of the class
@@ -126,10 +128,9 @@ class ActionButton(QPushButton):
     :attribute action_triggered (Signal(ActionButton)): A Signal with
         self as an argument, emitted when self is clicked on.
     """
-    # from_name: dict = {}  # name -> ActionButton
-    # ! Must be updated to avoid pointing to deleted items !
 
-    def __init__(self, action: Action, in_demo_or_use_line=False):
+    def __init__(self, action: Action, sub_buttons=None,
+                 in_demo_or_use_line=False):
         """
         Init self with an instance of the class Action. Set text,
         tooltip and keep the given action as an attribute. When self is
@@ -137,38 +138,49 @@ class ActionButton(QPushButton):
 
         :param action: The instance of the class Action one wants
             self to be associated with.
+        :param sub_buttons: Other ActionButton which will be simulated in
+        self.menu.
         """
 
         super().__init__()
-
+        self.setMinimumSize(70, 30)
+        # self.set_text_mode(True)
         self.action = action
+        self.sub_buttons = sub_buttons
 
         # Modify button default color
         if cvars.get('others.os') == "linux":
 
-            # if self.name.startswith('use'):
-            #     background_color = '#CC31CC'
-            # else:
-            #     background_color = cvars.get("display.color_for_selection",
-            #                                  "limegreen")
             background_color = cvars.get("display.color_for_selection",
                                          "limegreen")
             self.set_color(background_color)
-            # palette = self.palette()
-            # highlight_color = QColor(background_color)
-            # palette.setBrush(palette.Normal, palette.Button, highlight_color)
-            # palette.setBrush(palette.Inactive, palette.Button, highlight_color)
-            # self.setPalette(palette)
 
         self.in_demo_or_use_line = in_demo_or_use_line
         self.update()  # set symbol and tool tip
-        self.clicked.connect(self._emit_action)
+        self.clicked.connect(self.emit_action)
         # Modify arrow appearance when over a button
         self.setCursor(QCursor(Qt.PointingHandCursor))
-        # Update dictionary:
-        # self.from_name[action.symbol] = self
-        # self.from_name[action.name] = self
-        # log.debug(f"Init action button {action.name}")
+
+        self.set_menu()
+
+    def set_menu(self):
+        """
+        Set a pop-up menu if self has sub_actions.
+        """
+
+        if not self.sub_buttons:
+            return
+
+        menu = QMenu(self)
+
+        for button in self.sub_buttons:
+            menu_action = QAction(button.action.name, self)
+            menu_action.triggered.connect(button.emit_action)
+            menu.addAction(menu_action)
+
+        self.setMenu(menu)
+        self.setPopupMode(QToolButton.MenuButtonPopup)
+        menu.setToolTipsVisible(True)
 
     def set_color(self, color):
         palette = self.palette()
@@ -177,12 +189,7 @@ class ActionButton(QPushButton):
         palette.setBrush(palette.Inactive, palette.Button, highlight_color)
         self.setPalette(palette)
 
-    def update(self):
-        """
-        Set or update text and tooltips in button, using module pylib.text.
-        NB: translation is done here.
-        """
-        name = self.action.name
+    def __symbol_from_name(self, name):
         symbol = button_symbol(name)
         if self.in_demo_or_use_line:
             # Remove ugly prefix, 'use_' or 'prove_'
@@ -191,8 +198,10 @@ class ActionButton(QPushButton):
             elif symbol.startswith('prove'):
                 symbol = symbol[6:]
         symbol = _(symbol)  # Translate, finally!
-        self.setText(symbol)
+        return  symbol
 
+    @staticmethod
+    def __tooltip_from_name(name):
         tool_tip = button_tool_tip(name)
         if isinstance(tool_tip, str):
             tooltip = _(tool_tip)
@@ -207,15 +216,32 @@ class ActionButton(QPushButton):
             tooltip = '\n'.join(pretty_list)
         else:
             tooltip = ""
-        self.setToolTip(tooltip)
+
+        return tooltip
+
+    def update(self):
+        """
+        Set or update text and tooltips in button, using module pylib.text.
+        NB: translation is done here.
+        """
+
+        self.setText(self.__symbol_from_name(self.name))
+        self.setToolTip(self.__tooltip_from_name(self.name))
+
+        if self.menu():
+            for button, menu_action in zip(self.sub_buttons,
+                                           self.menu().actions()):
+                menu_action.setText(self.__symbol_from_name(button.name))
+                menu_action.setToolTip(self.__tooltip_from_name(button.name))
 
     @Slot()
-    def _emit_action(self):
+    def emit_action(self):
         """
         Emit the signal self.action_triggered with self as an argument.
         This slot is connected to ActionButton.clicked signal in
         self.__init__.
         """
+        print(f"J'emets {self.name}")
         self.action_triggered.emit(self)
 
     @property
@@ -279,31 +305,6 @@ class ActionButton(QPushButton):
 # is not *yet* defined. The workaround is to define this class attribute
 # outside of the class definition, as followed.
 ActionButton.action_triggered = Signal(ActionButton)
-
-#
-# class ProveUseModeSetter(QWidget):
-#     clicked = Signal()
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.demo_button = QRadioButton(text=_('Demo'))
-#         self.use_button = QRadioButton(text=_('Use'))
-#         self.lyt = QVBoxLayout()
-#         self.lyt.addWidget(self.demo_button)
-#         self.lyt.addWidget(self.use_button)
-#         self.setLayout(self.lyt)
-#
-#         self.demo_button.clicked.connect(self.clicked)
-#         self.use_button.clicked.connect(self.clicked)
-#         self.demo_button.setChecked(True)
-#
-#         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-#     @property
-#     def switch_mode(self):
-#         if self.demo_button.isChecked():
-#             return "demo"
-#         elif self.use_button.isChecked():
-#             return "use"
 
 
 class Switch(QPushButton):
@@ -417,7 +418,7 @@ class ActionButtonsLine(QWidget):
         demo_lbl.deleteLater()
         use_lbl.deleteLater()
 
-    def __init__(self, actions: [Action], show_label=False):
+    def __init__(self, actions: [Action]):
         """
         Init self with an ordered list of instances of the class Action.
         :param actions: The list of instances of the class Action one
@@ -430,6 +431,7 @@ class ActionButtonsLine(QWidget):
         """
 
         super().__init__()
+        self.actions = self.__organize_actions(actions)
 
         self.set_lbl_size()
 
@@ -446,19 +448,13 @@ class ActionButtonsLine(QWidget):
         h_layout.setContentsMargins(0, 0, 0, 0)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
-        # fixme: Obsolete
-        if show_label:
-            if self.demo_line:
-                demo_lbl = QLabel(_('Prove:'))
-                h_layout.addWidget(demo_lbl)
-                demo_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
-            elif self.use_line:
-                use_lbl = QLabel(_('Use:'))
-                use_lbl.setFixedSize(self.__lbl_width, self.__lbl_height)
-                h_layout.addWidget(use_lbl)
+        for action, subactions in self.actions:
+            sub_buttons = [ActionButton(sub_action,
+                                        in_demo_or_use_line=demo_or_use_line)
+                           for sub_action in subactions]
 
-        for action in actions:
             action_button = ActionButton(action,
+                                         sub_buttons=sub_buttons,
                                          in_demo_or_use_line=demo_or_use_line)
             h_layout.addWidget(action_button)
             self.buttons.append(action_button)
@@ -471,13 +467,39 @@ class ActionButtonsLine(QWidget):
         sp.setRetainSizeWhenHidden(True)
         self.setSizePolicy(sp)
 
-    def update(self):
+    # @property
+    # def demo_line(self):
+    #     return all(button.action.name.startswith('prove_')
+    #                for button in self.buttons)
+
+    @staticmethod
+    def __organize_actions(actions):
         """
-        Update text and tooltips in all buttons.
+        Put as sub-actions those actions whose name starts with the name of
+        some other previous action in actions.
+        e.g.
+            action_prove_exists_joker
+        is a sub-action of
+            action_prove_exists.
         """
-        # Fixme: obsolete
-        for button in self.buttons:
-            button.update()
+
+        organized_actions: [tuple] = []
+        idx = 0
+        while idx < len(actions):
+            action = actions[idx]
+            name = action.name
+            sub_actions = []
+            jdx = idx+1
+            while jdx < len(actions):
+                other_action = actions[jdx]
+                if other_action.name.startswith(name):
+                    sub_actions.append(other_action)
+                    actions.pop(jdx)
+                jdx += 1
+            organized_actions.append((action, sub_actions))
+            idx += 1
+
+        return organized_actions
 
     def names(self):
         return [button.name for button in self.buttons]

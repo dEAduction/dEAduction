@@ -103,6 +103,9 @@ class ContextMathObject(MathObject):
         math_objects = [mo for mo in cls.list_ if mo.math_type == math_type]
         return math_objects
 
+    def contains_joker(self):
+        return bool(self.math_type.jokers_n_vars())
+
     def copy_tags(self, other):
         self.has_been_used_in_proof = other.has_been_used_in_proof
         self.is_hidden = other.is_hidden

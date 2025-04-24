@@ -245,7 +245,7 @@ def action_forall(proof_step, prove=True, use=True) -> CodeForLean:
 # EXISTS #
 ##########
 
-def prove_exists(proof_step, witness: MathObject) -> CodeForLean:
+def prove_exists(proof_step, witness: Union[MathObject, str]) -> CodeForLean:
     """
     Assuming the target is an existential property '∃ x, P(x)' and no other
     object has been selected, prove it by providing a witness x and proving P(x).
@@ -256,8 +256,10 @@ def prove_exists(proof_step, witness: MathObject) -> CodeForLean:
     proof_step.prove_or_use = "prove"
 
     x = witness
-    x_lean = x.to_display(format_='lean')
-    x = x.to_display(format_='utf8')
+    x_lean = (x if isinstance(x, str)
+              else x.to_display(format_='lean'))
+    x = (x if isinstance(x, str)
+         else x.to_display(format_='utf8'))
     code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
     code.add_success_msg(_("Now prove {} suits our needs").format(x))
     return code
@@ -451,6 +453,77 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
         else:
             return prove_exists_on_hyp(proof_step, selected_objects)
     raise WrongUserInput(error=_("I do not know what to do"))
+
+
+@action()
+def action_prove_exists_joker(proof_step) -> CodeForLean:
+    """
+    Prove existence with a joker as a witness.
+    The joker is named as in a prove forall action, e.g. delta.
+    A hypothesis is created, e.g.
+    H1: delta = JOKER
+    Usr can continue the proof, and at some point decide to assign a value to
+    the joker (this is processed by the action_complete() method).
+    """
+
+    selected_objects = proof_step.selection
+    target_selected = proof_step.target_selected
+
+    test_selection(selected_objects, target_selected)
+
+    goal = proof_step.goal
+
+    if not goal.target.is_exists(implicit=True):
+        error = _("Target is not existential property '∃x, P(x)'")
+        raise WrongUserInput(error)
+
+    if selected_objects:
+        error = _("If you want to use a joker as witness, just select the "
+                  "target")
+        raise WrongUserInput(error)
+
+    math_object = goal.target.math_type
+
+    implicit = not math_object.is_exists(is_math_type=True, implicit=False)
+    if implicit:
+        # Implicit "exists"
+        # implicit_definition = MathObject.last_used_implicit_definition
+        math_object         = MathObject.last_rw_object
+        # codes = rw_with_defi(implicit_definition)
+
+    math_type: MathObject = math_object.bound_var_type
+    bound_var = math_object.bound_var
+    # body = math_object.body
+
+    # Name the new var
+    text = _("To prove this existential property") + ", "
+    letter = bound_var.preferred_letter()
+    [name] = provide_name_for_new_vars(proof_step,
+                                       math_types=[math_type],
+                                       preferred_letters=[letter],
+                                       text=text)
+
+    # Generate code: new objects named <name> and JOKER_x, and equality
+    [joker_name] = get_new_hyps(proof_step,
+                               prefix="JOKER",
+                               nb=1)
+
+    [hyp_name] = get_new_hyps(proof_step,
+                             prefix="H",
+                             nb=1)
+
+    code_str = [f"have {name}:{math_type}, sorry",
+                f"have {joker_name}:{math_type}, sorry",
+                f"have {hyp_name}: {name} = {joker_name}, sorry"]
+
+    codes = CodeForLean.and_then_from_list(code_str)
+    use_code = prove_exists(proof_step, witness=name)
+    codes.and_then(use_code)
+    success_msg = _("You can now go on with the proof, and decide what {}"
+                    " should be").format(name)
+    # error_msg = _("")
+    codes.add_success_msg(success_msg)
+    return codes
 
 
 ###############

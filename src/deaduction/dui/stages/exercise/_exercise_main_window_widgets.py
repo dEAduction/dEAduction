@@ -78,7 +78,7 @@ from deaduction.pylib.proof_state       import   Goal
 import deaduction.pylib.config.vars      as      cvars
 import deaduction.pylib.utils.filesystem as      fs
 
-from deaduction.pylib.text.tooltips import button_symbol
+# from deaduction.pylib.text.tooltips import button_symbol
 
 log = logging.getLogger(__name__)
 
@@ -182,10 +182,8 @@ class ExerciseCentralWidget(QWidget):
         # ──────────────── Init Actions area ─────────────── #
         # Action buttons
         # ActionButton.from_name = dict()
-        self.__prove_btns = ActionButtonsLine(exercise.available_logic_prove,
-                                              show_label=False)
-        self.__use_btns = ActionButtonsLine(exercise.available_logic_use,
-                                            show_label=False)
+        self.__prove_btns = ActionButtonsLine(exercise.available_logic_prove)
+        self.__use_btns = ActionButtonsLine(exercise.available_logic_use)
         self.__logic_1_btns = ActionButtonsLine(exercise.available_logic_1)
         self.__logic_2_btns = ActionButtonsLine(exercise.available_logic_2)
         self.__compute_btns = ActionButtonsLine(exercise.available_compute)
@@ -195,7 +193,6 @@ class ExerciseCentralWidget(QWidget):
         # !! Somehow, this does not work for self.__prove_buttons if called
         # after these are set into ths GroupBox in switch mode, so I put it
         # here:
-        self.set_font_for_action_buttons()
 
         self.init_action_btns_layout()
 
@@ -216,25 +213,6 @@ class ExerciseCentralWidget(QWidget):
         MathObjectWidgetItem.from_math_object = dict()
         self.target_wgt = TargetWidget()
         self.current_goal = None
-        # Size policies:
-        #       - Context should be able to expand at will, since properties
-        #       arbitrarily long
-        #       - Actions should be fixed size, determined by the
-        #       number of buttons
-        # self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
-        #                                 QSizePolicy.Preferred)
-        # self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
-        #                                 QSizePolicy.Preferred)
-
-        # https://i.kym-cdn.com/photos/images/original/001/561/446/27d.jpg
-
-        # self.__context_actions_lyt.addWidget(self.__context_gb)
-        # self.set_actions_gb()
-        # self.__context_actions_lyt.addWidget(self.__actions_gb)
-        # self.__context_gb.setSizePolicy(QSizePolicy.Expanding,
-        #                                 QSizePolicy.Preferred)
-        # self.__actions_gb.setSizePolicy(QSizePolicy.Fixed,
-        #                                 QSizePolicy.Preferred)
 
         # Fonts
         self.deaduction_fonts = deaduction_fonts
@@ -427,15 +405,31 @@ class ExerciseCentralWidget(QWidget):
                 self.__compute_btns]
 
     @property
-    def action_buttons(self) -> [ActionButton]:
+    def action_buttons(self,
+                       include_hidden_buttons=True) -> [ActionButton]:
         if self.__action_btns_lyt:
-            return self.__action_btns_lyt.buttons
+            buttons = self.__action_btns_lyt.buttons
+            sub_buttons = ((button.sub_buttons for button in buttons)
+                           if include_hidden_buttons else [])
+            return list(sum(sub_buttons, buttons))
         else:
             return []
-        # btns = sum([action_buttons_widgets.buttons
-        #             for action_buttons_widgets in
-        #             self.__action_buttons_lines], [])
-        # return btns
+
+    def show_action_button(self, name):
+        for button in self.action_buttons:
+            if button.name == name or button.symbol == name:
+                button.show()
+
+    def hide_action_button(self, name):
+        for button in self.action_buttons:
+            if button.name == name or button.symbol == name:
+                button.hide()
+
+    def show_complete_button(self, yes=True):
+        if yes:
+            self.show_action_button(name='complete')
+        else:
+            self.hide_action_button(name='complete')
 
     @property
     def action_button_names(self) -> [str]:
@@ -457,18 +451,6 @@ class ExerciseCentralWidget(QWidget):
         ActionButtonsLine max-height is set so that they keep their nice
         appearance on Mac, whatever the font size.
         """
-
-        # OBSOLETE: this is done in font_config
-        # # Sizes #
-        # main_size = self.deaduction_fonts.main_font_size
-        # tooltip_size = self.deaduction_fonts.tooltips_font_size
-        # symbol_size = self.deaduction_fonts.symbol_button_font_size
-        # style = f'QTreeWidget {{font-size: {main_size}}}' \
-        #         f'QListView {{font-size: {main_size}}}' \
-        #         f'QToolTip {{font-size: {tooltip_size};}}' \
-        #         # f'ActionButton {{max-height: 30px; ' \
-        #         # f'font-size: {symbol_size} }}'
-        # self.setStyleSheet(style)
 
         # List styles: Modify color for selected objects
         background_color = cvars.get("display.color_for_selection", "limegreen")
@@ -621,10 +603,6 @@ class ExerciseCentralWidget(QWidget):
         self.props_wgt.use_boldface = bool(self.history_nb)
         self.objects_wgt.set_math_objects(new_objects)
         self.props_wgt.set_math_objects(new_props)
-        if new_goal.new_objects:
-            self.objects_wgt.scrollToBottom()
-        if new_goal.new_props:
-            self.props_wgt.scrollToBottom()
 
         pgn = len(pending_goals)
         self.target_wgt.replace_target(new_target)
@@ -633,6 +611,11 @@ class ExerciseCentralWidget(QWidget):
         self.current_goal = new_goal
 
         self.statements_tree.verticalScrollBar().setValue(statements_scroll)
+
+        if new_goal.new_objects:
+            self.objects_wgt.scrollToBottom()
+        if new_goal.new_props:
+            self.props_wgt.scrollToBottom()
 
         if new_goal.contains_used_in_proof:
             self.__show__shaded_tutorial()

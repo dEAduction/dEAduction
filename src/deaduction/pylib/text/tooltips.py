@@ -146,42 +146,22 @@ __tooltips = {
     "transitivity":  [_("Use a transitivity rule, e.g. for chaining "
                         "inequalities")],
     'complete': [_('Replace "..." in object, property or goal by a '
-                   'suitable formula')]
+                   'suitable formula')],
+    'prove_exists_joker': [_('Use a joker as your witness')]
 }
 
 for key in ('forall', 'exists', 'implies', 'and', 'or'):
     __tooltips[key] = __tooltips['prove_' + key] + __tooltips['use_' + key]
 
-# Decentralized apply buttons
-# this phrase will be preceded by "double click to "
-# __tooltips_apply = {
-#     'tooltip_apply_function':
-#     _("""apply this function to a selected object or equality"""),
-#     'tooltip_apply_implication':
-#     _("apply this implication to a selected property, or to modify the goal"),
-#     'tooltip_apply_substitute':
-#     _("""use to substitute in a selected property"""),
-#     'tooltip_apply_for_all':
-#     _("""apply this property to a selected object"""),
-#     'tooltip_apply_exists':
-#     _("""get a new object in the context"""),
-#     'tooltip_apply_and':
-#     _("""split into two properties""")
-# }
 
 #########################
 # Define button symbols #
 #########################
 __buttons_symbols = dict()
-# Logic buttons by lines, this should determine placement in UI. FIXME
-# logic_buttons = ['and', 'or', 'not', 'implies', 'iff', 'forall', 'exists',
-#                  'equal', 'map']
-# logic_buttons_line_1 = ["and", "or", "not", "implies", "iff"]
-# logic_buttons_line_2 = ["forall", "exists", "equal", "map"]
-logic_buttons_line_1 = ["forall", "exists", "implies", "and", "or"]
+logic_buttons_line_1 = ["forall", "exists", "exists_joker", "implies", "and",
+                        "or"]
 logic_buttons_line_2 = ["not", "iff", "equal", "map"]
 compute_buttons_line = ["sum"]
-# logic_buttons = logic_buttons_line_1 + logic_buttons_line_2
 
 __logic_translation =\
     [_('FORALL'), _('EXISTS'), _('IMPLIES'), _('AND'), _('OR'),
@@ -192,7 +172,7 @@ __logic_translation =\
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
      _('NEW OBJECT'), _('PROOF METHODS'), _('ASSUMPTION'),
      _('SUM'), _('TRANSITIVITY'), _('ASSOCIATIVITY'), _('COMMUTE'),
-     _('TRIANGULAR INEQUALITY'), _('SIMPLIFY')]
+     _('TRIANGULAR INEQUALITY'), _('SIMPLIFY'), _('COMPLETE'), _('JOKER')]
 
 
 def __compute_buttons_symbols_dict():
@@ -208,6 +188,7 @@ def __compute_buttons_symbols_dict():
     # Add a new button here (except for logic buttons).
     non_logic_buttons_symbols = {
         # 'apply': _('Apply'),
+        'prove_exists_joker': _("Joker"),
         'proof_methods': _("Proof methods..."),
         'new_object': _('New object...'),
         # 'assumption_old': 'Goal! (old)',

@@ -1054,3 +1054,5 @@ class ExerciseMainWindow(QMainWindow):
         # self.ecw.target_wgt.target_label.mousePressEvent = \
         #     self.process_target_click
 
+        show_complete = new_goal.contains_joker()
+        self.ecw.show_complete_button(show_complete)
