@@ -48,7 +48,7 @@ from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject
 from deaduction.pylib.marked_pattern_math_object.calculator_pattern_strings import CalculatorAbstractButton
 
 from deaduction.dui.primitives          import (deaduction_fonts,
-                                                MathLabel)
+                                                MathLabel, RichTextToolButton)
 
 global _
 log = logging.getLogger(__name__)
@@ -58,64 +58,6 @@ if __name__ == "__main__":
     logger.configure(domains="deaduction",
                      display_level="debug",
                      filename=None)
-
-
-class RichTextToolButton(QToolButton):
-    """
-    An html QToolButton.
-    """
-    def __init__(self, parent=None, text=None):
-        if parent is not None:
-            super().__init__(parent)
-        else:
-            super().__init__()
-        # self.__lbl = QLabel(self)
-        self.__lbl = MathLabel()
-        if text is not None:
-            self.__lbl.setText(text)
-        self.__lyt = QHBoxLayout()
-        self.__lyt.setContentsMargins(0, 0, 0, 0)
-        self.__lyt.setSpacing(0)
-        self.setLayout(self.__lyt)
-        self.__lbl.setAttribute(Qt.WA_TranslucentBackground)
-        self.__lbl.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.__lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # Horizontal alignment:
-        self.__lbl.setAlignment(Qt.AlignCenter)
-        # self.__lyt.setAlignment(Qt.AlignCenter)
-        self.__lbl.setTextFormat(Qt.RichText)
-        self.__lbl.setMaximumHeight(22)
-        self.__lyt.addStretch()
-        self.__lyt.addWidget(self.__lbl)
-        self.__lyt.addStretch()
-
-        # self.setFixedSize(70, 30)
-        self.setMinimumSize(70, 30)
-        return
-
-    def setText(self, text):
-        self.__lbl.setText(text.strip())
-        self.updateGeometry()
-        return
-
-    def text(self):
-        html_text = self.__lbl.text()
-        doc = QTextDocument()
-        doc.setHtml(html_text)
-        text = doc.toPlainText()
-        return text
-
-    def sizeHint(self):
-        # FIXME: probably useless?
-        s = QToolButton.sizeHint(self)
-        w = self.__lbl.sizeHint()
-        s.setWidth(max(w.width() + 10, 40))
-        # s.setHeight(max(w.height() + 10, 30))
-        s.setHeight(max(w.height(), 30))
-        return s
-
-    def set_font(self, font):
-        self.__lbl.setFont(font)
 
 
 class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
@@ -160,6 +102,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         self.set_tooltip()
         symbol_size = deaduction_fonts.symbol_button_font_size
         self.set_font(deaduction_fonts.math_fonts(size=symbol_size))
+
         self.set_menu()
 
     def set_tooltip(self):
@@ -193,6 +136,7 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         self.setMenu(menu)
         self.setPopupMode(QToolButton.MenuButtonPopup)
+        # menu.setToolTipsVisible FIXME: add tooltips
 
     def insert_by_length(self, calc_buttons: list):
         """

@@ -35,5 +35,6 @@ from .base_math_widgets_styling import (MathLabel, MathItem, MathTextWidget,
                                         ExerciseStatementWindow,)
 from .disclosure_triangle import (DisclosureTriangle, DisclosureTitleWidget,
                                   DisclosureGroupBox)
+from .rich_tool_button import RichTextToolButton
 
 
