@@ -920,7 +920,7 @@ class Exercise(Theorem):
         actions = []
         for name in action_names:
             for action in self.available_logic:
-                if action.name in (name, name + '_prove', name + '_use'):
+                if action.name in (name, 'prove_' + name, 'use_' + name):
                     actions.append(action)
         return actions
 
@@ -932,7 +932,7 @@ class Exercise(Theorem):
         """
         actions = [action for action in LOGIC_BUTTONS.values()
                    if (action.name.startswith('prove_')
-                       and action.name[6:] in
+                       and action.name in
                        [action.name for action in self.available_logic_1])]
         return actions
 
@@ -944,7 +944,7 @@ class Exercise(Theorem):
         """
         actions = [action for action in LOGIC_BUTTONS.values()
                    if (action.name.startswith('use_')
-                       and action.name[4:] in
+                       and action.name in
                        [action.name for action in self.available_logic_1])]
         return actions
 
