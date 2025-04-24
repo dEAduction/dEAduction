@@ -491,6 +491,14 @@ def action_assumption(proof_step) -> CodeForLean:
     target = goal.target.math_type
     context = goal.context
 
+    if len(proof_step.proof_state.goals) == 1 and goal.contains_joker():
+        error = _("The proof cannot be complete until you complete all jokers")
+        raise WrongUserInput(error)
+    elif goal.target.contains_joker():
+        error = _("The proof cannot be complete until you complete jokers in "
+                  "the goal")
+        raise WrongUserInput(error)
+
     # (0) Raw target
     code_tree = [target]
 

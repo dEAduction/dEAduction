@@ -258,6 +258,13 @@ class Goal:
     def contains_used_in_proof(self) -> bool:
         return any(obj.has_been_used_in_proof for obj in self.context)
 
+    def contains_joker(self):
+        """
+        True if context or target contains (uncompleted) jokers.
+        """
+        objects = self.context + [self.target]
+        return any([cmo.contains_joker() for cmo in objects])
+
     def defining_equalities(self):
         """
         Return the list of defining equalities in self.context. A prop is a
@@ -838,7 +845,10 @@ class Goal:
         names = self.extract_vars_names()
         nbs = [name[len(prefix):]
                for name in names if name.startswith(prefix)]
-        nbs = [int(nb) for nb in nbs if nb.isdigit()] + [-1]
+        prefix += '_'
+        nbs_ = [name[len(prefix):]
+                for name in names if name.startswith(prefix)]
+        nbs = [int(nb) for nb in nbs+nbs_ if nb.isdigit()] + [-1]
         return max(nbs)
 
     ###################
