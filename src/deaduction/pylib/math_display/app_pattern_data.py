@@ -156,6 +156,8 @@ class PatternMathDisplay:
         - infix binary operator, e.g. divides
         - unary predicate, e.g. bounded
         - sup/inf/lim/...
+    TODO: some negations are treated in pattern_data, e.g. divides,
+     but should be treated here.
     """
 
     # constants = {
@@ -492,8 +494,8 @@ class PatternMathDisplay:
 
             fake_pattern = cls.fake_app_pattern_from_cst_name(name)
             cls.fake_app_constant_patterns[name] = fake_pattern
-            log.debug(f"Added {name} in PatternMathDisplay.fake_app_constant_patterns")
-        pass
+            # log.debug(f"Added {name} in "
+            #           f"PatternMathDisplay.fake_app_constant_patterns")
 
     @classmethod
     def adjust_special_shape_dict(cls):
