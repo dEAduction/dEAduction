@@ -502,10 +502,12 @@ class PatternMathDisplay:
         """
         Replace single int by tuple (e.g. '3' --> '(3, )'.
         """
-        for key, value in cls.usr_n_special_latex_shapes().items():
-            new_value = tuple((item, ) if isinstance(item, int)
-                              else item for item in value)
-            cls.usr_n_special_latex_shapes()[key] = new_value
+        for dic in (cls.special_latex_shapes,
+                    cls.latex_from_name_in_lean_metadata):
+            for key, value in dic.items():
+                new_value = tuple((item, ) if isinstance(item, int)
+                                  else item for item in value)
+                dic[key] = new_value
 
     @classmethod
     def update_dicts(cls):
