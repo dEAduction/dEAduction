@@ -505,12 +505,12 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
 
     # Generate code: new objects named <name> and JOKER_x, and equality
     [joker_name] = get_new_hyps(proof_step,
-                               prefix="JOKER",
-                               nb=1)
+                                prefix="HIDDENJOKER",
+                                nb=1)
 
     [hyp_name] = get_new_hyps(proof_step,
-                             prefix="H",
-                             nb=1)
+                              prefix="H",
+                              nb=1)
 
     code_str = [f"have {name}:{math_type}, sorry",
                 f"have {joker_name}:{math_type}, sorry",
