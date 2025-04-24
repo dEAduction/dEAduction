@@ -49,9 +49,9 @@ def get_new_hyps(proof_step, prefix=None, nb=10) -> [str]:
     where i is the max nb such that H<i> is in the context.
     """
     if not prefix:
-        prefix="H"
+        prefix = "H"
     last_nb = proof_step.goal.last_hypothesis_number(prefix=prefix)
-    return [prefix + str(last_nb+i+1) for i in range(nb)]
+    return [prefix + "_" + str(last_nb+i+1) for i in range(nb)]
 
     # forbidden_names = proof_step.goal.extract_vars_names()
     # return get_new_hyp_from_forbidden_names(proof_step,
@@ -78,11 +78,13 @@ def get_new_hyp_from_forbidden_names(proof_step,
     :param name: name to be used.
     FIXME: not used anymore.
     """
+    if not name:
+        name = 'H'
     counter = proof_step.property_counter
-    potential_name = name + str(counter) if name else 'H' + str(counter)
+    potential_name = name + '_' + str(counter)
     while potential_name in forbidden_names:
         counter += 1
-        potential_name = 'H' + str(counter)
+        potential_name = name + '_' + str(counter)
     proof_step.property_counter = counter + 1
     return potential_name
 
