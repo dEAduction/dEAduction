@@ -736,6 +736,8 @@ class Exercise(Theorem):
         - the list of available actions (corresponding to buttons of the UI)
         from the metadata. Both lists are computed in roughly the same way.
 
+        Note that the data dictionary is modified by this method.
+
         :param statements:  list of all Statement instances until the current
                             exercise, from which the available_statements
                             list will be extracted
@@ -747,22 +749,22 @@ class Exercise(Theorem):
         # expected_vars_number #
         # This is not used     #
         ########################
-        expected_vars_number = {}
-        if "expected_vars_number" in data.keys():
-            try:
-                for equality in data["expected_vars_number"].split(", "):
-                    key, _, value = equality.partition("=")
-                    key = key.strip()
-                    expected_vars_number[key] = int(value)
-            # In case int(value) has no meaning:
-            except AttributeError:
-                log.error(f"wrong format for ExpectedVarsNumber in exercise "
-                          f"{data['lean_name']}")
-            except ValueError:
-                log.error(f"wrong format for ExpectedVarsNumber in exercise "
-                          f"{data['lean_name']}")
+        # expected_vars_number = {}
+        # if "expected_vars_number" in data.keys():
+        #     try:
+        #         for equality in data["expected_vars_number"].split(", "):
+        #             key, _, value = equality.partition("=")
+        #             key = key.strip()
+        #             expected_vars_number[key] = int(value)
+        #     # In case int(value) has no meaning:
+        #     except AttributeError:
+        #         log.error(f"wrong format for ExpectedVarsNumber in exercise "
+        #                   f"{data['lean_name']}")
+        #     except ValueError:
+        #         log.error(f"wrong format for ExpectedVarsNumber in exercise "
+        #                   f"{data['lean_name']}")
         # Replace data with formatted data
-        data['expected_vars_number'] = expected_vars_number
+        # data['expected_vars_number'] = expected_vars_number
 
         ###########################
         # Treatment of statements #
@@ -855,6 +857,18 @@ class Exercise(Theorem):
             return old_vars
         else:
             return dict()
+
+    def check_prove_exists_joker(self):
+        """
+        Remove the prove_exists_joker button, unless
+        usr_jokers_available = true.
+        """
+        if not cvars.get('usr_jokers_available', False):
+            new_logic = [action for action in self.available_logic
+                         if action.name != 'prove_exists_joker']
+            assert len(new_logic) == len(self.available_logic) - 1
+            self.available_logic = new_logic
+
 
     @property
     def is_open_question(self):

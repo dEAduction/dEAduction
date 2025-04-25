@@ -142,8 +142,12 @@ class Coordinator(QObject):
 
     def __init__(self, exercise, servint, test_mode=False):
         super().__init__()
-        self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
+
+        # Exercise
         self.exercise: Exercise       = exercise
+        self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
+        self.exercise.check_prove_exists_joker()
+
         self.servint: ServerInterface = servint
         self.last_servint_task = None
 
