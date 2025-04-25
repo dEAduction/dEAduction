@@ -42,6 +42,8 @@ This file is part of d∃∀duction.
 import logging
 from functools import partial
 from typing import Dict, Optional
+
+from pyside2uic.Compiler.qtproxies import QtCore, QtGui
 from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
@@ -56,7 +58,8 @@ from PySide2.QtCore    import ( Signal,
                                 Qt,
                                 QModelIndex, QMimeData,
                                 QTimer,
-                                QRect)
+                                QRect,
+                                QPoint)
 from PySide2.QtWidgets import (QHBoxLayout,
                                QVBoxLayout,
                                QPushButton,
@@ -297,6 +300,27 @@ class ActionButton(QToolButton):
             self.setCheckable(False)
             await sleep(duration)
 
+    async def simulate_sub_button(self, sub_button,
+                                  duration=0.3, winkle_nb=2) -> bool:
+        """
+        Simulate usr click on the corresponding item in self.menu().
+        """
+        try:
+            idx = self.sub_buttons.index(sub_button)
+        except ValueError:
+            return False
+
+        menu_action = self.menu().actions()[idx]
+        pos = self.mapToGlobal(QPoint(0, self.frameGeometry().height()))
+        self.menu().popup(pos)
+        duration = duration/(3*winkle_nb)
+        for n in range(winkle_nb):
+            self.menu().setActiveAction(menu_action)
+            await sleep(2*duration)
+            self.menu().setActiveAction(None)
+            await sleep(duration)
+        self.menu().close()
+        return True
 
 # We wish to have an ActionButton class attribute called
 # action_triggered and defined as Signal(ActionButton). At first, one

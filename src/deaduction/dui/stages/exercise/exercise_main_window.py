@@ -669,12 +669,6 @@ class ExerciseMainWindow(QMainWindow):
     def action_button_from_name(self, button_name: str) -> ActionButton:
         """Turn an action encoded by a string, e.g. "forall", into a button.
         """
-        # button = ActionButton.from_name.get(button_name)
-        # if button:
-        #     return button
-        # else:
-        #     print("Button names:")
-        #     print(ActionButton.from_name.keys())
         for button in self.ecw.action_buttons:
             if button.name == button_name:
                 return button
@@ -868,6 +862,36 @@ class ExerciseMainWindow(QMainWindow):
         if target_selected:
             self.process_target_click()
 
+    async def simulate_button(self, button_name,
+                              duration=0.4,
+                              execute_action = True) -> bool:
+        """
+        Simulate a click on a button, maybe by looking into menu buttons if
+        button is hidden. Return True if success.
+        """
+
+        action_button = self.action_button_from_name(button_name)
+
+        if action_button:
+            if action_button.isHidden():
+                for button in self.ecw.action_buttons:
+                    for sub_button in button.sub_buttons:
+                        if action_button is sub_button:
+                            self.ecw.freeze(False)
+                            success = await button.simulate_sub_button(
+                                      sub_button, duration=duration)
+                            return success
+
+            # Click button, even if hidden
+            self.ecw.freeze(False)
+            await action_button.simulate(duration=duration)
+            if execute_action:  # Execute the action!
+                action_button.click()
+            self.ecw.freeze(self.freezed)
+            return True
+
+        return False
+
     async def simulate_user_action(self,
                                    user_action: UserAction,
                                    duration=0.4,
@@ -882,11 +906,9 @@ class ExerciseMainWindow(QMainWindow):
         If not, the UI just shows buttons blinking ; this is used
         when history_redo is executed, to keep all the following history.
         """
+
+        # --- DEBUG --- #
         log.debug("Simulating user action...")
-
-        # Adapt to prove/use current mode
-        # self.harmonize_buttons_and_user_action(user_action)
-
         msg = ""
         msg += f"    -> selection = {user_action.selection}"
         selection = self.contextualised_selection(user_action.selection)
@@ -905,23 +927,20 @@ class ExerciseMainWindow(QMainWindow):
             msg += f'\n {len(self.objects)} objects, {len(self.properties)} ' \
                    f'properties.'
             return False, msg
+
         self.simulate_selection(selection, target_selected)
         self.user_input = user_action.user_input
 
-        button = user_action.button_name_adapted_to_mode()
+        button_name = user_action.button_name_adapted_to_mode()
         statement_name = user_action.statement_name
-        if button:
-            msg += f"    -> click on button {button}"
-            action_button = self.action_button_from_name(button)
-            if action_button:
-                self.ecw.freeze(False)
-                await action_button.simulate(duration=duration)
-                if execute_action:  # Execute the action!
-                    action_button.click()
-                self.ecw.freeze(self.freezed)
+        if button_name:
+            msg += f"    -> click on button {button_name}"
+            success = await self.simulate_button(button_name,duration,
+                                                 execute_action)
+            if success:
                 return True, msg
             else:
-                return False, f"No button match {button}"
+                return False, f"No button match {button_name}"
         elif statement_name:
             msg += f"    -> statement {statement_name} called"
             statement_widget = \
