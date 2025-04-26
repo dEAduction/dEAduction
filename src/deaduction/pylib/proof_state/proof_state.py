@@ -190,6 +190,14 @@ class Goal:
                    and not cmo.is_instance()]
         return objects
 
+    def context_objects_by_age(self, age_min):
+        """
+        Return non-hidden context objects whose age is at least age_min.
+        """
+        def test(age):
+            return age >= age_min
+        return list(filter(test, self.context_objects))
+
     @property
     def context_props(self) -> [ContextMathObject]:
         if self.context is None:
@@ -350,8 +358,8 @@ class Goal:
 
         old_goal: Goal
         new_goal = self
-        new_context = new_goal.context.copy()
-        old_context = old_goal.context.copy()
+        new_context = new_goal.unmodified_context.copy()
+        old_context = old_goal.unmodified_context.copy()
         # Permuted_new_context will contain the new_context in the order
         # reflecting that of the old_context
         # Each new item that is found in the old_context will be affected at
