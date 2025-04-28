@@ -244,7 +244,6 @@ class ActionButton(QToolButton):
         This slot is connected to ActionButton.clicked signal in
         self.__init__.
         """
-        print(f"J'emets {self.name}")
         self.action_triggered.emit(self)
 
     @property

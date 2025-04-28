@@ -1073,5 +1073,6 @@ class ExerciseMainWindow(QMainWindow):
         # self.ecw.target_wgt.target_label.mousePressEvent = \
         #     self.process_target_click
 
+        # Show the complete button only if there are something to complete:
         show_complete = new_goal.contains_joker()
         self.ecw.show_complete_button(show_complete)
