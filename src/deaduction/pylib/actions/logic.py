@@ -402,7 +402,7 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
         if not prove:
             raise WrongProveModeInput(prop=prop_type)
         elif not goal.target.is_exists(implicit=True):
-            error = _("Target is not existential property '∃x, P(x)'")
+            error = _("Target is not an existential property '∃x, P(x)'")
             raise WrongUserInput(error)
         elif not user_input:
             # output = _("Enter element you want to use:") + "\n \n \n" + new_objects
@@ -436,7 +436,7 @@ def action_exists(proof_step, prove=True, use=True) -> CodeForLean:
 
             # Try to apply property "exists x, P(x)" to get a new MathObject x
             if not selected_hypo.is_exists(implicit=True):
-                error = _("Selection is not existential property '∃x, P(x)'")
+                error = _("Selection is not an existential property '∃x, P(x)'")
                 raise WrongUserInput(error)
             elif not use:
                 raise WrongProveModeInput(prop=prop_type)
@@ -474,7 +474,7 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
     goal = proof_step.goal
 
     if not goal.target.is_exists(implicit=True):
-        error = _("Target is not existential property '∃x, P(x)'")
+        error = _("Target is not an existential property '∃x, P(x)'")
         raise WrongUserInput(error)
 
     if selected_objects:
@@ -505,7 +505,7 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
 
     # Generate code: new objects named <name> and JOKER_x, and equality
     [joker_name] = get_new_hyps(proof_step,
-                                prefix="HIDDENJOKER",
+                                prefix="HIDDEN_USR_JOKER",
                                 nb=1)
 
     [hyp_name] = get_new_hyps(proof_step,
