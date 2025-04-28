@@ -221,6 +221,7 @@ class ProofStep:
     # AutoStep version, computed in Coordinator.update_proof_step():
     auto_step                 = None
     unsolved_goal_nodes_after = None  # Copy of the proof_tree, for history move
+    exercise                  = None  # Exercise being solved
 
     def __init__(self,
                  proof_nodes=None,

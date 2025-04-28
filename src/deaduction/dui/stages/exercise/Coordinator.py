@@ -280,6 +280,7 @@ class Coordinator(QObject):
         self.emw.set_msgs_for_status_bar(self.proof_tree.current_proof_msg)
         log.debug("New ProofStep:")
         self.proof_step = ProofStep()
+        self.proof_step.exercise = exercise
 
         # Get initial proof state
         proof_state = self.exercise.initial_proof_state
@@ -1439,7 +1440,7 @@ class Coordinator(QObject):
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
-
+        self.proof_step.exercise = self.exercise
         self.proof_step_updated.emit()  # Received in auto_test
 
     def __check_response_coherence(self, lean_response):
