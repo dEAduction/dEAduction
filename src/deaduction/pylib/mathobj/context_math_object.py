@@ -73,7 +73,7 @@ class ContextMathObject(MathObject):
         self.has_been_used_in_proof = False
         self.is_hidden = (self.name in self.invisible_name_list
                           or self.name.startswith("_inst_")
-                          or self.name.startswith("HIDDEN"))
+                          or "HIDDEN" in self.name)
 
     def __repr__(self):
         return self.debug_repr('CMO')
@@ -86,6 +86,16 @@ class ContextMathObject(MathObject):
     def is_modified(self):
         return (self.parent_context_math_object
                 and self.parent_context_math_object.math_type != self.math_type)
+
+    @property
+    def age(self):
+        """
+        Return the age of self, i.e. length of the tower of parents.
+        """
+        if self.is_new:
+            return 0
+
+        return 1 + self.parent_context_math_object.age
 
     def is_descendant_of(self, other):
         """

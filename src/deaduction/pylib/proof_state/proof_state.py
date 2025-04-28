@@ -192,11 +192,14 @@ class Goal:
 
     def context_objects_by_age(self, age_min):
         """
-        Return non-hidden context objects whose age is at least age_min.
+        Return non-hidden context objects whose age is more than age_min.
         """
-        def test(age):
-            return age >= age_min
+        def test(cmo):
+            return cmo.age > age_min
         return list(filter(test, self.context_objects))
+
+    def context_at_birth(self, cmo: ContextMathObject) -> []:
+        return self.context_objects_by_age(age_min=cmo.age)
 
     @property
     def context_props(self) -> [ContextMathObject]:
