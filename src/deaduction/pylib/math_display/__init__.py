@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 """
 
 # from .utils import Descendant
-from .pattern_data import metanodes, is_joker, joker_name
+from .pattern_data import metanodes, is_unassigned_joker, joker_name
 # from .pattern_init import pattern_init  !! Circular import !!
 from .app_pattern_data import PatternMathDisplay
 from .display_data import (MathDisplay,

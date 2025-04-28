@@ -145,12 +145,15 @@ def joker_name(math_object):
     if not name:
         return ""
 
-    if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+    if 'JOKER' in name:
         return name
 
 
-def is_joker(math_object):
-    return bool(joker_name(math_object))
+def is_unassigned_joker(math_object):
+    test1 = bool(joker_name(math_object))
+    test2 = (hasattr(math_object, 'assigned_math_object') and
+             math_object.assigned_math_object)
+    return test1 and not test2
 
 
 metanodes = {'*INEQUALITY': is_inequality,
@@ -158,7 +161,7 @@ metanodes = {'*INEQUALITY': is_inequality,
              '*INT_OR_NAT': is_int_or_nat,
              '*HAS_ADD': has_add,  # TODO: improve
              '*TYPE': is_type,
-             '*JOKER': is_joker}
+             '*JOKER': is_unassigned_joker}
 
 
 ###############

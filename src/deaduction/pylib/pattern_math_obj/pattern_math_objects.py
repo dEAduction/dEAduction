@@ -36,7 +36,8 @@ from .pattern_parser import tree_from_str
 from deaduction.pylib.math_display.nodes import Node
 # from deaduction.pylib.mathobj import MathObject, BoundVar
 
-from deaduction.pylib.math_display import PatternInit, is_joker, joker_name
+from deaduction.pylib.math_display import (PatternInit, is_unassigned_joker,
+                                           joker_name)
 from deaduction.pylib.mathobj.math_object import MathObject, BoundVar
 from deaduction.pylib.math_display import metanodes
 
@@ -298,7 +299,7 @@ class PatternMathObject(MathObject):
         # metavars = cls.__tmp_metavars_csts
         # loc_csts = cls.__tmp_loc_csts_for_metavars
 
-        if is_joker(math_object):
+        if is_unassigned_joker(math_object):
             return cls.metavar_from_joker(math_object)
 
         if math_object.is_bound_var:
