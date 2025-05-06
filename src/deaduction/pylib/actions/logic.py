@@ -519,7 +519,7 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
     codes = CodeForLean.and_then_from_list(code_str)
     use_code = prove_exists(proof_step, witness=name)
     codes.and_then(use_code)
-    success_msg = _("You can now go on with the proof, and decide what {}"
+    success_msg = _("You can now go on with the proof, and decide later what {}"
                     " should be").format(name)
     # error_msg = _("")
     codes.add_success_msg(success_msg)
