@@ -547,30 +547,35 @@ def action_complete(proof_step,
                     user_proves_statement=False,
                     statements_for_prover=None) -> CodeForLean:
     """
-    This is called when user wants to fill-in a context objects or the target
-    which contains a joker. There are several cases:
+    This is called when user wants to fill in a context objects or the target
+    which contains a joker. There are two exclusive cases:
 
     - Usr fills in a joker that she has introduced before. Then the proof
     should just go on.
     - Usr fills in a definition, or a statement, or formalizes a statement
     that should be checked by automatic solving the first time all jokers have
-    been complete. The statement should be logically equivalent to one of the
-    statement provided in the metadata field StatementsForProver.
+    been complete. Each joker should be equivalent to an equality asserted by
+    an axiom called AXIOM<nb><name_of_joker>
     There should be three kind of response:
     - the statement has no meaning,
-    - the statement has a meaning but I am unable to check that it is correct,
+    - the statement has a meaning, but I am unable to check that it is correct,
     - OK.
-    - Afterwards usr will maybe have to prove the statement.
-    """
+    - Afterward usr will maybe have to prove the statement.
 
-    # FIXME: this is valid only for action_complete_statements,
-    #  not for Jokers created by usr.
+    To get the right error msg, we have to try successively
+    - all joker declaration ("haves") + checking,
+    - all but the last one + checking,
+    and so on.
+    If none of the above works, then some declaration is meaningless. Again,
+    to know which one, we try successively
+    - all declarations (with no checking)
+    - all but one
+    and so on.
+    """
 
     # ---- (1) Handle selection ---- #
     selected_objects = proof_step.selection
-    # settings = cvars.get('functionality.target_selected_by_default')
     target_selected = proof_step.target_selected
-                       # or (settings and not selected_objects))
     goal = proof_step.proof_state.goals[0]
     target = goal.target
     extended_selected_objects = (selected_objects + [target]
@@ -587,12 +592,17 @@ def action_complete(proof_step,
     # e.g. even n <=> lam n, JOKER n      --> variable = n
     hypos_jokers_n_vars = []
     hypos_with_jokers = []
+    hypo_from_joker = dict()
     for cmo in extended_selected_objects:
         # FIXME: no math_type for context objects?
-        more_jokers = cmo.math_type.jokers_n_vars()
-        if more_jokers:
-            hypos_jokers_n_vars.append((cmo, more_jokers))
+        jokers_n_vars = cmo.math_type.jokers_n_vars()
+        if jokers_n_vars:
+            hypos_jokers_n_vars.append((cmo, jokers_n_vars))
             hypos_with_jokers.append(cmo)
+            # If cmo is "H1: delta = JOKER", hypo_from_joker[JOKER]=H1
+            children = cmo.math_type.children
+            if cmo.is_equality() and children[1].is_joker():
+                hypo_from_joker[children[1].name] = cmo
 
     if not hypos_with_jokers:
         raise WrongUserInput(error=_("There is nothing to complete"))
@@ -602,16 +612,60 @@ def action_complete(proof_step,
                            hypos_with_jokers=hypos_with_jokers)
 
     # ---- (3) Find jokers that have been assigned ---- #
+    # print('Find completed jokers')
     completed_jokers = []
+    usr_jokers = False  # True if assigned jokers are usr jokers
     for mpmo in user_input[0]:
         more_jokers = mpmo.search_in_name("JOKER")
         for joker in more_jokers:
             assigned_mo = joker.assigned_math_object
             if assigned_mo:
                 completed_jokers.append(joker)
+                if joker.is_usr_joker():
+                    usr_jokers = True
 
     if not completed_jokers:
         raise WrongUserInput(error=_("No joker completed"))
+
+    # print('Completed jokers:')
+    # print([joker.to_display(format_='utf8') for joker in completed_jokers])
+
+    # Check for illegal variables
+    for joker in completed_jokers:
+        cmo = hypo_from_joker.get(joker.metavar_name)
+        # print(f"Looking for {joker.metavar_name} in {hypo_from_joker}")
+        if not cmo:
+            continue
+        # context_math_object
+        mo = joker.assigned_math_object
+        cmo_var = cmo.math_type.children[0]
+        joker_context = goal.context_at_birth(cmo_var)
+        used_context = mo.local_constants_in()
+        illegal_vars = [cmo for cmo in used_context if cmo not in joker_context]
+        # DEBUG:
+        # print("context at birth:")
+        # print([v.to_display(format_='utf8') for v in joker_context])
+        # print(f"Used context:")
+        # print([v.to_display(format_='utf8') for v in used_context])
+        # print(f"Used Illegal vars:")
+        # print([v.to_display(format_='utf8') for v in illegal_vars])
+        if cmo_var in used_context:
+            jname = cmo_var.to_display(format_='utf8')
+            error = _("You cannot use {} to define {}!")
+            error = error.format(jname, jname)
+            raise WrongUserInput(error)
+        elif illegal_vars:
+            jname = cmo_var.to_display(format_='utf8')
+            iv = " ".join(var.to_display(format_='utf8')
+                          for var in illegal_vars)
+            if len(illegal_vars) == 1:
+                error = _("You cannot use variable {} to define {}, "
+                          "since it did not exist when {} was created")
+            else:
+                error = _("You cannot use variables {} to define {}, "
+                          "since they did not exist when {} was created")
+            error = error.format(iv, jname, jname)
+            raise WrongUserInput(error)
 
     # Find hypos containing this joker, and their variables
     variables = [[]]*len(completed_jokers)
@@ -642,16 +696,72 @@ def action_complete(proof_step,
                              prefix="HIDDEN",
                              nb=len(completed_jokers))
 
+    # List of CodeForLeans respectively for
+    # - declaration of jokers (as entered by usr via Calculator),
+    # - checking completion is correct,
+    # - rewriting hypos/goal using completion
+
+    ##################################
+    # ----- Case of usr_jokers ----- #
+    ##################################
+    # For usr joker we just assign the joker, there is nothing to check
+    codes = []
+    used_props = []
+    msgs = []
     nb = 0
+    if usr_jokers:
+        for joker, __, hypo in zip(completed_jokers, variables,
+                                   pertinent_hypos):
+            # cmo is H_1: delta = USR_JOKER
+            #  -> cmo_name = 'H_1', display_jkr_name = 'delta',
+            #  joker_name = 'USR_JOKER', content = usr joker completion
+            j_name = joker.metavar_name
+            cmo = hypo_from_joker.get(j_name)
+            cmo_name = cmo.display_name
+            display_jkr_name = cmo.math_type.children[0]
+            content = joker.assigned_math_object.to_display(format_="lean")
+
+            more_codes = [f"clear {cmo_name} {j_name}",
+                          f"have {cmo_name}: {display_jkr_name} = {content}",
+                          "sorry",
+                          f"rw {cmo_name} at *"]
+            more_codes = CodeForLean.and_then_from_list(more_codes)
+
+            # We could even clear these, but maybe this is more usr friendly
+            used_props.append(cmo)
+            codes.append(more_codes)
+            msg = f"{cmo_var.to_display(format_='utf8')} = {content}"
+            msgs.append(msg)
+            nb += 1
+
+        code = CodeForLean.and_then_from_list(codes)
+        msg = _("Let us try ") + ", ".join(msgs)
+        code.add_success_msg(msg)
+        code.add_used_properties(used_props)
+        return code
+
+    ######################################
+    # ----- Case of non usr jokers ----- #
+    ######################################
+    # For non usr jokers we assign and check
     # List of CodeForLeans respectively for
     # - declaration of usr joker completions,
     # - checking completion is correct,
     # - rewriting hypos/goal using completion
+
+    # --- (5a) Compute elementary codes --- #
     have_codes = []
-    check_codes = []
-    rw_codes = []
     at_hypos = []
-    for joker, vars_ , hypo in zip(completed_jokers, variables, pertinent_hypos):
+    check_codes = []
+    check_list = ["try{ext}",  # eliminate lambdas
+                  "try{tautology}",
+                  "try{simp only [not_and, not_or, not_not, not_forall, "
+                  "not_exists, eq_iff_iff,not_imp_not]}"]
+    rw_codes = []
+    nb = 0
+    have_codes_debug = []
+    check_codes_debug = []
+    for joker, vars_, hypo in zip(completed_jokers, variables, pertinent_hypos):
         name = joker.metavar_name
         vars_.reverse()
         var_names = [var.name for var in vars_]
@@ -663,24 +773,22 @@ def action_complete(proof_step,
         if vars_:
             content = "λ " + " ".join(var_names) + ", " + content
         hypo = hyp_names[nb]
-        have_code = CodeForLean.from_string(f"have {hypo}: {name} = {content}")
+        code_str = f"have {hypo}: {name} = {content}"
+        have_code = CodeForLean.from_string(code_str)
         have_codes.append(have_code)
+        have_codes_debug.append(code_str)
 
         # Check code: supposed to solve axiom_name = hypo as current goal
         # axiom_name = "AXIOM" + name, or "AXIOM0" + name, and so on
         try_rw_axioms = ["rw AXIOM" + name] + \
                         ["rw AXIOM" + str(idx) + name for idx in range(10)]
 
-        check_list = ["try{ext}",  # eliminate lambdas
-                      "try{tautology}",
-                      "try{simp only [not_and, not_or, not_not, not_forall, "
-                      "not_exists, eq_iff_iff,not_imp_not]}"]
-
+        # Successively try to solve with AXIOM n°<idx>:
         check_code = [CodeForLean.and_then_from_list([rw_axioms] +
                                                      check_list).solve1() 
                       for rw_axioms in try_rw_axioms]
         check_codes.append(CodeForLean.or_else_from_list(check_code))
-
+        check_codes_debug.append(try_rw_axioms)
         # Rw code:
         rw_code = CodeForLean.and_then_from_list([f"rw {hypo}" + at_hypo,
                                                   "try{dsimp only"
@@ -689,18 +797,35 @@ def action_complete(proof_step,
         rw_codes.append(rw_code)
         nb += 1
 
-    # To get appropriate success_msg, try have_codes
-    # successively: all codes, all except last one, and so on
-
-    first_have_codes = []  # e.g. [ [hc0, hc1, hc2], [hc0, hc1], [hc0] ]
+    # --- (5b) Combine elementary codes to check every possibilities --- #
+    # e.g. [ [hc0, rotate, hc1, rotate, hc2, rotate, rotate],
+    #        [hc0, rotate, hc1, rotate, rotate],
+    #        [hc0] ]
+    first_have_codes = []
     while have_codes:
-        first_have_codes.append(have_codes[:])
+        idx = 0
+        more_codes = []
+        for code in have_codes:
+            more_codes.append(code)
+            if idx < len(have_codes)-1:
+                more_codes.append(CodeForLean.rotate())
+            idx += 1
+        if nb > 1:  # More than one completed joker
+            more_codes.append(CodeForLean.rotate())
+            more_codes.append(CodeForLean.rotate())
+        first_have_codes.append(more_codes)
         have_codes.pop()
 
     first_check_codes = []  # e.g. [ [cc2, cc1, cc0], [cc1, cc0], [cc0] ]
-    check_codes.reverse()
+    # print("Check codes:")
+    # print(list(code.to_code() for code in check_codes))
+    # check_codes.reverse()
+    # print("Reversed check codes:")
+    # print(code.to_code() for code in check_codes)
     while check_codes:
-        first_check_codes.append(check_codes[:])
+        # BEWARE, check_codes is a list of or_else codes:
+        # We have to COPY them so that the or_else_code_nb works well.
+        first_check_codes.append(list(code.copy() for code in check_codes))
         check_codes.pop(0)
 
     first_rw_codes = []  # e.g. [ [rwc0, rwc1, rwc2], [rwc0, rwc1], [rwc0] ]
@@ -714,17 +839,23 @@ def action_complete(proof_step,
     what_you_entered = (_("Your proposal") if nb_jokers == 0
                         else _("Everything you entered"))
 
-    # ----- (5.a) Declarations + correctness ----- #
-    idx = nb_jokers-1
+    # ----- (5.c) Try successive declarations + correctness ----- #
+    # (all, then all but the last one, and so on)
+    # idx = nb_jokers-1
+    idx = 0
     next_success_msg = what_you_entered + " " + _("is correct!")
     for have_codes, check_codes, rw_codes in zip(first_have_codes,
                                                  first_check_codes,
                                                  first_rw_codes):
-        code_str = have_codes + check_codes + rw_codes
-        more_code = CodeForLean.and_then_from_list(code_str)
+        code = have_codes + check_codes + rw_codes
+        more_code = CodeForLean.and_then_from_list(code)
         more_code.add_success_msg(next_success_msg)
         codes.append(more_code)
-
+        # DEBUG:
+        # print(f"Check codes n° {idx}")
+        # for c in code:
+        #     print("    " + c.to_code())
+        # print("-->" + next_success_msg)
         # Write "success" msg (= failure of the next or_else!)
         if nb_jokers == 1:
             not_correct = _("it is not correct")
@@ -735,9 +866,9 @@ def action_complete(proof_step,
             not_correct = hypo + _(" is not correct")
         next_success_msg = (what_you_entered + " " + _("is meaningful") + " "
                             + _(f"but I suspect") + " " + not_correct)
-        idx -= 1
+        idx += 1
 
-    # ----- (5.b) Just declarations ----- #
+    # ----- (5.d) Just try successive declarations ----- #
     idx = nb_jokers-1
     for have_codes, rw_codes in zip(first_have_codes, first_rw_codes):
         code_str = have_codes + ['todo']*(idx+1) + rw_codes
@@ -757,6 +888,6 @@ def action_complete(proof_step,
                             + _("maybe a syntax error?"))
         idx -= 1
 
-    code = CodeForLean.or_else_from_list(codes)
-    code.add_error_msg(next_success_msg)
-    return code
+    final_code = CodeForLean.or_else_from_list(codes)
+    final_code.add_error_msg(next_success_msg)
+    return final_code

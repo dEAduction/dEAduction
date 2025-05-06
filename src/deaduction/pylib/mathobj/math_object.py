@@ -55,7 +55,7 @@ from functools import partial
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.pylib.math_display import MathList, MathDescendant
-
+from deaduction.pylib.utils import inj_list
 
 log = logging.getLogger(__name__)
 global _
@@ -1130,6 +1130,12 @@ class MathObject:
                     return True
             return False
 
+    def is_joker(self):
+        return 'JOKER' in self._info.get('name')
+
+    def is_usr_joker(self):
+        return 'USR_JOKER' in self._info.get('name')
+
     def jokers_n_vars(self) -> []:
         """
         Return the list of jokers and their vars in self.
@@ -1139,17 +1145,28 @@ class MathObject:
         """
         if self.is_application() and self.children:
             joke = self.children[0]
-            name = joke.display_name
-            if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+            if joke.is_joker():
                 variables = self.variables_of_app()
                 return [(self, variables)]
 
         elif self.is_constant() or self.is_local_constant():
-            name = self.display_name
-            if name.startswith('JOKER') or name.startswith('HIDDENJOKER'):
+            if self.is_joker():
                 return [(self, [])]
 
         return sum([child.jokers_n_vars() for child in self.children] , [])
+
+    def local_constants_in(self) -> []:
+        """
+        Return the list of local constants in self.
+        """
+        if self.is_local_constant():
+            return [self]
+
+        else:
+            lci = []
+            for child in self.children:
+                lci.extend(child.local_constants_in())
+            return inj_list(lci)
 
     @classmethod
     def substitute(cls, old_var, new_var, math_object):
