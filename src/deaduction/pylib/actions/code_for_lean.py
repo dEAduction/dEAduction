@@ -322,7 +322,7 @@ class CodeForLean:
                            error_msg: str = '',
                            global_success_msg: str = ""):
         """
-        Create an or_else CodeForLean from a (list of) strings or CodeForLean.
+        Create an and_then CodeForLean from a (list of) strings or CodeForLean.
 
         :param instructions: list of CodeForLean, str, or tuple.
         """
@@ -652,7 +652,7 @@ class CodeForLean:
                                                exclude_skip) \
                 + " }"
 
-    def add_trace_effective_code(self):
+    def add_trace_effective_code(self) -> tuple:
         """
         This method does two things:
         1) Add
@@ -692,7 +692,8 @@ class CodeForLean:
 
         return self, self_with_trace
 
-    def select_or_else(self, node_number, alternative_number):
+    def select_or_else(self, node_number, alternative_number,
+                       depth=0):
         """
         Modify self to reflect the fact that for the or_else node identified by
         code_number, the alternative whose number is alternative_number has
@@ -702,31 +703,60 @@ class CodeForLean:
         :param node_number: number of or_else_node
         :param alternative_number: number of successful alternative of this
         node
+        :param depth: for debugging
         :return: (1) a CodeForLean which is the modified self,
                  (2) A boolean which tells if or_else node has been found
         """
+        # DEBUG:
+        # prefix = "   |" * depth
+        # if self.is_or_else():
+        #     print(prefix + f"(Searching {node_number}, processing "
+        #           f"or_else {self.or_else_node_number} with  {len(self.instructions)} "
+        #           f"instructions")
+        # elif self.is_and_then():
+        #     print(prefix + f"processing and_then with {len(self.instructions)} "
+        #           f"instructions")
 
+        # BY CASES:
+        found = False
         if self.is_single_code():
-            return self, False
+            # print(prefix + f"{self.to_code()}")
+            new_code, found = self, False
         elif self.is_or_else() and self.or_else_node_number == node_number:
-            new_code = self.instructions[alternative_number]
-            return new_code, True
+            new_code, found = self.instructions[alternative_number], True
+            # print(prefix + "FOUND" + self.to_code())
         else:
-            found = False
             new_instructions = []
+            idx = 0
             for ins in self.instructions:
-                ins, found_here = ins.select_or_else(node_number,
-                                                     alternative_number)
-                new_instructions.append(ins)
-                if found_here:
-                    found = True
-            new_code = CodeForLean(instructions=new_instructions,
-                                   combinator=self.combinator,
-                                   error_msg=self.error_msg,
-                                   success_msg=self.success_msg,
-                                   or_else_node_number=self.or_else_node_number)
+                # print(f"    {idx}")
+                idx += 1
+                if found:
+                    new_ins = ins
+                    # print(prefix + ins.to_code())
+                else:
+                    new_ins, found = ins.select_or_else(node_number,
+                                                        alternative_number,
+                                                        depth+1)
+                    # if found_here:
+                    #     found = True
+                new_instructions.append(new_ins)
+            if found:
+                new_code = CodeForLean(instructions=new_instructions,
+                                       combinator=self.combinator,
+                                       error_msg=self.error_msg,
+                                       success_msg=self.success_msg,
+                                       or_else_node_number=self.or_else_node_number)
+            else:
+                new_code = self
 
-            return new_code, found
+        # DEBUG:
+        # if self.is_or_else():
+        #     print(prefix + f"<End or_else {self.or_else_node_number}>")
+        # elif self.is_and_then():
+        #     print(prefix + f"<End and_then>")
+
+        return new_code, found
 
     def add_no_meta_vars(self):
         """
@@ -752,7 +782,7 @@ class CodeForLean:
                                success_msg=self.success_msg,
                                error_msg=self.error_msg)
 
-    def to_decorated_code(self):
+    def to_decorated_code(self) -> tuple:
         """
         Turn a CodeForLean into a string that can be sent to Lean, including
         no_meta_vars and trace_effective_code when needed.
@@ -885,6 +915,10 @@ class CodeForLean:
     @classmethod
     def skip(cls):
         return cls("skip")
+
+    @classmethod
+    def rotate(cls):
+        return cls("rotate")
 
     @classmethod
     def no_meta_vars(cls):

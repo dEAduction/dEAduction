@@ -404,10 +404,12 @@ class ProofStepRequest(HighLevelServerRequest):
             self.effective_code, found = \
                 self.effective_code.select_or_else(node_nb, code_nb)
             if found:
-                self.log.debug("Selecting effective code -->")
-                self.log.debug(self.effective_code)
+                self.log.debug(f"Selecting {txt_line} -->")
+                self.log.debug(self.effective_code.to_code())
                 self.effective_code_received = True
                 self.proof_step.effective_code = self.effective_code
+            else:
+                self.log.warning(f"{txt_line} not found!")
 
     def is_complete(self) -> bool:
         """
