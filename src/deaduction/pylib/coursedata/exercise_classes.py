@@ -866,7 +866,7 @@ class Exercise(Theorem):
         if not cvars.get('usr_jokers_available', False):
             new_logic = [action for action in self.available_logic
                          if action.name != 'prove_exists_joker']
-            assert len(new_logic) == len(self.available_logic) - 1
+            # assert len(new_logic) == len(self.available_logic) - 1
             self.available_logic = new_logic
 
 
@@ -877,6 +877,10 @@ class Exercise(Theorem):
     @property
     def is_complete_statement(self):
         return self.info.get('complete_statement', False)
+
+    @property
+    def user_proves_statement(self):
+        return self.info.get('user_proves_statement', False)
 
     def statements_for_prover(self) -> [str]:
         """
