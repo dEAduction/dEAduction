@@ -431,6 +431,12 @@ class ExerciseCentralWidget(QWidget):
         else:
             self.hide_action_button(name='complete')
 
+    def freeze_action_buttons(self, yes=True, except_complete=True):
+        for btn in self.action_buttons:
+            if except_complete and yes and btn.name == "complete":
+                continue
+            btn.setEnabled(not yes)
+
     @property
     def action_button_names(self) -> [str]:
         return [btn.name for btn in self.action_buttons]

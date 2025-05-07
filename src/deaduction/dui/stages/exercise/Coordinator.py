@@ -55,7 +55,10 @@ import deaduction.pylib.text.text as text
 from deaduction.dui.primitives import           (ButtonsDialog,
                                                  ExerciseStatementWindow,
                                                  scale_geometry)
-from deaduction.dui.stages.exercise import      ExerciseMainWindow
+
+from deaduction.dui.stages.exercise.coordinator_mode import CoordinatorMode
+from deaduction.dui.stages.exercise import ExerciseMainWindow
+
 # from deaduction.dui.elements import             ActionButton
 from deaduction.dui.stages.calculator import    CalculatorController
 
@@ -168,8 +171,6 @@ class Coordinator(QObject):
 
         # Flags
         self.exercise_solved                = False
-        self.test_mode                      = test_mode
-        self.emw.test_mode                  = test_mode
         self.server_task_started            = trio.Event()
         self.server_task_closed             = trio.Event()
         self.initial_proof_states_set = trio.Event()
@@ -177,6 +178,8 @@ class Coordinator(QObject):
         self.stop_button_will_stop_server   = False
 
         # Initialization
+        self.__mode = CoordinatorMode.Normal  # Default
+        self.__init_mode(test_mode)
         self.is_frozen = False
         self.__connect_signals()
         self.__history_cvars = dict()
@@ -203,6 +206,37 @@ class Coordinator(QObject):
     # def __init_auto_steps(self):
     #     log.info("Initializing auto steps")
     #     self.__auto_steps = self.exercise.refined_auto_steps.copy()
+
+    def __init_mode(self, test_mode):
+        """
+        Determine self's mode.
+        """
+        if test_mode:
+            self.mode = CoordinatorMode.Test
+        elif self.exercise.launch_in_history_mode:
+            self.mode = CoordinatorMode.History
+        elif self.exercise.is_complete_statement:
+            self.mode = CoordinatorMode.CompleteStatement
+            self.emw.activate_complete_mode()
+
+    def check_complete_mode(self):
+        """
+        This should be called at each step when exercise.is_complete_statement.
+        It checks if goal still contain uncompleted jokers, and set the mode
+        accordingly.
+        """
+        print("Checking mode")
+        if self.mode in (CoordinatorMode.History, CoordinatorMode.Test):
+            return
+        elif self.mode is CoordinatorMode.CompleteStatement:
+            # Completion done? FIXME: could be done and false
+            if not self.proof_step.goal.contains_non_usr_joker():
+                QTimer.singleShot(0, self.display_fireworks_msg)
+        elif (self.exercise.is_complete_statement and
+              self.proof_step.goal.contains_non_usr_joker()):
+            self.mode = CoordinatorMode.CompleteStatement
+        else:
+            self.mode = CoordinatorMode.Normal
 
     def __init_history_mode(self):
         if not self.exercise.launch_in_history_mode or self.test_mode:
@@ -477,7 +511,31 @@ class Coordinator(QObject):
 
     @history_mode.setter
     def history_mode(self, yes=True):
-        self.emw.history_mode = yes
+        if yes:
+            self.mode = CoordinatorMode.History
+        else:
+            self.check_mode()
+
+    @property
+    def test_mode(self):
+        return self.mode is CoordinatorMode.Test
+
+    @test_mode.setter
+    def test_mode(self, yes=True):
+        if yes:
+            self.mode = CoordinatorMode.Test
+
+    @property
+    def mode(self):
+        return self.__mode
+
+    @mode.setter
+    def mode(self, mode: CoordinatorMode):
+        """
+        Guard that this is synchronized with emw.mode.
+        """
+        self.__mode = mode
+        self.emw.mode = mode
 
     @property
     def action_button_names(self) -> [str]:
@@ -1389,36 +1447,49 @@ class Coordinator(QObject):
         """
         Display a QMessageBox informing that the proof is complete.
         """
-        if not self.proof_step.is_redo() \
-                and not self.proof_step.is_goto()\
-                and not self.test_mode\
-                and not self.history_mode:
+        if (self.proof_step.is_redo() or self.proof_step.is_goto() or
+                self.test_mode or self.history_mode):
+            return
+
+        msg_box = QMessageBox(parent=self.emw)
+        button_change = msg_box.addButton(_('Change exercise'),
+                                          QMessageBox.YesRole)
+        button_change.setCheckable(True)
+        # button_change.clicked.connect(self.emw.change_exercise)
+
+        # Save history button
+        key = 'functionality.save_history_of_solved_exercises'
+        save_history = cvars.get(key, False)
+        check_box = QCheckBox(_('Save history'))
+        check_box.setChecked(save_history)
+        msg_box.setCheckBox(check_box)
+        # Adap msg:
+        if self.mode is CoordinatorMode.CompleteStatement:
+            if self.exercise.user_proves_statement:
+                title = _('Statement completed') + " — d∃∀duction"
+                text = _('The statement is correct! You can now go on to '
+                         'prove it.')
+                self.mode = CoordinatorMode.Normal
+                button_change.hide()
+                check_box.setChecked(False)
+                check_box.hide()
+            else:
+                title = _('Statement completed') + " — d∃∀duction"
+                text = _('The statement is correct!')
+        else:
             title = _('Target solved') + " — d∃∀duction"
             text = _('The proof is complete!')
-            msg_box = QMessageBox(parent=self.emw)
-            msg_box.setText(text)
-            msg_box.setWindowTitle(title)
-            button_ok = msg_box.addButton(_('Back to exercise'),
-                                          QMessageBox.YesRole)
-            button_change = msg_box.addButton(_('Change exercise'),
-                                              QMessageBox.YesRole)
-            button_change.setCheckable(True)
-            # button_change.clicked.connect(self.emw.change_exercise)
 
-            # Save history button
-            key = 'functionality.save_history_of_solved_exercises'
-            save_history = cvars.get(key, False)
-            check_box = QCheckBox(_('Save history'))
-            check_box.setChecked(save_history)
-            msg_box.setCheckBox(check_box)
+        msg_box.setText(text)
+        msg_box.setWindowTitle(title)
+        msg_box.addButton(_('Back to exercise'), QMessageBox.YesRole)
+        msg_box.exec_()
 
-            msg_box.exec_()
-
-            # Save history, and then change exercise,
-            #  so that saved exercise appears in exercises list
-            self.save_history(save_history=(check_box.isChecked()))
-            if button_change.isChecked():
-                self.emw.change_exercise.emit()
+        # Save history, and then change exercise,
+        #  so that saved exercise appears in exercises list
+        self.save_history(save_history=(check_box.isChecked()))
+        if button_change.isChecked():
+            self.emw.change_exercise.emit()
 
     def update_proof_step(self):
         """
@@ -1442,6 +1513,8 @@ class Coordinator(QObject):
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
         self.proof_step.exercise = self.exercise
         self.proof_step_updated.emit()  # Received in auto_test
+
+        self.check_complete_mode()
 
     def __check_response_coherence(self, lean_response):
         """

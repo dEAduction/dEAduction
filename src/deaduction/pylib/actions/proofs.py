@@ -649,13 +649,12 @@ def action_complete(proof_step,
         # print([v.to_display(format_='utf8') for v in used_context])
         # print(f"Used Illegal vars:")
         # print([v.to_display(format_='utf8') for v in illegal_vars])
-        if cmo_var in used_context:
-            jname = cmo_var.to_display(format_='utf8')
+        jname = cmo_var.to_display(format_='utf8')
+        if jname in [var.to_display(format_='utf8') for var in used_context]:
             error = _("You cannot use {} to define {}!")
             error = error.format(jname, jname)
             raise WrongUserInput(error)
         elif illegal_vars:
-            jname = cmo_var.to_display(format_='utf8')
             iv = " ".join(var.to_display(format_='utf8')
                           for var in illegal_vars)
             if len(illegal_vars) == 1:
@@ -828,7 +827,7 @@ def action_complete(proof_step,
         first_check_codes.append(list(code.copy() for code in check_codes))
         check_codes.pop(0)
 
-    first_rw_codes = []  # e.g. [ [rwc0, rwc1, rwc2], [rwc0, rwc1], [rwc0] ]
+    first_rw_codes = []  # e.g. [ [rwc0, rwc1, rwc2, sorry], [rwc0, rwc1],[rwc0] ]
     while rw_codes:
         first_rw_codes.append(rw_codes[:])
         rw_codes.pop()

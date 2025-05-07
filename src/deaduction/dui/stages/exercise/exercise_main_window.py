@@ -62,6 +62,7 @@ from deaduction.dui.elements            import (ActionButton,
                                                 ProofOutlineWindow,
                                                 ProofTreeController,
                                                 HelpWindow)
+from deaduction.dui.stages.exercise.coordinator_mode import CoordinatorMode
 from ._exercise_main_window_widgets     import (ExerciseCentralWidget,
                                                 ExerciseStatusBar,
                                                 ExerciseToolBar,
@@ -161,8 +162,9 @@ class ExerciseMainWindow(QMainWindow):
         self.lean_file            = None
         self.current_goal         = None
         self.displayed_proof_step = None
-        self.test_mode            = False
-        self.history_mode         = False
+        self.mode                 = None
+        # self.test_mode            = False
+        # self.history_mode         = False
         self.automatic_action     = False
 
         # From inside
@@ -505,6 +507,17 @@ class ExerciseMainWindow(QMainWindow):
     # Properties or like #
     ######################
     ######################
+    @property
+    def test_mode(self):
+        return self.mode is CoordinatorMode.Test
+
+    @property
+    def history_mode(self):
+        return self.mode is CoordinatorMode.History
+
+    @property
+    def complete_mode(self):
+        return self.mode is CoordinatorMode.CompleteStatement
 
     @property
     def proof_tree_window(self):
@@ -707,6 +720,15 @@ class ExerciseMainWindow(QMainWindow):
         self.exercise_toolbar.setEnabled(not yes)
         # if yes:
         #     self.statusBar.cancel_pending_msgs()
+
+    def activate_complete_mode(self, yes=True):
+        """
+        Freeze every action button except Complete.
+        """
+        if yes:
+            self.ecw.freeze_action_buttons(except_complete=True)
+        else:
+            self.ecw.freeze_action_buttons(yes=False)
 
     def history_button_unfreeze(self, at_beginning, at_end):
         """

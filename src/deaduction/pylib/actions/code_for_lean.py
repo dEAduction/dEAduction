@@ -921,6 +921,10 @@ class CodeForLean:
         return cls("rotate")
 
     @classmethod
+    def sorry(cls):
+        return cls("sorry")
+
+    @classmethod
     def no_meta_vars(cls):
         return cls("all_goals_no_meta_vars")
 

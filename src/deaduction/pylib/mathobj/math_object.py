@@ -1131,10 +1131,29 @@ class MathObject:
             return False
 
     def is_joker(self):
-        return 'JOKER' in self._info.get('name')
+        name = self._info.get('name')
+        if name:
+            return 'JOKER' in name
 
     def is_usr_joker(self):
-        return 'USR_JOKER' in self._info.get('name')
+        name = self._info.get('name')
+        if name:
+            return 'USR_JOKER' in name
+
+    def contains_joker(self):
+        if self.is_joker():
+            return True
+        return any(child.contains_joker() for child in self.children)
+
+    def contains_usr_joker(self):
+        if self.is_usr_joker():
+            return True
+        return any(child.contains_usr_joker() for child in self.children)
+
+    def contains_non_usr_joker(self):
+        if self.is_joker() and not self.is_usr_joker():
+            return True
+        return any(child.contains_non_usr_joker() for child in self.children)
 
     def jokers_n_vars(self) -> []:
         """

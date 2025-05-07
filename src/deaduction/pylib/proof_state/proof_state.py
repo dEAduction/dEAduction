@@ -274,7 +274,16 @@ class Goal:
         True if context or target contains (uncompleted) jokers.
         """
         objects = self.context + [self.target]
-        return any([cmo.contains_joker() for cmo in objects])
+        return any([cmo.math_type.contains_joker() for cmo in objects])
+
+    def contains_non_usr_joker(self):
+        """
+        True if context or target contains (uncompleted) jokers.
+        """
+        objects = self.context + [self.target]
+        tests = [cmo.math_type.contains_non_usr_joker() for cmo in objects]
+        # print(tests)
+        return any(tests)
 
     def defining_equalities(self):
         """
