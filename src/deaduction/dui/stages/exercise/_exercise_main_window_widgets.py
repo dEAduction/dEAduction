@@ -437,6 +437,9 @@ class ExerciseCentralWidget(QWidget):
                 continue
             btn.setEnabled(not yes)
 
+    def freeze_statements(self, yes=True):
+        self.statements_tree.setEnabled(not yes)
+
     @property
     def action_button_names(self) -> [str]:
         return [btn.name for btn in self.action_buttons]

@@ -727,8 +727,10 @@ class ExerciseMainWindow(QMainWindow):
         """
         if yes:
             self.ecw.freeze_action_buttons(except_complete=True)
+            self.ecw.freeze_statements()
         else:
             self.ecw.freeze_action_buttons(yes=False)
+            self.ecw.freeze_statements(yes=False)
 
     def history_button_unfreeze(self, at_beginning, at_end):
         """
