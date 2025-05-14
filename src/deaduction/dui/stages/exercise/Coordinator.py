@@ -225,12 +225,16 @@ class Coordinator(QObject):
         It checks if goal still contain uncompleted jokers, and set the mode
         accordingly.
         """
-        print("Checking mode")
+        # print("Checking mode")
         if self.mode in (CoordinatorMode.History, CoordinatorMode.Test):
             return
         elif self.mode is CoordinatorMode.CompleteStatement:
-            # Completion done? FIXME: could be done and false
-            if not self.proof_step.goal.contains_non_usr_joker():
+            # Completion done and correct?
+            test1 = not self.proof_step.goal.contains_non_usr_joker()
+            last_msg = self.previous_proof_step.success_msg
+            # print(f"Last msg: {last_msg}")
+            test2 = not _("is not correct") in last_msg  # Not ideal
+            if test1 and test2:
                 QTimer.singleShot(0, self.display_fireworks_msg)
         elif (self.exercise.is_complete_statement and
               self.proof_step.goal.contains_non_usr_joker()):
@@ -1447,7 +1451,9 @@ class Coordinator(QObject):
         """
         Display a QMessageBox informing that the proof is complete.
         """
-        if (self.proof_step.is_redo() or self.proof_step.is_goto() or
+        # if (self.proof_step.is_redo() or self.proof_step.is_goto() or
+        #         self.test_mode or self.history_mode):
+        if (self.previous_proof_step.is_history_move() or
                 self.test_mode or self.history_mode):
             return
 
@@ -1618,8 +1624,8 @@ class Coordinator(QObject):
         (2) The request has failed,
         (3) The request has succeeded but proof is not complete.
 
-        Every action of the user (ie click on an ActionButton, a statement
-        item, or a history move) which do not rise a WrongUserInput
+        Every action of the user except history move (ie click on an
+        ActionButton, a statement item) which do not rise a WrongUserInput
         exception is passed to Lean, and then goes through this method.
         """
 
