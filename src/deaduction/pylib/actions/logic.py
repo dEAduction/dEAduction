@@ -1630,6 +1630,19 @@ def action_equal(proof_step) -> CodeForLean:
     """
 
     selected_objects = proof_step.selection
+
+    for cmo in selected_objects:
+        cmot = cmo.math_type
+        if cmot.contains_usr_joker():
+            children = cmot.children
+            if cmo.is_equality() and children[1].is_usr_joker():
+                name = children[0]
+                error_msg = _(f"Use the button 'complete' to specify {name} in "
+                              f"equality {cmo}")
+            else:
+                error_msg = _(f"You cannot use {cmo} for substitution")
+            raise WrongUserInput(error_msg)
+
     target_selected = proof_step.target_selected
     target = proof_step.goal.target
     user_input = proof_step.user_input
