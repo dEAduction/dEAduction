@@ -131,8 +131,9 @@ def shallow_latex_to_text(math_list: Union[list, str], text_depth=0) \
             if success:  # Add a tag to indicate this is text (not math).
                 new_math_str = math_list.replace_string(math_list,
                                                         new_string)
-                formatter = math_list.formatter(r'\text')
-                string = [formatter, new_math_str]
+                new_string = new_math_str
+                # formatter = math_list.formatter(r'\text')
+                # new_string = [formatter, new_math_str]
         else:  # Try to shorten
             new_string = shorten(math_list)
             if new_string != math_list:
@@ -141,5 +142,6 @@ def shallow_latex_to_text(math_list: Union[list, str], text_depth=0) \
 
         return new_string
 
+    return ""
 
 

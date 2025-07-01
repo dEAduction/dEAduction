@@ -150,6 +150,13 @@ class MathDisplay:
     # TODO: compléter !!
     invisible_macros = [r'\no_text', r'\variable', r'\marked']
 
+    latex_to_latex_dic = {
+        '\equal': '=',
+        'ℝ': "\mathbb{R}",
+        'ℤ': "\mathbb{Z}",
+        'ℕ': "\mathbb{N}",
+        'ℚ': "\mathbb{Q}"
+    }
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
          "PROP_OR": (0, r"\or", 1),
@@ -755,15 +762,9 @@ class MathDisplay:
         """
         Convert a string or a list of string from latex to utf8.
         """
-        # FIXME: this should be used only for strings.
 
         utf8_string = None
 
-        # if isinstance(string, list):
-        #     return string.recursive_map(cls.latex_to_utf8)
-        # if isinstance(string, list) or isinstance(string, tuple):
-        #     return [cls.latex_to_utf8(item) for item in string]
-        # elif isinstance(string, str):
         striped_string = string.strip()  # Remove spaces
         if striped_string in cls.latex_to_utf8_dic:
             utf8_string = cls.latex_to_utf8_dic[striped_string]
@@ -786,11 +787,6 @@ class MathDisplay:
         (Used only in logic.py.)
         """
 
-        # FIXME: this should be used only for strings.
-
-        # if isinstance(string, list):
-        #     return [cls.latex_to_lean(item) for item in string]
-        # elif isinstance(string, str):
         striped_string = string.strip()  # Remove spaces
         if striped_string in cls.latex_to_lean_dic:
             lean_string = cls.latex_to_lean_dic[striped_string]
@@ -804,8 +800,17 @@ class MathDisplay:
             return utf8_string
         else:
             return string
-        # else:
-        #     return string
+
+    @classmethod
+    def latex_to_latex(cls, string: str):
+        striped_string = string.strip()  # Remove spaces
+        if striped_string in cls.latex_to_latex_dic:
+            lean_string = cls.latex_to_latex_dic[striped_string]
+            if isinstance(lean_string, str):
+                lean_string = string.replace(striped_string, lean_string)
+            return lean_string
+        else:
+            return string
 
     # @staticmethod
     # def wrap_lean_shape_with_type(mo, lean_shape):

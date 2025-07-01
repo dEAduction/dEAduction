@@ -119,3 +119,17 @@ class LeanResponse:
         return msg
 
 
+def process_lean_error_msg(errors: [str]) -> str:
+    """
+
+    :param errors: Lean error msg lines
+    :return: meaningful error msg for usr
+    """
+    error_type = errors[0]
+    msg = ""
+
+    if "type mismatch" in error_type:
+
+        msg = _("")
+
+    return msg

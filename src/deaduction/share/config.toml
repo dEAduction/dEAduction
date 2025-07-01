@@ -117,7 +117,8 @@ preset_courses = ["Tutoriels/Tutoriel.lean",
 recent_courses = []  # Absolute paths
 recent_courses_titles = []
 exercises_numbers = []
-save_all_statements_to_text_file = false
+save_all_statements_to_text_file = true
+text_file_format = "latex"  # utf8
 
 [dialogs]
 calculator_intro = true
@@ -147,7 +148,7 @@ copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
 ## The Python package builder read the version nb from here: ##
-version = "0.3.9997"
+version = "0.3.9997a"
 os = ""  # Let this to "" except for debugging
 
 #########################

@@ -482,13 +482,14 @@ class CourseChooser(AbstractCoExChooser):
         """
 
         saving = cvars.get('course.save_all_statements_to_text_file', True)
+        text_format = cvars.get('course.text_file_format', 'utf8')
         if not saving:
             return
 
         for course in self.loaded_courses:
             ips_complete = course.initial_proofs_complete
             if ips_complete:
-                course.save_all_exercises_text()
+                course.save_all_exercises_text(text_format=text_format)
 
     def find_course(self, abs_course_path):
         course = self.__preset_courses_wgt.find_course(abs_course_path)

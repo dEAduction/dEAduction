@@ -616,15 +616,6 @@ class MathList(list, MathDescendant):
         for item in self:
             if isinstance(item, MathString):
                 new_item = item.map(func)
-                # if (isinstance(new_item, str) and
-                #         not isinstance(new_item, MathString)):
-                #     new_item = MathString(new_item,
-                #                           root_math_object=item.root_math_object)
-                # if (isinstance(new_item, list) and
-                #         not isinstance(new_item, MathList)):
-                #     new_item = MathList(new_item,
-                #                         root_math_object=item.root_math_object)
-                #     new_item.check_completeness()
                 if new_item is not None:
                     self[idx] = new_item
             elif isinstance(item, MathList):
@@ -829,6 +820,8 @@ class MathList(list, MathDescendant):
                     # log.debug(f"Matching pattern --> {pre_shape}")
                     shape = tuple(substitute_metavars(item, metavars, pattern)
                                   for item in pre_shape)
+                    if dic is PatternInit.pattern_text:
+                        shape = ('\\text', ) + shape
                     break
             if shape:
                 shape_math.pattern = pattern
@@ -895,6 +888,8 @@ class MathList(list, MathDescendant):
                                 f"but is {type(item)}")
             idx += 1
 
+        return True
+
     def expand_latex_shape(self):
         """
         Expand latex shape. The resulting self is a MathList whose items are
@@ -960,7 +955,31 @@ class MathList(list, MathDescendant):
             previous_item = item.last_descendant()
             idx += 1
 
-    def linear_list(self, until=None, from_=None):
+    def process_latex_format(self, text_mode=True):
+        """
+        Handle the $'s in latex math expr.
+        """
+        pass
+        # if isinstance(self, list):
+        #     new_text_mode = (self[0] == r'\text')
+        # else:
+        #     new_text_mode = False
+        #
+        # if new_text_mode:
+        #     self.pop(0)
+        #
+        # if text_mode and not new_text_mode:
+        #     # from text to math
+        #
+        #
+        #
+        # for item in self:
+        #     if isinstance(item, MathString):
+        #
+        #     elif isinstance(item, MathList):
+        #         item.process_latex_format(text_mode=new_text_mode)
+
+    def linear_list(self, until=None, from_=None, latex=False):
         """
         Return the linear MathList of self.
         If until is not None, then stop
@@ -1019,9 +1038,10 @@ class MathList(list, MathDescendant):
     #
     #     return linear_list
 
-    def to_string(self) -> str:
+    def to_string(self, latex=False) -> str:
         """
         Concatenate self into an actual string.
+        Fixme: this not used anymore.
         """
         for item in self:
             if not isinstance(item, MathList) and not isinstance(item,
@@ -1030,6 +1050,7 @@ class MathList(list, MathDescendant):
 
         linear_list = self.linear_list()
         string = ''.join(linear_list)
+
         return string
 
     def mark(self):
@@ -1048,6 +1069,8 @@ class MathList(list, MathDescendant):
 
         if format_ in ('lean', 'utf8', 'html'):  # Replace latex macro by utf8:
             self.recursive_map(MathDisplay.latex_to_utf8)
+        elif format_ == 'latex':
+            self.recursive_map(MathDisplay.latex_to_latex)
         else:
             raise ValueError("Wrong format_ type, must be one of 'lean', "
                              "'utf8', 'html'")
@@ -1056,9 +1079,9 @@ class MathList(list, MathDescendant):
             html_display(self, use_color=use_color, bf=bf, no_text=no_text,
                          pretty_parentheses=pretty_parentheses)
 
-        elif format_ == 'utf8':  # or format_ == 'lean':
+        elif format_ == 'utf8':
             utf8_display(self, pretty_parentheses=pretty_parentheses)
-        elif format_ == 'lean':
+        elif format_ == 'lean' or format_ == 'latex':
             lean_display(self, pretty_parentheses=pretty_parentheses)
 
         # Put here general hygiene, and remove to_string
@@ -1118,9 +1141,16 @@ class MathList(list, MathDescendant):
                                          bf, is_type, used_in_proof,
                                          pretty_parentheses=pretty_parentheses)
 
-        # (5) And joint everything!
-        display = shape.to_string()
+        linear_list = shape.linear_list(latex=(format_=='latex'))
 
-        return display
+        # Join everything!
+        string = ''.join(linear_list)
+
+        # display = shape.to_string()
+
+        # if format_ == 'latex':
+        #     display = "$" + display + "$"
+
+        return string
 
 

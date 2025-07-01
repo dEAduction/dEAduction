@@ -332,8 +332,7 @@ class Statement:
         """
         return '.'.join(self.lean_name.split('.')[-2:])
 
-    @property
-    def statement_to_text(self):
+    def statement_to_text(self, text_format='utf8'):
         """
         if self has attribute 'initial_proof_state', then return a string
         with a text version of initial goal. E.g.
@@ -351,7 +350,8 @@ class Statement:
                 to_prove = False
                 open_pb = False
             content = initial_goal.goal_to_text(to_prove=to_prove,
-                                                open_problem=open_pb)
+                                                open_problem=open_pb,
+                                                format_=text_format)
         else:
             content = ""
         return content

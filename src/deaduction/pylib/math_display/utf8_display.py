@@ -150,7 +150,8 @@ def recursive_utf8_display(math_list, depth, lean_format=False,
         prefix = '^'
     # No color in utf8 :-(
     elif head in (r'\variable', r'\dummy_variable', r'\used_property',
-                  r'\text', r'\no_text', r'\marked'):
+                  r'\text',
+                  r'\no_text', r'\marked'):
         math_list.pop(0)
     
     add_parentheses(math_list, depth, lean_format=lean_format,
@@ -207,12 +208,11 @@ def lean_display(math_list: list, pretty_parentheses=True):
     recursive_utf8_display(math_list, depth=0, lean_format=True,
                            pretty_parentheses=pretty_parentheses)
 
-# def lean_display(math_list, depth=0):
-#     """
-#     Return a Lean version of the string represented by math_list.
-#     """
-#
-#     recursive_utf8_display(math_list, depth)
-#
-#     # return math_list
 
+def latex_display(math_list: list, pretty_parentheses=True):
+    """
+    Just remove formatters.
+    """
+
+    recursive_utf8_display(math_list, depth=0, lean_format=True,
+                           pretty_parentheses=pretty_parentheses)

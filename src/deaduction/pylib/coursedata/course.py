@@ -317,7 +317,7 @@ class Course:
                      if isinstance(item, Exercise)]
         return exercises
 
-    def all_exercises_text(self):
+    def all_exercises_text(self, text_format='utf8'):
         """
         Return the detailed statements of all exercises.
         """
@@ -328,7 +328,7 @@ class Course:
             ex_counter += 1
             txt += _(f"Exercise {ex_counter}: ") + exercise.pretty_name
             txt += '\n'
-            txt += exercise.statement_to_text
+            txt += exercise.statement_to_text(text_format)
             txt += '\n\n'
         return txt
 
@@ -343,20 +343,20 @@ class Course:
         # print(f"Abs history path:{abs_path}")
         return abs_path
 
-    def save_all_exercises_text(self):
+    def save_all_exercises_text(self, text_format='utf8'):
         """
         Save the text of all exercises in a file, if the file does not
         already exist.
         """
-        # TODO: write on previous file if contents not up to date.
+
         path = self.abs_text_file_path
-        content = self.all_exercises_text()
+        content = self.all_exercises_text(text_format)
         # 'x' = fails if file already exists
         try:
-            with open(path, mode='xt', encoding='utf-8') as output:
+            with open(path, mode='wt', encoding='utf-8') as output:
                 log.info("Saving all statements to file" + " " + str(path))
                 output.write(content)
-        except FileExistsError:
+        except FileExistsError:  # Should not happen, mode = 'w'
             log.debug("(File already exists:" + " " + str(path) + ")")
 
     @property
