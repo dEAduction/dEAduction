@@ -1132,13 +1132,11 @@ class MathObject:
 
     def is_joker(self):
         name = self._info.get('name')
-        if name:
-            return 'JOKER' in name
+        return 'JOKER' in name if name else None
 
     def is_usr_joker(self):
         name = self._info.get('name')
-        if name:
-            return 'USR_JOKER' in name
+        return 'USR_JOKER' in name if name else None
 
     def contains_joker(self):
         if self.is_joker():

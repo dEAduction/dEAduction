@@ -219,6 +219,17 @@ class Coordinator(QObject):
             self.mode = CoordinatorMode.CompleteStatement
             self.emw.activate_complete_mode()
 
+    def check_jokers(self):
+        """
+        This should be called after each step, before history_nb is increased.
+        - If the last action is a complete jokers action, it adds an entry in
+        the hidden_user_jokers dictionary, joker nb -> (history nb, value).
+        - If not, it suppresses all entries in this dic whose history_nb is
+        less than the current one.
+        The dic is used in automatic_actions, to complete uncompleted jokers
+        which have been completed in another branch of the proof.
+        """
+
     def check_complete_mode(self):
         """
         This should be called at each step when exercise.is_complete_statement.

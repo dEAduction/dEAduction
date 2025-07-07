@@ -130,6 +130,6 @@ def process_lean_error_msg(errors: [str]) -> str:
 
     if "type mismatch" in error_type:
 
-        msg = _("")
+        msg = ""
 
     return msg

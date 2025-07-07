@@ -542,10 +542,7 @@ def add_type_indication(item: Union[str, MathObject],
 
 
 @action()
-def action_complete(proof_step,
-                    complete_statement=False,
-                    user_proves_statement=False,
-                    statements_for_prover=None) -> CodeForLean:
+def action_complete(proof_step) -> CodeForLean:
     """
     This is called when user wants to fill in a context objects or the target
     which contains a joker. There are two exclusive cases:
