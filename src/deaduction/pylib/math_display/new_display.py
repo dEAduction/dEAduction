@@ -31,7 +31,10 @@ from deaduction.pylib.math_display.display_data import MathDisplay
 from deaduction.pylib.math_display.pattern_init import PatternInit
 from deaduction.pylib.math_display.display import (html_display, 
                                                    lean_display,
-                                                   utf8_display)
+                                                   latex_display,
+                                                   utf8_display,
+                                                   latex_process,
+                                                   remove_formaters)
 from deaduction.pylib.math_display.display_utils import (shallow_latex_to_text,
                                                          latex_to_text_func)
 from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
@@ -309,11 +312,13 @@ class MathString(str, MathDescendant):
     marked = r'\marked'
     dummy_var = r'\dummy_variable'
     var = r'\variable'
+    text = r'\text'
     begin_sub = '<sub>'
     end_sub = '</sub>'
 
     _format_strings = {error_string, cursor, marked, dummy_var, var,
-                       begin_sub, end_sub}
+                       begin_sub, end_sub,
+                       text}
 
     is_tagged = False
 
@@ -582,6 +587,8 @@ class MathList(list, MathDescendant):
 
         if len(self) > 0:  # Do not return empty list!
             return self
+
+        return None
 
     def replace_string(self, idx, new_string: str) -> bool:
         """
@@ -1081,8 +1088,10 @@ class MathList(list, MathDescendant):
 
         elif format_ == 'utf8':
             utf8_display(self, pretty_parentheses=pretty_parentheses)
-        elif format_ == 'lean' or format_ == 'latex':
+        elif format_ == 'lean':
             lean_display(self, pretty_parentheses=pretty_parentheses)
+        elif format_ == 'latex':
+            latex_display(self, pretty_parentheses=pretty_parentheses)
 
         # Put here general hygiene, and remove to_string
         if format_ in ('utf8', 'html'):
@@ -1092,8 +1101,13 @@ class MathList(list, MathDescendant):
         self.check_completeness()
         self.cut_spaces()
 
-        if format_ == 'lean':
-            self.remove_formatters(warning=(format_ != 'lean'))
+        # if format_ == 'lean':
+        #     self.remove_formatters(warning=(format_ != 'lean'))
+
+    # def remove_formatters(self):
+    #     new_math_list = [item for item in self
+    #                      if not item.is_formatter()]
+    #     return new_math_list
 
     @classmethod
     def complete_latex_shape(cls, math_object, format_="html", text=False,
@@ -1142,6 +1156,14 @@ class MathList(list, MathDescendant):
                                          pretty_parentheses=pretty_parentheses)
 
         linear_list = shape.linear_list(latex=(format_=='latex'))
+
+        # Add "$"
+        if format_ == 'latex':
+            linear_list = latex_process(linear_list)
+
+        # Remove formatter
+        # linear_list.remove_formatters()
+        linear_list = remove_formaters(linear_list)
 
         # Join everything!
         string = ''.join(linear_list)

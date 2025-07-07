@@ -220,7 +220,7 @@ class PatternMathDisplay:
 
     # NB: int will be turned to tuples
     special_latex_shapes = {"abs": ('|', -1, '|'),  # FIXME: does not work ???
-                            "limit": ("lim ", -2, " = ", -1),
+                            "limit": ("\lim ", -2, " = ", -1),
                             "majorant": (-1, r'\text_is', " majorant de ", -2),
                             "minorant": (-1, r'\text_is', " minorant de ", -2),
                             "continuous_at": (
@@ -233,8 +233,10 @@ class PatternMathDisplay:
                             # "limit": ("lim ", -2, " = ", -1),
                             "borne_sup": ("Sup ", -2, " = ", -1),
                             "borne_inf": ("Inf ", -2, " = ", -1),
-                            "limit_plus_infinity": ("lim ", -1, " = +∞"),
-                            "limit_function": ("lim", ['_', (-2,)], (-3,), " = ", (-1,)),
+                            "limit_plus_infinity": ("\lim", " ", -1, " = ",
+                                                    "+", "\infty"),
+                            "limit_function": ("\lim", ['_', (-2,)], (-3,),
+                                               " = ", (-1,)),
                             # "sqrt":  ("√", -1),
                             "segment": ("[", -2, ", ", -1, "]"),
                             "bit0": (-1, " + ", -1),

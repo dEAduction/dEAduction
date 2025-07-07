@@ -117,7 +117,16 @@ def add_parentheses(math_list: list, depth=1, lean_format=False,
                 math_list.append(paren.replace_string(paren, ")"))
 
 
+# def remove_formatter(math_list):
+#     new_math_list = [item for item in math_list
+#                      if item not in (r'\variable', r'\dummy_variable',
+#                                      r'\used_property', r'\text',
+#                                      r'\no_text', r'\marked')]
+#     return new_math_list
+#
+
 def recursive_utf8_display(math_list, depth, lean_format=False,
+                           latex_format=False,
                            pretty_parentheses=True):
     """
     Use the following tags as first child:
@@ -132,7 +141,8 @@ def recursive_utf8_display(math_list, depth, lean_format=False,
         return ""
 
     if isinstance(math_list, str):
-        if not lean_format:  # Real type = MathString
+        if not lean_format and not math_list.startswith('\\'):  # Real type =
+            # MathString
             new_string, is_subscriptable = sub_sup_to_utf8(math_list)
             # Replace even if not subscriptable ('\sub' --> '_')
             math_list = math_list.replace_string(math_list, new_string)
@@ -149,10 +159,10 @@ def recursive_utf8_display(math_list, depth, lean_format=False,
         math_list.pop(0)
         prefix = '^'
     # No color in utf8 :-(
-    elif head in (r'\variable', r'\dummy_variable', r'\used_property',
-                  r'\text',
-                  r'\no_text', r'\marked'):
-        math_list.pop(0)
+    # elif head in (r'\variable', r'\dummy_variable', r'\used_property',
+    #               r'\text',
+    #               r'\no_text', r'\marked'):
+    #     math_list.pop(0)
     
     add_parentheses(math_list, depth, lean_format=lean_format,
                     pretty_parentheses=pretty_parentheses)
@@ -164,18 +174,24 @@ def recursive_utf8_display(math_list, depth, lean_format=False,
             formatted_child = recursive_utf8_display(
                                          child, depth + 1,
                                          lean_format=lean_format,
+                                         latex_format=latex_format,
                                          pretty_parentheses=pretty_parentheses)
             math_list[idx] = formatted_child
         idx += 1
 
     # Process sup/sub prefix
-    if prefix == '_' and not lean_format:
+    if latex_format and (prefix in ('_', '^')):
+        math_list.insert(0, '{')
+        math_list.insert(0, prefix)
+        math_list += '}'
+
+    if prefix == '_' and not (lean_format or latex_format):
         tentative_string, is_subscriptable = subscript(math_list.to_string())
         if is_subscriptable:
             return tentative_string
         else:
             math_list.insert(0, prefix)
-    elif prefix == '^' and not lean_format:
+    elif prefix == '^' and not (lean_format or latex_format):
         tentative_string, is_subscriptable = superscript(math_list.to_string())
         if is_subscriptable:
             return tentative_string
@@ -214,5 +230,49 @@ def latex_display(math_list: list, pretty_parentheses=True):
     Just remove formatters.
     """
 
-    recursive_utf8_display(math_list, depth=0, lean_format=True,
+    recursive_utf8_display(math_list, depth=0, latex_format=True,
                            pretty_parentheses=pretty_parentheses)
+
+
+def is_math(latex_str: str):
+    if '\\' in latex_str:
+        return True
+    elif latex_str in '(){}_^><0123456789=+-*|[]':
+        return True
+    elif latex_str in (' = ', 'lim', 'lim ', ' > ', ' < ', ' + ', ' - '):
+        return True
+
+    return False
+
+
+def latex_process(linear_list):
+    new_list = []
+    previous_math_mode = False
+    previous_item = ""
+    for item in linear_list:
+        if item == ' ':
+            math_mode = previous_math_mode
+        else:
+            math_mode = (previous_item in (r"\variable", r"\dummy_variable")
+                         or is_math(item))
+
+        if math_mode is not previous_math_mode:
+            new_list.append('$')
+
+        new_list.append(item)
+        previous_item = item
+        previous_math_mode = math_mode
+
+    if previous_math_mode:
+        new_list.extend('$')
+
+    return new_list
+
+
+def remove_formaters(linear_list):
+    formaters = (r'\DeadCursor', r'\marked', r'\dummy_variable',
+                 r'\variable', r'\text', r'\no_text')
+
+    new_list = [item for item in linear_list if item not in formaters]
+    return new_list
+

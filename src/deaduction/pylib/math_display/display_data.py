@@ -152,10 +152,14 @@ class MathDisplay:
 
     latex_to_latex_dic = {
         '\equal': '=',
-        'ℝ': "\mathbb{R}",
-        'ℤ': "\mathbb{Z}",
-        'ℕ': "\mathbb{N}",
-        'ℚ': "\mathbb{Q}"
+        '\mul': r'\times',
+        'ℝ': r"\mathbb{R}",
+        'ℤ': r"\mathbb{Z}",
+        'ℕ': r"\mathbb{N}",
+        'ℚ': r"\mathbb{Q}",
+        r'\in_symbol': r'\in',
+        'ε': r"\varepsilon",
+        'δ': r'\delta'
     }
     latex_from_node = \
         {"PROP_AND": (0, r"\and", 1),
@@ -381,6 +385,8 @@ class MathDisplay:
             r'\geq': '≥',
             r'\set_inverse': ['^', '-1'],
             r'\inverse': ['^', '-1'],
+            r'\lim': 'lim',
+            r'\infty': '∞'
         }
 
         cls.latex_to_utf8_dic = {

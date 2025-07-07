@@ -24,7 +24,9 @@ This file is part of d∃∀duction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 from typing import Union
-from .utf8_display import utf8_display, lean_display
+from .utf8_display import (utf8_display, lean_display, remove_formaters,
+                           latex_process, latex_display)
+
 from .html_display import html_display
 from deaduction.pylib.math_display import MathDisplay
 
