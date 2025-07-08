@@ -801,19 +801,8 @@ class ServerInterface(QObject):
         :param code: CodeForLean
         """
         if code:
-            # Formatting. We do NOT want the "no_meta_vars" tactic!
-            code_string = code.to_code(exclude_no_meta_vars=True,
-                                       exclude_skip=True)
-            code_string = code_string.strip()
-            if not code_string.endswith(","):
-                code_string += ","
-            if not code_string.endswith("\n"):
-                code_string += "\n"
-
-            lean_file = self.lean_file
-            label = lean_file.history[lean_file.target_idx].label
-            self.lean_file.undo()
-            self.lean_file.insert(label=label, add_txt=code_string)
+            code_string = code.raw_code()
+            self.lean_file.history_replace(code_string)
             # Update the lean text editor:
             self.lean_file_changed.emit(self.lean_file.inner_contents)
 

@@ -61,6 +61,7 @@ from deaduction.dui.stages.exercise import ExerciseMainWindow
 
 # from deaduction.dui.elements import             ActionButton
 from deaduction.dui.stages.calculator import    CalculatorController
+from deaduction.pylib.config.dirs import history
 
 # Server
 from deaduction.pylib.server import             ServerInterface, Task
@@ -168,6 +169,8 @@ class Coordinator(QObject):
         self.previous_proof_step: Optional[ProofStep] = None
         self.journal                                  = Journal()
         self.lean_code_sent: Optional[CodeForLean]          = None
+        # usr_jkr_nb -> (history_nb, value):
+        self.usr_jokers_history_n_value = dict()
 
         # Flags
         self.exercise_solved                = False
@@ -197,10 +200,7 @@ class Coordinator(QObject):
         Connect all signals. Called at init.
         """
         self.servint.lean_file_changed.connect(self.emw.update_lean_editor)
-        # self.servint.effective_code_received.connect(
-        #                                         self.process_effective_code)
         self.servint.lean_response.connect(self.process_lean_response)
-        # self.emw.cancel_server.connect(self.cancel_server)
         self.emw.save_history.connect(self.save_history)
 
     # def __init_auto_steps(self):
@@ -219,16 +219,44 @@ class Coordinator(QObject):
             self.mode = CoordinatorMode.CompleteStatement
             self.emw.activate_complete_mode()
 
-    def check_jokers(self):
+    def check_usr_jokers(self):
         """
-        This should be called after each step, before history_nb is increased.
+        This should be called after each step which is not a hisroy move,
+        before history_nb is increased.
         - If the last action is a complete jokers action, it adds an entry in
         the hidden_user_jokers dictionary, joker nb -> (history nb, value).
-        - If not, it suppresses all entries in this dic whose history_nb is
-        less than the current one.
-        The dic is used in automatic_actions, to complete uncompleted jokers
+        - In addition, it suppresses all entries in this dic whose history_nb is
+        more than the current one: indeed those entries correspond to steps
+        that have been deleted by the last proof step.
+
+        The dic is used in automatic_actions, to complete jokers
         which have been completed in another branch of the proof.
         """
+
+        proof_step = self.proof_step
+        button_name = proof_step.user_action.button_name
+        history_nb = proof_step.history_nb
+
+        for key, (nb, xxx) in self.usr_jokers_history_n_value.items():
+            if history_nb < nb:  # This joker has not been assigned yet
+                self.usr_jokers_history_n_value.pop(key)
+
+        if button_name == "COMPLETE":
+            user_input = proof_step.user_input
+
+            # Collect all usr jokers:
+            completed_usr_jokers = []
+            for mpmo in user_input[0]:
+                jokers = mpmo.search_in_name("USR_JOKER")
+                for joker in jokers:
+                    assigned_mo = joker.assigned_math_object
+                    if assigned_mo:
+                        completed_usr_jokers.append(joker)
+            # Store history_nb and value
+            for usr_jkr in completed_usr_jokers:
+                nb = usr_jkr.usr_jkr_nb()
+                value = usr_jkr.assigned_math_object
+                self.usr_jokers_history_n_value[nb] = (history_nb, value)
 
     def check_complete_mode(self):
         """
@@ -471,12 +499,6 @@ class Coordinator(QObject):
         the previous exercise.
         """
         if self.servint:
-            # It seems that sometimes signals are already deleted
-            # try:
-            #     self.servint.effective_code_received.disconnect()
-            # except RuntimeError:
-            #     log.debug("(Impossible to disconnect signal effective code "
-            #               "received)")
             try:
                 self.servint.lean_response.disconnect()
             except RuntimeError:
@@ -529,7 +551,8 @@ class Coordinator(QObject):
         if yes:
             self.mode = CoordinatorMode.History
         else:
-            self.check_mode()
+            self.mode = CoordinatorMode.Unknown
+            self.check_complete_mode()
 
     @property
     def test_mode(self):
@@ -1205,7 +1228,7 @@ class Coordinator(QObject):
         # self.nursery.start_soon(self.emw.simulate_user_action,
         #                         next_step, duration)
 
-    def automatic_actions(self, goal: Goal) -> UserAction:
+    def automatic_actions(self, goal: Goal) -> Optional[UserAction]:
         """
         Return a UserAction if some automatic_intro is on and there is a
         pertinent automatic action to perform. Automatic actions include:
@@ -1231,6 +1254,20 @@ class Coordinator(QObject):
         context_premises = [p.premise() for p in goal.context_props]
         user_action = None
 
+        # # (0) Check usr_jokers to be assigned
+        # completed_jkrs = []
+        # values = []
+        # for key, (nb, value) in self.usr_jokers_history_n_value:
+        #     if nb <= self.proof_step.history_nb:
+        #         joker = "TOTO"  # FIXME
+        #         completed_jkrs.append(joker)
+        #         values.append("TOTO")
+        # if completed_jkrs:
+        #     user_action = UserAction(selection=completed_jkrs,
+        #                              button_name="COMPLETE",
+        #                              user_input=values)
+        #     return user_action
+        #
         # (1) Check automatic intro of existence hypos
         auto_exists = cvars.get("functionality.automatic_use_of_exists", True)
         if auto_exists:
@@ -1319,6 +1356,8 @@ class Coordinator(QObject):
                 target.turn_off_auto_action()
                 return user_action
 
+        return None
+
     def __process_automatic_actions(self, goal):
         """
         Perform the UserAction returned by self.automatic_action, if any.
@@ -1365,19 +1404,6 @@ class Coordinator(QObject):
         self.emw.history_button_unfreeze(at_beginning, at_end)
         self.is_frozen = False
         self.unfrozen.emit()
-
-    # @Slot(CodeForLean)
-    # def process_effective_code(self, effective_lean_code: CodeForLean):
-    #     """
-    #     Replace the (maybe complicated) Lean code in the Lean file by the
-    #     portion of the code that was effective.
-    #
-    #     This is called by a signal in servint.
-    #     """
-    #     code = effective_lean_code.to_code()
-    #     log.debug(f"Replacing code by effective code {code}")
-    #     self.proof_step.effective_code = effective_lean_code
-    #     self.servint.history_replace(effective_lean_code)
 
     def __process_failed_request_error(self, errors):
 
@@ -1523,6 +1549,9 @@ class Coordinator(QObject):
         self.proof_step.auto_step = AutoStep.from_proof_step(self.proof_step,
                                                              emw=self.emw)
 
+        # Update usr_joker dictionary
+        # self.check_usr_jokers()
+
         # Create next proof_step, and connect to ProofTree
         self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
@@ -1645,7 +1674,6 @@ class Coordinator(QObject):
         # (1) Test Response corresponds to request
         if not self.__check_response_coherence(lean_response):
             log.warning("Lean response with incoherent proof step, ignoring")
-            # self.abort_process()
             return
 
         no_more_goals = lean_response.no_more_goals
@@ -1664,10 +1692,6 @@ class Coordinator(QObject):
             self.__process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
-
-        # if exercise != self.exercise:  # Should never happen
-        #     log.warning("    not from current exercise, ignoring")
-        #     return
 
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
@@ -1699,10 +1723,6 @@ class Coordinator(QObject):
                           f"= {self.lean_file.target_idx}")
                 self.lean_file.state_info_attach(proof_step=self.proof_step)
                 self.proof_tree.process_new_proof_step(self.proof_step)
-                # self.proof_step.unsolved_goal_nodes_after = \
-                #     copy(self.proof_tree.unsolved_goal_nodes)
-                # ugn = [gn.goal_nb for gn in self.proof_tree.unsolved_goal_nodes]
-                # log.debug(f"Ps_unsolved_gn_after: {ugn}")
 
             # ─────── Check for new goals ─────── #
             # FIXME: obsolete. This is still used for the outline window though.

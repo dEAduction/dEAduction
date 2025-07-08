@@ -609,6 +609,7 @@ def action_complete(proof_step) -> CodeForLean:
                            hypos_with_jokers=hypos_with_jokers)
 
     # ---- (3) Find jokers that have been assigned ---- #
+    # This code is duplicated in Coordinator.check_usr_jokers()
     # print('Find completed jokers')
     completed_jokers = []
     usr_jokers = False  # True if assigned jokers are usr jokers

@@ -85,12 +85,13 @@ from deaduction.pylib.config.request_method import from_previous_state_method
 log = logging.getLogger("logic")
 global _
 
-
+HIDDEN_USR_JKR_NB = 0
 ####################################
 ####################################
 # FORALL, EXISTS, IMPLIES, AND, OR #
 ####################################
 ####################################
+
 
 ###########
 # FOR ALL #
@@ -504,9 +505,11 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
                                        text=text)
 
     # Generate code: new objects named <name> and JOKER_x, and equality
-    [joker_name] = get_new_hyps(proof_step,
-                                prefix="HIDDEN_USR_JOKER",
-                                nb=1)
+    # [joker_name] = get_new_hyps(proof_step,
+    #                             prefix="HIDDEN_USR_JOKER",
+    #                             nb=1)
+    joker_name = "HIDDEN_USR_JOKER" + str(HIDDEN_USR_JKR_NB)
+    HIDDEN_USR_JKR_NB += 1
 
     [hyp_name] = get_new_hyps(proof_step,
                               prefix="H",

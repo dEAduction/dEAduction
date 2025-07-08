@@ -360,6 +360,15 @@ class VirtualFile:
         if self.target_idx < 0:
             self.target_idx = 0
 
+    def history_replace(self, code_string):
+        """
+        Replace the last entry by code_string, by performing an undo followed
+        by insert.
+        """
+        label = self.history[self.target_idx].label
+        self.undo()
+        self.insert(label=label, add_txt=code_string)
+
     def redo(self):
         """
         Moves the history cursor one step forward.
@@ -516,17 +525,19 @@ def first_distinct_line(txt1: str, txt2: str) -> int:
 
 class LeanFile(VirtualFile):
 
-    @property
-    def previous_proof_step(self) -> Optional[ProofStep]:
-        if self.target_idx > 0:
-            return self.history[self.target_idx-1].misc_info.get('proof_step')
+    def proof_step_from_history_nb(self, history_nb) -> Optional[ProofStep]:
+        if 0 <= history_nb < len(self.history):
+            return self.history[history_nb].misc_info.get('proof_step')
         else:
             return None
 
     @property
+    def previous_proof_step(self) -> Optional[ProofStep]:
+        return self.proof_step_from_history_nb(self.target_idx-1)
+
+    @property
     def current_proof_step(self) -> ProofStep:
-        log.debug(f"Getting current proof step; hst nb = {self.target_idx}")
-        return self.history[self.target_idx].misc_info.get('proof_step')
+        return self.proof_step_from_history_nb(self.target_idx)
 
     @property
     def next_proof_step(self) -> Optional[ProofStep]:

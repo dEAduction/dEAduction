@@ -652,6 +652,21 @@ class CodeForLean:
                                                exclude_skip) \
                 + " }"
 
+    def raw_code(self):
+        """
+        Compute the raw code that could be sent to Lean, with no metavars
+        checking, and no "EFFECTIVE CODE" messages.
+        """
+        # Formatting. We do NOT want the "no_meta_vars" tactic!
+        code_string = self.to_code(exclude_no_meta_vars=True,
+                                   exclude_skip=True)
+        code_string = code_string.strip()
+        if not code_string.endswith(","):
+            code_string += ","
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+        return code_string
+
     def add_trace_effective_code(self) -> tuple:
         """
         This method does two things:

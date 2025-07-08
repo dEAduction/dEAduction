@@ -167,14 +167,14 @@ class ProofStep:
     """
     Class to store data associated to one step in the proof.
     The step starts with user inputs, and ends with Lean's responses.
-    Note that the proof_state attribute is used both for storing the
-    proof_state at the beginning of the step, which is used by logical
-    action to compute the pertinent Lean Code,
-    and for storing the proof_state at the end of the step, to be stored in
+    Note that the proof_state attribute is used:
+    - for storing the proof_state at the beginning of the step, which is used
+    by logical action to compute the pertinent Lean Code,
+    - and for storing the proof_state at the end of the step, to be stored in
     Journal and lean_file's history (and passed to the next proof_step).
 
-    proof_nodes is a class attribute,
-    a pile of ProofNode, initialised with an empty ProofNode
+    Attribute proof_nodes is a class attribute,
+    a pile of ProofNode, initialized with an empty ProofNode
     that stands for the whole proof.
     """
     # Fixme: proof_nodes should not be class attributes, for history moves

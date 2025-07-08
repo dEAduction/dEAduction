@@ -1138,6 +1138,14 @@ class MathObject:
         name = self._info.get('name')
         return 'USR_JOKER' in name if name else None
 
+    def usr_jkr_nb(self):
+        name = self._info.get('name')
+        if 'USR_JOKER' in name:
+            prefix, nb = name.split('USR_JOKER')
+            return nb
+        else:
+            return None
+
     def contains_joker(self):
         if self.is_joker():
             return True
