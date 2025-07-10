@@ -252,17 +252,15 @@ def prove_exists(proof_step, witness: Union[MathObject, str]) -> CodeForLean:
     object has been selected, prove it by providing a witness x and proving P(x).
     """
 
-    # FIXME: put MissingCalc in action_exists()
-    #  then here witness should be MathObject (not [MathObject])
     proof_step.prove_or_use = "prove"
 
-    x = witness
-    x_lean = (x if isinstance(x, str)
-              else x.to_display(format_='lean'))
-    x = (x if isinstance(x, str)
-         else x.to_display(format_='utf8'))
-    code = CodeForLean.from_string(f'use ({x_lean})')  # (f'use {x}, dsimp')
-    code.add_success_msg(_("Now prove {} suits our needs").format(x))
+    # witness_lean = (witness if isinstance(witness, str)
+    #                 else witness.to_display(format_='lean'))
+    witness_utf8 = (witness if isinstance(witness, str)
+                    else witness.to_display(format_='utf8'))
+
+    code = CodeForLean.use(witness)
+    code.add_success_msg(_("Now prove {} suits our needs").format(witness_utf8))
     return code
 
 
@@ -466,6 +464,7 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
     Usr can continue the proof, and at some point decide to assign a value to
     the joker (this is processed by the action_complete() method).
     """
+    global HIDDEN_USR_JKR_NB
 
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
@@ -508,7 +507,7 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
     # [joker_name] = get_new_hyps(proof_step,
     #                             prefix="HIDDEN_USR_JOKER",
     #                             nb=1)
-    joker_name = "HIDDEN_USR_JOKER" + str(HIDDEN_USR_JKR_NB)
+    joker_hidden_name = "HIDDEN_USR_JOKER" + str(HIDDEN_USR_JKR_NB)
     HIDDEN_USR_JKR_NB += 1
 
     [hyp_name] = get_new_hyps(proof_step,
@@ -516,17 +515,21 @@ def action_prove_exists_joker(proof_step) -> CodeForLean:
                               nb=1)
 
     code_str = [f"have {name}:{math_type}, sorry",
-                f"have {joker_name}:{math_type}, sorry",
-                f"have {hyp_name}: {name} = {joker_name}, sorry"]
+                f"have {joker_hidden_name}:{math_type}, sorry",
+                f"have {hyp_name}: {name} = {joker_hidden_name}, sorry"]
 
-    codes = CodeForLean.and_then_from_list(code_str)
+    code = CodeForLean.and_then_from_list(code_str)
     use_code = prove_exists(proof_step, witness=name)
-    codes.and_then(use_code)
+    code = code.and_then(use_code)
     success_msg = _("You can now go on with the proof, and decide later what {}"
                     " should be").format(name)
     # error_msg = _("")
-    codes.add_success_msg(success_msg)
-    return codes
+    code.add_success_msg(success_msg)
+
+    # Store code for later substitution (cf proofs.complete_usr_joker)
+    CodeForLean.code_for_usr_joker[joker_hidden_name] = code
+
+    return code
 
 
 ###############

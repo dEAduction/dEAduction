@@ -31,6 +31,8 @@ from sndhdr import whathdr
 from typing import Union
 from enum import IntEnum
 
+from trio import TASK_STATUS_IGNORED
+
 from deaduction.pylib.text        import tooltips
 # from deaduction.pylib.config.i18n import _
 import deaduction.pylib.config.vars as cvars
@@ -541,6 +543,116 @@ def add_type_indication(item: Union[str, MathObject],
         return item
 
 
+def check_illegal_var(joker_var, assigned_mo, goal):
+    """
+    Check for illegal vars in assigned_mo which is assigned by usr for
+    joker_var.
+    e.g. user wants to assign delta = epsilon/2
+    joker_var should be delta, assigned_mo = epsilon/2.
+    We check that var epsilon was born before delta, using goal.
+    """
+
+    joker_context = goal.context_at_birth(joker_var)
+    used_context = assigned_mo.local_constants_in()
+    illegal_vars = [cmo for cmo in used_context if cmo not in joker_context]
+    # DEBUG:
+    # print("context at birth:")
+    # print([v.to_display(format_='utf8') for v in joker_context])
+    # print(f"Used context:")
+    # print([v.to_display(format_='utf8') for v in used_context])
+    # print(f"Used Illegal vars:")
+    # print([v.to_display(format_='utf8') for v in illegal_vars])
+    joker_display = joker_var.to_display(format_='utf8')
+    if joker_display in [var.to_display(format_='utf8') for var in used_context]:
+        error = _("You cannot use {} to define {}!")
+        error = error.format(joker_display, joker_display)
+        raise WrongUserInput(error)
+    elif illegal_vars:
+        iv = " ".join(var.to_display(format_='utf8')
+                      for var in illegal_vars)
+        if len(illegal_vars) == 1:
+            error = _("You cannot use variable {} to define {}, "
+                      "since it did not exist when {} was created")
+        else:
+            error = _("You cannot use variables {} to define {}, "
+                      "since they did not exist when {} was created")
+        error = error.format(iv, joker_display, joker_display)
+        raise WrongUserInput(error)
+
+
+def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
+    """
+    Return code for completing a single user joker.
+    Here joker_hypo is a ContextMathObject that contains a user joker.
+    """
+
+    user_input = proof_step.user_input
+    children = joker_hypo.math_type.children
+
+    if not (joker_hypo.is_equality() and children[1].is_joker()):
+        # This should not happen(?)
+        raise WrongUserInput(error=_("There is nothing to complete"))
+
+    if not user_input:
+        # TODO: MissingUserJoker
+        raise MissingJoker(proof_step=proof_step,
+                           hypos_with_jokers=[joker_hypo])
+
+    assigned_joker = user_input[0][0].children[1]
+    equality = joker_hypo.math_type
+    joker_hidden_name = equality.children[1].display_name
+
+    joker_var = joker_hypo.math_type.children[0]
+    assigned_mo = assigned_joker.assigned_math_object
+    check_illegal_var(joker_var, assigned_joker, proof_step.goal)  # TODO: test
+
+    # e.g. joker_hypo is H_1: delta = USR_JOKER
+    #  -> hypo_name = 'H_1', display_jkr_name = 'delta',
+    #  joker_name = 'USR_JOKER', assigned_mo = usr joker completion
+
+    # hypo_name = joker_hypo.display_name
+    display_jkr_name = joker_var.display_name
+    usr_jkr_completion = assigned_joker.assigned_math_object
+
+    code = CodeForLean.use(usr_jkr_completion)
+    replaced_code = code.code_for_usr_joker.get(joker_hidden_name)
+    if replaced_code:
+        code.replaced_code = replaced_code
+    else:
+        log.warning(f"Use joker code not found for hidden var "
+                    f"{joker_hidden_name}")
+        pass  # TODO
+        # j_name = joker.metavar_name
+        # cmo = hypo_from_joker.get(j_name)
+        # cmo_name = cmo.display_name
+        # display_jkr_name = cmo.math_type.children[0]
+        # content = joker.assigned_math_object.to_display(format_="lean")
+        #
+        # more_codes = [f"clear {cmo_name} {j_name}",
+        #               f"have {cmo_name}: {display_jkr_name} = {content}",
+        #               "sorry",
+        #               f"rw {cmo_name} at *"]
+        # more_codes = CodeForLean.and_then_from_list(more_codes)
+        #
+        # # We could even clear these, but maybe this is more usr friendly
+        # used_props.append(cmo)
+        # codes.append(more_codes)
+        # msg = f"{cmo_var.to_display(format_='utf8')} = {content}"
+        # msgs.append(msg)
+        # nb += 1
+        #
+        # code = CodeForLean.and_then_from_list(codes)
+        # msg = _("Let us try ") + ", ".join(msgs)
+        # code.add_success_msg(msg)
+        # code.add_used_properties(used_props)
+
+    msg = _("Let us try ") + f"{display_jkr_name} = {assigned_mo}"
+    code.add_success_msg(msg)
+    code.add_used_properties([joker_hypo])
+
+    return code
+
+
 @action()
 def action_complete(proof_step) -> CodeForLean:
     """
@@ -581,6 +693,21 @@ def action_complete(proof_step) -> CodeForLean:
     if not extended_selected_objects:
         extended_selected_objects = goal.context + [target]
 
+    # Check for usr jokers:
+    usr_jkr_nb = 0
+    for mo in extended_selected_objects:
+        if mo.math_type.contains_usr_joker():
+            joker_hypo = mo
+            usr_jkr_nb += 1
+    if usr_jkr_nb > 1:
+        raise WrongUserInput("Complete one joker at a time")
+    elif usr_jkr_nb == 1:
+        return complete_usr_joker(proof_step, joker_hypo)
+
+    #####################################
+    # From now on there is no usr joker #
+    #####################################
+
     user_input = proof_step.user_input
 
     # ---- (2) Check for jokers in selection ---- #
@@ -612,57 +739,57 @@ def action_complete(proof_step) -> CodeForLean:
     # This code is duplicated in Coordinator.check_usr_jokers()
     # print('Find completed jokers')
     completed_jokers = []
-    usr_jokers = False  # True if assigned jokers are usr jokers
+    # usr_jokers = False  # True if assigned jokers are usr jokers
     for mpmo in user_input[0]:
         more_jokers = mpmo.search_in_name("JOKER")
         for joker in more_jokers:
             assigned_mo = joker.assigned_math_object
             if assigned_mo:
                 completed_jokers.append(joker)
-                if joker.is_usr_joker():
-                    usr_jokers = True
+                # if joker.is_usr_joker():
+                #     usr_jokers = True
 
     if not completed_jokers:
         raise WrongUserInput(error=_("No joker completed"))
 
-    # print('Completed jokers:')
-    # print([joker.to_display(format_='utf8') for joker in completed_jokers])
-
-    # Check for illegal variables
-    for joker in completed_jokers:
-        cmo = hypo_from_joker.get(joker.metavar_name)
-        # print(f"Looking for {joker.metavar_name} in {hypo_from_joker}")
-        if not cmo:
-            continue
-        # context_math_object
-        mo = joker.assigned_math_object
-        cmo_var = cmo.math_type.children[0]
-        joker_context = goal.context_at_birth(cmo_var)
-        used_context = mo.local_constants_in()
-        illegal_vars = [cmo for cmo in used_context if cmo not in joker_context]
-        # DEBUG:
-        # print("context at birth:")
-        # print([v.to_display(format_='utf8') for v in joker_context])
-        # print(f"Used context:")
-        # print([v.to_display(format_='utf8') for v in used_context])
-        # print(f"Used Illegal vars:")
-        # print([v.to_display(format_='utf8') for v in illegal_vars])
-        jname = cmo_var.to_display(format_='utf8')
-        if jname in [var.to_display(format_='utf8') for var in used_context]:
-            error = _("You cannot use {} to define {}!")
-            error = error.format(jname, jname)
-            raise WrongUserInput(error)
-        elif illegal_vars:
-            iv = " ".join(var.to_display(format_='utf8')
-                          for var in illegal_vars)
-            if len(illegal_vars) == 1:
-                error = _("You cannot use variable {} to define {}, "
-                          "since it did not exist when {} was created")
-            else:
-                error = _("You cannot use variables {} to define {}, "
-                          "since they did not exist when {} was created")
-            error = error.format(iv, jname, jname)
-            raise WrongUserInput(error)
+    # # print('Completed jokers:')
+    # # print([joker.to_display(format_='utf8') for joker in completed_jokers])
+    #
+    # # Check for illegal variables
+    # for joker in completed_jokers:
+    #     cmo = hypo_from_joker.get(joker.metavar_name)
+    #     # print(f"Looking for {joker.metavar_name} in {hypo_from_joker}")
+    #     if not cmo:
+    #         continue
+    #     # context_math_object
+    #     mo = joker.assigned_math_object
+    #     cmo_var = cmo.math_type.children[0]
+    #     joker_context = goal.context_at_birth(cmo_var)
+    #     used_context = mo.local_constants_in()
+    #     illegal_vars = [cmo for cmo in used_context if cmo not in joker_context]
+    #     # DEBUG:
+    #     # print("context at birth:")
+    #     # print([v.to_display(format_='utf8') for v in joker_context])
+    #     # print(f"Used context:")
+    #     # print([v.to_display(format_='utf8') for v in used_context])
+    #     # print(f"Used Illegal vars:")
+    #     # print([v.to_display(format_='utf8') for v in illegal_vars])
+    #     jname = cmo_var.to_display(format_='utf8')
+    #     if jname in [var.to_display(format_='utf8') for var in used_context]:
+    #         error = _("You cannot use {} to define {}!")
+    #         error = error.format(jname, jname)
+    #         raise WrongUserInput(error)
+    #     elif illegal_vars:
+    #         iv = " ".join(var.to_display(format_='utf8')
+    #                       for var in illegal_vars)
+    #         if len(illegal_vars) == 1:
+    #             error = _("You cannot use variable {} to define {}, "
+    #                       "since it did not exist when {} was created")
+    #         else:
+    #             error = _("You cannot use variables {} to define {}, "
+    #                       "since they did not exist when {} was created")
+    #         error = error.format(iv, jname, jname)
+    #         raise WrongUserInput(error)
 
     # Find hypos containing this joker, and their variables
     variables = [[]]*len(completed_jokers)
@@ -697,45 +824,6 @@ def action_complete(proof_step) -> CodeForLean:
     # - declaration of jokers (as entered by usr via Calculator),
     # - checking completion is correct,
     # - rewriting hypos/goal using completion
-
-    ##################################
-    # ----- Case of usr_jokers ----- #
-    ##################################
-    # For usr joker we just assign the joker, there is nothing to check
-    codes = []
-    used_props = []
-    msgs = []
-    nb = 0
-    if usr_jokers:
-        for joker, __, hypo in zip(completed_jokers, variables,
-                                   pertinent_hypos):
-            # cmo is H_1: delta = USR_JOKER
-            #  -> cmo_name = 'H_1', display_jkr_name = 'delta',
-            #  joker_name = 'USR_JOKER', content = usr joker completion
-            j_name = joker.metavar_name
-            cmo = hypo_from_joker.get(j_name)
-            cmo_name = cmo.display_name
-            display_jkr_name = cmo.math_type.children[0]
-            content = joker.assigned_math_object.to_display(format_="lean")
-
-            more_codes = [f"clear {cmo_name} {j_name}",
-                          f"have {cmo_name}: {display_jkr_name} = {content}",
-                          "sorry",
-                          f"rw {cmo_name} at *"]
-            more_codes = CodeForLean.and_then_from_list(more_codes)
-
-            # We could even clear these, but maybe this is more usr friendly
-            used_props.append(cmo)
-            codes.append(more_codes)
-            msg = f"{cmo_var.to_display(format_='utf8')} = {content}"
-            msgs.append(msg)
-            nb += 1
-
-        code = CodeForLean.and_then_from_list(codes)
-        msg = _("Let us try ") + ", ".join(msgs)
-        code.add_success_msg(msg)
-        code.add_used_properties(used_props)
-        return code
 
     ######################################
     # ----- Case of non usr jokers ----- #

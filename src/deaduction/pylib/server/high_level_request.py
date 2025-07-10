@@ -315,18 +315,10 @@ class ProofStepRequest(HighLevelServerRequest):
     def from_previous_state_method(self, yes=True):
         self.__from_previous_state_method = yes
 
-    def compute_code_string(self):
+    def compute_code_string(self, lean_code=None):
         lean_code = self.proof_step.lean_code
-        self.decorated_code, code_string = lean_code.to_decorated_code()
-        code_string = code_string.strip()
-
-        if not code_string.endswith(","):
-            code_string += ","
-        if not code_string.endswith("\n"):
-            code_string += "\n"
-
-        self.code_string = code_string
-        self.log.debug("Code sent:" + code_string)
+        self.code_string = lean_code.code_for_request()
+        self.log.debug("Code sent:" + self.code_string)
 
     ##########################################
     # Compute contents for from state method #

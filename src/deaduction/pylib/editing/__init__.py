@@ -236,16 +236,22 @@ class VirtualFile:
     ################################
     # Actions
     ################################
-    def replace(self, old, new):
+    def replace(self, old, new) -> bool:
         """
         In the current text, replace first occurence of old with new.
+        Return False if old is not found.
         """
+        success = (self.__txt.find(old) != -1)
+        if not success:
+            return False
+
         current_pos = self.current_pos
         next_txt = self.__txt.replace(old, new, 1)
         # Improve: this assume that cursor is after old in the text.
         current_pos += (len(new) - len(old))
         self.state_add('code_replace', next_txt, current_pos)
         self.state_info_attach(replaced_text=(old, new))
+        return True
 
     def replace_entry_containing(self, old_piece_of_code, new_code):
         old_code = self.find_first_insertion_of(old_piece_of_code)

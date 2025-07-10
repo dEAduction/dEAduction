@@ -159,6 +159,9 @@ class CodeForLean:
         - if combinator = single_code, then instructions contains a unique
         term, of type SingleCode
         - else all terms in the instructions list are of type CodeForLean.
+
+    If replaced_code, then the replaced_code should be replaced by self in
+    the current code (as opposed to inserted at the end of the current code).
     """
 
     instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
@@ -168,6 +171,7 @@ class CodeForLean:
     conjunction       = None  # type: (Union[MathObject, str])
     disjunction       = None  # type: (Union[MathObject, str])
     subgoal           = None  # type: Union[MathObject, str]
+    replaced_code     = None  # type: Optional[CodeForLean]
     # The following is used to store the number of an or_else instructions
     or_else_node_number:   Optional[int] = None
 
@@ -176,7 +180,10 @@ class CodeForLean:
 
     attributes = {"instructions", "combinator", "error_msg", "success_msg",
                   "conjunction", "disjunction", "subgoal",
-                  "or_else_node_number"}
+                  "or_else_node_number", "replaced_code"}
+
+    # Dictionary usr joker name: str -> code: CodeForLen
+    code_for_usr_joker = dict()
 
     def __init__(self, *args, **kwargs):
         """
@@ -652,6 +659,16 @@ class CodeForLean:
                                                exclude_skip) \
                 + " }"
 
+    def code_for_request(self) -> str:
+        decorated_code, code_string = self.to_decorated_code()
+        code_string = code_string.strip()
+
+        if not code_string.endswith(","):
+            code_string += ","
+        if not code_string.endswith("\n"):
+            code_string += "\n"
+        return code_string
+
     def raw_code(self):
         """
         Compute the raw code that could be sent to Lean, with no metavars
@@ -1063,6 +1080,23 @@ class CodeForLean:
         code.add_error_msg(error_msg)
 
         return code
+
+    @classmethod
+    def use(cls, witness):
+        witness_lean = (witness if isinstance(witness, str)
+                        else witness.to_display(format_='lean'))
+        code = CodeForLean.from_string(f'use ({witness_lean})')
+        return code
+
+    @classmethod
+    def introduce_usr_joker(cls, variable_name, math_type, joker_name,
+                            hyp_name):
+        code_str = [f"have {variable_name}:{math_type}, sorry",
+                    f"have {joker_name}:{math_type}, sorry",
+                    f"have {hyp_name}: {variable_name} = {joker_name}, sorry"]
+
+        codes = cls.and_then_from_list(code_str)
+        return codes
 
 
 SKIP = CodeForLean.from_string("skip")

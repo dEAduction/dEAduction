@@ -760,7 +760,16 @@ class ServerInterface(QObject):
                                    exercise=self.__exercise_current,
                                    lean_file=self.lean_file,
                                    from_previous_proof_state_method=method)
-        self.lean_file.insert(label=label, add_txt=request.code_string)
+        replaced_code = proof_step.lean_code.replaced_code
+        if replaced_code:
+            text = replaced_code.code_for_request()
+            replaced_text: bool = self.lean_file.replace(old=text,
+                                                         new=request.code_string)
+            if not replaced_text:
+                self.log.warning(f"Replaced code {replaced_text} not found"
+                                 f"in code {self.lean_file.inner_contents}")
+        else:
+            self.lean_file.insert(label=label, add_txt=request.code_string)
 
         await self.__get_response_for_request(request=request)
         self.__desirable_lean_rqst_fpps_method()
