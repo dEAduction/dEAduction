@@ -318,6 +318,7 @@ class ProofStepRequest(HighLevelServerRequest):
     def compute_code_string(self, lean_code=None):
         lean_code = self.proof_step.lean_code
         self.code_string = lean_code.code_for_request()
+        self.decorated_code = lean_code.decorated_code
         self.log.debug("Code sent:" + self.code_string)
 
     ##########################################

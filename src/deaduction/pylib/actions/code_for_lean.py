@@ -178,6 +178,8 @@ class CodeForLean:
     # The following counts the total number of or_else instructions so far
     or_else_node_counter = 0
 
+    __decorated_code = None
+
     attributes = {"instructions", "combinator", "error_msg", "success_msg",
                   "conjunction", "disjunction", "subgoal",
                   "or_else_node_number", "replaced_code"}
@@ -245,6 +247,7 @@ class CodeForLean:
                             subgoal=self.subgoal,
                             or_else_node_number=self.or_else_node_number,
                             or_else_node_counter=self.or_else_node_counter)
+        other.__decorated_code = self.__decorated_code
 
         return other
 
@@ -660,7 +663,7 @@ class CodeForLean:
                 + " }"
 
     def code_for_request(self) -> str:
-        decorated_code, code_string = self.to_decorated_code()
+        code_string = self.decorated_code.to_code()
         code_string = code_string.strip()
 
         if not code_string.endswith(","):
@@ -684,7 +687,7 @@ class CodeForLean:
             code_string += "\n"
         return code_string
 
-    def add_trace_effective_code(self) -> tuple:
+    def add_trace_effective_code(self):
         """
         This method does two things:
         1) Add
@@ -698,14 +701,14 @@ class CodeForLean:
         """
 
         if self.is_single_code():
-            return self, self
+            return self
         elif self.is_or_else():  # Call recursively on each instruction
             node_number = CodeForLean.or_else_node_counter
             CodeForLean.or_else_node_counter += 1
             code_counter = 0
             instructions2 = []
             for instruction in self.instructions:
-                _, ins2 = instruction.add_trace_effective_code()
+                ins2 = instruction.add_trace_effective_code()
                 trace_string = f'trace \"EFFECTIVE CODE n°' \
                                f'{node_number}.' \
                                f'{code_counter}\"'
@@ -714,7 +717,7 @@ class CodeForLean:
                 instructions2.append(ins2)
             self.or_else_node_number = node_number
         else:
-            instructions2 = [ins.add_trace_effective_code()[1] for ins in
+            instructions2 = [ins.add_trace_effective_code() for ins in
                              self.instructions]
 
         self_with_trace = CodeForLean(combinator=self.combinator,
@@ -722,7 +725,7 @@ class CodeForLean:
                                       error_msg=self.error_msg,
                                       success_msg=self.success_msg)
 
-        return self, self_with_trace
+        return self_with_trace
 
     def select_or_else(self, node_number, alternative_number,
                        depth=0):
@@ -795,6 +798,7 @@ class CodeForLean:
         Add the "no_meta_vars" tactic after each piece of code.
         Formerly that was limited to code containing "apply", but metavars
         appears in many more situations, and this tactic is painless.
+        No side effect.
         """
 
         if self.is_empty():
@@ -814,21 +818,30 @@ class CodeForLean:
                                success_msg=self.success_msg,
                                error_msg=self.error_msg)
 
-    def to_decorated_code(self) -> tuple:
-        """
-        Turn a CodeForLean into a string that can be sent to Lean, including
-        no_meta_vars and trace_effective_code when needed.
+    # def to_decorated_code(self) -> tuple:
+    #     """
+    #     Turn a CodeForLean into a string that can be sent to Lean, including
+    #     no_meta_vars and trace_effective_code when needed.
+    #
+    #     :return: the first element is a CodeForLean which is self with
+    #     "no_meta_vars" instructions, and or_else_node_number decorations.
+    #     The second is the decorated string.
+    #     """
+    #
+    #     # ! no_meta_vars, and then trace_effective_code, in that order !
+    #     code1 = self.add_no_meta_vars()
+    #     code2 = code1.add_trace_effective_code()
+    #     string = code2.to_code()
+    #     return code1, string
 
-        :return: the first element is a CodeForLean which is self with
-        "no_meta_vars" instructions, and or_else_node_number decorations.
-        The second is the decorated string.
-        """
+    @property
+    def decorated_code(self):
+        if not self.__decorated_code:
+            code1 = self.add_no_meta_vars()
+            code2 = code1.add_trace_effective_code()
+            self.__decorated_code = code2
 
-        # ! no_meta_vars, and then trace_effective_code, in that order !
-        code1 = self.add_no_meta_vars()
-        code1, code2 = code1.add_trace_effective_code()
-        string = code2.to_code()
-        return code1, string
+        return self.__decorated_code
 
     def extract_success_msg(self, effective_code=""):
         """
