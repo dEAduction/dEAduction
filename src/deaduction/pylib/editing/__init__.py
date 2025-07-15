@@ -109,6 +109,7 @@ class VirtualFile:
         corresponding state in history
         """
 
+        # Direction of target:
         ddir = int(self.target_idx > self.idx) - \
                int(self.target_idx < self.idx)
 
@@ -241,6 +242,8 @@ class VirtualFile:
         In the current text, replace first occurence of old with new.
         Return False if old is not found.
         """
+
+        self.__update()
         success = (self.__txt.find(old) != -1)
         if not success:
             return False
@@ -253,9 +256,9 @@ class VirtualFile:
         self.state_info_attach(replaced_text=(old, new))
         return True
 
-    def replace_entry_containing(self, old_piece_of_code, new_code):
-        old_code = self.find_first_insertion_of(old_piece_of_code)
-        self.replace(old_code, new_code)
+    # def replace_entry_containing(self, old_piece_of_code, new_code):
+    #     old_code = self.find_first_insertion_of(old_piece_of_code)
+    #     self.replace(old_code, new_code)
 
     def insert(self, label, add_txt, move_cursor=True):
         """
@@ -266,6 +269,7 @@ class VirtualFile:
         :param move_cursor: Move cursor after inserted text.
         """
 
+        self.__update()
         current_pos = self.current_pos
         next_txt = self.__txt[:current_pos] + add_txt
 
@@ -434,9 +438,7 @@ class VirtualFile:
         """
         Retrieve the complete file contents.
         """
-        self.__update()
-
-        return self.preamble + self.__txt + self.afterword
+        return self.preamble + self.inner_contents + self.afterword
 
     @property
     def inner_contents(self):

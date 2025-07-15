@@ -613,6 +613,9 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
     # hypo_name = joker_hypo.display_name
     display_jkr_name = joker_var.display_name
     usr_jkr_completion = assigned_joker.assigned_math_object
+    if not usr_jkr_completion:
+        raise WrongUserInput(error=_("Complete the equality to replace the "
+                                     "joker"))
 
     code = CodeForLean.use(usr_jkr_completion)
     replaced_code = code.code_for_usr_joker.get(joker_hidden_name)

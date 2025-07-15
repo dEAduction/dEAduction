@@ -628,6 +628,10 @@ class ServerInterface(QObject):
 
             self.__add_pending_request(request)
             self.log.debug(f"Request seq_num: {self.request_seq_num}")
+            # try:
+            #     self.log.info(f"Inner contents:{request.lean_file.inner_contents}")
+            # except:
+            #     pass
             req = SyncRequest(file_name="deaduction_lean",
                               content=request.file_contents())
             resp = await self.lean_server.send(req)
@@ -686,7 +690,12 @@ class ServerInterface(QObject):
 
         if isinstance(request, ProofStepRequest):
             analyses = (request.hypo_analyses, request.targets_analyses)
-            self.history_replace(request.effective_code)
+
+            # Replace code by effective code in the Lean file
+            # NOT if the last step was a replacement!
+            if not request.proof_step.replaced_code:
+                self.history_replace(request.effective_code)
+
             lean_response = LeanResponse(proof_step=request.proof_step,
                                          analyses=analyses,
                                          error_type=error_type,
@@ -727,51 +736,59 @@ class ServerInterface(QObject):
         self.__desirable_lean_rqst_fpps_method(force_normal=True)
         self.exercise_set.emit()
 
-    async def code_replace(self, task, label, proof_step):
-        """
-        Replace a piece of code in the lean_file.
-        This is used when instantiating jokers.
-        """
-
-        # FIXME: find info in proof_step.code_for_lean
-
-        old = ""
-        new = ""
-        self.lean_file.replace(old, new)
-        request = LeanCodeProofStepRequest(task=task,
-                                           proof_step=proof_step,
-                                           exercise=self.__exercise_current,
-                                           lean_file=self.lean_file)
-
-        await self.__get_response_for_request(request=request)
+    # async def code_replace(self, task, label, proof_step):
+    #     """
+    #     Replace a piece of code in the lean_file.
+    #     This is used when instantiating jokers.
+    #     """
+    #
+    #     # FIXME: find info in proof_step.code_for_lean
+    #
+    #     old = ""
+    #     new = ""
+    #     self.lean_file.replace(old, new)
+    #     request = LeanCodeProofStepRequest(task=task,
+    #                                        proof_step=proof_step,
+    #                                        exercise=self.__exercise_current,
+    #                                        lean_file=self.lean_file)
+    #
+    #     await self.__get_response_for_request(request=request)
 
     async def code_insert(self, task, label: str, proof_step):
         """
-        Inserts code in the Lean virtual file.
+        Inserts code in the Lean virtual file (or replace it). Build a
+        Request for Lean, and call self.__get_response.
         """
-        # FIXME:
-        #  if proof_step.replace (or in code_for_lean):
-        #  await self.code_replace(blabla)
 
-        method = from_previous_state_method()
-        self.log.debug(f"FPPS Method: {method}")
+        replaced_code = proof_step.lean_code.replaced_code
+        if replaced_code:
+            fpps_method = False
+        else:
+            fpps_method = from_previous_state_method()
+
         request = ProofStepRequest(task=task,
                                    proof_step=proof_step,
                                    exercise=self.__exercise_current,
                                    lean_file=self.lean_file,
-                                   from_previous_proof_state_method=method)
-        replaced_code = proof_step.lean_code.replaced_code
+                                   from_previous_proof_state_method=fpps_method)
+
+        code_str = request.code_string
+
         if replaced_code:
-            text = replaced_code.code_for_request()
-            replaced_text: bool = self.lean_file.replace(old=text,
-                                                         new=request.code_string)
-            if not replaced_text:
-                self.log.warning(f"Replaced code {replaced_text} not found"
-                                 f"in code {self.lean_file.inner_contents}")
+            self.log.debug("Replacing text in Lean file")
+            # ecs = replaced_code.effective_code_sent
+            # cs = replaced_code.code_sent
+            old_text = replaced_code.raw_code()
+            replace_text: bool = self.lean_file.replace(old=old_text,
+                                                         new=code_str)
+            if not replace_text:
+                self.log.warning(f"Replaced code not found:\n {old_text}"
+                                 f"\nin code:\n{self.lean_file.inner_contents}")
         else:
             self.lean_file.insert(label=label, add_txt=request.code_string)
 
         await self.__get_response_for_request(request=request)
+
         self.__desirable_lean_rqst_fpps_method()
 
     async def code_set(self, task, label: str, code: str,

@@ -300,9 +300,7 @@ class ProofStepRequest(HighLevelServerRequest):
         self.code_string = ""
         self.decorated_code = None  # will be decorated_code
         self.compute_code_string()
-        # self.effective_code = (deepcopy(self.decorated_code)
-        #                        if self.decorated_code else None)
-        # FIXME: the following seems to work:
+
         self.effective_code = (self.decorated_code.copy()
                                if self.decorated_code else None)
         self.__from_previous_state_method = from_previous_proof_state_method
@@ -320,6 +318,7 @@ class ProofStepRequest(HighLevelServerRequest):
         self.code_string = lean_code.code_for_request()
         self.decorated_code = lean_code.decorated_code
         self.log.debug("Code sent:" + self.code_string)
+        # lean_code.code_sent = self.code_string
 
     ##########################################
     # Compute contents for from state method #
@@ -349,8 +348,8 @@ class ProofStepRequest(HighLevelServerRequest):
         if self.lean_file:
             self.lean_file.add_seq_num(self.seq_num)
             self.set_lean_file_afterword()
-            self.lean_file.cursor_move_to(0)
-            self.lean_file.cursor_save()
+            # self.lean_file.cursor_move_to(0)  FIXME: ?????
+            # self.lean_file.cursor_save()
 
     def set_lean_file_afterword(self):
         """
@@ -367,7 +366,7 @@ class ProofStepRequest(HighLevelServerRequest):
             contents = self.__file_contents_from_previous_state(goal,
                                                                 self.code_string)
             self.log.info('Using from state method for Lean server')
-            print(contents)
+            # print(contents)
             return contents
         else:
             return self.lean_file.contents
