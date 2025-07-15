@@ -187,6 +187,9 @@ class CodeForLean:
     # Dictionary usr joker name: str -> code: CodeForLen
     code_for_usr_joker = dict()
 
+    __code_sent = None
+    __effective_code_sent = None
+
     def __init__(self, *args, **kwargs):
         """
         __init__ may be called with args either
@@ -236,6 +239,32 @@ class CodeForLean:
     #     string = "CodeForLean(" + ", ".join(attributes) + ")"
     #     return string
 
+    # @property
+    # def code_sent(self):
+    #     return self.__code_sent
+    #
+    # @code_sent.setter
+    # def code_sent(self, code_str):
+    #     if not self.__code_sent:
+    #         self.__code_sent = code_str
+    #     else:
+    #         log.warning("Attempt to set Attribute CodeForLean.code_sent "
+    #                     "which is already set")
+    #
+    # @property
+    # def effective_code_sent(self):
+    #     # FIXME: not used
+    #     return self.__effective_code_sent
+    #
+    # @effective_code_sent.setter
+    # def effective_code_sent(self, code_str):
+    #     if not self.__effective_code_sent:
+    #         self.__effective_code_sent = code_str
+    #     else:
+    #         log.warning("Attempt to set Attribute "
+    #                     "CodeForLean.effective_code_sent "
+    #                     "which is already set")
+
     def copy(self):
         instructions = [instruction.copy() for instruction in self.instructions]
         other = CodeForLean(instructions=instructions,
@@ -248,6 +277,8 @@ class CodeForLean:
                             or_else_node_number=self.or_else_node_number,
                             or_else_node_counter=self.or_else_node_counter)
         other.__decorated_code = self.__decorated_code
+        # other.code_sent = self.code_sent
+        # other.effective_code_sent = self.effective_code_sent
 
         return other
 
@@ -663,6 +694,9 @@ class CodeForLean:
                 + " }"
 
     def code_for_request(self) -> str:
+        """
+        Formatted code string that should be sent for Lean request.
+        """
         code_string = self.decorated_code.to_code()
         code_string = code_string.strip()
 
@@ -672,10 +706,11 @@ class CodeForLean:
             code_string += "\n"
         return code_string
 
-    def raw_code(self):
+    def raw_code(self) -> str:
         """
-        Compute the raw code that could be sent to Lean, with no metavars
-        checking, and no "EFFECTIVE CODE" messages.
+        FOrmatted code string that could be sent to Lean, with no metavars
+        checking, and no "EFFECTIVE CODE" messages. It can replace the
+        code_for_request in the Lean file.
         """
         # Formatting. We do NOT want the "no_meta_vars" tactic!
         code_string = self.to_code(exclude_no_meta_vars=True,
@@ -724,6 +759,8 @@ class CodeForLean:
                                       instructions=instructions2,
                                       error_msg=self.error_msg,
                                       success_msg=self.success_msg)
+        if self.is_or_else():
+            self_with_trace.or_else_node_number = node_number
 
         return self_with_trace
 
