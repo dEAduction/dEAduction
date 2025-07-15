@@ -351,6 +351,12 @@ class ProofStep:
     ##############
     # Properties #
     ##############
+    @property
+    def replaced_code(self):
+        if self.lean_code:
+            return self.lean_code.replaced_code
+        else:
+            return None
 
     @property
     def selection(self):
