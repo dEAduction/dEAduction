@@ -598,13 +598,29 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
         raise MissingJoker(proof_step=proof_step,
                            hypos_with_jokers=[joker_hypo])
 
-    assigned_joker = user_input[0][0].children[1]
     equality = joker_hypo.math_type
     joker_hidden_name = equality.children[1].display_name
-
     joker_var = joker_hypo.math_type.children[0]
-    assigned_mo = assigned_joker.assigned_math_object
-    check_illegal_var(joker_var, assigned_joker, proof_step.goal)  # TODO: test
+
+    calc_output = user_input[0][0]
+    if len(calc_output.children) == 2:  # Normal case
+        assigned_joker = calc_output.children[1]
+        check_illegal_var(joker_var, assigned_joker,
+                          proof_step.goal)
+        usr_jkr_completion = assigned_joker.assigned_math_object
+        if not usr_jkr_completion:
+            raise WrongUserInput(error=_("Complete the equality to replace the "
+                                         "joker"))
+
+    else:  # Case of a history file
+        str_user_input = calc_output.name.split("=")
+        if len(str_user_input) == 2:
+            usr_jkr_completion = str_user_input[1]
+        else:
+            raise WrongUserInput(_("Unexpected user input"))
+
+
+    # assigned_mo = assigned_joker.assigned_math_object
 
     # e.g. joker_hypo is H_1: delta = USR_JOKER
     #  -> hypo_name = 'H_1', display_jkr_name = 'delta',
@@ -612,10 +628,6 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
 
     # hypo_name = joker_hypo.display_name
     display_jkr_name = joker_var.display_name
-    usr_jkr_completion = assigned_joker.assigned_math_object
-    if not usr_jkr_completion:
-        raise WrongUserInput(error=_("Complete the equality to replace the "
-                                     "joker"))
 
     code = CodeForLean.use(usr_jkr_completion)
     replaced_code = code.code_for_usr_joker.get(joker_hidden_name)
@@ -625,31 +637,8 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
         log.warning(f"Use joker code not found for hidden var "
                     f"{joker_hidden_name}")
         pass  # TODO
-        # j_name = joker.metavar_name
-        # cmo = hypo_from_joker.get(j_name)
-        # cmo_name = cmo.display_name
-        # display_jkr_name = cmo.math_type.children[0]
-        # content = joker.assigned_math_object.to_display(format_="lean")
-        #
-        # more_codes = [f"clear {cmo_name} {j_name}",
-        #               f"have {cmo_name}: {display_jkr_name} = {content}",
-        #               "sorry",
-        #               f"rw {cmo_name} at *"]
-        # more_codes = CodeForLean.and_then_from_list(more_codes)
-        #
-        # # We could even clear these, but maybe this is more usr friendly
-        # used_props.append(cmo)
-        # codes.append(more_codes)
-        # msg = f"{cmo_var.to_display(format_='utf8')} = {content}"
-        # msgs.append(msg)
-        # nb += 1
-        #
-        # code = CodeForLean.and_then_from_list(codes)
-        # msg = _("Let us try ") + ", ".join(msgs)
-        # code.add_success_msg(msg)
-        # code.add_used_properties(used_props)
 
-    msg = _("Let us try ") + f"{display_jkr_name} = {assigned_mo}"
+    msg = _("Let us try ") + f"{display_jkr_name} = {usr_jkr_completion}"
     code.add_success_msg(msg)
     code.add_used_properties([joker_hypo])
 
