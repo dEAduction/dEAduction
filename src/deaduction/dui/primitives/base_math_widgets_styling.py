@@ -27,7 +27,7 @@ This file is part of d∃∀duction.
 
 from PySide2.QtWidgets import (QLabel, QTextEdit, QDialog, QVBoxLayout,
                                QDialogButtonBox)
-from PySide2.QtGui import QStandardItem
+from PySide2.QtGui import QStandardItem, Qt
 
 import deaduction.pylib.config.vars as cvars
 from .font_config import deaduction_fonts
@@ -285,7 +285,8 @@ class ExerciseStatementWindow(QDialog):
 
         lyt = QVBoxLayout()
         title = exercise.pretty_name
-        description = exercise.description
+        description = exercise.complete_description
+
         if title:
             title_wgt = QLabel(title)
             title_wgt.setStyleSheet('font-weight: bold;'
@@ -295,6 +296,7 @@ class ExerciseStatementWindow(QDialog):
             description_wgt = QLabel(description)
             description_wgt.setStyleSheet('font-size:   15pt;')
             description_wgt.setWordWrap(True)
+            description_wgt.setTextFormat(Qt.PlainText)
             lyt.addWidget(description_wgt)
 
         lyt.addWidget(goal_widget)

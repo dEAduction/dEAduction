@@ -181,7 +181,9 @@ class Statement:
     lean_variables:         str
     # '(X : Type) (A : set X)'
     pretty_name:            str
-    # 'Union d'intersections'
+    # e.g. 'Union d'intersections'
+    description_intro:      str             = None
+    # e.g. "Formalize the following statement:"
     description:            str             = None
     # "L'union est distributive par rapport à l'intersection"
     text_book_identifier:   str             = None
@@ -309,6 +311,25 @@ class Statement:
         if cls != Statement:
             attributes.update(cls.__annotations__)
         return attributes
+
+    @property
+    def complete_description(self):
+        """
+        Return description_intro + description.
+        """
+        description_intro = self.description_intro
+        description = self.description
+        if description_intro:
+            complete_description = self.description_intro
+            if description:
+                complete_description += '\n' + description
+        else:
+            complete_description = description
+        return complete_description
+
+    @property
+    def html_complete_description(self):
+        return self.complete_description.replace("\n", "<br>")
 
     @property
     def initial_proof_state(self):
@@ -632,7 +653,8 @@ class Exercise(Theorem):
     original_exercise                           = None
 
     # NB: settings are treated in self.update_cvars_from_metadata()
-    non_pertinent_course_metadate = ('_raw_metadata', 'description',
+    non_pertinent_course_metadata = ('_raw_metadata', 'description',
+                                     'description_intro',
                                      'pretty_name', 'settings')
 
     __launch_in_history_mode = None

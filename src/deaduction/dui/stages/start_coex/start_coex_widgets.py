@@ -716,7 +716,8 @@ class ExerciseChooser(AbstractCoExChooser):
         title = exercise.pretty_name
         if exercise.history_date():
             title += " " + _("(saved proof)")
-        description = exercise.description
+
+        description = exercise.complete_description
 
         # vertical_value = self.__vertical_bar.value()
         # vertical_max = self.vertical_bar.maximum()

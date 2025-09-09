@@ -574,7 +574,7 @@ class Course:
                     # may be modified locally in the exercise's metadata
                     for field_name in course_metadata:
                         if field_name not in \
-                                Exercise.non_pertinent_course_metadate:
+                                Exercise.non_pertinent_course_metadata:
                             metadata.setdefault(field_name,
                                                 course_metadata[field_name])
                     # Creating Exercise!

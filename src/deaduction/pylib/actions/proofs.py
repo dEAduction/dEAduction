@@ -44,7 +44,7 @@ from deaduction.pylib.actions import (InputType,
                                       MissingCalculatorOutput,
                                       CalculatorRequest,
                                       WrongUserInput,
-                                      MissingJoker,
+                                      MissingExerciseJoker, MissingUserJoker,
                                       action,
                                       CodeForLean,
                                       test_selection)
@@ -584,6 +584,10 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
     """
     Return code for completing a single user joker.
     Here joker_hypo is a ContextMathObject that contains a user joker.
+    The computed code (essentially "use ...") should replace the joker code in
+    the Lean file. The joker code should have been stored in the
+    CodeForLean.code_for_usr_joker dictionary, and will be stored as
+    code.replaced_code.
     """
 
     user_input = proof_step.user_input
@@ -594,13 +598,14 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
         raise WrongUserInput(error=_("There is nothing to complete"))
 
     if not user_input:
-        # TODO: MissingUserJoker
-        raise MissingJoker(proof_step=proof_step,
-                           hypos_with_jokers=[joker_hypo])
+        raise MissingUserJoker(proof_step=proof_step,
+                               hypos_with_jokers=[joker_hypo])
 
+    # e.g. joker_hypo is H_1: delta = USR_JOKER_1
+    # -> joker_var = MathObject(delta), joker_hidden_name = USR_JOKER_1
     equality = joker_hypo.math_type
-    joker_hidden_name = equality.children[1].display_name
     joker_var = joker_hypo.math_type.children[0]
+    joker_hidden_name = equality.children[1].display_name
 
     calc_output = user_input[0][0]
     if len(calc_output.children) == 2:  # Normal case
@@ -619,14 +624,6 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
         else:
             raise WrongUserInput(_("Unexpected user input"))
 
-
-    # assigned_mo = assigned_joker.assigned_math_object
-
-    # e.g. joker_hypo is H_1: delta = USR_JOKER
-    #  -> hypo_name = 'H_1', display_jkr_name = 'delta',
-    #  joker_name = 'USR_JOKER', assigned_mo = usr joker completion
-
-    # hypo_name = joker_hypo.display_name
     display_jkr_name = joker_var.display_name
 
     code = CodeForLean.use(usr_jkr_completion)
@@ -636,7 +633,6 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
     else:
         log.warning(f"Use joker code not found for hidden var "
                     f"{joker_hidden_name}")
-        pass  # TODO
 
     msg = _("Let us try ") + f"{display_jkr_name} = {usr_jkr_completion}"
     code.add_success_msg(msg)
@@ -658,10 +654,12 @@ def action_complete(proof_step) -> CodeForLean:
     been complete. Each joker should be equivalent to an equality asserted by
     an axiom called AXIOM<nb><name_of_joker>
     There should be three kind of response:
-    - the statement has no meaning,
-    - the statement has a meaning, but I am unable to check that it is correct,
-    - OK.
-    - Afterward usr will maybe have to prove the statement.
+        - the statement has no meaning,
+        - the statement has a meaning,
+        but I am unable to check that it is correct,
+        - OK.
+
+    - Afterward usr will maybe have to prove the statement: NOT IMPLEMENTED.
 
     To get the right error msg, we have to try successively
     - all joker declaration ("haves") + checking,
@@ -724,8 +722,8 @@ def action_complete(proof_step) -> CodeForLean:
         raise WrongUserInput(error=_("There is nothing to complete"))
 
     if not user_input:
-        raise MissingJoker(proof_step=proof_step,
-                           hypos_with_jokers=hypos_with_jokers)
+        raise MissingExerciseJoker(proof_step=proof_step,
+                                   hypos_with_jokers=hypos_with_jokers)
 
     # ---- (3) Find jokers that have been assigned ---- #
     # This code is duplicated in Coordinator.check_usr_jokers()

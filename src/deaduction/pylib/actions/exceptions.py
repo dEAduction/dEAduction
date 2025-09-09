@@ -167,7 +167,7 @@ class MissingCalculatorOutput(MissingParametersError):
         elif self.request_type is CalculatorRequest.FillInJoker:
             if proof_step.target_selected:
                 if proof_step.selection:
-                    self.title += _("Complete hypothesis and goal")
+                    self.title = _("Complete hypothesis and goal")
                 else:
                     self.title = _("Complete goal")
             else:
@@ -338,13 +338,42 @@ class MissingJoker(MissingCalculatorOutput):
                          proof_step=proof_step)
 
         self.hypos_with_jokers = hypos_with_jokers
-        if proof_step.target_selected:
-            if proof_step.selection:
-                self.title += _("Complete hypothesis and goal")
+        # if proof_step.target_selected:
+        #     if proof_step.selection:
+        #         self.title += _("Complete hypothesis and goal")
+        #     else:
+        #         self.title = _("Complete goal")
+        # else:
+        #     self.title = _("Complete hypothesis")
+
+
+class MissingExerciseJoker(MissingJoker):
+    def __init__(self, proof_step, hypos_with_jokers):
+        super().__init__(proof_step, hypos_with_jokers)
+
+    def targets_n_titles(self):
+        targets = [hypo.math_type for hypo in self.hypos_with_jokers]
+        goal_target = self.proof_step.goal.target
+        nb_hypos = len(targets)
+        are_math_type = [False] * nb_hypos
+        titles = [_("Complete goal") if hypo is goal_target
+                  else _("Complete hypothesis {}").format(hypo.name)
+                  for hypo in self.hypos_with_jokers]
+        # Add exercise description
+        if titles:
+            description = self.proof_step.exercise.html_complete_description
+            if len(titles) == 1:
+                titles[0] = description
             else:
-                self.title = _("Complete goal")
-        else:
-            self.title = _("Complete hypothesis")
+                titles[0] = description + "<br>" + titles[0]
+
+        return targets, are_math_type, titles
+
+
+class MissingUserJoker(MissingJoker):
+    def __init__(self, proof_step, hypos_with_jokers):
+        super().__init__(proof_step, hypos_with_jokers)
+        self.title = _("Complete your joker")
 
     def targets_n_titles(self):
         targets = [hypo.math_type for hypo in self.hypos_with_jokers]

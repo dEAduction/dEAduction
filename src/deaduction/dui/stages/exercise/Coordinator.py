@@ -219,44 +219,44 @@ class Coordinator(QObject):
             self.mode = CoordinatorMode.CompleteStatement
             self.emw.activate_complete_mode()
 
-    def check_usr_jokers(self):
-        """
-        This should be called after each step which is not a hisroy move,
-        before history_nb is increased.
-        - If the last action is a complete jokers action, it adds an entry in
-        the hidden_user_jokers dictionary, joker nb -> (history nb, value).
-        - In addition, it suppresses all entries in this dic whose history_nb is
-        more than the current one: indeed those entries correspond to steps
-        that have been deleted by the last proof step.
-
-        The dic is used in automatic_actions, to complete jokers
-        which have been completed in another branch of the proof.
-        """
-
-        proof_step = self.proof_step
-        button_name = proof_step.user_action.button_name
-        history_nb = proof_step.history_nb
-
-        for key, (nb, xxx) in self.usr_jokers_history_n_value.items():
-            if history_nb < nb:  # This joker has not been assigned yet
-                self.usr_jokers_history_n_value.pop(key)
-
-        if button_name == "COMPLETE":
-            user_input = proof_step.user_input
-
-            # Collect all usr jokers:
-            completed_usr_jokers = []
-            for mpmo in user_input[0]:
-                jokers = mpmo.search_in_name("USR_JOKER")
-                for joker in jokers:
-                    assigned_mo = joker.assigned_math_object
-                    if assigned_mo:
-                        completed_usr_jokers.append(joker)
-            # Store history_nb and value
-            for usr_jkr in completed_usr_jokers:
-                nb = usr_jkr.usr_jkr_nb()
-                value = usr_jkr.assigned_math_object
-                self.usr_jokers_history_n_value[nb] = (history_nb, value)
+    # def check_usr_jokers(self):
+    #     """
+    #     This should be called after each step which is not a history move,
+    #     before history_nb is increased.
+    #     - If the last action is a complete jokers action, it adds an entry in
+    #     the hidden_user_jokers dictionary, joker nb -> (history nb, value).
+    #     - In addition, it suppresses all entries in this dic whose history_nb is
+    #     more than the current one: indeed those entries correspond to steps
+    #     that have been deleted by the last proof step.
+    #
+    #     The dic is used in automatic_actions, to complete jokers
+    #     which have been completed in another branch of the proof.
+    #     """
+    #
+    #     proof_step = self.proof_step
+    #     button_name = proof_step.user_action.button_name
+    #     history_nb = proof_step.history_nb
+    #
+    #     for key, (nb, xxx) in self.usr_jokers_history_n_value.items():
+    #         if history_nb < nb:  # This joker has not been assigned yet
+    #             self.usr_jokers_history_n_value.pop(key)
+    #
+    #     if button_name == "COMPLETE":
+    #         user_input = proof_step.user_input
+    #
+    #         # Collect all usr jokers:
+    #         completed_usr_jokers = []
+    #         for mpmo in user_input[0]:
+    #             jokers = mpmo.search_in_name("USR_JOKER")
+    #             for joker in jokers:
+    #                 assigned_mo = joker.assigned_math_object
+    #                 if assigned_mo:
+    #                     completed_usr_jokers.append(joker)
+    #         # Store history_nb and value
+    #         for usr_jkr in completed_usr_jokers:
+    #             nb = usr_jkr.usr_jkr_nb()
+    #             value = usr_jkr.assigned_math_object
+    #             self.usr_jokers_history_n_value[nb] = (history_nb, value)
 
     def check_complete_mode(self):
         """
@@ -572,8 +572,14 @@ class Coordinator(QObject):
         """
         Guard that this is synchronized with emw.mode.
         """
+        old_mode = self.__mode
         self.__mode = mode
         self.emw.mode = mode
+        if mode == CoordinatorMode.CompleteStatement:
+            self.emw.activate_complete_mode()
+        else:
+            self.emw.activate_complete_mode(False)
+
 
     @property
     def action_button_names(self) -> [str]:
@@ -919,6 +925,7 @@ class Coordinator(QObject):
         - update self.proof_tree.current_goal_node.
         - Update interface, and prepare next proof_step.
         """
+        log.info("** Processing history move **")
         historic_proof_step = self.lean_file.current_proof_step
         children_goal_nodes = historic_proof_step.children_goal_nodes
         proof_state = historic_proof_step.proof_state
@@ -935,7 +942,6 @@ class Coordinator(QObject):
         self.update_proof_step()
 
         # ─────── Update UI ─────── #
-        log.info("** Updating UI **")
         self.update_lean_editor()
         self.unfreeze()
         if self.proof_step.is_error():  # Should not happen?!
