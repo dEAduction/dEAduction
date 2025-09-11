@@ -815,18 +815,9 @@ def action_complete(proof_step) -> CodeForLean:
     # - checking completion is correct,
     # - rewriting hypos/goal using completion
 
-    ######################################
-    # ----- Case of non usr jokers ----- #
-    ######################################
-    # For non usr jokers we assign and check
-    # List of CodeForLeans respectively for
-    # - declaration of usr joker completions,
-    # - checking completion is correct,
-    # - rewriting hypos/goal using completion
-
     # --- (5a) Compute elementary codes --- #
     have_codes = []
-    at_hypos = []
+    hypo_names = []
     check_codes = []
     check_list = ["try{ext}",  # eliminate lambdas
                   "try{tautology}",
@@ -836,19 +827,25 @@ def action_complete(proof_step) -> CodeForLean:
     nb = 0
     have_codes_debug = []
     check_codes_debug = []
+    MAX_JKR = 10
     for joker, vars_, hypo in zip(completed_jokers, variables, pertinent_hypos):
         name = joker.metavar_name
         vars_.reverse()
         var_names = [var.name for var in vars_]
-        at_hypo = "" if hypo == target else f" at {hypo.name}"
-        at_hypos.append(at_hypo)
+        if hypo == target:
+            hypo_name = ""
+            at_hypo = ""
+        else:
+            hypo_name = hypo.name
+            at_hypo = "at " + hypo_name
+        hypo_names.append(hypo_name)
 
-        # Have code:
+        # Have codes (jokers assignation):
         content = joker.assigned_math_object.to_display(format_="lean")
         if vars_:
             content = "λ " + " ".join(var_names) + ", " + content
         hypo = hyp_names[nb]
-        code_str = f"have {hypo}: {name} = {content}"
+        code_str = f"have {hypo}: {name} = ({content})"
         have_code = CodeForLean.from_string(code_str)
         have_codes.append(have_code)
         have_codes_debug.append(code_str)
@@ -856,7 +853,7 @@ def action_complete(proof_step) -> CodeForLean:
         # Check code: supposed to solve axiom_name = hypo as current goal
         # axiom_name = "AXIOM" + name, or "AXIOM0" + name, and so on
         try_rw_axioms = ["rw AXIOM" + name] + \
-                        ["rw AXIOM" + str(idx) + name for idx in range(10)]
+                        ["rw AXIOM" + str(idx) + name for idx in range(MAX_JKR)]
 
         # Successively try to solve with AXIOM n°<idx>:
         check_code = [CodeForLean.and_then_from_list([rw_axioms] +
@@ -865,7 +862,7 @@ def action_complete(proof_step) -> CodeForLean:
         check_codes.append(CodeForLean.or_else_from_list(check_code))
         check_codes_debug.append(try_rw_axioms)
         # Rw code:
-        rw_code = CodeForLean.and_then_from_list([f"rw {hypo}" + at_hypo,
+        rw_code = CodeForLean.and_then_from_list([f"rw {hypo} " + at_hypo,
                                                   "try{dsimp only"
                                                   f" {at_hypo}" + "}"])
                                                   # f"clear {hypo}"])
@@ -911,14 +908,17 @@ def action_complete(proof_step) -> CodeForLean:
     codes = []
     nb_jokers = len(completed_jokers)
 
-    what_you_entered = (_("Your proposal") if nb_jokers == 0
-                        else _("Everything you entered"))
+    if nb_jokers == 1:
+        next_success_msg = _("Your proposal is correct!")
+        meaningful = _("There is no syntax error")
+    else:
+        next_success_msg = _("Everything you entered is correct!")
+        meaningful = _("There is no syntax error")
 
     # ----- (5.c) Try successive declarations + correctness ----- #
     # (all, then all but the last one, and so on)
     # idx = nb_jokers-1
     idx = 0
-    next_success_msg = what_you_entered + " " + _("is correct!")
     for have_codes, check_codes, rw_codes in zip(first_have_codes,
                                                  first_check_codes,
                                                  first_rw_codes):
@@ -935,12 +935,16 @@ def action_complete(proof_step) -> CodeForLean:
         if nb_jokers == 1:
             not_correct = _("it is not correct")
         else:
-            at_hypo = at_hypos[idx]
-            hypo = (f"hypothesis {at_hypo[3:]}" if at_hypo  # Remove 'at'
-                    else "the goal")
-            not_correct = hypo + _(" is not correct")
-        next_success_msg = (what_you_entered + " " + _("is meaningful") + " "
+            hypo_name = hypo_names[idx]
+            if hypo_name:
+                # hypo = _("hypothesis {}").format(at_hypo[3:])
+                not_correct = _(f"hypothesis {hypo_name} is not correct")
+            else:
+                # hypo = _("the goal")
+                not_correct = _("the goal is not correct")
+        next_success_msg = (meaningful + " "
                             + _(f"but I suspect") + " " + not_correct)
+        next_success_msg = _("Error: ") + next_success_msg
         idx += 1
 
     # ----- (5.d) Just try successive declarations ----- #
@@ -949,20 +953,27 @@ def action_complete(proof_step) -> CodeForLean:
         code_str = have_codes + ['todo']*(idx+1) + rw_codes
         more_code = CodeForLean.and_then_from_list(code_str)
         more_code.add_success_msg(next_success_msg)
+        more_code.add_error_msg(next_success_msg)
         codes.append(more_code)
 
         # Write "success" msg (= failure of the next or_else!)
         if nb_jokers == 1:
-            your_proposal = _("Your proposal")
+            hypo = ""
         else:
-            at_hypo = at_hypos[idx]
-            hypo = (f"hypothesis {at_hypo[3:]}" if at_hypo  # Remove 'at'
-                    else "the goal")
-            your_proposal = _("Your proposal for") + " " + hypo
-        next_success_msg = (your_proposal + " " + _("is not meaningful") + ", "
+            hypo_name = hypo_names[idx]
+            hypo = (_(f" for hypothesis {hypo_name}") if hypo_name
+                    else _(" for the goal"))
+        next_success_msg = (_("I do not understand your proposal") + hypo + ", "
                             + _("maybe a syntax error?"))
         idx -= 1
 
+    # Obsolete: does not fail for non-correctness
     final_code = CodeForLean.or_else_from_list(codes)
-    final_code.add_error_msg(next_success_msg)
+
+    # DOES NOT WORK:
+    # (when Lean fail, no message is traced!)
+    # all_codes_but_first = CodeForLean.or_else_from_list(codes[1:])
+    # failing_codes = all_codes_but_first.try_().and_then(CodeForLean.fail())
+    # final_code = codes[0].or_else(failing_codes)
+
     return final_code

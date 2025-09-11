@@ -1415,15 +1415,18 @@ class Coordinator(QObject):
 
         self.lean_editor.set_error_msg(errors)
 
-        lean_code = self.proof_step.lean_code
-        if lean_code and lean_code.error_msg:
-            self.proof_step.error_msg = lean_code.error_msg
+        # lean_code = self.proof_step.lean_code
+        # if lean_code and lean_code.error_msg:
+        #     self.proof_step.error_msg = lean_code.error_msg
+        if self.proof_step.error_msg:
+            pass
         else:
             self.proof_step.error_msg = _('Error')
 
         details = ""
         for error in errors:
             details += "\n" + error.text
+        log.debug(f"proof_step.error_msg: {self.proof_step.error_msg}")
         log.debug(f"Lean errors, details: {details}")
 
     def __process_error(self, error_type, errors):
@@ -1431,6 +1434,7 @@ class Coordinator(QObject):
         Note that history_delete will be called, and then process_lean_response
         again.
         """
+        log.debug("Processing error msg")
         self.proof_step.error_type = error_type
         if error_type == 1:  # FailedRequestError
             self.__process_failed_request_error(errors)
@@ -1451,12 +1455,20 @@ class Coordinator(QObject):
             self.proof_step.error_msg = _("(File unchanged)")
         elif error_type == 7:
             self.proof_step.error_msg = _("Action cancelled")
+        elif error_type == 11:  # Lean succeeded but with failure success msg
+            log.debug("Error 11")
+            print("Msgs:")
+            print(self.proof_step.error_msg)
+            print(self.proof_step.success_msg)
+            if not self.proof_step.error_msg:
+                self.proof_step.error_msg = self.proof_step.success_msg
         else:
             self.proof_step.error_msg = _("Undocumented error")
 
     def abort_process(self):
         log.debug("Aborting process")
-        print(self.lean_file.history_length)
+        log.debug(f"Error {self.proof_step.error_type}: {self.proof_step.error_msg}")
+        # print(self.lean_file.history_length)
         # if self.lean_file and not self.servint.lean_file.history_at_beginning:
         if self.lean_file and self.lean_file.has_history():
             # Abort and go back to last goal
@@ -1559,7 +1571,7 @@ class Coordinator(QObject):
         # self.check_usr_jokers()
 
         # Create next proof_step, and connect to ProofTree
-        self.emw.displayed_proof_step = copy(self.proof_step)  # FIXME
+        self.emw.displayed_proof_step = copy(self.proof_step)
         self.proof_step = ProofStep.next_(self.lean_file.current_proof_step,
                                           self.lean_file.target_idx)
         self.proof_step.parent_goal_node = self.proof_tree.current_goal_node
@@ -1686,7 +1698,7 @@ class Coordinator(QObject):
         error_type = lean_response.error_type
         proof_state = lean_response.new_proof_state
 
-        log.info("** Processing Lean's response **")
+        log.info(f"** Processing Lean's response with error type {error_type} **")
         if self.lean_file:
             history_nb = self.lean_file.target_idx
             log.info(f"History nb: {history_nb}")

@@ -166,7 +166,7 @@ class CodeForLean:
 
     instructions: [Any]   # type: [Union[CodeForLean, SingleCode]]
     combinator:   str = LeanCombinator.single_code
-    error_msg:    str = ""
+    _error_msg:    str = ""
     _success_msg:  str = ""
     conjunction       = None  # type: (Union[MathObject, str])
     disjunction       = None  # type: (Union[MathObject, str])
@@ -311,7 +311,7 @@ class CodeForLean:
 
     @classmethod
     def from_list(cls,
-                  instructions: [],
+                  instructions: list,
                   combinator=LeanCombinator.and_then,
                   error_msg: str = '',
                   global_success_msg: str = ""):
@@ -342,7 +342,7 @@ class CodeForLean:
 
     @classmethod
     def or_else_from_list(cls,
-                          instructions: [],
+                          instructions: list,
                           error_msg: str = '',
                           global_success_msg: str = ""):
         """
@@ -359,13 +359,15 @@ class CodeForLean:
 
     @classmethod
     def and_then_from_list(cls,
-                           instructions: [],
+                           instructions: list,
                            error_msg: str = '',
                            global_success_msg: str = ""):
         """
         Create an and_then CodeForLean from a (list of) strings or CodeForLean.
 
-        :param instructions: list of CodeForLean, str, or tuple.
+        :param instructions: List of CodeForLean, str, or tuple.
+        :param error_msg:
+        :param global_success_msg:
         """
         return cls.from_list(instructions=instructions,
                              combinator=LeanCombinator.and_then,
@@ -385,10 +387,30 @@ class CodeForLean:
                 msg = instruction.success_msg
                 if msg:
                     return msg
+        return ""
 
     @success_msg.setter
     def success_msg(self, msg: str):
         self._success_msg = msg
+
+    @property
+    def error_msg(self):
+        """
+        Return self's success_msg, or, if self is and_then, the first
+        success_msg found in self's instructions.
+        """
+        if self._error_msg:
+            return self._error_msg
+        elif self.is_and_then():
+            for instruction in self.instructions:
+                msg = instruction.error_msg
+                if msg:
+                    return msg
+        return ""
+
+    @error_msg.setter
+    def error_msg(self, msg: str):
+        self._error_msg = msg
 
     def add_error_msg(self, error_msg: str):
         """
@@ -642,6 +664,11 @@ class CodeForLean:
                            combinator=LeanCombinator.solve1,
                            success_msg=success_msg)
         return code
+
+    # @classmethod
+    # def fail(cls):
+    #     code = cls("fail")
+    #     return code
 
     ###################################
     # ------ Writing Lean code ------ #

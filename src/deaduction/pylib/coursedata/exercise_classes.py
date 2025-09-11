@@ -577,10 +577,11 @@ class Statement:
     @property
     def auxiliary_definitions(self):
         aux_def = self.info.get('auxiliary_definitions')
-        if not aux_def:
-            return []
-        else:
+        if isinstance(aux_def, str):
             return aux_def.split()
+        if isinstance(aux_def, list):
+            return aux_def
+        return []
 
 
 class Definition(Statement):
@@ -1499,7 +1500,7 @@ def metadata_to_str(metadata: Dict[str, str]):
 def metadata_to_toml(metadata: dict) -> str:
     if not metadata:
         return ""
-    # print(metadata)
+    print(metadata)
     toml = tomli_w.dumps(metadata)
     return toml
 

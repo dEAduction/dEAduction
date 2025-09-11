@@ -50,7 +50,7 @@ function.add = [ -2, " + ", -1 ]
 functionality.calculator_available = true
 others.Lean_request_method = "normal"
 -/
-
+  
 /- RESTES
     sqrt --> ( "racine (",-1, ")")
 Display
@@ -614,4 +614,5 @@ end exercices_monotonie
 
 
 end course
+
 

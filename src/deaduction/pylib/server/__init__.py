@@ -683,6 +683,12 @@ class ServerInterface(QObject):
         if error_list:
             error_type = 1
 
+        # Lean succeeded but with failed success msg
+        if hasattr(request, "proof_step") and request.proof_step.success_msg:
+            if request.proof_step.success_msg.lower().startswith(_("error")):
+                print(f"Success/error msg! {request.proof_step.success_msg}")
+                error_type = 11
+
         # (4) Send information
         if isinstance(request, InitialProofStateRequest):
             self.initial_proof_state_set.emit()

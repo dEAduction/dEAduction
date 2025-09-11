@@ -122,7 +122,7 @@ end
 
 -- lemma theorem.inverse_decroissante (a b:ℝ)
 -- (HP1: a > 0) (HP2:b > 0):
--- a < b → b⁻¹ < a⁻¹
+-- a < b → b⁻¹ < a⁻¹ 
 -- :=
 -- /- dEAduction
 -- PrettyName
@@ -142,9 +142,9 @@ abs_add x y : |x + y| ≤ |x| + |y|
 
 ----------------------------------
 namespace maximum
--- The name RealSubGroup will be replaced by ℝ in d∃∀duction,
+-- The name RealSubGroup will be replaced by ℝ in d∃∀duction, 
 -- but allows to treat the cases of integers or rationals.
-variables {RealSubGroup : Type} [decidable_linear_order RealSubGroup]
+variables {RealSubGroup : Type} [decidable_linear_order RealSubGroup] 
 
 lemma definition.max (a b c : RealSubGroup) :
 a = max b c ↔ (b ≤ a ∧ c ≤ a ∧ (a=b ∨ a=c))
@@ -190,7 +190,7 @@ end
 end maximum
 
 namespace valeur_absolue
-variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup]
+variables {RealSubGroup : Type} [decidable_linear_ordered_comm_ring RealSubGroup] 
 
 lemma definition.valeur_absolue
 (a b : RealSubGroup) :
@@ -223,7 +223,7 @@ end
 lemma theorem.majoration_valeur_absolue
 (x r : RealSubGroup):
 (abs x < r) ↔ ((-r < x) ∧ (x < r))
-:=
+:= 
 /- dEAduction
 pretty_name = "Majoration d'une valeur absolue"
 -/
@@ -235,22 +235,22 @@ end
 lemma theorem.inegalite_triangulaire
 (x y : RealSubGroup):
 |x + y| ≤ |x| + |y|
-:=
+:= 
 /- dEAduction
 pretty_name = "Inégalité triangulaire"
 -/
 begin
-  exact abs_add x y
+  exact abs_add x y 
 end
 
 lemma theorem.valeur_absolue_produit :
 ∀ x y : RealSubGroup,  |x * y| = |x| * |y|
-:=
+:= 
 /- dEAduction
 pretty_name = "Valeur absolue d'un produit"
 -/
 begin
-  intros x y, exact abs_mul x y
+  intros x y, exact abs_mul x y 
 end
 
 end valeur_absolue
@@ -263,11 +263,11 @@ namespace suites
 -- Définitions de la limite --
 ------------------------------
 
-lemma definition.limit
+lemma definition.limit 
 {u : ℕ → ℝ} {l : ℝ} :
-(limit u l) ↔
+(limit u l) ↔ 
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < ε
-:=
+:= 
 /- dEAduction
 pretty_name = "Limite d'une suite"
 implicit_use = true
@@ -278,9 +278,9 @@ end
 
 lemma definition.converging_seq
 {u : ℕ → ℝ} :
-(converging_seq u) ↔
+(converging_seq u) ↔ 
 ∃ l, limit u l
-:=
+:= 
 /- dEAduction
 pretty_name = "Suite convergente"
 implicit_use = true
@@ -291,7 +291,7 @@ end
 
 lemma definition.limit_plus_infinity
 {u : ℕ → ℝ} :
-(limit_plus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M :=
+(limit_plus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M := 
 /- dEAduction
 pretty_name = "Limite infinie d'une suite"
 implicit_use = true
@@ -302,9 +302,9 @@ end
 
 lemma definition.increasing_seq
 {u : ℕ → ℝ} :
-(increasing_seq u) ↔
+(increasing_seq u) ↔ 
 ∀ p q, p ≤ q → u p ≤ u q
-:=
+:= 
 /- dEAduction
 pretty_name = "Suite croissante"
 implicit_use = true
@@ -313,11 +313,11 @@ begin
   refl
 end
 
-lemma definition.bounded_above
+lemma definition.bounded_above 
 {u : ℕ → ℝ} :
-(bounded_above u) ↔
+(bounded_above u) ↔ 
 ∃ M:ℝ, ∀ n,  u n ≤ M
-:=
+:= 
 /- dEAduction
 pretty_name = "Suite majorée"
 implicit_use = true
@@ -326,11 +326,11 @@ begin
   refl
 end
 
--- lemma definition.bounded_below
+-- lemma definition.bounded_below 
 -- {u : ℕ → ℝ} :
--- (bounded_below_sequence u) ↔
+-- (bounded_below_sequence u) ↔ 
 -- ∃ M:ℝ, ∀ n,  u n ≥ M
--- :=
+-- := 
 -- /- dEAduction
 -- PrettyName
 --   Suite minorée
@@ -341,11 +341,11 @@ end
 --   refl
 -- end
 
-lemma definition.bounded
+lemma definition.bounded 
 {u : ℕ → ℝ} :
-(bounded_sequence u) ↔
+(bounded_sequence u) ↔ 
 ∃ M>0, ∀ n, | u n | ≤ M
-:=
+:= 
 /- dEAduction
 pretty_name = "Suite bornée"
 implicit_use = true
@@ -365,8 +365,8 @@ begin
     todo,
 end
 
-lemma definition.limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) :
-limit_function f a l ↔
+lemma definition.limit_function (f : ℝ → ℝ) (a : ℝ) (l : ℝ) : 
+limit_function f a l ↔ 
 ( ∀ ε > 0, ∃ δ>0, ∀ x: ℝ, ( | x-a | < δ → | f x  - l | < ε ) ):=
 /- dEAduction
 pretty_name = "Limite d'une fonction"
@@ -430,7 +430,7 @@ pretty_name = "Exercices sur les suites I"
 -- --------------------------------------------------
 
 -- lemma exercise.limit_alt :
--- not (converging_seq (λ n, (-1)^n))  :=
+-- not (converging_seq (λ n, (-1)^n))  := 
 -- /- dEAduction
 -- PrettyName
 --   La suite -1, 1, -1, 1, ... ne converge pas.
@@ -452,7 +452,7 @@ pretty_name = "Exercices sur les suites I"
 
 -- Ceci ne fonctionne pas : pb de mixer des inégalité entre nb réels (le M qui vient de la def de limite infinie)
 -- et nb entiers
--- lemma exercise.limit_affine
+-- lemma exercise.limit_affine 
 -- (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = n/2024 - 100) :
 -- limit_plus_infinity u :=
 -- /- dEAduction
@@ -467,7 +467,7 @@ pretty_name = "Exercices sur les suites I"
 
 
 
-lemma exercise.limit_constante
+lemma exercise.limit_constante 
 (u : ℕ → ℝ) (c : ℝ) (H : ∀ n, u n = c) :
 converging_seq u :=
 /- dEAduction
@@ -479,11 +479,11 @@ l'existence d'une limite.
 """
 -/
 begin
-  todo,
+  todo
 end
 
 -- lemma exercise.limit_inverse :
--- converging_seq (λ n, n⁻¹)  :=
+-- converging_seq (λ n, n⁻¹)  := 
 -- /- dEAduction
 -- PrettyName
 --   (**) La suite des inverses des entiers est convergente.
@@ -496,7 +496,7 @@ end
 -- end
 
 -- lemma exercise.limit_racine :
--- limit_plus_infinity  (λ n,  n^(1/2))  :=
+-- limit_plus_infinity  (λ n,  n^(1/2))  := 
 -- /- dEAduction
 -- PrettyName
 --   La suite des racines carrées des entiers tend vers l'infini.
@@ -571,7 +571,7 @@ pretty_name = "Exercices sur les suites II"
 
 lemma exercise.couper_epsilon_en_deux
 (u : ℕ → ℝ) (l : ℝ) :
-(limit u l) ↔
+(limit u l) ↔ 
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < 2*ε
 :=
 /- dEAduction
@@ -588,7 +588,7 @@ end
 
 lemma exercise.couper_epsilon_en_100
 (u : ℕ → ℝ) (l : ℝ) :
-(limit u l) ↔
+(limit u l) ↔ 
 ∀ ε > 0, ∃ N, ∀ n ≥ N, | u n - l | < 100*ε
 :=
 /- dEAduction
@@ -622,7 +622,7 @@ end
 
 lemma exercise.limite_unique
 (u : ℕ → ℝ) (l : ℝ)(l' : ℝ) (H : limit u l) (H' : limit u l') :
-l = l'
+l = l' 
 :=
 /- dEAduction
 pretty_name = "Unicité de la limite (*)"
@@ -637,7 +637,7 @@ end
 
 
 lemma exercise.gendarmes
-(u v w  : ℕ → ℝ) (l : ℝ)
+(u v w  : ℕ → ℝ) (l : ℝ) 
 (H : limit u l) (H' : limit w l)
 (H'' : ∀n, (((u n) ≤ v n) and ((v n) ≤ w n))) :
 limit v l
@@ -718,7 +718,7 @@ continuous (function.comp g f) :=
 /- dEAduction
 pretty_name = "Continuité et composition"
 -/
-begin
+begin 
   todo,
 end
 
@@ -730,7 +730,7 @@ limit (λ n, f (u n)) (f l) :=
 pretty_name = "Image d'une suite convergente"
 description = "Deux limites en hypothèse, une en conclusion..."
 -/
-begin
+begin 
   todo,
 end
 
@@ -757,7 +757,7 @@ begin
 end
 
 
-lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ):
+lemma exercise.convergente_implique_cauchy (u: ℕ → ℝ): 
 converging_seq u → cauchy u :=
 /- dEAduction
 pretty_name = "Une suite convergente est de Cauchy"
@@ -822,23 +822,23 @@ end continuite_uniforme
 -- -/
 
 -- definition DL_order_0 (f: ℝ → ℝ) : Prop :=
--- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and
+-- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
 -- (∀ h, f h = f 0 + φ h)
 
 -- definition DL_order_1 (f: ℝ → ℝ) (a : ℝ) : Prop :=
--- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and
+-- ∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
 -- (∀ h, f h = f 0 + a * h + (φ h) * h)
 
 -- lemma definition.DL_order_0
 -- (f: ℝ → ℝ) (a : ℝ):
--- (DL_order_0 f) ↔ (∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and
+-- (DL_order_0 f) ↔ (∃ (φ : ℝ → ℝ), (limit_function φ 0 0) and 
 -- (∀ h, f h = f 0 + φ h))
 -- :=
 -- begin
 --   todo
 -- end
 
--- example
+-- example 
 -- (f: ℝ → ℝ):
 -- (DL_order_0 f) ↔ ∃ l, (limit_function f 0 l) :=
 -- begin
@@ -847,7 +847,7 @@ end continuite_uniforme
 -- end DL
 
 
-/-
+/- 
 On peut multiplier les variantes : si une fonction a une
 limite >0 en un point, elle est >0 au voisinage.
 Si lim f < lim g alors f < g au voisinage.

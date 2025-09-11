@@ -42,7 +42,8 @@ class LeanResponse:
     analysis = None
     new_proof_state = None
     # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state,
-    # 6 = file unchanged, 7 = cancelled, 10 = unknown:
+    # 6 = file unchanged, 7 = canceled, 10 = unknown:
+    # 11 = complete action is meaningful but not correct
     error_type: int = 0
     error_list: Optional[List]
     # _error_msg: str = ''

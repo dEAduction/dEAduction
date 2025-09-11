@@ -214,7 +214,7 @@ class ProofStep:
     effective_code            = None  # CodeForLean that proved effective
     # 1 = WUI, 2 = FRE, 3 = TIMEOUT, 4 = UNICODE, 5 = No proof state:
     error_type: Optional[int] = 0
-    error_msg: str            = ''
+    _error_msg: str            = ''
     proof_state               = None
     no_more_goal              = False
     _success_msg: str         = ''
@@ -467,6 +467,22 @@ class ProofStep:
     @success_msg.setter
     def success_msg(self, msg: str):
         self._success_msg = msg
+
+    @property
+    def error_msg(self) -> str:
+        if self._error_msg:
+            return self._error_msg
+        elif self.effective_code:
+            return self.effective_code.error_msg
+        elif self.lean_code:
+            return self.lean_code.error_msg
+        elif self.is_error():
+            return 'Error'
+        return ""
+
+    @error_msg.setter
+    def error_msg(self, msg: str):
+        self._error_msg = msg
 
     @property
     def txt(self):
