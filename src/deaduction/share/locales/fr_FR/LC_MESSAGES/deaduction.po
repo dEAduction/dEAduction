@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-09-11 15:20+0200\n"
-"PO-Revision-Date: 2025-09-11 15:41+0200\n"
+"POT-Creation-Date: 2025-09-11 17:49+0200\n"
+"PO-Revision-Date: 2025-09-11 17:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -824,66 +824,66 @@ msgstr ""
 "Voulez-vous démontrer la <b>prémisse</b><br><CENTER>{}</CENTER><br>en tant "
 "que nouveau but ?"
 
-#: dui/stages/exercise/Coordinator.py:1422 pylib/server/exceptions.py:39
+#: dui/stages/exercise/Coordinator.py:1424 pylib/server/exceptions.py:39
 msgid "Error"
 msgstr "Erreur"
 
-#: dui/stages/exercise/Coordinator.py:1439
+#: dui/stages/exercise/Coordinator.py:1442
 msgid "I've got a headache, try again..."
 msgstr "Je n’y arrive pas, mais vous pouvez ré-essayer !"
 
-#: dui/stages/exercise/Coordinator.py:1442
+#: dui/stages/exercise/Coordinator.py:1445
 msgid "Unicode error, try again..."
 msgstr "Erreur de mémoire, ré-essayez !"
 
-#: dui/stages/exercise/Coordinator.py:1449
+#: dui/stages/exercise/Coordinator.py:1452
 msgid "Unable to get new proof_state"
 msgstr "Impossible d'obtenir le nouvel état de preuve"
 
-#: dui/stages/exercise/Coordinator.py:1452
+#: dui/stages/exercise/Coordinator.py:1455
 msgid "(File unchanged)"
 msgstr "(Fichier non modifié)"
 
-#: dui/stages/exercise/Coordinator.py:1454
+#: dui/stages/exercise/Coordinator.py:1457
 msgid "Action cancelled"
 msgstr "Action annulée"
 
-#: dui/stages/exercise/Coordinator.py:1463 pylib/actions/logic.py:1301
+#: dui/stages/exercise/Coordinator.py:1468 pylib/actions/logic.py:1301
 msgid "Undocumented error"
 msgstr "Erreur non documentée"
 
-#: dui/stages/exercise/Coordinator.py:1513
+#: dui/stages/exercise/Coordinator.py:1518
 #: dui/stages/exercise/_exercise_main_window_widgets.py:779
 #: dui/stages/exercise/_exercise_main_window_widgets.py:795
 msgid "Change exercise"
 msgstr "Changer d’exercice"
 
-#: dui/stages/exercise/Coordinator.py:1521
+#: dui/stages/exercise/Coordinator.py:1526
 msgid "Save history"
 msgstr "Sauver l'historique"
 
-#: dui/stages/exercise/Coordinator.py:1527
-#: dui/stages/exercise/Coordinator.py:1535
+#: dui/stages/exercise/Coordinator.py:1532
+#: dui/stages/exercise/Coordinator.py:1540
 msgid "Statement completed"
 msgstr "L'énoncé a été complété"
 
-#: dui/stages/exercise/Coordinator.py:1528
+#: dui/stages/exercise/Coordinator.py:1533
 msgid "The statement is correct! You can now go on to prove it."
 msgstr "L'énoncé est correct ! Vous pouvez maintenant le démontrer."
 
-#: dui/stages/exercise/Coordinator.py:1536
+#: dui/stages/exercise/Coordinator.py:1541
 msgid "The statement is correct!"
 msgstr "L'énoncé est correct !"
 
-#: dui/stages/exercise/Coordinator.py:1538
+#: dui/stages/exercise/Coordinator.py:1543
 msgid "Target solved"
 msgstr "But atteint"
 
-#: dui/stages/exercise/Coordinator.py:1539
+#: dui/stages/exercise/Coordinator.py:1544
 msgid "The proof is complete!"
 msgstr "La preuve est terminée !"
 
-#: dui/stages/exercise/Coordinator.py:1543
+#: dui/stages/exercise/Coordinator.py:1548
 msgid "Back to exercise"
 msgstr "Retour à l’exercice"
 
@@ -1193,11 +1193,11 @@ msgstr "Etape suivante"
 msgid "Scroll to end"
 msgstr "Défiler en bas"
 
-#: pylib/actions/code_for_lean.py:1084
+#: pylib/actions/code_for_lean.py:1083
 msgid "Principle of induction"
 msgstr "Principe de récurrence"
 
-#: pylib/actions/code_for_lean.py:1152 pylib/actions/commun_actions.py:248
+#: pylib/actions/code_for_lean.py:1151 pylib/actions/commun_actions.py:248
 #: pylib/actions/commun_actions.py:365 pylib/actions/commun_actions.py:377
 #: pylib/actions/logic.py:552 pylib/actions/logic.py:1066
 #: pylib/actions/logic.py:1138
@@ -1205,7 +1205,7 @@ msgstr "Principe de récurrence"
 msgid "Property {} added to the context"
 msgstr "Propriété {} ajoutée au contexte"
 
-#: pylib/actions/code_for_lean.py:1156
+#: pylib/actions/code_for_lean.py:1155
 msgid "Unable to apply the selected property"
 msgstr "La propriété sélectionnée n’a pas pu être appliqué"
 
@@ -2165,41 +2165,35 @@ msgstr "Aucun joker n'a été complété"
 msgid "Your proposal is correct!"
 msgstr "Votre proposition est correcte !"
 
-#: pylib/actions/proofs.py:913 pylib/actions/proofs.py:916
-msgid "There is no syntax error"
-msgstr "Il n'y a pas d'erreur de syntaxe"
-
 #: pylib/actions/proofs.py:915
 msgid "Everything you entered is correct!"
 msgstr "Tout ce que vous avez proposé est correct!"
 
-#: pylib/actions/proofs.py:936
-msgid "it is not correct"
-msgstr "ce n'est pas correct"
+#: pylib/actions/proofs.py:949
+msgid "There is no syntax error but I suspect it is not correct"
+msgstr ""
+"Il n'y a pas d'erreur de syntaxe mais je soupçonne que ça n'est pas correct"
 
-#: pylib/actions/proofs.py:944
-msgid "the goal is not correct"
-msgstr "le but n'est pas correct"
-
-#: pylib/actions/proofs.py:946
-msgid "but I suspect"
-msgstr "mais je soupçonne que"
-
-#: pylib/actions/proofs.py:947
+#: pylib/actions/proofs.py:951 pylib/actions/proofs.py:972
 msgid "Error: "
 msgstr "Erreur : "
 
-#: pylib/actions/proofs.py:965
-msgid " for the goal"
+#: pylib/actions/proofs.py:969
+msgid "for the goal"
 msgstr "pour le but"
 
-#: pylib/actions/proofs.py:966
+#: pylib/actions/proofs.py:970
 msgid "I do not understand your proposal"
 msgstr "Je ne comprends pas votre proposition"
 
-#: pylib/actions/proofs.py:967
+#: pylib/actions/proofs.py:971
 msgid "maybe a syntax error?"
 msgstr "peut-être une erreur de syntaxe ?"
+
+#: pylib/actions/proofs.py:976
+msgid "I do not understand your proposal, maybe a syntax error?"
+msgstr ""
+"Je ne comprends pas votre proposition, peut-être une erreur de syntaxe ?"
 
 #: pylib/actions/special_actions.py:54
 msgid "Drop on some object or property!"
@@ -4156,6 +4150,15 @@ msgstr "d∃∀duction"
 #: share/applications/deaduction.desktop:4
 msgid "Run dEAduction"
 msgstr "Démarrer d∃∀duction"
+
+#~ msgid "it is not correct"
+#~ msgstr "ce n'est pas correct"
+
+#~ msgid "the goal is not correct"
+#~ msgstr "le but n'est pas correct"
+
+#~ msgid "but I suspect"
+#~ msgstr "mais je soupçonne que"
 
 #~ msgid "Your proposal is meaningful"
 #~ msgstr "Il n'y a pas d'erreur de syntaxe"

@@ -418,8 +418,7 @@ class CodeForLean:
         all the alternatives.
         """
         if self.is_or_else():
-            for code in self.instructions:
-                code.add_error_msg(error_msg)
+            self.instructions[-1].add_error_msg(error_msg)
         self.error_msg = error_msg
 
     def add_success_msg(self, success_msg: str):

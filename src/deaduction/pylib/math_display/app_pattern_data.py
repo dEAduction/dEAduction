@@ -240,7 +240,7 @@ class PatternMathDisplay:
                             # "sqrt":  ("√", -1),
                             "segment": ("[", -2, ", ", -1, "]"),
                             "bit0": (-1, " + ", -1),
-                            "rel_prime": (-2, _(" and "), -1, " " + _(
+                            "rel_prime": (-2, " " + _("and") + " ", -1, " " + _(
                                 "relatively prime")),
                             }
 

@@ -1456,10 +1456,12 @@ class Coordinator(QObject):
         elif error_type == 7:
             self.proof_step.error_msg = _("Action cancelled")
         elif error_type == 11:  # Lean succeeded but with failure success msg
-            log.debug("Error 11")
-            print("Msgs:")
-            print(self.proof_step.error_msg)
-            print(self.proof_step.success_msg)
+            # log.debug("Error 11")
+            # print("Msgs:")
+            # print(self.proof_step.success_msg)
+            # print(self.proof_step.error_msg)
+            # print(self.proof_step.lean_code.error_msg)
+            # print(self.proof_step.effective_code.error_msg)
             if not self.proof_step.error_msg:
                 self.proof_step.error_msg = self.proof_step.success_msg
         else:

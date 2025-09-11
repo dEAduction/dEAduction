@@ -910,10 +910,10 @@ def action_complete(proof_step) -> CodeForLean:
 
     if nb_jokers == 1:
         next_success_msg = _("Your proposal is correct!")
-        meaningful = _("There is no syntax error")
+        # meaningful = _("There is no syntax error")
     else:
         next_success_msg = _("Everything you entered is correct!")
-        meaningful = _("There is no syntax error")
+        # meaningful = _("There is no syntax error")
 
     # ----- (5.c) Try successive declarations + correctness ----- #
     # (all, then all but the last one, and so on)
@@ -932,18 +932,22 @@ def action_complete(proof_step) -> CodeForLean:
         #     print("    " + c.to_code())
         # print("-->" + next_success_msg)
         # Write "success" msg (= failure of the next or_else!)
-        if nb_jokers == 1:
-            not_correct = _("it is not correct")
-        else:
-            hypo_name = hypo_names[idx]
-            if hypo_name:
-                # hypo = _("hypothesis {}").format(at_hypo[3:])
-                not_correct = _(f"hypothesis {hypo_name} is not correct")
-            else:
-                # hypo = _("the goal")
-                not_correct = _("the goal is not correct")
-        next_success_msg = (meaningful + " "
-                            + _(f"but I suspect") + " " + not_correct)
+
+        # Does not work:
+        # if nb_jokers == 1:
+        #     not_correct = _("it is not correct")
+        # else:
+        #     hypo_name = hypo_names[idx]
+        #     if hypo_name:
+        #         # hypo = _("hypothesis {}").format(at_hypo[3:])
+        #         not_correct = _(f"hypothesis {hypo_name} is not correct")
+        #     else:
+        #         # hypo = _("the goal")
+        #         not_correct = _("the goal is not correct")
+        # next_success_msg = (meaningful + " "
+        #                     + _(f"but I suspect") + " " + not_correct)
+        next_success_msg = _(f"There is no syntax error but I suspect it is "\
+                             "not correct")
         next_success_msg = _("Error: ") + next_success_msg
         idx += 1
 
@@ -957,18 +961,24 @@ def action_complete(proof_step) -> CodeForLean:
         codes.append(more_code)
 
         # Write "success" msg (= failure of the next or_else!)
-        if nb_jokers == 1:
-            hypo = ""
-        else:
-            hypo_name = hypo_names[idx]
-            hypo = (_(f" for hypothesis {hypo_name}") if hypo_name
-                    else _(" for the goal"))
-        next_success_msg = (_("I do not understand your proposal") + hypo + ", "
-                            + _("maybe a syntax error?"))
+        # if nb_jokers == 1:
+        #     hypo = ""
+        # else:
+        #     hypo_name = hypo_names[idx]
+        #     hypo = (_(f" for hypothesis {hypo_name}") if hypo_name
+        #             else " " + _("for the goal"))
+        # next_success_msg = (_("I do not understand your proposal") + hypo + ", "
+        #                     + _("maybe a syntax error?"))
+        next_success_msg = _("I do not understand your proposal, maybe a "
+                             "syntax error?")
+        next_success_msg = _("Error: ") + next_success_msg
         idx -= 1
 
     # Obsolete: does not fail for non-correctness
+    global_error_msg = _("I do not understand your proposal, maybe a syntax "
+                         "error?")
     final_code = CodeForLean.or_else_from_list(codes)
+    final_code.add_error_msg(global_error_msg)
 
     # DOES NOT WORK:
     # (when Lean fail, no message is traced!)

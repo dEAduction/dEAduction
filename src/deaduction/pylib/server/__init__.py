@@ -686,7 +686,9 @@ class ServerInterface(QObject):
         # Lean succeeded but with failed success msg
         if hasattr(request, "proof_step") and request.proof_step.success_msg:
             if request.proof_step.success_msg.lower().startswith(_("error")):
-                print(f"Success/error msg! {request.proof_step.success_msg}")
+                # print(f"Success/error msg! {request.proof_step.success_msg}")
+                # print(f"error msg: {request.proof_step.error_msg}")
+                request.proof_step.error_msg = request.proof_step.success_msg
                 error_type = 11
 
         # (4) Send information
