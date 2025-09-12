@@ -670,16 +670,31 @@ class MathCursor:
         self.debug()
 
     def actually_decrease_pos(self):
-        while self.cursor_is_before and not self.is_at_beginning():
+        # while self.cursor_is_before and not self.is_at_beginning():
+        #     self.decrease_pos()
+        # while self.cursor_is_after and not self.is_at_beginning():
+        #     self.decrease_pos()
+
+        pos = self.linear_text_cursor_position()
+        new_pos = pos
+        while new_pos == pos and not self.is_at_beginning():
+            self.debug()
             self.decrease_pos()
-        while self.cursor_is_after and not self.is_at_beginning():
-            self.decrease_pos()
+            new_pos = self.linear_text_cursor_position()
 
     def actually_increase_pos(self):
-        while self.cursor_is_after and not self.is_at_end():
+        # while self.cursor_is_after and not self.is_at_end():
+        #     self.increase_pos()
+        # while self.cursor_is_before and not self.is_at_end():
+        #     self.increase_pos()
+
+        pos = self.linear_text_cursor_position()
+        new_pos = pos
+        while new_pos == pos and not self.is_at_end():
+            self.debug()
             self.increase_pos()
-        while self.cursor_is_before and not self.is_at_end():
-            self.increase_pos()
+            new_pos = self.linear_text_cursor_position()
+
 
     # def fast_increase(self, set_marked=True):
     #     """
