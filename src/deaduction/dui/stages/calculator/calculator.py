@@ -435,7 +435,7 @@ class CalculatorAllButtons(QWidget):
 
         # (2) Lines from nodes
         if only_numbers:
-            node_classes = ["numbers"]
+            node_classes = ["numbers", "inequalities"]
         for node_name, NodeClass, col_size in (
                 ("logic", LogicalNode, 5),
                 ("sets", SetTheoryNode, 5),

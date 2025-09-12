@@ -125,8 +125,11 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
         if len(self.patterns) ==1:
             return
         menu = QMenu(self)
-        menu_items = [pattern.to_display(format_='utf8') for pattern in
-                      self.patterns]
+        if self.menu:
+            menu_items = self.menu
+        else:
+            menu_items = [pattern.to_display(format_='utf8') for pattern in
+                          self.patterns]
 
         for pattern, menu_item in zip(self.patterns, menu_items):
             action = QAction(menu_item, self)
