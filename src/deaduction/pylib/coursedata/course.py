@@ -158,29 +158,49 @@ class Course:
             log.warning(f"No copy of original exercise {exercise.pretty_name}"
                         f"found in history file")
 
-    def saved_exercises_in_history_course(self) -> [Exercise]:
+    def saved_exercises_in_history_course(self, max_nb=100) -> list[Exercise]:
         """
-        Provide list of all exercises saved in history course.
+        Provide list of exercises saved in history course. For each exercise,
+        only the max last versions are provided.
         """
 
         history_course = self.history_course()
         if not history_course:
             return []
 
-        exercises = [exo for exo in history_course.exercises
-                     if exo.history_date() and exo.refined_auto_steps]
+        # exercises = [exo for exo in history_course.exercises
+        #              if exo.history_date() and exo.refined_auto_steps]
         # # debug
         # for exo in hstr_course.exercises:
         #     if exo.history_date():
         #         continue
 
-        return exercises
+        # last_exercises = [ex for ex in exercises
+        #                   if ex.history_number() >
+        #                   ex.nb_versions_saved_in_history_course() - max_nb]
+
+        last_exercises = []
+        for exo in self.exercises:
+            for history_exo in self.history_versions_from_exercise(exo):
+                if (history_exo.history_number() >
+                        exo.nb_versions_saved_in_history_course() - max_nb):
+                    last_exercises.append(history_exo)
+
+        return last_exercises
 
     def history_versions_from_exercise(self, exercise: Exercise):
         """
         Return the versions of exercise as saved in self.history_course().
+        Beware that this may NOT make use of
+        the saved_exercises_in_history_course() method.
         """
-        saved_exercises = self.saved_exercises_in_history_course()
+        history_course = self.history_course()
+        if not history_course:
+            return []
+
+        # saved_exercises = self.saved_exercises_in_history_course()
+        saved_exercises = [exo for exo in history_course.exercises
+                           if exo.history_date() and exo.refined_auto_steps]
         exercises = [history_exo for history_exo in saved_exercises
                      if history_exo.is_history_version_of(exercise)]
         return exercises
@@ -217,12 +237,13 @@ class Course:
     def is_history_file(self):
         return self.course_file_name.startswith('history_')
 
-    def exercises_including_saved_version(self):
+    def exercises_including_saved_version(self, max_nb=100):
         """
-        Return a list containing self's exercises and all saved versions.
+        Return a list containing self's exercises and all saved versions
+        (or at least as many as max_nb per exercise).
         """
         original_exercises = self.exercises
-        saved_exercises = self.saved_exercises_in_history_course()
+        saved_exercises = self.saved_exercises_in_history_course(max_nb=max_nb)
         log.debug(f"Found {len(saved_exercises)} saved exercises")
         if not saved_exercises:
             return self.exercises

@@ -582,7 +582,8 @@ class ExerciseChooser(AbstractCoExChooser):
 
         browser_layout = QVBoxLayout()
 
-        exercises = course.exercises_including_saved_version()
+        max_nb = cvars.get('display.max_nb_of_saved_versions', 1)
+        exercises = course.exercises_including_saved_version(max_nb)
         exercises_tree = StatementsTreeWidget(exercises,
                                               course.outline,
                                               is_exercise_list=True)
@@ -1037,6 +1038,7 @@ class AbstractStartCoEx(QDialog):
 
         show_history = self.__show_history_action.isChecked()
         cvars.set('display.show_saved_exercises', show_history)
+        # max_nb = cvars.get('display.max_nb_of_saved_versions', 1)
         history_versions = self.course.saved_exercises_in_history_course()
         # tree_widget = self.__exercises_tree
         # tree_widget.hide_statements(history_versions, not yes)

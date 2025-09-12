@@ -1152,11 +1152,14 @@ class Exercise(Theorem):
         """
         return self.course.history_versions_from_exercise(self)
 
+    def nb_versions_saved_in_history_course(self) -> int:
+        return len(self.versions_saved_in_history_course())
+
     def has_versions_in_history_course(self):
         """
         True if at least one saved version of self in history_course.
         """
-        return len(self.versions_saved_in_history_course()) > 0
+        return self.nb_versions_saved_in_history_course() > 0
 
     def is_solved_in_history_course(self):
         """
@@ -1246,6 +1249,22 @@ class Exercise(Theorem):
 
         # Reload history_course to remove deleted entry
         # self.original_exercise.course.set_history_course()
+
+    def history_number(self) -> int:
+        """
+        Return the number at the end of self's name, which may serve as a
+        history number. If no such number, return -1.
+
+        E.g. "exercise.complete_lemme_de_gauss_12" --> 12
+        """
+        name = self.lean_name
+        suffix = name.split('_')[-1]
+        try:
+            nb = int(suffix)
+        except ValueError:
+            nb = -1
+
+        return nb
 
 
 #############
