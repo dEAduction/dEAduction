@@ -896,6 +896,7 @@ class CalculatorController:
 
         for target_wdg in self.target_widgets:
             target_wdg.enable_actions = self.enable_actions
+            target_wdg.mouse_pressed_at_pos.connect(self.go_to_linear_position)
 
         self.__init_histories()
         self.__init_targets()
@@ -1794,12 +1795,20 @@ class CalculatorController:
     def go_to_beginning(self):
         log.debug("Action: go to beginning")
         self.math_cursor.go_to_beginning()
+        self.math_cursor.max_shrink_selection()
         self.set_target_and_update_ui()
 
     @Slot()
     def go_to_end(self):
         log.debug("Action: go to end")
         self.math_cursor.go_to_end()
+        self.math_cursor.max_shrink_selection()
+        self.set_target_and_update_ui()
+
+    @Slot()
+    def go_to_linear_position(self, position):
+        self.math_cursor.go_to_linear_position(position)
+        self.math_cursor.max_shrink_selection()
         self.set_target_and_update_ui()
 
     # @Slot()

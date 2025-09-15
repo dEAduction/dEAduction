@@ -835,6 +835,33 @@ class MathCursor:
             self.increase_pos()
             new_pos = self.linear_text_cursor_position()
 
+    def go_to_linear_position(self, position):
+        """
+        If position > current position, move to the right until being the
+        closest to position. And symmetrically.
+        In practice, go right until current_position > position, then go left
+        once if this is closer.
+        """
+        current_position = self.linear_text_cursor_position()
+        delta = position - current_position
+        while delta > 0:
+            last_delta = delta
+            self.actually_increase_pos()
+            current_position = self.linear_text_cursor_position()
+            delta = position - current_position
+            if delta < 0:
+                if last_delta < -delta:
+                    self.actually_decrease_pos()
+                return
+        while delta < 0:
+            last_delta = delta
+            self.actually_decrease_pos()
+            current_position = self.linear_text_cursor_position()
+            delta = position - current_position
+            if delta > 0:
+                if -last_delta < delta:
+                    self.actually_increase_pos()
+                return
 
     # def fast_increase(self, set_marked=True):
     #     """

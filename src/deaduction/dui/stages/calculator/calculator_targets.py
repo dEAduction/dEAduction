@@ -172,6 +172,7 @@ class CalculatorTarget(MathTextWidget):
     key_event_item_interval = 1000
 
     enable_actions: callable  # Set by CalculatorController
+    mouse_pressed_at_pos = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -207,6 +208,9 @@ class CalculatorTarget(MathTextWidget):
             self.setFocus()
             # TODO: move math_cursor to position
             # super().mousePressEvent(event)
+            cursor = self.cursorForPosition(event.pos())
+            position = cursor.position()
+            self.mouse_pressed_at_pos.emit(position)
             event.ignore()
 
     def mouseDoubleClickEvent(self, event):
