@@ -1755,13 +1755,13 @@ class CalculatorController:
     @Slot()
     def move_up(self):
         log.debug("Action: Move up")
-        self.math_cursor.enlarge_selection()
+        self.math_cursor.actually_enlarge_selection()
         self.set_target_and_update_ui()
 
     @Slot()
     def move_down(self):
         log.debug("Action: Move down")
-        self.math_cursor.shrink_selection()
+        self.math_cursor.actually_shrink_selection()
         self.set_target_and_update_ui()
 
     @Slot()

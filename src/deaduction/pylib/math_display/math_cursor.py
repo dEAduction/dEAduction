@@ -583,6 +583,7 @@ class MathCursor:
         """
         # print("enlarging selection...")
         # TODO: rewrite using who_is_larger_selection
+        # TODO: repeat until selection actually changes or at top
         self.hide_cursor()
         parent, idx = self.parent_and_idx_of_cursor()
         # print(f"parent: {parent}, idx!{idx}")
@@ -614,6 +615,13 @@ class MathCursor:
             self.set_marked_element(True)
         self.debug()
 
+    def actually_enlarge_selection(self, set_marked=True):
+        current_mo = self.current_math_object
+
+        while self.current_math_object == current_mo and not self.is_at_top():
+            # self.debug()
+            self.enlarge_selection(set_marked)
+
     def shrink_selection(self, set_marked=True):
         self.hide_cursor()
         ok = self.go_down()
@@ -637,6 +645,13 @@ class MathCursor:
             self.set_marked_element(True)
         self.debug()
         return ok
+
+    def actually_shrink_selection(self, set_marked=True):
+        current_mo = self.current_math_object
+
+        while self.current_math_object == current_mo and not self.is_at_bottom():
+            # self.debug()
+            self.shrink_selection(set_marked)
 
     def max_shrink_selection(self):
         ok = True
