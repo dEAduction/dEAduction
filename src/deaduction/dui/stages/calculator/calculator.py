@@ -1377,19 +1377,20 @@ class CalculatorController:
             self.down_action.setEnabled(False)
             self.delete_action.setEnabled(False)
         else:
-            self.beginning_action.setEnabled(not cursor.is_at_beginning())
-            self.left_action.setEnabled(not cursor.is_at_beginning())
-            self.right_action.setEnabled(not cursor.is_at_end())
-            self.end_action.setEnabled(not cursor.is_at_end())
+            self.beginning_action.setEnabled(not cursor.is_visually_at_beginning())
+            self.left_action.setEnabled(not cursor.is_visually_at_beginning())
+            self.right_action.setEnabled(not cursor.is_visually_at_end())
+            self.end_action.setEnabled(not cursor.is_visually_at_end())
             self.undo_action.setEnabled(self.history_idx > 0)
             self.redo_action.setEnabled(self.history_idx < len(self.history) - 1)
             self.undo_all.setEnabled(self.history_idx > 0)
             self.redo_all.setEnabled(self.history_idx < len(self.history) - 1)
 
             # FIXME:
-            self.up_action.setEnabled(True)
-            self.down_action.setEnabled(True)
-            self.delete_action.setEnabled(True)
+            self.up_action.setEnabled(not cursor.is_at_top())
+            self.down_action.setEnabled(not cursor.is_at_bottom())
+            can_delete = bool(self.target.marked_descendant().assigned_math_object)
+            self.delete_action.setEnabled(can_delete)
 
         # Has usr filled-in enough targets?
         #  All place_holders must be at the end,

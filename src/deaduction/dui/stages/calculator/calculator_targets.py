@@ -92,50 +92,64 @@ class NavigationBar(AbstractToolBar):
         icons_dir = cdirs.icons
         beg_path = str((icons_dir / 'icons8-double-left-48.png').resolve())
 
-        # TODO: implement tooltips for shortcuts
-        beginning_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToPreviousWord)[0].toString()
-        beginning_shortcut = f"({_('type')} {beginning_shortcut})"
-
-        left_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToPreviousChar)[0].toString()
-        right_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToNextChar)[0].toString()
-        end_shortcut = QKeySequence.keyBindings(
-            QKeySequence.MoveToNextWord)[0].toString()
-        delete_shortcut = QKeySequence.keyBindings(
-            QKeySequence.Delete)[0].toString()
+        # beginning_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToPreviousWord)[0].toString()
+        # left_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToPreviousChar)[0].toString()
+        # right_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToNextChar)[0].toString()
+        # end_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToNextWord)[0].toString()
+        # delete_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.Delete)[0].toString()
+        # up_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToPreviousLine)[0].toString()
+        # down_shortcut = QKeySequence.keyBindings(
+        #     QKeySequence.MoveToNextLine)[0].toString()
+        beginning_tooltip = (_('Go to beginning') + '\n'
+                             + '(' + _('type') + ' Ctrl ←)')
+        end_tooltip = (_('Go to end') + '\n'
+                             + '(' + _('type') + ' Ctrl →)')
+        right_tooltip = (_('Move right') + '\n'
+                             + '(' + _('type') + ' →)')
+        left_tooltip = (_('Move left') + '\n'
+                             + '(' + _('type') + ' ←)')
+        up_tooltip = (_('Enlage selection') + '\n'
+                             + '(' + _('type') + ' ↑)')
+        down_tooltip = (_('Shrink selection') + '\n'
+                             + '(' + _('type') + ' ↓)')
+        delete_tooltip = (_('Delete selected block') + '\n'
+                             + '(' + _('type') + ' suppr)')
         self.beginning_action = QAction(QIcon(beg_path),
-                                        _('Go to beginning'),
+                                        beginning_tooltip,
                                         self)
 
         left_path = str((icons_dir / 'icons8-back-48.png').resolve())
         self.left_action = QAction(QIcon(left_path),
-                                   _('Move left'), self)
+                                   left_tooltip, self)
 
         right_path = str((icons_dir / 'icons8-forward-48.png').resolve())
         self.right_action = QAction(QIcon(right_path),
-                                   _('Move right'), self)
+                                   right_tooltip, self)
 
         up_path = str((icons_dir / 'icons8-expand-48.png').resolve())
         self.up_action = QAction(QIcon(up_path),
-                                   _('Enlarge selection'), self)
+                                   up_tooltip, self)
 
         down_path = str((icons_dir / 'icons8-shrink-48.png').resolve())
         self.down_action = QAction(QIcon(down_path),
-                                   _('Shrink selection'), self)
+                                   down_tooltip, self)
 
         end_path = str((icons_dir / 'icons8-double-right-48.png').resolve())
         self.end_action = QAction(QIcon(end_path),
-                                   _('Go to end'), self)
+                                   end_tooltip, self)
 
         self.delete = QAction(QIcon(str((icons_dir /
                                          'icons8-clear-48.png').resolve())),
-                              _('Delete selected block'), self)
+                              delete_tooltip, self)
 
         self.addAction(self.beginning_action)
         self.addAction(self.left_action)
-        # self.addAction(self.up_action)
         self.addAction(self.right_action)
         self.addAction(self.end_action)
         self.addSeparator()
@@ -191,6 +205,8 @@ class CalculatorTarget(MathTextWidget):
             super().mousePressEvent(event)
         else:
             self.setFocus()
+            # TODO: move math_cursor to position
+            # super().mousePressEvent(event)
             event.ignore()
 
     def mouseDoubleClickEvent(self, event):
@@ -198,7 +214,12 @@ class CalculatorTarget(MathTextWidget):
             super().mouseDoubleClickEvent(event)
         else:
             self.setFocus()
+            # TODO: select item
             event.ignore()
+
+    def mouseReleaseEvent(self, event):
+        super().mouseDoubleClickEvent(event)
+        # TODO: change selection accordingly
 
     def keyPressEvent(self, event):
         """
@@ -326,6 +347,8 @@ class CalculatorTarget(MathTextWidget):
                                 cursor.MoveAnchor,
                                 new_position - old_position)
             self.setTextCursor(cursor)
+
+
 
 
 class CalculatorTargets(QWidget):

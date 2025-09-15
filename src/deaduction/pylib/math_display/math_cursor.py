@@ -233,8 +233,8 @@ class MathCursor:
 
     def linear_text_cursor_position(self):
         """
-        Return the position at which the cursor should be seen, in a text
-        document.
+        Return the position at which the blinking cursor should be seen,
+        in a text document.
         """
         # doc = QTextDocument()
         # MathDisplay.mark_cursor = True
@@ -255,6 +255,24 @@ class MathCursor:
         position = text.find(self.deaduction_cursor)
         self.hide_cursor()
         return position
+
+    def is_visually_at_end(self):
+        doc = QTextDocument()
+        self.show_cursor()
+        doc.setHtml(self.math_list.to_string())
+        text = doc.toPlainText()
+        at_end = text.endswith(self.deaduction_cursor)
+        self.hide_cursor()
+        return at_end
+
+    def is_visually_at_beginning(self):
+        doc = QTextDocument()
+        self.show_cursor()
+        doc.setHtml(self.math_list.to_string())
+        text = doc.toPlainText()
+        at_end = text.startswith(self.deaduction_cursor)
+        self.hide_cursor()
+        return at_end
 
     def debug(self):
         log.debug(f"MathCursor: {self.cursor_is_before}")
@@ -281,109 +299,139 @@ class MathCursor:
             self.root_math_object.unmark()
             math_object.set_marked(yes)
 
-    def go_up(self):
-        ca = self.cursor_address
-        if len(ca) > 0:
-            self.cursor_address = ca[:-1]
+    def who_is_up(self) -> (bool, tuple):
+        """
+        Return a new address in the form (new_is_after, new_cursor_address).
+        """
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+        if len(new_cursor_address) > 0:
+            new_cursor_address = new_cursor_address[:-1]
+
+        return new_is_after, new_cursor_address
+
+    def who_is_down(self) -> (bool, tuple):
+        """
+        Return a new address in the form (new_is_after, new_cursor_address).
+        """
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+        if isinstance(self.current_item, MathList):
+            if self.cursor_is_before:  # Go to beginning of current_item
+                new_cursor_address += (0,)
+            else:  # Go to end of current item
+                new_cursor_address += (len(self.current_item)-1,)
+
+        return new_is_after, new_cursor_address
+
+    def who_is_right(self) -> (bool, tuple):
+        """
+        Return a new address in the form (new_is_after, new_cursor_address).
+        """
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+
+        if self.cursor_is_before:
+            new_is_after = True
+        else:
+            parent = self.parent_of_current_item
+            idx = self.current_idx
+            if parent and idx < len(parent) - 1:
+                new_cursor_address = (new_cursor_address[:-1] + (idx + 1,))
+                new_is_after = False
+
+        return new_is_after, new_cursor_address
+
+    def who_is_left(self) -> (bool, tuple):
+        """
+        Return a new address in the form (new_is_after, new_cursor_address).
+        """
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+
+        if self.cursor_is_after:
+            new_is_after = False
+        else:
+            idx = self.current_idx
+            if idx and idx > 0:
+                new_cursor_address = (new_cursor_address[:-1] + (idx - 1,))
+                new_is_after = True
+
+        return new_is_after, new_cursor_address
+
+    def go_to_address(self, new_is_after, new_cursor_address):
+        """
+        Go to the position specified by new_is_after, new_cursor_address.
+        Return true iff this is different from current position.
+        """
+        is_after, cursor_address = (self.cursor_is_after, self.cursor_address)
+        if (is_after, cursor_address) !=(new_is_after, new_cursor_address):
+            self.cursor_is_after = new_is_after
+            self.cursor_address = new_cursor_address
             return True
         else:
             return False
+
+    def go_up(self):
+        # ca = self.cursor_address
+        # if len(ca) > 0:
+        #     self.cursor_address = ca[:-1]
+        #     return True
+        # else:
+        #     return False
+        new_is_after, new_cursor_address = self.who_is_up()
+        return self.go_to_address(new_is_after, new_cursor_address)
 
     def go_down(self):
         """
         Go either to first child if cursor_is_before, or to last child if
         not.
         """
-        if isinstance(self.current_item, MathList):
-            if self.cursor_is_before:  # Go to beginning of current_item
-                self.cursor_address += (0,)
-            else:  # Go to end of current item
-                self.cursor_address += (len(self.current_item)-1,)
-            return True
-        else:
-            return False
+        # if isinstance(self.current_item, MathList):
+        #     if self.cursor_is_before:  # Go to beginning of current_item
+        #         self.cursor_address += (0,)
+        #     else:  # Go to end of current item
+        #         self.cursor_address += (len(self.current_item)-1,)
+        #     return True
+        # else:
+        #     return False
+        new_is_after, new_cursor_address = self.who_is_down()
+        return self.go_to_address(new_is_after, new_cursor_address)
 
     def go_right(self):
         """
         Move from before current item to after,
         or from after current item to before next item at the same level.
         """
-        if self.cursor_is_before:
-            self.set_cursor_after()
-            return
-
-        parent = self.parent_of_current_item
-        idx = self.current_idx
-        if parent and idx < len(parent) - 1:
-            self.cursor_address = (self.cursor_address[:-1] +
-                                   (idx + 1,))
-            self.set_cursor_before()
-            return True
-
-        return False
+        # if self.cursor_is_before:
+        #     self.set_cursor_after()
+        #     return
+        #
+        # parent = self.parent_of_current_item
+        # idx = self.current_idx
+        # if parent and idx < len(parent) - 1:
+        #     self.cursor_address = (self.cursor_address[:-1] + (idx + 1,))
+        #     self.set_cursor_before()
+        #     return True
+        # return False
+        new_is_after, new_cursor_address = self.who_is_right()
+        return self.go_to_address(new_is_after, new_cursor_address)
 
     def go_left(self):
 
-        if self.cursor_is_after:
-            self.set_cursor_before()
-            return
-
-        idx = self.current_idx
-        if idx and idx > 0:
-            self.cursor_address = (self.cursor_address[:-1] +
-                                   (idx - 1,))
-            self.set_cursor_after()
-            return True
-
-        return False
-
-    # def decrease_through_identical_positions(self):
-    #     """
-    #     Change position from before an item to after the previous item at the
-    #     same level, unless the current item is first at its level.
-    #     """
-    #
-    #     # if self.cursor_is_after or self.current_idx == 0:  # Nothing to do
-    #     #     return
-    #
-    #     # if self.current_item.is_formatter() or self.cursor_is_before:
-    #     #     success = self.go_left()
-    #     #     if success:
-    #     #         self.decrease_through_identical_positions()
-    #
-    #     if self.cursor_is_after and not self.current_item.is_formatter():
-    #         return
-    #     if self.is_at_beginning():
-    #         return
-    #
-    #     parent = self.parent_of_current_item
-    #     if not parent:
-    #         return
-    #
-    #     first_children = parent[:self.current_idx]
-    #     if not all(child.is_formatter() for child in first_children):
-    #         success = self.go_left()
-    #         if success:
-    #             self.decrease_through_identical_positions()
-
-    # def increase_through_identical_positions(self):
-    #     """
-    #     Change position from before an item to after the previous item at the
-    #     same level, unless the current item is first at its level.
-    #     """
-    #
-    #     if self.current_item.is_formatter() or self.cursor_is_after:
-    #         success = self.go_right()
-    #         if success:
-    #             self.increase_through_identical_positions()
-
-    # def go_to_address(self, address: tuple, set_cursor_after=None,
-    #                   set_marked=True):
-    #     self.cursor_address = address
-    #     if set_cursor_after is not None:
-    #         self.set_cursor_after(set_cursor_after)
-    #     if set_marked:
-    #         self.set_marked_element(True)
+        # if self.cursor_is_after:
+        #     self.set_cursor_before()
+        #     return
+        #
+        # idx = self.current_idx
+        # if idx and idx > 0:
+        #     self.cursor_address = (self.cursor_address[:-1] +
+        #                            (idx - 1,))
+        #     self.set_cursor_after()
+        #     return True
+        # return False
+        new_is_after, new_cursor_address = self.who_is_left()
+        return self.go_to_address(new_is_after, new_cursor_address)
 
     def go_to(self, math_object, after=True, set_marked=True) -> bool:
         """
@@ -456,16 +504,92 @@ class MathCursor:
         # This --> crash!
         # self.debug()
 
+    def who_is_larger_selection(self):
+        """
+        If cursor is before the first item in parent, or after the last item,
+        then go up.
+        """
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+
+        self.hide_cursor()
+        parent, idx = self.parent_and_idx_of_cursor()
+
+        if (self.cursor_is_before and idx == 0) \
+                or (self.cursor_is_after and idx == len(parent)):
+            new_is_after, new_cursor_address = self.who_is_up()
+
+        if (new_is_after, new_cursor_address) == (self.cursor_is_after,
+                                                  self.cursor_address):
+            if self.cursor_is_after:
+                cmo = self.current_math_object
+                ni = self.next_item()
+                if ni:
+                    nmo = ni.descendant
+                    if cmo in nmo.children:
+                        new_is_after, new_cursor_address = self.who_is_right()
+            else:
+                cmo = self.current_math_object
+                pi = self.previous_item()
+                if pi:
+                    pmo = pi.descendant
+                    if cmo in pmo.children:
+                        new_is_after, new_cursor_address = self.who_is_left()
+
+        return new_is_after, new_cursor_address
+
+    def who_is_smaller_selection(self):
+        new_cursor_address = self.cursor_address
+        new_is_after = self.cursor_is_after
+
+        self.hide_cursor()
+        new_is_after, new_cursor_address = self.who_is_down()
+
+        if (new_is_after, new_cursor_address) == (self.cursor_is_after,
+                                                  self.cursor_address):
+            if self.cursor_is_after:
+                cmo = self.current_math_object
+                ni = self.next_item()
+                if ni:
+                    nmo = ni.descendant
+                    if nmo in cmo.children:
+                        new_is_after, new_cursor_address = self.who_is_right()
+            else:
+                cmo = self.current_math_object
+                pi = self.previous_item()
+                if pi:
+                    pmo = pi.descendant
+                    if pmo in cmo.children:
+                        new_is_after, new_cursor_address = self.who_is_left()
+
+        return new_is_after, new_cursor_address
+
+    def is_at_top(self):
+        # return not len(self.cursor_address) > 0
+        larger = self.who_is_larger_selection()
+        at_top = (larger == (self.cursor_is_after, self.cursor_address))
+        return at_top
+
+    def is_at_bottom(self):
+        # return not isinstance(self.current_item, MathList)
+        smaller = self.who_is_smaller_selection()
+        at_bottom = (smaller == (self.cursor_is_after, self.cursor_address))
+        return at_bottom
+
     def enlarge_selection(self, set_marked=True):
         """
         If cursor is before the first item in parent, or after the last item,
         then go up.
         """
+        # print("enlarging selection...")
+        # TODO: rewrite using who_is_larger_selection
         self.hide_cursor()
         parent, idx = self.parent_and_idx_of_cursor()
+        # print(f"parent: {parent}, idx!{idx}")
         go_up = False
         if (self.cursor_is_before and idx == 0) \
-        or (self.cursor_is_after and idx == len(parent)):
+                or (self.cursor_is_after and idx == len(parent)):
+            # print("I go up")
             go_up = self.go_up()
 
         if not go_up:
@@ -475,6 +599,7 @@ class MathCursor:
                 if ni:
                     nmo = ni.descendant
                     if cmo in nmo.children:
+                        # print("I go right)")
                         self.go_right()
             else:
                 cmo = self.current_math_object
@@ -482,6 +607,7 @@ class MathCursor:
                 if pi:
                     pmo = pi.descendant
                     if cmo in pmo.children:
+                        # print("I go left")
                         self.go_left()
 
         if set_marked:
@@ -490,7 +616,6 @@ class MathCursor:
 
     def shrink_selection(self, set_marked=True):
         self.hide_cursor()
-        ok = False
         ok = self.go_down()
         if not ok:
             if self.cursor_is_after:
