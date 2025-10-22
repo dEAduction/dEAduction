@@ -345,6 +345,14 @@ class PatternMathObject(MathObject):
     def is_metavar(self):
         return isinstance(self, MetaVar)
 
+    def contains_unassigned_metavar(self):
+        for child in self.children:
+            print(f"{child.to_display(format_='utf8')} not complete: "
+                  f"{child.contains_unassigned_metavar()}")
+        yes = any(child.contains_unassigned_metavar() for child in self.children)
+        print(f"{self.to_display(format_='utf8')} not complete: {yes}")
+        return yes
+
     def is_no_math_type(self):
         return self is self.NO_MATH_TYPE
 
@@ -794,6 +802,18 @@ class MetaVar(PatternMathObject):
                                                           copied_metavars)
         return new_mvar
 
+    def contains_unassigned_metavar(self):
+        if self.assigned_math_object:
+            if isinstance(self.assigned_math_object, PatternMathObject):
+                return self.assigned_math_object.contains_unassigned_metavar()
+            else:
+                return False
+            # print(f"assigned_math_object: "
+            #       f"{self.assigned_math_object.to_display(format_='utf8')}")
+            # return False
+        else:
+            return True
+
     @property
     def assigned_math_object(self):
         return self._assigned_math_object
@@ -806,6 +826,8 @@ class MetaVar(PatternMathObject):
     def assigned_math_type(self):
         if self.assigned_math_object:
             return self.assigned_math_object.math_type
+        else:
+            return None
 
     def check_type_msg(self):
         expected_type = self._math_type.try_to_display(text=True, is_type=True)

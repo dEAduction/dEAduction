@@ -1265,6 +1265,10 @@ class CalculatorController:
         #     self.status_bar.show_pending_msgs()
 
     def help_msg(self):
+        """
+        Always return empty string.
+        TODO: pertinent help messages.
+        """
         msg = ""
         DEBUG=False
         current_mo = self.current_target.marked_descendant()
@@ -1296,6 +1300,9 @@ class CalculatorController:
                 msg = _("Enter {}").format(expected_type)
             else:
                 msg = _("(No help available)")
+
+        if not DEBUG:
+            msg = ""
         return msg
 
     def polished_lean_code(self):
@@ -1419,8 +1426,12 @@ class CalculatorController:
                 break
             else:  # At least one assigned_math_object
                 OK = True
-        # button_box = (self.targets_widget.button_box if self.targets_widget
-        #               else self.calculator_ui.button_box)
+
+        # Do not enable OK if some target contains "?" (unassigned metavar)
+        for mo in assigned_math_objects:
+            if mo and mo.contains_unassigned_metavar():
+                OK = False
+
         button_box = self.targets_widget.button_box
         button_box.setEnabled(OK)
 
