@@ -1265,9 +1265,11 @@ class CalculatorController:
         #     self.status_bar.show_pending_msgs()
 
     def help_msg(self):
+        msg = ""
         DEBUG=False
         current_mo = self.current_target.marked_descendant()
         target_expected_type = current_mo._math_type
+        # self.current_target.marked_descendant().assigned_math_object
         if current_mo.math_type:
             display_type = current_mo.math_type_to_display(format_='utf8',
                                                            text=True)
@@ -1279,13 +1281,15 @@ class CalculatorController:
             expected_type = target_expected_type.try_to_display(text=True,
                                                                 is_type=True)
 
-        if not current_mo.is_metavar and DEBUG:
-            msg = "((not a metavar))"
+        if not current_mo.is_metavar:
+            if DEBUG:
+                msg = "((not a metavar))"
         elif current_mo.assigned_math_object:
-            msg = current_mo.check_type()
-            if not msg and DEBUG:
-                msg = (f"((type checked : expected {expected_type},"
-                       f"got {display_type}))")
+            if DEBUG:
+                msg = current_mo.check_type()
+                if not msg:
+                    msg = (f"((type checked : expected {expected_type},"
+                           f"got {display_type}))")
         else:
             if (expected_type and not (target_expected_type.is_metavar
                     and not target_expected_type.assigned_math_object)):
@@ -1387,7 +1391,6 @@ class CalculatorController:
             self.undo_all.setEnabled(self.history_idx > 0)
             self.redo_all.setEnabled(self.history_idx < len(self.history) - 1)
 
-            # FIXME:
             self.up_action.setEnabled(not cursor.is_at_top())
             self.down_action.setEnabled(not cursor.is_at_bottom())
             can_delete = bool(self.target.marked_descendant().assigned_math_object)

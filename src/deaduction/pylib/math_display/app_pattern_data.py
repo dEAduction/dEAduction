@@ -42,17 +42,20 @@ latex_from_app_pattern = {
     # TODO: test Id, Id(x)
     "APP(CONSTANT/name=Identite, ?1, ?2: ?1)": ("Id", r"\parentheses", 2),
 
-    # u_n: surrounded by empty strings for Calculator
+    # u_n:
     "APP(LOCAL_CONSTANT: !SEQUENCE(?2, ?3)(...), ?1: ?2)":
-        ('', (0, local_constant_shape), ['_', (1, )], ''),
+    # ('', (0, local_constant_shape), ['_', (1, )], ''),
+        ((0, local_constant_shape), ['_', (1,)]),
     # "APP(LOCAL_CONSTANT: !SEQUENCE(...)(...), ?1)":
     #     ('(0, ).name', ['_', (1,)]),
     "APP(LOCAL_CONSTANT: !SEQUENCE(...)(...), ?1)":
-        ('', (0, local_constant_shape), ['_', (1,)], ''),
+        # ('', (0, local_constant_shape), ['_', (1,)], ''),
+        ((0, local_constant_shape), ['_', (1,)]),
     # APP(E, i) --> E_i
     #   Here E is the name of the local constant, which is self.children[0]
     "APP(LOCAL_CONSTANT: !SET_FAMILY(?2, ?3)(...), ?1: ?2)":
-        ('', (0, local_constant_shape), ['_', (1, )], ''),
+        # ('', (0, local_constant_shape), ['_', (1, )], ''),
+        ((0, local_constant_shape), ['_', (1,)]),
     "APP(CONSTANT/name=limit_function, LAMBDA(?2, ?3, ?4), ?0, ?1)":
         (r'\no_text', "lim", ['_', (-3, 1), r'\to', (-2,)], ' ', (-3, 2),
          " = ", (-1,)),

@@ -1348,7 +1348,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         """
 
         # DEBUG
-        check_types = True
+        # check_types = True
         PatternMathObject.clear_cls_metavars()
         for child_new_pmo in mvars:
             log.debug(f"----> {child_new_pmo} match?")
@@ -1363,6 +1363,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                                     math_object))
                 log.debug("Check type failed, assign anyway")
                 return True
+        return False
 
     def priority_tests(self, new_pmo, mvar, parent_mvar) -> bool:
         """
@@ -1579,7 +1580,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
         return True
 
-    def insert_if_you_can(self, new_pmo, mvar,  # parent_mvar=None,
+    def insert_if_you_can(self, new_pmo, mvar,
                           check_types=False, old_target=None):
         """
         Try to insert new_pmo at mvar.
@@ -1599,8 +1600,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # if parent_mvar:
         #     assert isinstance(parent_mvar, MarkedPatternMathObject)
 
-        left = self.appears_left_of_cursor(mvar)
-        right = self.appears_right_of_cursor(mvar)
+        # left = self.appears_left_of_cursor(mvar)
+        # right = self.appears_right_of_cursor(mvar)
 
         pmo_display = new_pmo.to_display(format_='utf8')
         log.debug(f"Trying to insert {pmo_display} at {mvar}")
