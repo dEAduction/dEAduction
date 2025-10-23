@@ -316,15 +316,6 @@ equal = LogicalNode("PROP_EQUAL",
                     (r"\no_text", 0, r" \equal ", 1)
                     )
 
-mapsto = LogicalNode("LAMBDA",
-                     "LAMBDA: FUNCTION(?0, ?2)(?0,"
-                     "LOCAL_CONSTANT/name=?.BoundVar: ?0, ?3: ?2)",
-                     (1, r'\in', 0, r"\mapsto", 3)
-                     )
-mapsto.set_button_symbol("↦")
-mapsto.set_button_tooltip(_("Define a function"))
-#                         ['APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
-
 # "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
 # "PROP_FALSE": (r"\false",)
 
@@ -388,31 +379,6 @@ set_inverse.set_button_symbol("f⁻¹({·})")
 set_inverse.set_button_tooltip(_("The inverse image of a subset under a "
                                  "function"))
 
-
-# NB: 'APPLICATION' is a special pattern
-application = SetTheoryNode("APPLICATION",
-                            # "GENERIC_APPLICATION",
-                            # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
-                            # 'APPLICATION(?0, ?1)',
-                            ['APPLICATION: ?3()(?0: !FUNCTION(?2, ?3), '
-                                '?1: ?2)',
-                             'APPLICATION: ?3()(?0: !SEQUENCE(CONSTANT/name=ℕ, '
-                             '?3), ?1: CONSTANT/name=ℕ)'
-                             ],
-                            (0, "\\parentheses", 1))
-
-application.set_button_symbol("f(·)")
-application.set_button_tooltip(_("Application of a function to an element\\n"
-                                 "or term of a sequence."))
-application.set_button_menu(["f(x)", "u_n"])
-
-composition = SetTheoryNode("COMPOSITION",
-                            "COMPOSITION: FUNCTION(?1, ?3)"
-                            "(?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))",
-                            (4, r'\circ', 5)
-                            )
-composition.set_button_tooltip(_("Composition of two functions"))
-
 subsets = SetTheoryNode("SUBSETS",
                         "SET: TYPE()(?0: *TYPE)",
                         (r'\set_of_subsets', [r'\symbol_parentheses', 0]))
@@ -448,6 +414,52 @@ functions.set_button_tooltip(_("A set of functions"))
 # "SET_INTENSION_EXT": (
 #     r"\no_text", r'\{', 2, ' | ', 1, r' \in ', 0, r'\}'),
 # symbol = '{|}': 'SET_INTENSION(?0: TYPE, ?1, ?2: PROP)'
+
+
+class FunctionNode(Node):
+    """
+    Class to store a few basic nodes related to functions: application of a
+    function to an argument (or a sequence to an index), composition,
+    définition of a function.
+    """
+    _name = "Functions"
+    __name_for_translation = _("Functions")
+    calculator_nodes = []
+
+
+# NB: 'APPLICATION' is a special pattern
+application = FunctionNode("APPLICATION",
+                            # "GENERIC_APPLICATION",
+                            # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
+                            # 'APPLICATION(?0, ?1)',
+                            ['APPLICATION: ?3()(?0: !FUNCTION(?2, ?3), '
+                                '?1: ?2)',
+                             'APPLICATION: ?3()(?0: !SEQUENCE(CONSTANT/name=ℕ, '
+                             '?3), ?1: CONSTANT/name=ℕ)'
+                             ],
+                            (0, "\\parentheses", 1))
+
+application.set_button_symbol("f(·)")
+application.set_button_tooltip(_("Application of a function to an element\\n"
+                                 "or term of a sequence."))
+application.set_button_menu(["f(x)", "u_n"])
+application.set_shortcut("APP")
+
+composition = FunctionNode("COMPOSITION",
+                            "COMPOSITION: FUNCTION(?1, ?3)"
+                            "(?4: FUNCTION(?2, ?3), ?5: FUNCTION(?1, ?2))",
+                            (4, r'\circ', 5)
+                            )
+composition.set_button_tooltip(_("Composition of two functions"))
+
+mapsto = FunctionNode("LAMBDA",
+                     "LAMBDA: FUNCTION(?0, ?2)(?0,"
+                     "LOCAL_CONSTANT/name=?.BoundVar: ?0, ?3: ?2)",
+                     (1, r'\in', 0, r"\mapsto", 3)
+                     )
+mapsto.set_button_symbol("↦")
+mapsto.set_button_tooltip(_("Define a function"))
+mapsto.set_shortcut("\mapsto")
 
 
 class NumberNode(Node):

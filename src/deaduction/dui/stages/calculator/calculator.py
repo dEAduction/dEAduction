@@ -71,8 +71,8 @@ from deaduction.pylib.actions import MissingCalculatorOutput
 
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
-                                                 SetTheoryNode, NumberNode,
-                                                 InequalityNode)
+                                                 SetTheoryNode, FunctionNode,
+                                                 NumberNode, InequalityNode)
 
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
@@ -435,10 +435,11 @@ class CalculatorAllButtons(QWidget):
 
         # (2) Lines from nodes
         if only_numbers:
-            node_classes = ["numbers", "inequalities"]
+            node_classes = ["functions", "numbers", "inequalities"]
         for node_name, NodeClass, col_size in (
                 ("logic", LogicalNode, 5),
                 ("sets", SetTheoryNode, 5),
+                ("functions", FunctionNode, 5),
                 ("numbers", NumberNode, 4),
                 ("inequalities", InequalityNode, 5)):
             # TODO: add settings test on buttons name
