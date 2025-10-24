@@ -346,11 +346,11 @@ class PatternMathObject(MathObject):
         return isinstance(self, MetaVar)
 
     def contains_unassigned_metavar(self):
-        for child in self.children:
-            print(f"{child.to_display(format_='utf8')} not complete: "
-                  f"{child.contains_unassigned_metavar()}")
+        # for child in self.children:
+        #     print(f"{child.to_display(format_='utf8')} not complete: "
+        #           f"{child.contains_unassigned_metavar()}")
         yes = any(child.contains_unassigned_metavar() for child in self.children)
-        print(f"{self.to_display(format_='utf8')} not complete: {yes}")
+        # print(f"{self.to_display(format_='utf8')} not complete: {yes}")
         return yes
 
     def is_no_math_type(self):
@@ -443,7 +443,7 @@ class PatternMathObject(MathObject):
         self_type = self.math_type
         # DEBUG
         if not isinstance(self_type, PatternMathObject):
-            print(f"{self_type} is not a PatternMathObject!!!")
+            log.warning(f"{self_type} is not a PatternMathObject!!!")
 
         if return_msg:
             error_msg = self.try_to_display() + " ≠match "

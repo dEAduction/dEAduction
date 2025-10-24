@@ -72,7 +72,8 @@ from deaduction.pylib.actions import MissingCalculatorOutput
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
                                                  SetTheoryNode, FunctionNode,
-                                                 NumberNode, InequalityNode)
+                                                 NumberNode, InequalityNode
+                                                 )
 
 from deaduction.pylib.mathobj import MathObject
 from deaduction.pylib.pattern_math_obj import (PatternMathObject,
@@ -463,6 +464,15 @@ class CalculatorAllButtons(QWidget):
         # Connect button signals
         for btn in self.buttons():
             btn.btn_send_pattern.connect(self.process_clic)
+            pattern = btn.patterns[0]
+            if (pattern.node == 'APPLICATION'
+                and btn.button_symbol ==
+                    FunctionNode.application.button_symbol()):
+                self.application_pattern = pattern
+            if (pattern.node == 'GENERIC_PARENTHESES'
+                and btn.button_symbol ==
+                    NumberNode.parentheses.button_symbol()):
+                self.parentheses_pattern = pattern
 
         self.set_geometry()
 
@@ -1088,6 +1098,14 @@ class CalculatorController:
         # self.main_window.close()
 
     @property
+    def application_pattern(self):
+        return self.buttons_window.application_pattern
+
+    @property
+    def parentheses_pattern(self):
+        return self.buttons_window.parentheses_pattern
+
+    @property
     def nb_of_targets(self):
         return len(self.targets)
 
@@ -1598,14 +1616,10 @@ class CalculatorController:
             original_bvs = []
             copied_bvs = []
 
-        new_target = self.target.deep_copy(self.target,
-                                           original_bvs,
-                                           copied_bvs)
-        # if pattern_s[0].is_bound_var:
-        #     # FIXME
-        #     main_bv = self.target.children[1]
-        #     print(f"BV, {main_bv}"
-        #           f",{pattern_s[0] is main_bv}")
+        target = self.target
+        new_target = target.deep_copy(self.target,
+                                      original_bvs,
+                                      copied_bvs)
 
         # Do not affect marked_descendant:
         new_target.set_math_cursor(go_to_end=False)
@@ -1622,12 +1636,19 @@ class CalculatorController:
         assigned_mvar = None
         # print(f"New target: {new_target}")
 
-        # (1) Normal insert
+        # ####### (1) Normal insert ########
         for pattern in pattern_s:
-            if pattern.node == "GENERIC_APPLICATION":  # FIXME: obsolete?
-                # (1a) Special buttons: applications
-                # g --> g(·)
-                assigned_mvar = new_target.insert_application()
+            print(pattern.node, self.parentheses_pattern.node,
+                  pattern == self.parentheses_pattern)
+            # print(target.marked_descendant().is_suitable_for_app(),
+            # target.cursor_is_after_marked_descendant())
+            if (pattern == self.parentheses_pattern
+                and target.marked_descendant().is_suitable_for_app()
+                    and target.cursor_is_after_marked_descendant()):
+                # ###### (1a) Special buttons: parentheses ######
+                # If after a function or like, then insert APP
+                log.debug("(Trying application)")
+                assigned_mvar = new_target.insert(self.application_pattern)
             else:
                 # (1b) Normal insert
                 assigned_mvar = new_target.insert(pattern)
@@ -1636,12 +1657,12 @@ class CalculatorController:
                 break
 
         pattern = pattern_s[-1]
-        # (2) Automatic patterns
+        # ###### (2) Automatic patterns ######
         # g, x --> g(x)  ; u, n --> u_n
         if not assigned_mvar:
             assigned_mvar = new_target.insert_application_with_arg(pattern)
 
-        # (3) Force insertion with LAST pattern
+        # ###### (3) Force insertion with LAST pattern ######
         # For now this just fusions digits
         #  1, 2 --> 12
         if not assigned_mvar:

@@ -425,6 +425,7 @@ class FunctionNode(Node):
     _name = "Functions"
     __name_for_translation = _("Functions")
     calculator_nodes = []
+    application = None  # Set below
 
 
 # NB: 'APPLICATION' is a special pattern
@@ -444,6 +445,8 @@ application.set_button_tooltip(_("Application of a function to an element\\n"
                                  "or term of a sequence."))
 application.set_button_menu(["f(x)", "u_n"])
 application.set_shortcut("APP")
+
+FunctionNode.application = application
 
 composition = FunctionNode("COMPOSITION",
                             "COMPOSITION: FUNCTION(?1, ?3)"
@@ -469,6 +472,7 @@ class NumberNode(Node):
     _name = "Numbers"
     __name_for_translation = _("Numbers")
     calculator_nodes = []
+    parentheses = None  # Set below
 
 
 Naturals = NumberNode('ℕ',
@@ -553,6 +557,8 @@ parentheses = NumberNode('GENERIC_PARENTHESES',
                          ('(', 0, ')')
                          )
 parentheses.set_button_symbol("()")
+
+NumberNode.parentheses = parentheses
 
 sum_ = NumberNode('SUM',
                   # 'SUM: ?2: *HAS_ADD()()(?0: ?2, ?1: ?2)',
