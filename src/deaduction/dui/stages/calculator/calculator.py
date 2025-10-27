@@ -1659,8 +1659,8 @@ class CalculatorController:
         pattern = pattern_s[-1]
         # ###### (2) Automatic patterns ######
         # g, x --> g(x)  ; u, n --> u_n
-        if not assigned_mvar:
-            assigned_mvar = new_target.insert_application_with_arg(pattern)
+        if (not assigned_mvar) and target.cursor_is_after_marked_descendant():
+            assigned_mvar = new_target.insert_application_with_arg2(pattern)
 
         # ###### (3) Force insertion with LAST pattern ######
         # For now this just fusions digits

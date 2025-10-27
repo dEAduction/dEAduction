@@ -550,10 +550,16 @@ class MathObject:
         """
         Construct a MathObject obtained by applying function to var.
         """
+        f_type = function.math_type
+        children = f_type.children
+        if len(children) < 1:
+            raise ValueError(f"Math_type {f_type.to_display(format_='utf8')}"
+                             f" of {function.to_display(format_='utf8')}"
+                             f"does not have 2 children")
         return cls(node="APPLICATION",
                    info={},
                    children=[function, var],
-                   math_type=function.math_type.children[1])
+                   math_type=children[1])
 
     @classmethod
     def FALSE(cls):
@@ -1730,6 +1736,9 @@ class MathObject:
 
     def is_number(self):
         return any([self.is_N(), self.is_Z(), self.is_Q(), self.is_R()])
+
+    def is_generic_number(self):
+        return self.node == '*NUMBER_TYPES'
 
     def ring_expr(self) -> Optional[int]:
         """

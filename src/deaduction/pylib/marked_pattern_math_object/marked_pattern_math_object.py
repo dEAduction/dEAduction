@@ -1121,6 +1121,32 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         return mpmo
 
     @classmethod
+    def application_from_function_n_arg(cls, fct, arg):
+        """
+        Construct an MPMO corresponding to APP(fct, arg).
+        """
+        if not isinstance(fct, cls):
+            fct = cls.from_math_object(fct)
+
+        children = fct.math_type.children
+        if children:
+            arg_type = children[0]
+        else:
+            arg_type = cls.NO_MATH_TYPE
+
+        mvar0 = MarkedMetavar(math_type=fct.math_type)
+        mvar0.assigned_math_object = fct
+        mvar1 = MarkedMetavar(math_type=arg_type)
+        mvar1.assigned_math_object = arg
+
+        print(f"fct {fct.to_display(format_='utf8')} "
+              f"with type {fct.math_type.to_display(format_='utf8')}")
+        print(f"mvar type {mvar0.math_type.to_display(format_='utf8')}")
+        mpmo = cls.application(mvar0, mvar1)
+        return mpmo
+
+
+    @classmethod
     def populate_applications_from_context(cls, context):
         """
         For each MathObject fct from context, if suitable, compute
@@ -1749,12 +1775,68 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                     mvar.assigned_math_object = new_pmo
                 return mvar
 
+    def insert_application_with_arg2(self, argument: MathObject):
+        """
+        Try to insert an APPLICATION, with marked_descendant as its first
+        argument (i.e. as the function being applied, denoted f below),
+        and a given argument as its second argument (i.e. the argument at
+        which the function is applied, denoted x).
+        We treat the cases of
+        - f:X-> Y, x:X
+        - f: sequence, x: natural number
+        - f: set family with index set I, x:I
+        - f: N,Z,Q,or R -> Y, x: some number
+        - TODO: f: XxY -> Z, x:X
+
+        :return If successful, the marked_descendant with assigned math_object
+        corresponding to f(x).
+        """
+
+        log.debug("Trying to insert an application with arg")
+        mvar = self.marked_descendant()
+        if not mvar:
+            return None
+        function: MathObject = mvar.assigned_math_object
+        if not function:
+            return None
+
+        if not function.is_suitable_for_app():
+            return None
+
+        # Check argument match function's origin
+        arg_type = argument.math_type
+        f_type = function.math_type
+        origin_type = f_type.children[0] if f_type.children else None
+        seq_test = function.is_sequence() and arg_type.is_N
+        general_test = (origin_type == arg_type)
+        number_test = (origin_type
+                       and
+                       (origin_type.is_number() or origin_type.is_generic_number())
+                       and
+                       (arg_type.is_number() or arg_type.is_generic_number()))
+
+        origin_display = origin_type.to_display(format_='utf8') if (
+            origin_type) else "None"
+        arg_display = arg_type.to_display(format_='utf8') if arg_type else \
+            "None"
+        print(f"Types: {origin_display}, {arg_display}")
+        print(f"Tests: {seq_test, general_test, number_test}")
+        if not any([seq_test, general_test, number_test]):
+            return None
+
+        # new_mo = MathObject.application(function, argument)
+        # new_pmo = MarkedPatternMathObject.from_math_object(new_mo)
+        new_pmo = MarkedPatternMathObject.application_from_function_n_arg(function, argument)
+        mvar.assigned_math_object = new_pmo
+        return mvar
+
     def insert_application_with_arg(self, argument: MathObject):
         """
         Try to insert an APPLICATION, with marked_descendant as its first
         argument (i.e. as the function being applied), and a given argument
         as its second argument (i.e. the argument at which the function is
         applied).
+        FIXME: obsolete
         """
 
         log.debug("Trying to insert an application with arg")
