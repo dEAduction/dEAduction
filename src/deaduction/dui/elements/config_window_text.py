@@ -69,6 +69,7 @@ PRETTY_NAMES = {
     #                                                  "buttons"),
     'display.display_success_messages': _("Display success messages"),
     'display.color_for_selection': _("Color for selection"),
+    'display.color_for_applied_properties': _("Color for applied properties"),
     'display.math_font_file': _("Maths fonts"),
     'logic.button_use_or_prove_mode': _('Prove / use mode for action buttons'),
     'display_switch': _('Display switcher'),

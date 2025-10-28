@@ -135,8 +135,9 @@ class AbstractMathHtmlText:
     def color_styles(self):
         if self.use_color:
             style = f".variable  {{ color: {color_variables()} }}" \
-                    f".dummy_variable  {{ color: {color_dummy_variables()} }}" \
-                    f".used_prop  {{ color: {color_props()} }}"
+                    f".dummy_variable  {{ color: {color_dummy_variables()} }}"
+            # if color_props():
+            style += f".used_prop  {{ color: {color_props()} }}"
         else:
             style = ""
 

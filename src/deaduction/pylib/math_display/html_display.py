@@ -26,7 +26,7 @@ This file is part of d∃∀duction.
 from typing import Union
 import logging
 
-# import deaduction.pylib.config.vars as cvars
+import deaduction.pylib.config.vars as cvars
 #
 # from deaduction.pylib.math_display.more_display_utils import (cut_spaces,
 #                                                               replace_dubious_characters)
@@ -192,6 +192,11 @@ def recursive_html_display(math_list: Union[list, str], depth,
         math_list.pop(0)
     if (not use_color) and math_list[0] in (r'\variable', r'\dummy_variable',
                                             r'\used_property'):
+        math_list.pop(0)
+
+    color_applied_prop = cvars.get('logic.use_color_for_applied_properties',
+                                   False)
+    if not color_applied_prop and math_list[0] == r'\used_property':
         math_list.pop(0)
 
     # Main formatter. Pre and post will be added AFTER recursive formatting

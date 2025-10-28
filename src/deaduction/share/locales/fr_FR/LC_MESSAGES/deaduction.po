@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-09-11 17:49+0200\n"
-"PO-Revision-Date: 2025-09-11 17:50+0200\n"
+"POT-Creation-Date: 2025-10-28 10:18+0100\n"
+"PO-Revision-Date: 2025-10-28 10:22+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: pygettext.py 1.5\n"
-"X-Generator: Poedit 3.7\n"
+"X-Generator: Poedit 3.8\n"
 "X-Poedit-Basepath: ../../../..\n"
 "X-Poedit-SearchPath-0: .\n"
 
@@ -80,7 +80,7 @@ msgstr "Les fichiers suivants ont le même nom:\n"
 msgid "Show details"
 msgstr "Détails"
 
-#: dui/__main__.py:613 dui/elements/config_window.py:332
+#: dui/__main__.py:613 dui/elements/config_window.py:333
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -93,7 +93,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:215
-#: dui/elements/config_window.py:577
+#: dui/elements/config_window.py:578
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_dict.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -129,8 +129,8 @@ msgid "steps"
 msgstr "étapes"
 
 #: dui/elements/actions_widgets_classes.py:1221
-#: dui/stages/start_coex/start_coex_widgets.py:863
-#: dui/stages/start_coex/start_coex_widgets.py:1205
+#: dui/stages/start_coex/start_coex_widgets.py:864
+#: dui/stages/start_coex/start_coex_widgets.py:1207
 msgid "Exercises"
 msgstr "Exercices"
 
@@ -142,35 +142,35 @@ msgstr "Sauvegardes"
 msgid "Statements"
 msgstr "Enoncés"
 
-#: dui/elements/config_window.py:124
+#: dui/elements/config_window.py:125
 msgid "The variables of the context are displayed in color"
 msgstr "Les variables du contexte apparaissent en couleur"
 
-#: dui/elements/config_window.py:126
+#: dui/elements/config_window.py:127
 msgid "The dummy variables (bound by a quantifier) are displayed in color"
 msgstr ""
 "Les variables muette (liées à un quantificateur) apparaissent en couleur"
 
-#: dui/elements/config_window.py:129
+#: dui/elements/config_window.py:130
 msgid "The context properties are shaded after the first time they are used"
 msgstr ""
 "Les propriétés du contexte sont grisées après avoir été utilisées une "
 "première fois"
 
-#: dui/elements/config_window.py:132
+#: dui/elements/config_window.py:133
 msgid "The user is asked to name new context variables"
 msgstr "L'utilisateur doit nommer les nouvelles variables du contexte"
 
-#: dui/elements/config_window.py:134
+#: dui/elements/config_window.py:135
 msgid "Display properties using bounded quantification"
 msgstr "Utiliser la quantification bornée"
 
-#: dui/elements/config_window.py:138
+#: dui/elements/config_window.py:139
 msgid "'Admit current sub-goal!' is available with the Proof methods button"
 msgstr ""
 "'Admettre le but en cours !' est possible avec le bouton 'Méthodes de preuve'"
 
-#: dui/elements/config_window.py:141
+#: dui/elements/config_window.py:142
 msgid ""
 "When an existence property appears in the context, the ∃ button is operated "
 "automatically"
@@ -178,7 +178,7 @@ msgstr ""
 "Lorsqu'une propriété d'existence apparait dans le contexte, le bouton ∃ est "
 "actionné automatiquement"
 
-#: dui/elements/config_window.py:144
+#: dui/elements/config_window.py:145
 msgid ""
 "When a conjunction appears in the context, the AND button is operated "
 "automatically"
@@ -186,13 +186,13 @@ msgstr ""
 "Lorsqu'une conjonction apparait dans le contexte, le bouton AND est actionné "
 "automatiquement"
 
-#: dui/elements/config_window.py:147
+#: dui/elements/config_window.py:148
 msgid "Buttons act on the target if no context object is selected"
 msgstr ""
 "Les boutons agissent sur le but si aucune propriété du contexte n'a été "
 "sélectionnée"
 
-#: dui/elements/config_window.py:149
+#: dui/elements/config_window.py:150
 msgid ""
 "e.g. the ∀ button applies on properties like 'A⊂B', which is a universal "
 "property by implicitly applying the definition of inclusion"
@@ -201,14 +201,14 @@ msgstr ""
 "comme une propriété universelle en appliquant implicitement la définition "
 "d'inclusion"
 
-#: dui/elements/config_window.py:153
+#: dui/elements/config_window.py:154
 msgid ""
 "e.g. when applying '∀ε>0, P(ε)' to some ε, the computer tries to prove ε>0"
 msgstr ""
 "Si on applique, par exemple, '∀ε>0, P(ε)' à un nombre ε, l'ordinateur essaie "
 "de démontrer ε>0"
 
-#: dui/elements/config_window.py:156
+#: dui/elements/config_window.py:157
 msgid ""
 "Objects and properties of the context may be dragged and dropped on each "
 "other, e.g. drag and drop 'x∈A' on 'A⊂B' to get 'x∈B'"
@@ -216,7 +216,7 @@ msgstr ""
 "Les objets et propriétés du contexte peuvent être glissées et déposées les "
 "unes sur les autres, par exemple déposer 'x∈A' sur 'A⊂B' pour obtenir 'x∈B'"
 
-#: dui/elements/config_window.py:159
+#: dui/elements/config_window.py:160
 msgid ""
 "Properties of the context may be dragged and dropped on statements, "
 "typically a definition, e.g. drag and drop 'A⊂B' on the definition of "
@@ -226,7 +226,7 @@ msgstr ""
 "typiquement sur une définition : par exemple, déposer 'x∈A' sur 'A⊂B' pour "
 "obtenir 'x∈B'"
 
-#: dui/elements/config_window.py:163
+#: dui/elements/config_window.py:164
 msgid ""
 "Statements may be dragged and dropped in the context properties area, where "
 "they become a context property that may be applied with more precision"
@@ -235,7 +235,7 @@ msgstr ""
 "contexte, où ils deviennent une propriété qui peut être utilisée plus "
 "finement"
 
-#: dui/elements/config_window.py:167
+#: dui/elements/config_window.py:168
 msgid ""
 "When an implication 'P ⇒ Q' appears in the context, the computer asks user "
 "if she wants to prove P as a sub-goal"
@@ -243,7 +243,7 @@ msgstr ""
 "Lorsqu'une implication 'P ⇒ Q' apparait dans le contexte, l'ordinateur "
 "demande à l'utilisatrice si elle veut démontrer P comme un but intermédiaire"
 
-#: dui/elements/config_window.py:170
+#: dui/elements/config_window.py:171
 msgid ""
 "The ∀ and ⇒ buttons are operated automatically when the target is a "
 "universal property or an implication"
@@ -251,55 +251,55 @@ msgstr ""
 "Les boutons ∀ et ⇒ sont automatiquement actionnés lorsque le but est une "
 "propriété universelle ou une implication"
 
-#: dui/elements/config_window.py:173
+#: dui/elements/config_window.py:174
 msgid "Choose in which order to prove the two sub-goals of a conjunction"
 msgstr ""
 "Choisir l'ordre dans lequel on prouve les deux termes d'une conjonction"
 
-#: dui/elements/config_window.py:175
+#: dui/elements/config_window.py:176
 msgid "Choose in which order to study the two cases of a disjunction"
 msgstr "Choisir l'ordre dans lequel on étudie les deux cas d'une disjonction"
 
-#: dui/elements/config_window.py:258
+#: dui/elements/config_window.py:259
 msgid "Open the logical calculator to enter composite objects"
 msgstr "Ouvrir la calculatrice logique pour entrer des objets composites"
 
-#: dui/elements/config_window.py:260
+#: dui/elements/config_window.py:261
 msgid "Save all the statements to a text file in .deaduction/text_files"
 msgstr ""
 "Sauvegarder les énoncés dans un fichier texte dans le dossier .deaduction/"
 "text_files"
 
-#: dui/elements/config_window.py:306
+#: dui/elements/config_window.py:307
 #: dui/stages/exercise/exercise_main_window.py:253
 msgid "Preferences"
 msgstr "Préférences"
 
-#: dui/elements/config_window.py:317
+#: dui/elements/config_window.py:318
 msgid "Save preferences for next session"
 msgstr "Sauvegarder les préférences"
 
-#: dui/elements/config_window.py:331
+#: dui/elements/config_window.py:332
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:333
+#: dui/elements/config_window.py:334
 msgid "Apply"
 msgstr "Appliquer"
 
-#: dui/elements/config_window.py:459
+#: dui/elements/config_window.py:460
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:548
+#: dui/elements/config_window.py:549
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:581
+#: dui/elements/config_window.py:582
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:804
+#: dui/elements/config_window.py:805
 #, python-brace-format
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
@@ -400,132 +400,136 @@ msgid "Color for selection"
 msgstr "Couleur des éléments sélectionnés"
 
 #: dui/elements/config_window_text.py:72
+msgid "Color for applied properties"
+msgstr "Couleur des propriétés utilisées"
+
+#: dui/elements/config_window_text.py:73
 msgid "Maths fonts"
 msgstr "Police pour les maths"
 
-#: dui/elements/config_window_text.py:73
+#: dui/elements/config_window_text.py:74
 msgid "Prove / use mode for action buttons"
 msgstr "Mode démontrer / utiliser pour les boutons logiques"
 
-#: dui/elements/config_window_text.py:74
+#: dui/elements/config_window_text.py:75
 msgid "Display switcher"
 msgstr "Afficher le commutateur"
 
-#: dui/elements/config_window_text.py:75
+#: dui/elements/config_window_text.py:76
 msgid "Display both buttons"
 msgstr "Afficher les deux boutons"
 
-#: dui/elements/config_window_text.py:76
+#: dui/elements/config_window_text.py:77
 msgid "Display unified buttons"
 msgstr "Afficher un bouton unique"
 
-#: dui/elements/config_window_text.py:77
+#: dui/elements/config_window_text.py:78
 msgid "Use color for variables"
 msgstr "Variables en couleur"
 
-#: dui/elements/config_window_text.py:78
+#: dui/elements/config_window_text.py:79
 msgid "Use color for dummy variables"
 msgstr "Variables muettes en couleur"
 
-#: dui/elements/config_window_text.py:79
+#: dui/elements/config_window_text.py:80
 msgid "Use color for applied properties"
 msgstr "Griser les propriétés déjà utilisées"
 
-#: dui/elements/config_window_text.py:81
+#: dui/elements/config_window_text.py:82
 msgid "Target selected by default"
 msgstr "But sélectionné par défaut"
 
-#: dui/elements/config_window_text.py:83
+#: dui/elements/config_window_text.py:84
 msgid "Allow proof by sorry"
 msgstr "Admettre le but en cours est autorisé"
 
-#: dui/elements/config_window_text.py:85
+#: dui/elements/config_window_text.py:86
 msgid "Allow implicit use of definitions"
 msgstr "Autoriser les définitions implicites"
 
-#: dui/elements/config_window_text.py:87
+#: dui/elements/config_window_text.py:88
 msgid "Automatic intro of variables and hypotheses"
 msgstr "Introduction automatique des variables et des hypothèses"
 
-#: dui/elements/config_window_text.py:89
+#: dui/elements/config_window_text.py:90
 msgid "Automatically destruct existence context properties"
 msgstr "Destruction automatique des propriétés existentielles"
 
-#: dui/elements/config_window_text.py:91
+#: dui/elements/config_window_text.py:92
 msgid "Automatic destruct context conjunctions"
 msgstr "Destruction automatique des conjonctions du contexte"
 
-#: dui/elements/config_window_text.py:95
+#: dui/elements/config_window_text.py:96
 msgid "Save history when exercise is solved"
 msgstr "Sauver l'historique lorsqu'un exercice est résolu"
 
-#: dui/elements/config_window_text.py:97
+#: dui/elements/config_window_text.py:98
 msgid "Try to silently prove ε>0 when applying '∀ε>0'"
 msgstr "Essayer de démontrer ε>0 quand on applique '∀ε>0'"
 
-#: dui/elements/config_window_text.py:99
+#: dui/elements/config_window_text.py:100
 msgid "Ask to prove 'P' when 'P ⇒ Q' in context"
 msgstr "Proposer de prouver 'P' quand 'P ⇒ Q' dans le contexte"
 
-#: dui/elements/config_window_text.py:101
+#: dui/elements/config_window_text.py:102
 msgid "Logical calculator"
 msgstr "Calculatrice logique"
 
-#: dui/elements/config_window_text.py:102
+#: dui/elements/config_window_text.py:103
 msgid "Save journal"
 msgstr "Sauvegarder le journal"
 
-#: dui/elements/config_window_text.py:104
+#: dui/elements/config_window_text.py:105
 msgid "Split logic buttons into two lines"
 msgstr "Boutons logiques sur deux lignes"
 
-#: dui/elements/config_window_text.py:105
+#: dui/elements/config_window_text.py:106
 msgid "Drag statements to context"
 msgstr "Glisser les énoncés dans le contexte"
 
-#: dui/elements/config_window_text.py:106
+#: dui/elements/config_window_text.py:107
 msgid "Drag and drop in context"
 msgstr "Glisser-déposer dans le contexte"
 
-#: dui/elements/config_window_text.py:107
+#: dui/elements/config_window_text.py:108
 msgid "Drag context to statements"
 msgstr "Glisser du contexte vers les énoncés"
 
-#: dui/elements/config_window_text.py:108
+#: dui/elements/config_window_text.py:109
 #: pylib/coursedata/course_metadata_translations.py:38
 msgid "None"
 msgstr "Aucun(e)"
 
-#: dui/elements/config_window_text.py:109
+#: dui/elements/config_window_text.py:110
 msgid "Beginner"
 msgstr "Débutant"
 
-#: dui/elements/config_window_text.py:110
+#: dui/elements/config_window_text.py:111
 msgid "Intermediate"
 msgstr "Intermédiaire"
 
-#: dui/elements/config_window_text.py:111
+#: dui/elements/config_window_text.py:112
 msgid "Expert"
 msgstr "Expert"
 
-#: dui/elements/config_window_text.py:113
+#: dui/elements/config_window_text.py:114
 msgid "Bounded quantification: denote ∀x>0, ... instead of ∀x∈ℝ, (x>0 ⇒ ...)"
 msgstr ""
 "Quantification bornée : noter ∀x>0, ... à la place de ∀x∈ℝ, (x>0 ⇒ ...)"
 
-#: dui/elements/config_window_text.py:116
+#: dui/elements/config_window_text.py:117
 msgid "Choose the order when proving a conjunction"
 msgstr "Choisir l'ordre lorsqu'on prouve une conjonction"
 
-#: dui/elements/config_window_text.py:118
+#: dui/elements/config_window_text.py:119
 msgid "Choose the order when using a disjunction"
 msgstr "Choisir l'ordre lorsqu'on utilise une disjonction"
 
-#: dui/elements/config_window_text.py:119
+#: dui/elements/config_window_text.py:120
 msgid "Ask user to name variables"
 msgstr "L'utilisateur nomme les variables"
 
-#: dui/elements/config_window_text.py:121
+#: dui/elements/config_window_text.py:122
 msgid "Save all statements to text file"
 msgstr "Sauvegarder les énoncés dans un fichier texte"
 
@@ -676,7 +680,7 @@ msgstr "    Je réfléchis"
 msgid "    Initializing"
 msgstr "    Initialisation"
 
-#: dui/primitives/base_math_widgets_styling.py:275
+#: dui/primitives/base_math_widgets_styling.py:276
 msgid "Reminder of the exercise statement"
 msgstr "Rappel de l'énoncé de l'exercice"
 
@@ -696,65 +700,65 @@ msgstr "Oui ou non ? — d∃∀duction"
 msgid "Do not show again"
 msgstr "Ne plus montrer"
 
-#: dui/stages/calculator/calculator.py:128
+#: dui/stages/calculator/calculator.py:129
 #: dui/stages/calculator/calculator_targets.py:67
 msgid "Undo all"
 msgstr "Tout annuler"
 
-#: dui/stages/calculator/calculator.py:131
+#: dui/stages/calculator/calculator.py:132
 #: dui/stages/calculator/calculator_targets.py:70
 msgid "Undo"
 msgstr "Annuler"
 
-#: dui/stages/calculator/calculator.py:134
+#: dui/stages/calculator/calculator.py:135
 #: dui/stages/calculator/calculator_targets.py:73
 msgid "Redo"
 msgstr "Rétablir"
 
-#: dui/stages/calculator/calculator.py:137
+#: dui/stages/calculator/calculator.py:138
 #: dui/stages/calculator/calculator_targets.py:76
 msgid "Redo all"
 msgstr "Tout rétablir"
 
-#: dui/stages/calculator/calculator.py:170
+#: dui/stages/calculator/calculator.py:171
 #: dui/stages/calculator/calculator_targets.py:109
 msgid "Go to beginning"
 msgstr "Aller au début"
 
-#: dui/stages/calculator/calculator.py:174
-#: dui/stages/calculator/calculator_targets.py:114
+#: dui/stages/calculator/calculator.py:175
+#: dui/stages/calculator/calculator_targets.py:115
 msgid "Move left"
 msgstr "Aller à gauche"
 
-#: dui/stages/calculator/calculator.py:177
+#: dui/stages/calculator/calculator.py:178
 msgid "Expand selection"
 msgstr "Etendre la sélection"
 
-#: dui/stages/calculator/calculator.py:180
-#: dui/stages/calculator/calculator_targets.py:126
+#: dui/stages/calculator/calculator.py:181
+#: dui/stages/calculator/calculator_targets.py:119
 msgid "Shrink selection"
 msgstr "Réduire la sélection"
 
-#: dui/stages/calculator/calculator.py:184
-#: dui/stages/calculator/calculator_targets.py:118
+#: dui/stages/calculator/calculator.py:185
+#: dui/stages/calculator/calculator_targets.py:113
 msgid "Move right"
 msgstr "Aller à droite"
 
-#: dui/stages/calculator/calculator.py:187
-#: dui/stages/calculator/calculator_targets.py:130
+#: dui/stages/calculator/calculator.py:188
+#: dui/stages/calculator/calculator_targets.py:111
 msgid "Go to end"
 msgstr "Aller à la fin"
 
-#: dui/stages/calculator/calculator.py:191
-#: dui/stages/calculator/calculator_targets.py:134
+#: dui/stages/calculator/calculator.py:192
+#: dui/stages/calculator/calculator_targets.py:121
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
-#: dui/stages/calculator/calculator.py:404
+#: dui/stages/calculator/calculator.py:405
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:916
+#: dui/stages/calculator/calculator.py:928
 msgid ""
 "<div>Use the Logical Calculator to fill-in the form.<br> </div><div>Please "
 "note the green selection: when you click a calculator button, the "
@@ -767,16 +771,16 @@ msgstr ""
 "div><div>Utilisez les flèches \"Elargir\" et \"Réduire\" pour modifier la "
 "sélection.</div>"
 
-#: dui/stages/calculator/calculator.py:1291
+#: dui/stages/calculator/calculator.py:1319
 #, python-brace-format
 msgid "Enter {}"
 msgstr "Entrer {}"
 
-#: dui/stages/calculator/calculator.py:1293
+#: dui/stages/calculator/calculator.py:1321
 msgid "(No help available)"
 msgstr "(Pas d'aide disponible)"
 
-#: dui/stages/calculator/calculator.py:1658
+#: dui/stages/calculator/calculator.py:1695
 #, python-brace-format
 msgid "Cannot insert {} here"
 msgstr "Impossible d'insérer {} ici"
@@ -786,15 +790,21 @@ msgstr "Impossible d'insérer {} ici"
 msgid "(type  {})"
 msgstr "(taper {})"
 
-#: dui/stages/calculator/calculator_targets.py:98
+#: dui/stages/calculator/calculator_targets.py:110
+#: dui/stages/calculator/calculator_targets.py:112
+#: dui/stages/calculator/calculator_targets.py:114
+#: dui/stages/calculator/calculator_targets.py:116
+#: dui/stages/calculator/calculator_targets.py:118
+#: dui/stages/calculator/calculator_targets.py:120
+#: dui/stages/calculator/calculator_targets.py:122
 msgid "type"
 msgstr "taper"
 
-#: dui/stages/calculator/calculator_targets.py:122
-msgid "Enlarge selection"
+#: dui/stages/calculator/calculator_targets.py:117
+msgid "Enlage selection"
 msgstr "Elargir la sélection"
 
-#: dui/stages/calculator/calculator_targets.py:418
+#: dui/stages/calculator/calculator_targets.py:445
 msgid "Raw editor (Lean)"
 msgstr "Editeur brut (Lean)"
 
@@ -1030,7 +1040,7 @@ msgid "Installing — d∃∀duction"
 msgstr "Installation — d∃∀duction"
 
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:138
-#: dui/stages/start_coex/start_coex_widgets.py:850
+#: dui/stages/start_coex/start_coex_widgets.py:851
 msgid "Quit"
 msgstr "Quitter"
 
@@ -1082,74 +1092,74 @@ msgstr ""
 "Pas de fichier sélectionné !\n"
 "Sélectionner un fichier \".lean\""
 
-#: dui/stages/start_coex/start_coex_widgets.py:707
+#: dui/stages/start_coex/start_coex_widgets.py:708
 msgid "Preview not available (be patient...)"
 msgstr "Chargement en cours (patientez…)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:718
+#: dui/stages/start_coex/start_coex_widgets.py:719
 msgid "(saved proof)"
 msgstr "(sauvegarde)"
 
-#: dui/stages/start_coex/start_coex_widgets.py:852
-#: dui/stages/start_coex/start_coex_widgets.py:1109
+#: dui/stages/start_coex/start_coex_widgets.py:853
+#: dui/stages/start_coex/start_coex_widgets.py:1111
 msgid "Start exercise"
 msgstr "Commencer la preuve"
 
-#: dui/stages/start_coex/start_coex_widgets.py:862
+#: dui/stages/start_coex/start_coex_widgets.py:863
 msgid "Files"
 msgstr "Fichiers"
 
-#: dui/stages/start_coex/start_coex_widgets.py:927
+#: dui/stages/start_coex/start_coex_widgets.py:928
 msgid "Show only recent files"
 msgstr "Afficher seulement les fichiers récents"
 
-#: dui/stages/start_coex/start_coex_widgets.py:935
+#: dui/stages/start_coex/start_coex_widgets.py:936
 msgid "Show saved proofs"
 msgstr "Afficher les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:942
+#: dui/stages/start_coex/start_coex_widgets.py:943
 msgid "Delete saved proofs"
 msgstr "Effacer les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1107
+#: dui/stages/start_coex/start_coex_widgets.py:1109
 msgid "Load proof"
 msgstr "Charger la démonstration"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1241
+#: dui/stages/start_coex/start_coex_widgets.py:1243
 msgid "Deleting all saved proofs?"
 msgstr "Effacer toutes les sauvegardes ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1243
+#: dui/stages/start_coex/start_coex_widgets.py:1245
 msgid ""
 "This will delete ALL saved proofs for this file. Are you sure about this?"
 msgstr ""
 "Ceci effacera TOUTES les sauvegarde pour ce fichier. Est-ce bien ce que vous "
 "voulez ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1247
+#: dui/stages/start_coex/start_coex_widgets.py:1249
 msgid "Deleting all saved proofs"
 msgstr "Effacer toutes les sauvegardes"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1249
+#: dui/stages/start_coex/start_coex_widgets.py:1251
 msgid ""
 "This will delete ALL saved proofs for this exercise. Are you sure about this?"
 msgstr ""
 "Ceci effacera TOUTES les sauvegarde pour cet exercice. Est-ce bien ce que "
 "vous voulez ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1253
+#: dui/stages/start_coex/start_coex_widgets.py:1255
 msgid "Deleting a saved proof"
 msgstr "Effacer une sauvegarde"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1254
+#: dui/stages/start_coex/start_coex_widgets.py:1256
 msgid "Do you want to delete this saved proof?"
 msgstr "Voulez-vous effacer cette sauvegarde ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1369
+#: dui/stages/start_coex/start_coex_widgets.py:1371
 msgid "Choose file and exercise — d∃∀duction"
 msgstr "Choisir le fichier et l’exercice — d∃∀duction"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1383
+#: dui/stages/start_coex/start_coex_widgets.py:1385
 msgid ""
 "Welcome to the d∃∀duction file and exercise selector. Select a file in the "
 "'Files' tab, then select your exercise in the 'Exercises' tab."
@@ -1158,26 +1168,26 @@ msgstr ""
 "Choisissez un fichier dans l'onglet \"Fichiers\", puis un exercice dans "
 "l'onglet \"Exercices\"."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1389
+#: dui/stages/start_coex/start_coex_widgets.py:1391
 msgid "Use the toolbar to display recent files and saved exercises."
 msgstr ""
 "Utilisez la barre d'outils pour afficher les fichiers récents et les "
 "exercices sauvegardés."
 
-#: dui/stages/start_coex/start_coex_widgets.py:1417
+#: dui/stages/start_coex/start_coex_widgets.py:1419
 #: pylib/proof_state/proof_state.py:1117
 msgid "True or False?"
 msgstr "Vrai ou faux ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1420
+#: dui/stages/start_coex/start_coex_widgets.py:1422
 msgid "Do you want to prove this statement or its negation?"
 msgstr "Voulez-vous démontrer cet énoncé ou bien sa négation ?"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1427
+#: dui/stages/start_coex/start_coex_widgets.py:1429
 msgid "Prove statement"
 msgstr "Démontrer l’énoncé"
 
-#: dui/stages/start_coex/start_coex_widgets.py:1428
+#: dui/stages/start_coex/start_coex_widgets.py:1430
 msgid "Prove negation"
 msgstr "Démontrer la négation"
 
@@ -2174,23 +2184,11 @@ msgid "There is no syntax error but I suspect it is not correct"
 msgstr ""
 "Il n'y a pas d'erreur de syntaxe mais je soupçonne que ça n'est pas correct"
 
-#: pylib/actions/proofs.py:951 pylib/actions/proofs.py:972
+#: pylib/actions/proofs.py:951 pylib/actions/proofs.py:974
 msgid "Error: "
 msgstr "Erreur : "
 
-#: pylib/actions/proofs.py:969
-msgid "for the goal"
-msgstr "pour le but"
-
-#: pylib/actions/proofs.py:970
-msgid "I do not understand your proposal"
-msgstr "Je ne comprends pas votre proposition"
-
-#: pylib/actions/proofs.py:971
-msgid "maybe a syntax error?"
-msgstr "peut-être une erreur de syntaxe ?"
-
-#: pylib/actions/proofs.py:976
+#: pylib/actions/proofs.py:972 pylib/actions/proofs.py:978
 msgid "I do not understand your proposal, maybe a syntax error?"
 msgstr ""
 "Je ne comprends pas votre proposition, peut-être une erreur de syntaxe ?"
@@ -2233,11 +2231,11 @@ msgstr "Sauvegarde du fichier de configuration"
 msgid "target"
 msgstr "But"
 
-#: pylib/coursedata/course.py:284
+#: pylib/coursedata/course.py:305
 msgid "no description"
 msgstr "pas de description"
 
-#: pylib/coursedata/course.py:397
+#: pylib/coursedata/course.py:418
 msgid "except"
 msgstr "sauf"
 
@@ -2313,112 +2311,109 @@ msgstr "Variables liées"
 msgid "Context"
 msgstr "Contexte"
 
-#: pylib/math_display/app_pattern_data.py:72
+#: pylib/math_display/app_pattern_data.py:75
+#: pylib/math_display/app_pattern_data.py:246
 #: pylib/math_display/display_data.py:459
 msgid "and"
 msgstr "et"
 
-#: pylib/math_display/app_pattern_data.py:72
+#: pylib/math_display/app_pattern_data.py:75
 msgid "are disjoint"
 msgstr "sont disjoints"
 
-#: pylib/math_display/app_pattern_data.py:76
-#: pylib/math_display/app_pattern_data.py:77
+#: pylib/math_display/app_pattern_data.py:79
+#: pylib/math_display/app_pattern_data.py:80
 msgid "connected"
 msgstr "connexe"
 
-#: pylib/math_display/app_pattern_data.py:191
+#: pylib/math_display/app_pattern_data.py:194
 msgid "converging"
 msgstr "convergente"
 
-#: pylib/math_display/app_pattern_data.py:192
+#: pylib/math_display/app_pattern_data.py:195
 msgid " non decreasing"
 msgstr "croissante"
 
-#: pylib/math_display/app_pattern_data.py:193
+#: pylib/math_display/app_pattern_data.py:196
 msgid " non increasing"
 msgstr "décroissante"
 
-#: pylib/math_display/app_pattern_data.py:194
+#: pylib/math_display/app_pattern_data.py:197
 msgid "continuous"
 msgstr "continue"
 
-#: pylib/math_display/app_pattern_data.py:195
+#: pylib/math_display/app_pattern_data.py:198
 msgid "uniformly continuous"
 msgstr "uniformément continue"
 
-#: pylib/math_display/app_pattern_data.py:196
+#: pylib/math_display/app_pattern_data.py:199
 msgid "bounded from above"
 msgstr "majorée"
 
-#: pylib/math_display/app_pattern_data.py:197
+#: pylib/math_display/app_pattern_data.py:200
 msgid "bounded from below"
 msgstr "minorée"
 
-#: pylib/math_display/app_pattern_data.py:198
-#: pylib/math_display/app_pattern_data.py:200
+#: pylib/math_display/app_pattern_data.py:201
+#: pylib/math_display/app_pattern_data.py:203
 msgid "bounded"
 msgstr "borné"
 
-#: pylib/math_display/app_pattern_data.py:199
+#: pylib/math_display/app_pattern_data.py:202
 msgid "a Cauchy sequence"
 msgstr "une suite de Cauchy"
 
-#: pylib/math_display/app_pattern_data.py:204
-#: pylib/math_display/app_pattern_data.py:227
+#: pylib/math_display/app_pattern_data.py:207
+#: pylib/math_display/app_pattern_data.py:230
 msgid "continuous at"
 msgstr "continue au point"
 
-#: pylib/math_display/app_pattern_data.py:206
+#: pylib/math_display/app_pattern_data.py:209
 msgid "an equivalence relation"
 msgstr "une relation d’équivalence"
 
-#: pylib/math_display/app_pattern_data.py:208
+#: pylib/math_display/app_pattern_data.py:211
 msgid "a partition"
 msgstr "une partition"
 
-#: pylib/math_display/app_pattern_data.py:209
+#: pylib/math_display/app_pattern_data.py:212
 msgid "an application"
 msgstr "une application"
 
-#: pylib/math_display/app_pattern_data.py:210
+#: pylib/math_display/app_pattern_data.py:213
 msgid "a bijective application"
 msgstr "une application bijective"
 
-#: pylib/math_display/app_pattern_data.py:212 pylib/math_display/nodes.py:622
-#: pylib/math_display/nodes.py:625
+#: pylib/math_display/app_pattern_data.py:215 pylib/math_display/nodes.py:640
+#: pylib/math_display/nodes.py:643
 msgid "even"
 msgstr "pair"
 
-#: pylib/math_display/app_pattern_data.py:213
+#: pylib/math_display/app_pattern_data.py:216
 msgid "odd"
 msgstr "impair"
 
-#: pylib/math_display/app_pattern_data.py:214 pylib/math_display/nodes.py:629
+#: pylib/math_display/app_pattern_data.py:217 pylib/math_display/nodes.py:647
 #: pylib/math_display/pattern_data.py:336
 msgid "divides"
 msgstr "divise"
 
-#: pylib/math_display/app_pattern_data.py:215
+#: pylib/math_display/app_pattern_data.py:218
 msgid "sqrt"
 msgstr "racine"
 
-#: pylib/math_display/app_pattern_data.py:216
+#: pylib/math_display/app_pattern_data.py:219
 msgid "segment"
 msgstr "segment"
 
-#: pylib/math_display/app_pattern_data.py:217 pylib/math_display/nodes.py:632
+#: pylib/math_display/app_pattern_data.py:220 pylib/math_display/nodes.py:650
 msgid "prime"
 msgstr "premier"
 
-#: pylib/math_display/app_pattern_data.py:218
-#: pylib/math_display/app_pattern_data.py:244
+#: pylib/math_display/app_pattern_data.py:221
+#: pylib/math_display/app_pattern_data.py:247
 msgid "relatively prime"
 msgstr "premiers entre eux"
-
-#: pylib/math_display/app_pattern_data.py:243
-msgid " and "
-msgstr "et"
 
 #: pylib/math_display/display_data.py:251
 msgid "some inequality"
@@ -2925,72 +2920,76 @@ msgid "family"
 msgstr "famille"
 
 #: pylib/math_display/nodes.py:325
-msgid "Define a function"
-msgstr "Définir une fonction"
-
-#: pylib/math_display/nodes.py:334
 msgid "Set Theory"
 msgstr "Théorie Des Ensembles"
 
-#: pylib/math_display/nodes.py:366
+#: pylib/math_display/nodes.py:357
 msgid "A singleton (set with one element)"
 msgstr "Un singleton (ensemble à un élément)"
 
-#: pylib/math_display/nodes.py:373
+#: pylib/math_display/nodes.py:364
 msgid "A pair (set with two elements"
 msgstr "Une paire (ensemble à deux éléments)"
 
-#: pylib/math_display/nodes.py:382
+#: pylib/math_display/nodes.py:373
 msgid "The image of a subset under a function"
 msgstr "Image d'un sous-ensemble par une application"
 
-#: pylib/math_display/nodes.py:388
+#: pylib/math_display/nodes.py:379
 msgid "The inverse image of a subset under a function"
 msgstr "Image réciproque d'un sous-ensemble par une application"
 
-#: pylib/math_display/nodes.py:405
+#: pylib/math_display/nodes.py:386
+msgid "The set of subsets of a set."
+msgstr "L’ensemble des parties d'un ensemble"
+
+#: pylib/math_display/nodes.py:392
+msgid "A set of functions"
+msgstr "Un ensemble de fonctions"
+
+#: pylib/math_display/nodes.py:426
+msgid "Functions"
+msgstr "Fonctions"
+
+#: pylib/math_display/nodes.py:444
 msgid "Application of a function to an element\\nor term of a sequence."
 msgstr ""
 "Application d'une fonction à un élément\n"
 "ou terme d'une suite"
 
-#: pylib/math_display/nodes.py:414
+#: pylib/math_display/nodes.py:456
 msgid "Composition of two functions"
 msgstr "Composition de deux applications"
 
-#: pylib/math_display/nodes.py:420
-msgid "The set of subsets of a set."
-msgstr "L’ensemble des parties d'un ensemble"
+#: pylib/math_display/nodes.py:464
+msgid "Define a function"
+msgstr "Définir une fonction"
 
-#: pylib/math_display/nodes.py:426
-msgid "A set of functions"
-msgstr "Un ensemble de fonctions"
-
-#: pylib/math_display/nodes.py:458
+#: pylib/math_display/nodes.py:473
 msgid "Numbers"
 msgstr "Nombres"
 
-#: pylib/math_display/nodes.py:518
+#: pylib/math_display/nodes.py:534
 msgid "-? or ?-?"
 msgstr "-? ou ?-?"
 
-#: pylib/math_display/nodes.py:560
+#: pylib/math_display/nodes.py:578
 msgid "Absolute value"
 msgstr "Valeur absolue"
 
-#: pylib/math_display/nodes.py:574
+#: pylib/math_display/nodes.py:592
 msgid "Inequalities"
 msgstr "Inégalités"
 
-#: pylib/math_display/nodes.py:616
+#: pylib/math_display/nodes.py:634
 msgid "Definitions"
 msgstr "Définitions"
 
-#: pylib/math_display/nodes.py:698 pylib/math_display/pattern_data.py:296
+#: pylib/math_display/nodes.py:716 pylib/math_display/pattern_data.py:296
 msgid "for every subset"
 msgstr "pour toute partie"
 
-#: pylib/math_display/nodes.py:698 pylib/math_display/pattern_data.py:296
+#: pylib/math_display/nodes.py:716 pylib/math_display/pattern_data.py:296
 msgid " of "
 msgstr " de "
 
@@ -3171,7 +3170,7 @@ msgstr "Excepted \"type\" key in package config."
 msgid "Uknown package type {}, excepted {}"
 msgstr "Uknown package type {}, excepted {}"
 
-#: pylib/pattern_math_obj/pattern_math_objects.py:814
+#: pylib/pattern_math_obj/pattern_math_objects.py:836
 #, python-brace-format
 msgid "Expecting {}, but this is {}"
 msgstr "On attend {}, mais c'est {}"
@@ -4150,6 +4149,18 @@ msgstr "d∃∀duction"
 #: share/applications/deaduction.desktop:4
 msgid "Run dEAduction"
 msgstr "Démarrer d∃∀duction"
+
+#~ msgid "for the goal"
+#~ msgstr "pour le but"
+
+#~ msgid "I do not understand your proposal"
+#~ msgstr "Je ne comprends pas votre proposition"
+
+#~ msgid "maybe a syntax error?"
+#~ msgstr "peut-être une erreur de syntaxe ?"
+
+#~ msgid " and "
+#~ msgstr "et"
 
 #~ msgid "it is not correct"
 #~ msgstr "ce n'est pas correct"
