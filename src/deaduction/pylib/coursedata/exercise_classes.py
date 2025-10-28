@@ -969,12 +969,16 @@ class Exercise(Theorem):
     def available_logic_prove(self):
         """
         return the list of demo actions whose names are names of actions in
-        self.available_logic.
+        self.available_logic, and whose name startswith 'prove".
         """
-        actions = [action for action in LOGIC_BUTTONS.values()
-                   if (action.name.startswith('prove_')
-                       and action.name in
-                       [action.name for action in self.available_logic_1])]
+
+        names = [action.name for action in self.available_logic_1]
+        actions = []
+        for action in LOGIC_BUTTONS.values():
+            name = action.name
+            if name.startswith('prove_'):
+                if name in names or name[6:] in names:
+                    actions += [action]
         return actions
 
     @property
@@ -983,10 +987,13 @@ class Exercise(Theorem):
         return the list of demo actions whose names are names of actions in
         self.available_logic.
         """
-        actions = [action for action in LOGIC_BUTTONS.values()
-                   if (action.name.startswith('use_')
-                       and action.name in
-                       [action.name for action in self.available_logic_1])]
+        names = [action.name for action in self.available_logic_1]
+        actions = []
+        for action in LOGIC_BUTTONS.values():
+            name = action.name
+            if name.startswith('use_'):
+                if name in names or name[4:] in names:
+                    actions += [action]
         return actions
 
     @property

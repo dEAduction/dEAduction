@@ -151,6 +151,7 @@ class Coordinator(QObject):
         self.exercise: Exercise       = exercise
         self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
         self.exercise.check_prove_exists_joker()
+        # log.debug(f"Available logic: {[action.name for action in self.exercise.available_logic_prove + self.exercise.available_logic_use]}")
 
         self.servint: ServerInterface = servint
         self.last_servint_task = None
