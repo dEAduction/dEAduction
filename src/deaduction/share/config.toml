@@ -66,7 +66,7 @@ do_not_name_dummy_vars_as_dummy_vars_in_one_prop = false
 force_indices_for_dummy_vars = false
 use_color_for_variables = true
 use_color_for_dummy_variables = true
-use_color_for_applied_properties = true
+use_color_for_applied_properties = false
 use_bounded_quantification_notation = true
 usr_name_new_vars = false
 
