@@ -438,11 +438,11 @@ class CalculatorAllButtons(QWidget):
         if only_numbers:
             node_classes = ["functions", "numbers", "inequalities"]
         for node_name, NodeClass, col_size in (
-                ("logic", LogicalNode, 5),
-                ("sets", SetTheoryNode, 5),
-                ("functions", FunctionNode, 5),
                 ("numbers", NumberNode, 4),
-                ("inequalities", InequalityNode, 5)):
+                ("inequalities", InequalityNode, 5),
+                ("functions", FunctionNode, 5),
+                ("logic", LogicalNode, 5),
+                ("sets", SetTheoryNode, 5)):
             # TODO: add settings test on buttons name
             if (not node_classes) or node_name in node_classes:
                 buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
