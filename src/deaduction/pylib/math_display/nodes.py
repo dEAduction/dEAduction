@@ -275,6 +275,9 @@ forall = LogicalNode(
      'PROP_IMPLIES(PROP_≥(BV, ?2), ?3: PROP))',],
     (r"\forall", 1, r" \in_quant ", 0, ", ", 2))
 
+forall.set_button_tooltip('∀ a ∈ ?, ?')
+forall.set_shortcut(r'\forall')
+
 exists = LogicalNode(
     "QUANT_∃",
     ['QUANT_∃: PROP()(?0: *TYPE, '
@@ -287,6 +290,8 @@ exists = LogicalNode(
      'PROP_IMPLIES(PROP_≥(BV, ?2), ?3: PROP))',
      ],
     (r"\exists", 1, r" \in_quant ", 0, r'\such_that', 2))
+exists.set_button_tooltip('∃ a ∈ ?, ?')
+exists.set_shortcut(r'\exists')
 
 
 # "QUANT_∃!": (r"\exists_unique", 1, r" \in_quant ", 0, r'\such_that', 2)

@@ -1068,7 +1068,12 @@ class CalculatorController:
             for target, target_wdg in zip(self.targets,
                                           self.targets_widget.target_wdgs):
                 target.set_math_cursor()
-                target.math_cursor.go_to_end()
+                mvar = target.first_mvar(unassigned=True)
+                moved = False
+                if mvar:
+                    moved = target.math_cursor.go_to(mvar)
+                if not moved:
+                    target.math_cursor.go_to_end()
                 target_wdg.setHtml(target.to_display(format_='html'))
                 self.targets_widget.set_focused_target_idx(idx)
                 self.update_cursor()
