@@ -1638,8 +1638,7 @@ class CalculatorController:
 
         # ####### (1) Normal insert ########
         for pattern in pattern_s:
-            print(pattern.node, self.parentheses_pattern.node,
-                  pattern == self.parentheses_pattern)
+            # print(pattern.node, self.parentheses_pattern.node)
             # print(target.marked_descendant().is_suitable_for_app(),
             # target.cursor_is_after_marked_descendant())
             if (pattern == self.parentheses_pattern
@@ -1675,7 +1674,7 @@ class CalculatorController:
             # self.check_new_bound_var(assigned_mvar)
             self.target = new_target
             # DEBUG
-            print(new_target.to_display(format_='lean'))
+            # print(new_target.to_display(format_='lean'))
 
             # check_type_msg = new_target.check_type()
             # if check_type_msg:

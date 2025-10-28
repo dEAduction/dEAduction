@@ -317,8 +317,7 @@ class MathString(str, MathDescendant):
     end_sub = '</sub>'
 
     _format_strings = {error_string, cursor, marked, dummy_var, var,
-                       begin_sub, end_sub,
-                       text}
+                       begin_sub, end_sub, text}
 
     is_tagged = False
 
@@ -1003,10 +1002,11 @@ class MathList(list, MathDescendant):
                 linear_list.extend(item.linear_list())
             else:
                 linear_list.append(item)
-            if until and linear_list[-1] == until:
-                break
-            if from_ and linear_list[-1] == from_:
-                linear_list = []
+            if len(linear_list)>0:
+                if until and linear_list[-1] == until:
+                    break
+                if from_ and linear_list[-1] == from_:
+                    linear_list = []
 
         return linear_list
 
@@ -1048,7 +1048,6 @@ class MathList(list, MathDescendant):
     def to_string(self, latex=False) -> str:
         """
         Concatenate self into an actual string.
-        Fixme: this not used anymore.
         """
         for item in self:
             if not isinstance(item, MathList) and not isinstance(item,
@@ -1157,21 +1156,14 @@ class MathList(list, MathDescendant):
 
         linear_list = shape.linear_list(latex=(format_=='latex'))
 
-        # Add "$"
         if format_ == 'latex':
             linear_list = latex_process(linear_list)
 
         # Remove formatter
-        # linear_list.remove_formatters()
         linear_list = remove_formaters(linear_list)
 
         # Join everything!
         string = ''.join(linear_list)
-
-        # display = shape.to_string()
-
-        # if format_ == 'latex':
-        #     display = "$" + display + "$"
 
         return string
 

@@ -1018,6 +1018,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         # Fixme: most of the following is useless
         descendants = []
         for item in linear_list:
+            if not isinstance(item, MathString):
+                raise ValueError(f"Item {item} is {type(item)} but should be "
+                                 f"MathString")
             descendant = item.descendant
             # We need to remove MathObject.NO_MATH_TYPE
             if item == self.math_cursor.deaduction_cursor:
@@ -1264,7 +1267,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         Partition proper children (items of self.ordered_children that are
         not self) into three lists:
         left, central, right.
-        Left children are the ones are before the first 'self' in
+        Left children are the ones that are before the first 'self' in
         self.ordered_descendants.
         """
         left = []
@@ -1514,11 +1517,19 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         also re-assigned to mvar children of new_pmo.
         """
 
+        # log.debug(f"ordered_descendants: {self.ordered_descendants()}")
+
         assert mvar.is_assigned
         # Determine if mvar should be assigned to a left or right child of
         # new_pmo, i.e. if it appears left or right of cursor.
         left = self.appears_left_of_cursor(mvar)
         right = self.appears_right_of_cursor(mvar)
+
+        # The following is important, e.g. for a sequence term u_0
+        # which is not detected by self.appears_left_of_cursor:
+        if not left and not right:
+            left = self.cursor_is_after_marked_descendant()
+            right = not left
 
         left_mvars, central_mvars, right_mvars = \
             new_pmo.partionned_mvars(unassigned=True)

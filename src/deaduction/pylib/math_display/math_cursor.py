@@ -254,6 +254,8 @@ class MathCursor:
         text = doc.toPlainText()
         position = text.find(self.deaduction_cursor)
         self.hide_cursor()
+        # log.debug(f"Cursor text: {text}")
+        # log.debug(f'Cursor pos:{position}')
         return position
 
     def is_visually_at_end(self):
