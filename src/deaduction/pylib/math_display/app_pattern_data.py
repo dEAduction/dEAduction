@@ -188,12 +188,22 @@ class PatternMathDisplay:
                        'injective', 'surjective', 'bijective',
                        'relation_equivalence', 'partition',
                        'application', 'application_bijective', 'even', 'odd',
+                       'strictly_increasing', 'strictly_decreasing',
+                       'paire', 'impaire', 'croissante', 'decroissante',
+                       'increasing', 'decreasing', 's_croissante',
+                       's_decroissante',
                        'prime']
 
     # Dicts
     constants_pretty_names = {'converging_seq': _("converging"),
                               'increasing_seq': _(" non decreasing"),
                               'decreasing_seq': _(" non increasing"),
+                              'increasing': _('increasing'),
+                              'decreasing': _('decreasing'),
+                              'strictly_increasing': _('strictly increasing'),
+                              'strictly_decreasing': _('strictly decreasing'),
+                              's_croissante': 'strictement croissante',
+                              's_decroissante': 'strictement décroissante',
                               'continuous': _("continuous"),
                               'uniformly_continuous': _("uniformly continuous"),
                               'bounded_above': _("bounded from above"),

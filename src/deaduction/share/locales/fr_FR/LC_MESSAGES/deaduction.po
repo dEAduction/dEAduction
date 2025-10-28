@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-10-28 10:18+0100\n"
-"PO-Revision-Date: 2025-10-28 10:22+0100\n"
+"POT-Creation-Date: 2025-10-28 12:52+0100\n"
+"PO-Revision-Date: 2025-10-28 12:53+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -771,16 +771,16 @@ msgstr ""
 "div><div>Utilisez les flèches \"Elargir\" et \"Réduire\" pour modifier la "
 "sélection.</div>"
 
-#: dui/stages/calculator/calculator.py:1319
+#: dui/stages/calculator/calculator.py:1324
 #, python-brace-format
 msgid "Enter {}"
 msgstr "Entrer {}"
 
-#: dui/stages/calculator/calculator.py:1321
+#: dui/stages/calculator/calculator.py:1326
 msgid "(No help available)"
 msgstr "(Pas d'aide disponible)"
 
-#: dui/stages/calculator/calculator.py:1695
+#: dui/stages/calculator/calculator.py:1700
 #, python-brace-format
 msgid "Cannot insert {} here"
 msgstr "Impossible d'insérer {} ici"
@@ -804,7 +804,7 @@ msgstr "taper"
 msgid "Enlage selection"
 msgstr "Elargir la sélection"
 
-#: dui/stages/calculator/calculator_targets.py:445
+#: dui/stages/calculator/calculator_targets.py:443
 msgid "Raw editor (Lean)"
 msgstr "Editeur brut (Lean)"
 
@@ -2312,7 +2312,7 @@ msgid "Context"
 msgstr "Contexte"
 
 #: pylib/math_display/app_pattern_data.py:75
-#: pylib/math_display/app_pattern_data.py:246
+#: pylib/math_display/app_pattern_data.py:256
 #: pylib/math_display/display_data.py:459
 msgid "and"
 msgstr "et"
@@ -2326,92 +2326,108 @@ msgstr "sont disjoints"
 msgid "connected"
 msgstr "connexe"
 
-#: pylib/math_display/app_pattern_data.py:194
+#: pylib/math_display/app_pattern_data.py:198
 msgid "converging"
 msgstr "convergente"
 
-#: pylib/math_display/app_pattern_data.py:195
+#: pylib/math_display/app_pattern_data.py:199
 msgid " non decreasing"
 msgstr "croissante"
 
-#: pylib/math_display/app_pattern_data.py:196
+#: pylib/math_display/app_pattern_data.py:200
 msgid " non increasing"
 msgstr "décroissante"
 
-#: pylib/math_display/app_pattern_data.py:197
+#: pylib/math_display/app_pattern_data.py:201
+msgid "increasing"
+msgstr "croissante"
+
+#: pylib/math_display/app_pattern_data.py:202
+msgid "decreasing"
+msgstr "décroissante"
+
+#: pylib/math_display/app_pattern_data.py:203
+msgid "strictly increasing"
+msgstr "strictement croissante"
+
+#: pylib/math_display/app_pattern_data.py:204
+msgid "strictly decreasing"
+msgstr "strictement décroissante"
+
+#: pylib/math_display/app_pattern_data.py:207
 msgid "continuous"
 msgstr "continue"
 
-#: pylib/math_display/app_pattern_data.py:198
+#: pylib/math_display/app_pattern_data.py:208
 msgid "uniformly continuous"
 msgstr "uniformément continue"
 
-#: pylib/math_display/app_pattern_data.py:199
+#: pylib/math_display/app_pattern_data.py:209
 msgid "bounded from above"
 msgstr "majorée"
 
-#: pylib/math_display/app_pattern_data.py:200
+#: pylib/math_display/app_pattern_data.py:210
 msgid "bounded from below"
 msgstr "minorée"
 
-#: pylib/math_display/app_pattern_data.py:201
-#: pylib/math_display/app_pattern_data.py:203
+#: pylib/math_display/app_pattern_data.py:211
+#: pylib/math_display/app_pattern_data.py:213
 msgid "bounded"
 msgstr "borné"
 
-#: pylib/math_display/app_pattern_data.py:202
+#: pylib/math_display/app_pattern_data.py:212
 msgid "a Cauchy sequence"
 msgstr "une suite de Cauchy"
 
-#: pylib/math_display/app_pattern_data.py:207
-#: pylib/math_display/app_pattern_data.py:230
+#: pylib/math_display/app_pattern_data.py:217
+#: pylib/math_display/app_pattern_data.py:240
 msgid "continuous at"
 msgstr "continue au point"
 
-#: pylib/math_display/app_pattern_data.py:209
+#: pylib/math_display/app_pattern_data.py:219
 msgid "an equivalence relation"
 msgstr "une relation d’équivalence"
 
-#: pylib/math_display/app_pattern_data.py:211
+#: pylib/math_display/app_pattern_data.py:221
 msgid "a partition"
 msgstr "une partition"
 
-#: pylib/math_display/app_pattern_data.py:212
+#: pylib/math_display/app_pattern_data.py:222
 msgid "an application"
 msgstr "une application"
 
-#: pylib/math_display/app_pattern_data.py:213
+#: pylib/math_display/app_pattern_data.py:223
 msgid "a bijective application"
 msgstr "une application bijective"
 
-#: pylib/math_display/app_pattern_data.py:215 pylib/math_display/nodes.py:640
-#: pylib/math_display/nodes.py:643
+#: pylib/math_display/app_pattern_data.py:225 pylib/math_display/nodes.py:645
+#: pylib/math_display/nodes.py:648
 msgid "even"
 msgstr "pair"
 
-#: pylib/math_display/app_pattern_data.py:216
+#: pylib/math_display/app_pattern_data.py:226
 msgid "odd"
 msgstr "impair"
 
-#: pylib/math_display/app_pattern_data.py:217 pylib/math_display/nodes.py:647
+#: pylib/math_display/app_pattern_data.py:227 pylib/math_display/nodes.py:652
 #: pylib/math_display/pattern_data.py:336
 msgid "divides"
 msgstr "divise"
 
-#: pylib/math_display/app_pattern_data.py:218
+#: pylib/math_display/app_pattern_data.py:228
 msgid "sqrt"
 msgstr "racine"
 
-#: pylib/math_display/app_pattern_data.py:219
+#: pylib/math_display/app_pattern_data.py:229
 msgid "segment"
 msgstr "segment"
 
-#: pylib/math_display/app_pattern_data.py:220 pylib/math_display/nodes.py:650
+#: pylib/math_display/app_pattern_data.py:230 pylib/math_display/nodes.py:655
 msgid "prime"
 msgstr "premier"
 
-#: pylib/math_display/app_pattern_data.py:221
-#: pylib/math_display/app_pattern_data.py:247
+#: pylib/math_display/app_pattern_data.py:231
+#: pylib/math_display/app_pattern_data.py:257
 msgid "relatively prime"
 msgstr "premiers entre eux"
 
@@ -2919,77 +2935,77 @@ msgstr "une famille"
 msgid "family"
 msgstr "famille"
 
-#: pylib/math_display/nodes.py:325
+#: pylib/math_display/nodes.py:330
 msgid "Set Theory"
 msgstr "Théorie Des Ensembles"
 
-#: pylib/math_display/nodes.py:357
+#: pylib/math_display/nodes.py:362
 msgid "A singleton (set with one element)"
 msgstr "Un singleton (ensemble à un élément)"
 
-#: pylib/math_display/nodes.py:364
+#: pylib/math_display/nodes.py:369
 msgid "A pair (set with two elements"
 msgstr "Une paire (ensemble à deux éléments)"
 
-#: pylib/math_display/nodes.py:373
+#: pylib/math_display/nodes.py:378
 msgid "The image of a subset under a function"
 msgstr "Image d'un sous-ensemble par une application"
 
-#: pylib/math_display/nodes.py:379
+#: pylib/math_display/nodes.py:384
 msgid "The inverse image of a subset under a function"
 msgstr "Image réciproque d'un sous-ensemble par une application"
 
-#: pylib/math_display/nodes.py:386
+#: pylib/math_display/nodes.py:391
 msgid "The set of subsets of a set."
 msgstr "L’ensemble des parties d'un ensemble"
 
-#: pylib/math_display/nodes.py:392
+#: pylib/math_display/nodes.py:397
 msgid "A set of functions"
 msgstr "Un ensemble de fonctions"
 
-#: pylib/math_display/nodes.py:426
+#: pylib/math_display/nodes.py:431
 msgid "Functions"
 msgstr "Fonctions"
 
-#: pylib/math_display/nodes.py:444
+#: pylib/math_display/nodes.py:449
 msgid "Application of a function to an element\\nor term of a sequence."
 msgstr ""
 "Application d'une fonction à un élément\n"
 "ou terme d'une suite"
 
-#: pylib/math_display/nodes.py:456
+#: pylib/math_display/nodes.py:461
 msgid "Composition of two functions"
 msgstr "Composition de deux applications"
 
-#: pylib/math_display/nodes.py:464
+#: pylib/math_display/nodes.py:469
 msgid "Define a function"
 msgstr "Définir une fonction"
 
-#: pylib/math_display/nodes.py:473
+#: pylib/math_display/nodes.py:478
 msgid "Numbers"
 msgstr "Nombres"
 
-#: pylib/math_display/nodes.py:534
+#: pylib/math_display/nodes.py:539
 msgid "-? or ?-?"
 msgstr "-? ou ?-?"
 
-#: pylib/math_display/nodes.py:578
+#: pylib/math_display/nodes.py:583
 msgid "Absolute value"
 msgstr "Valeur absolue"
 
-#: pylib/math_display/nodes.py:592
+#: pylib/math_display/nodes.py:597
 msgid "Inequalities"
 msgstr "Inégalités"
 
-#: pylib/math_display/nodes.py:634
+#: pylib/math_display/nodes.py:639
 msgid "Definitions"
 msgstr "Définitions"
 
-#: pylib/math_display/nodes.py:716 pylib/math_display/pattern_data.py:296
+#: pylib/math_display/nodes.py:721 pylib/math_display/pattern_data.py:296
 msgid "for every subset"
 msgstr "pour toute partie"
 
-#: pylib/math_display/nodes.py:716 pylib/math_display/pattern_data.py:296
+#: pylib/math_display/nodes.py:721 pylib/math_display/pattern_data.py:296
 msgid " of "
 msgstr " de "
 
