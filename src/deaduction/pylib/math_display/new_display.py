@@ -826,8 +826,8 @@ class MathList(list, MathDescendant):
                     # log.debug(f"Matching pattern --> {pre_shape}")
                     shape = tuple(substitute_metavars(item, metavars, pattern)
                                   for item in pre_shape)
-                    if dic is PatternInit.pattern_text:
-                        shape = ('\\text', ) + shape
+                    # if dic is PatternInit.pattern_text:
+                    #     shape = ('\\text', ) + shape
                     break
             if shape:
                 shape_math.pattern = pattern
@@ -844,7 +844,11 @@ class MathList(list, MathDescendant):
 
         # (3) Process macros
         if shape[0] == "global":
+            # print(shape)
             shape = global_pre_shape_to_pre_shape(shape[1:], text=text)
+
+        if shape_math.pattern_dic is PatternInit.pattern_text:
+            shape = ['\\text'] + list(shape)
 
         # (4) Populate MathList by changing items into MathString
         for item in shape:

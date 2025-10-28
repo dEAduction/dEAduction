@@ -353,8 +353,6 @@ class CalculatorTarget(MathTextWidget):
             self.setTextCursor(cursor)
 
 
-
-
 class CalculatorTargets(QWidget):
     """
     This class displays one or several CalculatorTarget,
