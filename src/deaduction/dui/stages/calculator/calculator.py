@@ -548,169 +548,6 @@ class CalculatorAllButtons(QWidget):
         button.btn_send_pattern.connect(self.process_clic)
 
 
-# class CalculatorWidget(QWidget):
-#     """
-#     A class to display a "calculator", i.e. a QWidget that enables usr to
-#     build a new MathObject (a new mathematical object or property).
-#     """
-#
-#     send_pattern = Signal(MarkedPatternMathObject)
-#
-#     def __init__(self, calc_patterns: [CalculatorPatternLines]):
-#         super().__init__()
-#
-#         # self.key_event_buffer = ""
-#
-#         self.toolbar = CalculatorToolbar()
-#         self.navigation_bar = NavigationBar()
-#
-#         main_lyt = QVBoxLayout()
-#         main_lyt.addWidget(self.toolbar)
-#
-#         self.buttons_groups = []
-#         # Clear ancient shortcuts!!
-#         CalculatorButton.shortcuts_dic = {}
-#
-#         ###############
-#         # Add buttons #
-#         ###############
-#         self.btns_wgt = QWidget()
-#         btns_lyt = QVBoxLayout()
-#
-#         # Lines from pattern_lines
-#         for calc_pattern in calc_patterns:
-#             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
-#                 calc_pattern)
-#             btns_lyt.addWidget(buttons)
-#             self.buttons_groups.append(buttons)
-#
-#         # Lines from nodes
-#         for NodeClass, col_size in ((LogicalNode, 5),
-#                                     (SetTheoryNode, 5),
-#                                     (NumberNode, 4),
-#                                     (InequalityNode, 5)):
-#             buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
-#                                                                 col_size)
-#             btns_lyt.addWidget(buttons)
-#             self.buttons_groups.append(buttons)
-#
-#         btns_lyt.addStretch()
-#         self.btns_wgt.setLayout(btns_lyt)
-#         self.btns_scroll_area = QScrollArea()
-#         self.btns_scroll_area.setWidgetResizable(True)
-#         # self.btns_scroll_area.setSizePolicy(QSizePolicy.Expanding)
-#         self.btns_scroll_area.setWidget(self.btns_wgt)
-#
-#         main_lyt.addWidget(self.btns_scroll_area)
-#
-#         # Connect button signals
-#         for btn in self.buttons():
-#             btn.send_pattern.connect(self.process_clic)
-#
-#         # main_lyt.addStretch()
-#
-#         ####################
-#         # CalculatorTarget #
-#         ####################
-#         # calculator_target will process key events and send them to the
-#         # toolbars
-#         self.calculator_target = CalculatorTarget()
-#         self.calculator_target_title = QLabel()
-#         self.calculator_target_title.setStyleSheet("font-weight: bold; ")
-#         main_lyt.addWidget(self.calculator_target_title)
-#         main_lyt.addWidget(self.calculator_target)
-#
-#         ###################
-#         # Navigation btns #
-#         ###################
-#         # main_lyt.addWidget(self.navigation_bar)
-#         nav_lyt = QHBoxLayout()
-#         nav_lyt.addWidget(self.navigation_bar)
-#         nav_lyt.addStretch()
-#         self.lean_mode_wdg = QCheckBox("Lean mode")
-#         self.lean_mode_wdg.setFocusPolicy(Qt.NoFocus)
-#         nav_lyt.addWidget(self.lean_mode_wdg)
-#
-#         main_lyt.addLayout(nav_lyt)
-#
-#         ####################
-#         # OK / Cancel btns #
-#         ####################
-#         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-#                                            # | QDialogButtonBox.Cancel)
-#         self.button_box.accepted.connect(self.close_n_accept)
-#         main_lyt.addWidget(self.button_box)
-#         self.setLayout(main_lyt)
-#
-#         # Connect calculator_target
-#         self.calculator_target.navigation_bar = self.navigation_bar
-#         self.calculator_target.toolbar = self.toolbar
-#         self.calculator_target.button_box = self.button_box
-#         self.calculator_target.setFocus()
-#
-#         self.set_geometry()
-#
-#     def set_geometry(self, geometry=None):
-#         settings = QSettings("deaduction")
-#         value = settings.value("calculator/geometry")
-#         if value:
-#             self.restoreGeometry(value)
-#         elif geometry:
-#             self.setGeometry(geometry)
-#
-#         for buttons in self.buttons_groups:
-#             hidden = settings.value(f"calculator/{buttons.title}",
-#                                      buttons.hidden)
-#             hidden = (hidden in (True, "true"))
-#             # dt = buttons.hidden
-#             # if dt.hidden != hidden:
-#             #     buttons.hidden = not hidden
-#             #     dt.toggle()
-#             # else:
-#             buttons.set_hidden(hidden=hidden)
-#
-#     def close(self):
-#         # Save window geometry
-#         settings = QSettings("deaduction")
-#         settings.setValue("calculator/geometry", self.saveGeometry())
-#
-#         # Save states of disclosure triangles
-#         for buttons in self.buttons_groups:
-#             settings.setValue(f"calculator/{buttons.title}",
-#                               buttons.hidden)
-#
-#     def close_n_accept(self):
-#         self.close()
-#         self.accept()
-#
-#     def reject(self):
-#         self.close()
-#         super().reject()
-#
-#     def set_target_title(self, title):
-#         self.calculator_target_title.setText(title)
-#
-#     def buttons(self) -> [CalculatorButton]:
-#         btns = []
-#         for buttons_group in self.buttons_groups:
-#             btns.extend(buttons_group.buttons)
-#         return btns
-#
-#     # def add_bound_var_btn(self):
-#
-#     def set_html(self, text):
-#         self.calculator_target.setHtml(text)
-#
-#     @Slot()
-#     def process_clic(self, pattern):
-#         self.send_pattern.emit(pattern)
-#
-#     def bound_var_group(self):
-#         for group in self.buttons_groups:
-#             if group.title == CalculatorPatternLines.bound_vars_title:
-#                 return group
-
-
 class CalculatorMainWindow(QDialog):
     """
     The main window, which display the targets widget and the calculator
@@ -1617,6 +1454,7 @@ class CalculatorController:
             original_bvs = [potential_bv]
             copied_bvs = [potential_bv.deep_copy(potential_bv)]
             pattern_s[0] = copied_bvs[0]
+            # DEBUG: here bv are NOT marked
         else:
             original_bvs = []
             copied_bvs = []
@@ -1630,6 +1468,7 @@ class CalculatorController:
         new_target.set_math_cursor(go_to_end=False)
         new_target.math_cursor.set_cursor_at_the_same_position_as(
             self.target.math_cursor)
+        # print(new_target.marked_descendant()) --> OK, a single marked desc
         # assert (new_target.math_cursor.cursor_address ==
         #         self.target.math_cursor.cursor_address)
         # assert (new_target.math_cursor.cursor_is_after ==
@@ -1653,9 +1492,11 @@ class CalculatorController:
                 # If after a function or like, then insert APP
                 log.debug("(Trying application)")
                 assigned_mvar = new_target.insert(self.application_pattern)
+                # print(new_target.marked_descendant()) -> 2 md
             else:
                 # (1b) Normal insert
                 assigned_mvar = new_target.insert(pattern)
+                # print(new_target.marked_descendant())
                 # assigned_mvar = new_target.new_insert(pattern)
             if assigned_mvar:
                 break
@@ -1664,6 +1505,7 @@ class CalculatorController:
         # ###### (2) Automatic patterns ######
         # g, x --> g(x)  ; u, n --> u_n
         if (not assigned_mvar) and target.cursor_is_after_marked_descendant():
+            # print(new_target.marked_descendant())
             assigned_mvar = new_target.insert_application_with_arg2(pattern)
 
         # ###### (3) Force insertion with LAST pattern ######

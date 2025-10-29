@@ -181,14 +181,13 @@ class MarkedTree:
 
     def marked_descendant(self):
         """
-        Return the marked descendant of self, if any. Rais an exception if
+        Return the marked descendant of self, if any. Raise an exception if
         self has several marked descendants.
         """
         if self.is_marked:
             return self
 
         marked_descendant = []
-        # for child in self.ordered_children():
         for child in self.children:
             if child is self:
                 continue
@@ -200,7 +199,8 @@ class MarkedTree:
             if len(marked_descendant) == 1:
                 return marked_descendant[0]
             else:
-                raise ValueError(f"Several marked descendants in {self}")
+                raise ValueError(f"Several marked descendants in {self}: "
+                                 f"{marked_descendant}")
 
     @property
     def has_marked_descendant(self) -> bool:
@@ -551,12 +551,15 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             marked_descendant = self.marked_descendant()
             marked_descendant.unmark()
 
+        # Beware, this mark the end of self:
         self._math_cursor = MathCursor(root_math_object=self,
                                        cursor_math_object=marked_descendant,
                                        go_to_end=go_to_end)
 
         if marked_descendant:
             marked_descendant.mark()
+        else:
+            self.unmark()
 
     @property
     def math_cursor(self):
@@ -586,8 +589,6 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         from_ = self.math_cursor.deaduction_cursor if only_after else None
 
         linear_list = self.math_list().linear_list(until=until, from_=from_)
-
-        log.debug(f"Linear list with nodes: {linear_list}")
         # Fixme: most of the following is useless
         descendants = []
         for item in linear_list:
@@ -715,9 +716,9 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         mvar1 = MarkedMetavar(math_type=arg_type)
         mvar1.assigned_math_object = arg
 
-        print(f"fct {fct.to_display(format_='utf8')} "
-              f"with type {fct.math_type.to_display(format_='utf8')}")
-        print(f"mvar type {mvar0.math_type.to_display(format_='utf8')}")
+        # print(f"fct {fct.to_display(format_='utf8')} "
+        #       f"with type {fct.math_type.to_display(format_='utf8')}")
+        # print(f"mvar type {mvar0.math_type.to_display(format_='utf8')}")
         mpmo = cls.application(mvar0, mvar1)
         return mpmo
 
@@ -1403,8 +1404,8 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
             origin_type) else "None"
         arg_display = arg_type.to_display(format_='utf8') if arg_type else \
             "None"
-        print(f"Types: {origin_display}, {arg_display}")
-        print(f"Tests: {seq_test, general_test, number_test}")
+        # print(f"Types: {origin_display}, {arg_display}")
+        # print(f"Tests: {seq_test, general_test, number_test}")
         if not any([seq_test, general_test, number_test]):
             return None
 
