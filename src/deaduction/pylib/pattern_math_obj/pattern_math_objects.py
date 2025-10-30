@@ -785,21 +785,24 @@ class MetaVar(PatternMathObject):
 
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None,
-                  original_metavars=None, copied_metavars=None):
+                  original_metavars=None, copied_metavars=None,
+                  recursion_depth=0):
         """
         Deep copy self, including assigned math object.
         """
         new_mvar = super().deep_copy(self, original_bound_vars,
                                      copied_bound_vars,
                                      original_metavars,
-                                     copied_metavars)
+                                     copied_metavars,
+                                     recursion_depth)
         mmo = self.assigned_math_object
         if mmo:
             new_mvar.assigned_math_object = mmo.deep_copy(mmo,
                                                           original_bound_vars,
                                                           copied_bound_vars,
                                                           original_metavars,
-                                                          copied_metavars)
+                                                          copied_metavars,
+                                                          recursion_depth)
         return new_mvar
 
     def contains_unassigned_metavar(self):

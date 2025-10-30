@@ -1677,12 +1677,14 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
 
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None,
-                  original_metavars=None, copied_metavars=None):
+                  original_metavars=None, copied_metavars=None,
+                  recursion_depth=0):
         new_mvar: MarkedMetavar = super().deep_copy(self,
                                                     original_bound_vars,
                                                     copied_bound_vars,
                                                     original_metavars,
-                                                    copied_metavars)
+                                                    copied_metavars,
+                                                    recursion_depth)
         if self.is_marked:
             new_mvar.mark()
         return new_mvar

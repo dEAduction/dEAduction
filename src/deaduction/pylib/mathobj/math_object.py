@@ -442,7 +442,8 @@ class MathObject:
 
     @classmethod
     def deep_copy(cls, self, original_bound_vars=None, copied_bound_vars=None,
-                  original_metavars=None, copied_metavars=None):
+                  original_metavars=None, copied_metavars=None,
+                  recursion_depth=0):
         """
         Return a deep copy of self. This should work for subclasses.
         NB: in the copied object, original bound vars must be duplicated only
@@ -455,6 +456,10 @@ class MathObject:
         Likewise for metavars.
         TODO: we could just do that for every sub_object, not only metavars/bv.
         """
+
+        MAX_RECURSION_DEPTH = 5
+        if recursion_depth >= MAX_RECURSION_DEPTH:
+            return cls.NO_MATH_TYPE
 
         if original_bound_vars is None:
             original_bound_vars = []
@@ -477,19 +482,25 @@ class MathObject:
         new_info = deepcopy(self._info)
         math_type: cls = self._math_type
         children: [cls] = self.children  # Real type could be different
-        new_math_type = (math_type if (math_type is None or
-                                       math_type.is_no_math_type())
-                         else math_type.deep_copy(math_type,
-                                                  original_bound_vars,
-                                                  copied_bound_vars,
-                                                  original_metavars,
-                                                  copied_metavars))
-
+        try:
+            new_math_type = (math_type if (math_type is None or
+                                           math_type.is_no_math_type())
+                             else self if math_type == self  # Hum
+                             else math_type.deep_copy(math_type,
+                                                      original_bound_vars,
+                                                      copied_bound_vars,
+                                                      original_metavars,
+                                                      copied_metavars,
+                                                      recursion_depth+1))
+        except RecursionError:
+            raise RecursionError(f"Infinite loop in deep copying {self},"
+                                 f"math_type={math_type}")
         new_children = [child.deep_copy(child,
                                         original_bound_vars,
                                         copied_bound_vars,
                                         original_metavars,
-                                        copied_metavars)
+                                        copied_metavars,
+                                        recursion_depth)
                         for child in children]
 
         new_math_object = cls(node=self.node, info=new_info,
