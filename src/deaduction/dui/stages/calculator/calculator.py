@@ -461,14 +461,20 @@ class CalculatorAllButtons(QWidget):
         main_lyt.addWidget(self.btns_scroll_area)
         self.setLayout(main_lyt)
 
+        # Special patterns
+        self.parentheses_pattern = None
+        # We always need app pattern (e.g. to get f(x) )
+        app_patterns = FunctionNode.application.marked_pattern_math_objects()
+        self.application_pattern = app_patterns[0]
+
         # Connect button signals
         for btn in self.buttons():
             btn.btn_send_pattern.connect(self.process_clic)
             pattern = btn.patterns[0]
-            if (pattern.node == 'APPLICATION'
-                and btn.button_symbol ==
-                    FunctionNode.application.button_symbol()):
-                self.application_pattern = pattern
+            # if (pattern.node == 'APPLICATION'
+            #     and btn.button_symbol ==
+            #         FunctionNode.application.button_symbol()):
+            #     self.application_pattern = pattern
             if (pattern.node == 'GENERIC_PARENTHESES'
                 and btn.button_symbol ==
                     NumberNode.parentheses.button_symbol()):

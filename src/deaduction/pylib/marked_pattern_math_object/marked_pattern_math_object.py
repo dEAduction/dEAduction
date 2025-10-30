@@ -1400,10 +1400,10 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
                        and
                        (arg_type.is_number() or arg_type.is_generic_number()))
 
-        origin_display = origin_type.to_display(format_='utf8') if (
-            origin_type) else "None"
-        arg_display = arg_type.to_display(format_='utf8') if arg_type else \
-            "None"
+        # origin_display = origin_type.to_display(format_='utf8') if (
+        #     origin_type) else "None"
+        # arg_display = arg_type.to_display(format_='utf8') if arg_type else \
+        #     "None"
         # print(f"Types: {origin_display}, {arg_display}")
         # print(f"Tests: {seq_test, general_test, number_test}")
         if not any([seq_test, general_test, number_test]):

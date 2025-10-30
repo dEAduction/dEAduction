@@ -432,9 +432,8 @@ class FunctionNode(Node):
     calculator_nodes = []
     application = None  # Set below
 
-
 # NB: 'APPLICATION' is a special pattern
-application = FunctionNode("APPLICATION",
+application_node = FunctionNode("APPLICATION",
                             # "GENERIC_APPLICATION",
                             # 'APPLICATION: ?3()(?0: FUNCTION(?2, ?3), ?1: ?2)',
                             # 'APPLICATION(?0, ?1)',
@@ -445,13 +444,13 @@ application = FunctionNode("APPLICATION",
                              ],
                             (0, "\\parentheses", 1))
 
-application.set_button_symbol("f(·)")
-application.set_button_tooltip(_("Application of a function to an element\\n"
+application_node.set_button_symbol("f(·)")
+application_node.set_button_tooltip(_("Application of a function to an element\\n"
                                  "or term of a sequence."))
-application.set_button_menu(["f(x)", "u_n"])
-application.set_shortcut("APP")
+application_node.set_button_menu(["f(x)", "u_n"])
+application_node.set_shortcut("APP")
 
-FunctionNode.application = application
+FunctionNode.application = application_node
 
 composition = FunctionNode("COMPOSITION",
                             "COMPOSITION: FUNCTION(?1, ?3)"
