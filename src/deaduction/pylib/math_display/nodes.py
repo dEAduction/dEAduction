@@ -607,7 +607,7 @@ leq = InequalityNode("PROP_≤",
                      'PROP_≤: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2)',
                      (0, " ≤ ", 1)
                      )
-
+leq.set_shortcut(r'\leq')
 
 gt = InequalityNode("PROP_>",
                     'PROP_>: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
@@ -619,11 +619,13 @@ geq = InequalityNode("PROP_≥",
                      'PROP_≥: PROP()(?0: ?2=*NUMBER_TYPES, ?1: ?2=*NUMBER_TYPES)',
                      (0, " ≥ ", 1)
                      )
+geq.set_shortcut(r'\geq')
 
 # "PROP_EQUAL_NOT": (r"\no_text", 0, r" \neq ", 1),  # todo
 equal_not = InequalityNode("PROP_EQUAL_NOT",
                            'PROP_EQUAL_NOT: PROP()(?0: ?2, ?1: ?2)',
                            (r"\no_text", 0, r" \neq ", 1))
+equal_not.set_shortcut(r'\neq')
 
 equal2 = InequalityNode("PROP_EQUAL",
                         'PROP_EQUAL: PROP()(?0: ?2, ?1: ?2)',

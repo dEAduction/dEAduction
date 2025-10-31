@@ -37,12 +37,8 @@ import logging
 
 from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtGui     import  QTextDocument
-from PySide2.QtWidgets import (QToolButton,
-    # QPushButton,
-                               QHBoxLayout,
-                               QSizePolicy, QMenu, QAction)
+from PySide2.QtWidgets import (QToolButton, QMenu, QAction)
 
-from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.marked_pattern_math_object import (MarkedPatternMathObject,
                                                          calc_shortcuts_macro)
 from deaduction.pylib.marked_pattern_math_object.calculator_pattern_strings import CalculatorAbstractButton
@@ -226,13 +222,26 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
         If timeout is True:
         return the first button matching shortcut, which is supposed to be
-        the one with smallest length
-
+        the one with smallest length.
         """
+        MAX_LENGTH = 50
 
+        msg = ""
         buttons = cls.shortcuts_dic.get(text_buffer)
-        if buttons and (len(buttons) == 1 or timeout):
-            return buttons[0]
+
+        #Debug
+        # btns_sc = [btn.shortcut for btn in buttons] if buttons else None
+        # print(f"Shortcut {text_buffer} --> {btns_sc}")
+        # if buttons:
+        #     print(buttons[0].shortcut == text_buffer)
+        if buttons:
+            if timeout:  # Search for first button whose shortcut is text_buffer
+                for btn in buttons:
+                    if btn.shortcut == text_buffer:
+                        buttons = [btn]
+                        break
+            if len(buttons) == 1:
+                return buttons[0], ""
 
         # Try to find text in calc_shortcuts_macro
         if not text_is_macro:
@@ -240,7 +249,14 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
             if macro:
                 button = cls.find_shortcut(text_buffer=macro, timeout=timeout,
                                            text_is_macro=True)
-                return button
+                return button, ""
+
+        if buttons:
+            msg = ", ".join([btn.shortcut for btn in buttons])
+        if len(msg) > MAX_LENGTH:
+            msg = msg[:MAX_LENGTH] + " (...)"
+        return None, msg
+
 
     @Slot()
     def btn_process_click(self, patterns=None):
@@ -254,16 +270,24 @@ class CalculatorButton(RichTextToolButton, CalculatorAbstractButton):
 
     @classmethod
     def process_key_events(cls, key_event_buffer, timeout=False):
-        # button = cls.shortcuts_dic.get(key_event_buffer)
-        button = cls.find_shortcut(key_event_buffer, timeout)
+        button, msg = cls.find_shortcut(key_event_buffer, timeout)
+
+        shortcut_msg = ""
+        if not button:
+            if not msg:
+                msg = _("no match")
+            shortcut_msg = key_event_buffer + " --> " + msg
+
         if button:
             button.animateClick(100)
-            return True
+            return True, shortcut_msg
+        else:
+            return False, shortcut_msg
 
-    def remove_button(self):
-        log.debug("Try to rm btn from shortcuts...")
+    def remove_shortcut(self):
         bad_keys = [key for key, btns in CalculatorButton.shortcuts_dic.items()
                     if self in btns]
+        # log.debug(f"Try to rm btn from shortcuts: {bad_keys}...")
         for key in bad_keys:
             # log.debug(f"Removing btn from key {key}")
             btns = CalculatorButton.shortcuts_dic[key]

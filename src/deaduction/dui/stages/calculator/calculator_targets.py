@@ -173,6 +173,7 @@ class CalculatorTarget(MathTextWidget):
 
     enable_actions: callable  # Set by CalculatorController
     mouse_pressed_at_pos = Signal(int)
+    shortcut_msg = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -266,6 +267,11 @@ class CalculatorTarget(MathTextWidget):
             self.key_buffer_timeout()
             event.ignore()
             return
+        # if key_sequence == QKeySequence.Cancel:  # Does not work
+        #     print("CANCEL")
+        #     self.key_buffer_timeout(give_up=True)
+        #     event.ignore()
+        #     return
 
         # QAction key sequences
         action = None
@@ -311,6 +317,7 @@ class CalculatorTarget(MathTextWidget):
             # print(action)
             bar.animate_click(action)
             self.clear_key_buffer()
+            self.shortcut_msg.emit("")
             event.ignore()
             return
 
@@ -320,20 +327,26 @@ class CalculatorTarget(MathTextWidget):
             self.key_buffer_timer.start()
             self.key_event_buffer += text
             # print(self.key_event_buffer, self.key_buffer_timer)
-            yes = CalculatorButton.process_key_events(self.key_event_buffer,
-                                                      timeout=False)
+            yes, msg = CalculatorButton.process_key_events(self.key_event_buffer,
+                                                           timeout=False)
             if yes:
                 self.clear_key_buffer()
+                self.shortcut_msg.emit("")
+            else:
+                self.shortcut_msg.emit(msg)
 
         event.ignore()
 
     @Slot()
-    def key_buffer_timeout(self):
+    def key_buffer_timeout(self, give_up=False):
         if self.key_buffer_timer.isActive():
             self.key_buffer_timer.stop()
 
-        CalculatorButton.process_key_events(self.key_event_buffer,
-                                            timeout=True)
+        self.shortcut_msg.emit("")
+
+        if not give_up:
+            yes, msg = CalculatorButton.process_key_events(self.key_event_buffer,
+                                                           timeout=True)
         self.key_event_buffer = ""
 
     def clear_key_buffer(self):
@@ -454,7 +467,7 @@ class CalculatorTargets(QWidget):
         # Targets #
         ###########
         title_wdgs = []
-        self.target_wdgs: [CalculatorTarget] = []
+        self.target_wdgs: list[CalculatorTarget] = []
         for title in titles:
             if title:
                 title_wdg = QLabel(title)

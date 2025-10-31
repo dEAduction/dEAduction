@@ -1685,7 +1685,7 @@ class MarkedMetavar(MetaVar, MarkedPatternMathObject):
                                                     original_metavars,
                                                     copied_metavars,
                                                     recursion_depth)
-        if self.is_marked:
+        if self.is_marked and hasattr(new_mvar, "mark"):
             new_mvar.mark()
         return new_mvar
 

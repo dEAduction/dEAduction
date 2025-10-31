@@ -91,7 +91,7 @@ class DefinitionMathObject(MathObject, Definition):
     def get_constants(cls):
         """
         Return all instances organized in dict whose keys are
-        hierarchies of sections.
+        hierarchies of sections. This used in Calculator.
         """
 
         all_constants = dict()

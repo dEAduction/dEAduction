@@ -62,8 +62,9 @@ from PySide2.QtCore import Signal, Slot, Qt, QTimer, QSettings
 from PySide2.QtGui     import  QKeySequence, QIcon
 from PySide2.QtWidgets import (QApplication, QWidget,
                                QSizePolicy, QScrollArea,
-                               QHBoxLayout, QVBoxLayout, QGridLayout,QToolBar,
-                               QAction, QDialog, QGroupBox, QMainWindow)
+                               QHBoxLayout, QVBoxLayout, QGridLayout, QToolBar,
+                               QAction, QDialog, QGroupBox, QMainWindow,
+                               QTabWidget)
 
 import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.config.vars as cvars
@@ -272,6 +273,10 @@ class CalculatorButtonsGroup(QWidget):
     #     for btn in calculator_buttons:
     #         self.add_button(btn)
 
+    def remove_all_shortcuts(self):
+        for button in self.buttons:
+            button.remove_shortcut()  # Remove from shortcut_dic
+
     def remove_all_buttons(self):
         # log.debug("Removing bv buttons...")
         item = self.buttons_layout.takeAt(0)
@@ -279,7 +284,7 @@ class CalculatorButtonsGroup(QWidget):
             button = item.widget()
             if button:
                 log.debug(button.text())
-                button.remove_button()  # Remove from shortcut_dic
+                # button.remove_shortcut()  # Remove from shortcut_dic
                 button.hide()
                 button.deleteLater()
             item = self.buttons_layout.takeAt(0)
@@ -372,6 +377,65 @@ class CalculatorButtonsGroup(QWidget):
         self.toggle_buttons()
 
 
+class CalculatorTabButtonWidget(QTabWidget):
+    """
+    A class to display two instances of CalculatorAllButtons,
+    a complete one and a simplified one.
+    """
+    send_pattern = Signal(list, str)
+    # targets_window: CalculatorTargets = None
+    # controller = None  # Set by CalculatorController
+    targets_window_is_closed = False
+
+    # We always need app pattern (e.g. to get f(x) ) and parentheses
+    app_pats = FunctionNode.application.marked_pattern_math_objects()
+    application_pattern = app_pats[0]
+    par_pats = NumberNode.parentheses.marked_pattern_math_objects()
+    parentheses_pattern = par_pats[0]
+
+    def __init__(self, calc_patterns: [CalculatorPatternLines],
+                 node_classes=None,
+                 only_numbers=False):
+        """
+        If only_numbers is True then the simplified tab will be selected.
+        node_classes is the list of names of node classes that should be
+        displayed in the complete tab.
+        """
+        super().__init__()
+
+        # Set CalculatorButton shortcuts dict:
+        self.shortcuts_dic = dict()
+        CalculatorButton.shortcuts_dic = self.shortcuts_dic
+        CalculatorButton.original_shortcuts_dic = dict()
+
+        self.complete_widget = CalculatorAllButtons(calc_patterns,
+                                                    node_classes=node_classes)
+
+        # In simple mode, no bounded vars and no defs
+        simple_calc_patterns = [cp for cp in calc_patterns
+                                if cp.tag not in cp.complex_tags]
+        self.simple_widget = CalculatorAllButtons(simple_calc_patterns,
+                                                  only_numbers=True)
+
+        self.addTab(self.simple_widget, _("Number mode"))
+        self.addTab(self.complete_widget, _("Full mode"))
+
+        if only_numbers:
+            self.setCurrentIndex(0)
+        else:
+            self.setCurrentIndex(1)
+
+        # Connect signals
+        self.complete_widget.send_pattern.connect(self.send_pattern)
+        self.simple_widget.send_pattern.connect(self.send_pattern)
+
+    def closeEvent(self, event):
+        if not self.targets_window_is_closed:
+            event.ignore()
+        else:
+            super().closeEvent(event)
+
+
 class CalculatorAllButtons(QWidget):
     """
     A class to display groups of CalculatorButtons, with a vertical scroll bar.
@@ -387,9 +451,6 @@ class CalculatorAllButtons(QWidget):
     """
 
     send_pattern = Signal(list, str)
-    targets_window: CalculatorTargets = None
-    controller = None  # Set by CalculatorController
-    targets_window_is_closed = False
 
     def __init__(self, calc_patterns: [CalculatorPatternLines],
                  node_classes=None,
@@ -406,11 +467,6 @@ class CalculatorAllButtons(QWidget):
         # self.setFocusPolicy(Qt.NoFocus)  --> Buttons cannot be clicked!
         self.buttons_groups = []
 
-        # Set CalculatorButton shortcuts dict:
-        self.shortcuts_dic = dict()
-        CalculatorButton.shortcuts_dic = self.shortcuts_dic
-        CalculatorButton.original_shortcuts_dic = dict()
-
         main_lyt = QVBoxLayout()
 
         ###############
@@ -420,14 +476,10 @@ class CalculatorAllButtons(QWidget):
 
         # (1) Lines from pattern_lines
         for calc_pattern in calc_patterns:
-            # Avoid empty context
-            if (calc_pattern.title is not CalculatorPatternLines.bound_vars_title
+            # Avoid empty context (except for bound vars)
+            if (calc_pattern.tag != 'bound vars'
                     and all(not line for line in calc_pattern.lines)):
                 continue
-            # No bounded vars if only numbers
-            if only_numbers:
-                if calc_pattern.title is CalculatorPatternLines.bound_vars_title:
-                    continue
 
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
                 calc_pattern)
@@ -436,13 +488,13 @@ class CalculatorAllButtons(QWidget):
 
         # (2) Lines from nodes
         if only_numbers:
-            node_classes = ["functions", "numbers", "inequalities"]
+            node_classes = ["numbers", "inequalities"]
         for node_name, NodeClass, col_size in (
-                ("numbers", NumberNode, 4),
-                ("inequalities", InequalityNode, 5),
-                ("functions", FunctionNode, 5),
                 ("logic", LogicalNode, 5),
-                ("sets", SetTheoryNode, 5)):
+                ("sets", SetTheoryNode, 5),
+                ("functions", FunctionNode, 5),
+                ("numbers", NumberNode, 4),
+                ("inequalities", InequalityNode, 5)):
             # TODO: add settings test on buttons name
             if (not node_classes) or node_name in node_classes:
                 buttons = CalculatorButtonsGroup.from_node_subclass(NodeClass,
@@ -461,24 +513,9 @@ class CalculatorAllButtons(QWidget):
         main_lyt.addWidget(self.btns_scroll_area)
         self.setLayout(main_lyt)
 
-        # Special patterns
-        self.parentheses_pattern = None
-        # We always need app pattern (e.g. to get f(x) )
-        app_patterns = FunctionNode.application.marked_pattern_math_objects()
-        self.application_pattern = app_patterns[0]
-
         # Connect button signals
         for btn in self.buttons():
             btn.btn_send_pattern.connect(self.process_clic)
-            pattern = btn.patterns[0]
-            # if (pattern.node == 'APPLICATION'
-            #     and btn.button_symbol ==
-            #         FunctionNode.application.button_symbol()):
-            #     self.application_pattern = pattern
-            if (pattern.node == 'GENERIC_PARENTHESES'
-                and btn.button_symbol ==
-                    NumberNode.parentheses.button_symbol()):
-                self.parentheses_pattern = pattern
 
         self.set_geometry()
 
@@ -731,13 +768,8 @@ class CalculatorController:
         self.calculator_groups.extend(cpls)
 
         # User interface #
-        self.buttons_window = CalculatorAllButtons(
+        self.buttons_window = CalculatorTabButtonWidget(
             self.calculator_groups, only_numbers=self.targets_are_numbers)
-        # self.buttons_window.setParent(self.targets_widget)
-        # --> buttons_window does not show!
-        # self.buttons_window.setFocusProxy(self.targets_widget)
-        #  --> click on buttons has no effect
-        self.buttons_window.controller = self  # Useless?
         self.__set_targets()
         self.__init_multiple_signals()
         self.buttons_window.send_pattern.connect(self.insert_pattern)
@@ -859,8 +891,6 @@ class CalculatorController:
             idx += 1
 
     def __init_multiple_signals(self):
-        # self.buttons_window.targets_widget = self.targets_widget
-        buttons_window = self.buttons_window
         targets_window = self.targets_widget
 
         t_bar = targets_window.toolbar
@@ -879,24 +909,8 @@ class CalculatorController:
         targets_window.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
         n_bar.delete.triggered.connect(self.delete)
 
-    # def __init_signals(self):
-    #     calc_ui = self.calculator_ui
-    #
-    #     t_bar = calc_ui.toolbar
-    #     t_bar.rewind.triggered.connect(self.history_to_beginning)
-    #     t_bar.undo_action.triggered.connect(self.history_undo)
-    #     t_bar.redo_action.triggered.connect(self.history_redo)
-    #     t_bar.go_to_end.triggered.connect(self.history_to_end)
-    #
-    #     n_bar = calc_ui.navigation_bar
-    #     n_bar.beginning_action.triggered.connect(self.go_to_beginning)
-    #     n_bar.left_action.triggered.connect(self.move_left)
-    #     n_bar.up_action.triggered.connect(self.move_up)
-    #     n_bar.down_action.triggered.connect(self.move_down)
-    #     n_bar.right_action.triggered.connect(self.move_right)
-    #     n_bar.end_action.triggered.connect(self.go_to_end)
-    #     calc_ui.lean_mode_wdg.stateChanged.connect(self.toggle_lean_mode)
-    #     n_bar.delete.triggered.connect(self.delete)
+        for calculator_target in self.target_widgets:
+            calculator_target.shortcut_msg.connect(self.status_bar.show_msg)
 
     def __init_histories(self):
         for target, history in zip(self.targets, self.histories):
@@ -1131,6 +1145,9 @@ class CalculatorController:
         # else:  # Show immediately
         #     self.status_bar.show_pending_msgs()
 
+    def show_shortcut_msg(self, msg, delay):
+        self.status_bar.show_msg(msg, delay)
+
     def help_msg(self):
         """
         Always return empty string.
@@ -1317,6 +1334,7 @@ class CalculatorController:
         Give focus back to targets_widget (and thus to the active
         target_wdg). This prevents the Buttons window to keep focus.
         """
+        # print("Focus on targets")
         if self.targets_widget:
             self.targets_widget.activateWindow()
             self.targets_widget.setFocus()
@@ -1353,49 +1371,11 @@ class CalculatorController:
 
     @property
     def bound_var_buttons(self):
-        bv_group = self.buttons_window.bound_var_group()
+        bv_group = self.buttons_window.complete_widget.bound_var_group()
         return bv_group
 
     def bound_vars(self):
         return self.bound_var_buttons.patterns()
-
-    #
-    # def bound_vars_from_buttons(self):
-    #     bound_vars = self.bound_var_buttons_group().patterns()
-    #     return bound_vars
-    #
-    # def check_old_bound_vars(self):
-    #     """
-    #     Remove bound vars buttons whose bound vars is not in self.bound_vars.
-    #     """
-    #
-    #     ids = [bv.identifier_nb for bv in self.current_target.bound_vars()]
-    #     log.debug(f"Target bv Ids: {ids}")
-    #     log.debug("Bv buttons ids:")
-    #     for btn in self.bound_var_buttons.buttons:
-    #         bv = btn.patterns[0]
-    #         log.debug(f"{bv.identifier_nb}")
-    #         if bv.identifier_nb not in ids:
-    #             self.bound_var_buttons.remove_button(btn)
-
-    # def check_new_bound_var(self, assigned_mvar):
-    #     """
-    #     If assigned_mvar contains a new bound var, handle it, i.e. name it
-    #     and add a new button.
-    #     If the assigned_mvar affects the type of some bound var, then
-    #     rename this bound var.
-    #     """
-    #
-    #     # (0) Record new bound vars
-    #     if assigned_mvar.has_bound_var():
-    #         bound_var = assigned_mvar.bound_var
-    #         bound_var.is_unnamed = True
-    #         # Name new bound var:
-    #         self.goal.name_one_bound_var(bound_var)  # FIXME, bad names
-    #         # TODO: ask usr to give name if settings
-    #         # Add bound var button
-    #         new_button = CalculatorButton.from_math_object(bound_var)
-    #         self.buttons_window.add_button(self.bound_var_buttons, new_button)
 
     def rename_bound_vars(self):
         """
@@ -1419,12 +1399,19 @@ class CalculatorController:
         if not self.bound_var_buttons:
             return
 
+        self.bound_var_buttons.remove_all_shortcuts()
+
+        # print(self.current_target.bound_vars())
         buttons = [CalculatorButton.from_math_object(bound_var,
                                                      copy_math_object=False)
                    for bound_var in self.current_target.bound_vars()]
+        # print(buttons)
+        # print(CalculatorButton.shortcuts_dic.get('x'))
+
         self.bound_var_buttons.set_buttons(buttons)
         for btn in buttons:
-            btn.btn_send_pattern.connect(self.buttons_window.process_clic)
+            btn.btn_send_pattern.connect(
+                self.buttons_window.complete_widget.process_clic)
 
     @Slot()
     def insert_pattern(self, pattern_s: [MarkedPatternMathObject],

@@ -169,6 +169,9 @@ class CalculatorAbstractButton:
     @classmethod
     def from_math_object(cls, math_object, copy_math_object=True):
         symbol = math_object.to_display(format_='html', use_color=True)
+        shortcut: str = math_object.to_display(format_='utf8', use_color=True)
+        if not shortcut.replace('\\', '').isalnum():
+            shortcut = None
         if copy_math_object:
             marked_pmo = MarkedPatternMathObject.from_math_object(math_object)
         else:
@@ -177,7 +180,8 @@ class CalculatorAbstractButton:
         return cls(latex_symbol=symbol,
                    tooltip=None,
                    patterns=marked_pmo,
-                   menu=None)
+                   menu=None,
+                   shortcut=shortcut)
 
     @classmethod
     def from_pattern_nodes(cls, node):
@@ -196,6 +200,7 @@ class CalculatorPatternLines:
 
     bound_vars_title = _('Bound variables')
     context_title = _('Context')
+    complex_tags = ('bound vars', 'definitions')
 
     # Dict of symbol / MarkedPMO
     marked_patterns = OrderedDict()
@@ -206,8 +211,8 @@ class CalculatorPatternLines:
     # # Special patterns
     # marked_patterns['()'] = parentheses_patterns() + [marked_patterns['()']]
 
-    def __init__(self, title: str, lines: [],
-                 patterns=None):
+    def __init__(self, title: str, lines: list, patterns=None,
+                 tag=None):
         """
         Lines is a list of symbols which are keys for the cls.marked_patterns
         dict, which is updated with the optional patterns argument.
@@ -216,12 +221,13 @@ class CalculatorPatternLines:
         #  turned into marked_patterns when inserted
         self.title = title
         self.lines = lines
+        self.tag = tag
         if patterns:
             self.marked_patterns = patterns
             CalculatorPatternLines.marked_patterns.update(patterns)
 
     @classmethod
-    def from_context(cls, context_math_objects: [ContextMathObject]):
+    def from_context(cls, context_math_objects: list[ContextMathObject]):
         patterns = dict()
         for obj in context_math_objects:
             symbol = obj.to_display(format_='html',
@@ -230,13 +236,14 @@ class CalculatorPatternLines:
             patterns[symbol] = marked_pmo
         cpl = cls(title= cls.context_title,
                   lines=[list(patterns.keys())],
-                  patterns=patterns)
+                  patterns=patterns,
+                  tag="context")
         return cpl
 
     @classmethod
     def bound_vars(cls):
         title = cls.bound_vars_title
-        cpl = cls(title=title, lines=[])
+        cpl = cls(title=title, lines=[], tag='bound vars')
         return cpl
 
     @classmethod
@@ -294,7 +301,8 @@ class CalculatorPatternLines:
                                for idx in range(len(symbols) // 4 + 1)]
                     cpl = cls(title=section,
                               lines=symbols,
-                              patterns=patterns)
+                              patterns=patterns,
+                              tag="definitions")
 
                     cpls.append(cpl)
 

@@ -148,6 +148,14 @@ class DeaductionStatusBar(QStatusBar):
         self.show_success_icon()
         self.set_message(tmp_msg)
 
+    @Slot()
+    def show_msg(self, tmp_msg):
+        """
+        Show tmp_msg.
+        """
+        self.hide_icon()
+        self.set_message(tmp_msg)
+
     def hide_icon(self):
         self.iconWidget.hide()
 
