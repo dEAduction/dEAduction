@@ -331,11 +331,15 @@ class CalculatorButtonsGroup(QWidget):
     def from_calculator_pattern_lines(cls, calc_pattern):
         buttons = []
         # If more than one line, then col_size = length of first line
-        col_size = (len(calc_pattern.lines[0]) if len(calc_pattern.lines) > 1
+        col_size = (len(calc_pattern.latex_symbols[0]) if len(
+            calc_pattern.latex_symbols) > 1
                     else None)
-        for line in calc_pattern.lines:
-            for symbol in line:
-                buttons.append(CalculatorButton(symbol))
+        for btn_symbols, latex_symbols in zip(calc_pattern.button_symbols,
+                                              calc_pattern.latex_symbols):
+            for symbol, latex in zip(btn_symbols, latex_symbols):
+                # print(f"Creating button {symbol}, {latex}")
+                buttons.append(CalculatorButton(latex_symbol=latex,
+                                                button_symbol=symbol))
 
         buttons_group = cls(title=calc_pattern.title,
                             calculator_buttons=buttons,
@@ -478,7 +482,7 @@ class CalculatorAllButtons(QWidget):
         for calc_pattern in calc_patterns:
             # Avoid empty context (except for bound vars)
             if (calc_pattern.tag != 'bound vars'
-                    and all(not line for line in calc_pattern.lines)):
+                    and all(not line for line in calc_pattern.latex_symbols)):
                 continue
 
             buttons = CalculatorButtonsGroup.from_calculator_pattern_lines(
@@ -751,7 +755,7 @@ class CalculatorController:
         if goal:
             context = goal.context_objects
             context_line = CalculatorPatternLines.from_context(context)
-            if context_line.lines:
+            if context_line.latex_symbols:
                 self.calculator_groups.extend([context_line])
             # Compute applications on ContextMathObjects:
             MarkedPatternMathObject.populate_applications_from_context(context)
@@ -842,11 +846,14 @@ class CalculatorController:
         OK = cc.main_window.exec()
 
         if not OK:
+            log.debug("Closing with no data")
             cc.main_window.close()
             return [], OK
         ############################
         # After exec: post-process #
         ############################
+        if cc.lean_mode:
+            cc.set_lean_target()
         targets = cc.targets
         math_objects = []
 
@@ -854,10 +861,12 @@ class CalculatorController:
             target.unmark()
             if target.is_metavar:
                 if not target.assigned_math_object:
+                    # log.debug("No target")
                     # No more data from this point
                     break
             if cc.lean_mode:
                 lean_code = cc.polished_lean_code()
+                log.debug(f"Calculator output Lean code {lean_code}")
                 math_object = MathObject.raw_lean_code(lean_code)
             else:
                 # math_object = target.assigned_math_object
@@ -1000,7 +1009,9 @@ class CalculatorController:
 
     @property
     def current_lean_code(self):
-        return self.current_target_wdg.toPlainText().strip()
+        text = self.current_target_wdg.toPlainText().strip()
+        # log.debug(f"Current Lean code: {text}")
+        return text
 
     @property
     def current_target(self):
@@ -1049,9 +1060,13 @@ class CalculatorController:
 
     def target_to_text(self):
         if self.lean_mode:
-            text = self.target.to_display(format_='lean')
-            text = text.replace('?', ' ')
-            text = text.strip()
+            mo = self.target.assigned_math_object
+            if mo:
+                text = mo.to_display(format_='lean')
+                text = text.replace('?', ' ')
+                text = text.strip()
+            else:
+                text = ''
         else:
             text = self.target.to_display(format_='html',
                                           pretty_parentheses=False)
@@ -1203,25 +1218,33 @@ class CalculatorController:
 
         for shortcut, button in (
                 CalculatorButton.original_shortcuts_dic.items()):
-            text = button.lean_symbol
-            polished_code = polished_code.replace(shortcut, text)
+            if shortcut.startswith('\\'):
+                text = button.lean_symbol
+                print(f"Replacing {shortcut} by {text}")
+                polished_code = polished_code.replace(shortcut, text)
 
         return polished_code
 
     def set_lean_target(self):
         """
         This method is called when self goes from lean_mode=True to
-        lean_mode=False.
+        lean_mode=False: the pure Lean code in encapsulated in a
+        MarkedPatternMathObject.
         """
         if not self.current_lean_code:
             return
 
-        math_object_code = MathObject.raw_lean_code(self.polished_lean_code())
+        pure_code = self.polished_lean_code()
+        # print(f"Pure code: {pure_code}")
+        math_object_code = MathObject.raw_lean_code(pure_code)
+        pmo = MarkedPatternMathObject.from_math_object(math_object_code)
+        # print(f"MPMO: {pmo.to_display(format_='utf8')}")
+
         # Set target
         math_type = self.target.math_type
         target = MarkedMetavar.from_mvar(MetaVar(math_type=math_type))
-        target.assigned_math_object = math_object_code
-
+        target.assigned_math_object = pmo
+        # print(f"target text: {self.target_to_text()}")
         target.set_math_cursor()
         target.math_cursor.go_to_end()
         self.target = target
@@ -1290,6 +1313,7 @@ class CalculatorController:
         # Has usr filled-in enough targets?
         #  All place_holders must be at the end,
         #  i.e. no assigned_math_object after unassigned
+        # CAUTION, these are str in Lean mode
         assigned_math_objects = [var.assigned_math_object if var.is_metavar
                                  else var for var in self.targets]
         # Take into account current target may be in Lean mode
@@ -1312,9 +1336,10 @@ class CalculatorController:
                 OK = True
 
         # Do not enable OK if some target contains "?" (unassigned metavar)
-        for mo in assigned_math_objects:
-            if mo and mo.contains_unassigned_metavar():
-                OK = False
+        if not self.lean_mode:
+            for mo in assigned_math_objects:
+                if mo and mo.contains_unassigned_metavar():
+                    OK = False
 
         button_box = self.targets_widget.button_box
         button_box.setEnabled(OK)

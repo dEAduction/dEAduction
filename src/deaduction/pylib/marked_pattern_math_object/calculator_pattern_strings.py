@@ -168,8 +168,9 @@ class CalculatorAbstractButton:
 
     @classmethod
     def from_math_object(cls, math_object, copy_math_object=True):
-        symbol = math_object.to_display(format_='html', use_color=True)
-        shortcut: str = math_object.to_display(format_='utf8', use_color=True)
+        latex_symbol = math_object.to_display(format_='utf8', use_color=True)
+        btn_symbol = math_object.to_display(format_='html', use_color=True)
+        shortcut = latex_symbol
         if not shortcut.replace('\\', '').isalnum():
             shortcut = None
         if copy_math_object:
@@ -177,7 +178,8 @@ class CalculatorAbstractButton:
         else:
             assert isinstance(math_object, MarkedPatternMathObject)
             marked_pmo = math_object
-        return cls(latex_symbol=symbol,
+        return cls(latex_symbol=latex_symbol,
+                   button_symbol=btn_symbol,
                    tooltip=None,
                    patterns=marked_pmo,
                    menu=None,
@@ -211,16 +213,40 @@ class CalculatorPatternLines:
     # # Special patterns
     # marked_patterns['()'] = parentheses_patterns() + [marked_patterns['()']]
 
-    def __init__(self, title: str, lines: list, patterns=None,
+    def __init__(self, title: str, # lines: list,
+                 latex_symbols: list,
+                 button_symbols: list = None,
+                 patterns=None,
                  tag=None):
         """
-        Lines is a list of symbols which are keys for the cls.marked_patterns
-        dict, which is updated with the optional patterns argument.
+        Lines is a LIST OF LIST of latex_symbols which are keys for the
+        cls.marked_patterns dict, which is updated with the optional
+        patterns argument.
         """
         # FIXME: marked_patterns should be just patterns??
         #  turned into marked_patterns when inserted
         self.title = title
-        self.lines = lines
+        # self.lines = lines
+        self.latex_symbols = latex_symbols
+
+        # Fill-in empty button symbols
+        if not button_symbols:
+            button_symbols = latex_symbols
+        else:
+            for idx in range(len(latex_symbols)):
+                latexs = latex_symbols[idx]
+                btns = button_symbols[idx]
+                if not btns:
+                    button_symbols[idx] = latexs
+                else:
+                    for jdx in range(len(latexs)):
+                        if not btns[jdx]:
+                            btns[jdx] = latexs[jdx]
+
+        # print("Creating pattern lines:")
+        # print(latex_symbols)
+        # print(button_symbols)
+        self.button_symbols = button_symbols
         self.tag = tag
         if patterns:
             self.marked_patterns = patterns
@@ -229,13 +255,22 @@ class CalculatorPatternLines:
     @classmethod
     def from_context(cls, context_math_objects: list[ContextMathObject]):
         patterns = dict()
+        btn_symbols = []
+        latex_symbols = []
         for obj in context_math_objects:
-            symbol = obj.to_display(format_='html',
-                                    use_color=True)
+            button_symbol = obj.to_display(format_='html', use_color=True)
+            latex_symbol = obj.to_display(format_='utf8')
             marked_pmo = MarkedPatternMathObject.from_math_object(obj)
-            patterns[symbol] = marked_pmo
-        cpl = cls(title= cls.context_title,
-                  lines=[list(patterns.keys())],
+            latex_symbols.append(latex_symbol)
+            btn_symbols.append(button_symbol)
+            patterns[button_symbol] = marked_pmo
+        # print("Context line:")
+        # print(btn_symbols)
+        # print(latex_symbols)
+        cpl = cls(title=cls.context_title,
+                  # lines=[list(patterns.keys())],
+                  latex_symbols=[latex_symbols],
+                  button_symbols=[btn_symbols],
                   patterns=patterns,
                   tag="context")
         return cpl
@@ -243,7 +278,7 @@ class CalculatorPatternLines:
     @classmethod
     def bound_vars(cls):
         title = cls.bound_vars_title
-        cpl = cls(title=title, lines=[], tag='bound vars')
+        cpl = cls(title=title, latex_symbols=[], tag='bound vars')
         return cpl
 
     @classmethod
@@ -300,7 +335,7 @@ class CalculatorPatternLines:
                     symbols = [symbols[4*idx:4*(idx+1)]
                                for idx in range(len(symbols) // 4 + 1)]
                     cpl = cls(title=section,
-                              lines=symbols,
+                              latex_symbols=symbols,
                               patterns=patterns,
                               tag="definitions")
 

@@ -262,6 +262,7 @@ class MathDisplay:
     # Only those shape that are distinct from the latex_from_node dict
     lean_from_node = {
         # "PLACE_HOLDER": (r'__',),
+        # "GENERIC_PARENTHESES": ('(', 0, ')'),
         "COE": ("↥", 0,),
         "LOCAL_CONSTANT": (display_name,),
         "CONSTANT": ("@", display_name),  # e.g. @composition
@@ -339,6 +340,8 @@ class MathDisplay:
         r'\not': "not ",
         r'\times': "×",
         r'\mul': "*",
+        # '×': "*"
+        # r'\parentheses': '()'
     }
 
     @classmethod

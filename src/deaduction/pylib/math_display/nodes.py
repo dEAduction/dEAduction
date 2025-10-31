@@ -524,7 +524,8 @@ for i in [4, 5, 6]:
 
 mult_ = NumberNode('MULT',
                    'MULT: ?2()(?0: ?2, ?1: ?2)',
-                   (0, r"\times", 1)
+                   (0, r"\mul", 1),
+                   lean_shape=(0, r"*", 1)
                    )
 
 for i in [1, 2, 3]:

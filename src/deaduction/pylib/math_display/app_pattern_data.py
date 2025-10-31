@@ -89,8 +89,8 @@ generic_app_dict = {
     "APP: PROP()(CST?, ...)": ('', (-1,), [r'\text_is', (0,)], ''),
     # f(x):
     "APP(?0: !FUNCTION(?1, ?2), ?3: ?1)": ((0,), r"\parentheses", (1,)),
-    # Replace x ↦ f(x) by f:
-    "LAMBDA(?0, ?1, APP(?3, ?1))": ((2, 0),)
+    # Replace x ↦ f(x) by f: e g. LAM(R, x, APP(f, x) )  --> NO
+    # "LAMBDA(?0, ?1, APP(?3, ?1))": ((2, 0),)
 }
 
 
