@@ -87,6 +87,15 @@ def get(k: str, default_value=None):
     # print(__dict_factory)
     # print("Usr:")
     # print(__dict_user)
+    # test = True
+    # try:
+    #     test = udict.dotget(__dict_user, "functionality.allow_induction")
+    # except:
+    #     pass
+    # print(f"Allow_induction: {test}")
+    # if not test:
+    #     raise TypeError("Toto")
+
     # Try in user config
     try:
         return udict.dotget(__dict_user, k)
@@ -161,6 +170,7 @@ def recursive_update(new_settings: dict, original_dic=None,
     return {'functionality': {Lean_method': True, 'Jean-Pierre': None}}
 
     """
+    log.info("Update cvars")
     global __dict_user
     if not original_dic:
         original_dic = __dict_user
