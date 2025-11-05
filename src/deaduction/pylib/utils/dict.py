@@ -72,9 +72,20 @@ def dotget(r, k, default_value=None):
     try:
         keys = list(k.split("."))
         rp = r
+        # print(f"keys:{keys}")
+        # print("Successive dict:")
+        # print(rp)
         for idx in range(0, len(keys)-1):
             rp = rp[keys[idx]]
-        return rp[keys[-1]]
+            # print("dict:")
+            # print(rp)
+        key=keys[-1]
+        # print(key)
+        # print(rp[key])
+        if rp:
+            return rp[key]
+        else:
+            raise KeyError("No dictionary")
     except KeyError as e :
         if default_value is not None:
             return default_value
