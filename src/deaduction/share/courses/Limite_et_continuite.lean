@@ -36,7 +36,8 @@ et la continuité des fonctions
 [settings]
 functionality.calculator_available = true
 others.Lean_request_method = "from_previous_proof_state"
-usr_jokers_available = true
+functionality.usr_jokers_available = true
+logic.use_color_for_applied_properties = true
 -/
 
 

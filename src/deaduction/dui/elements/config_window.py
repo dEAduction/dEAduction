@@ -173,7 +173,9 @@ CONFIGS['Functionalities'] = {
     'functionality.choose_order_to_prove_conjunction': (None, True,
         _("Choose in which order to prove the two sub-goals of a conjunction")),
     'functionality.choose_order_to_use_disjunction': (None, True,
-        _("Choose in which order to study the two cases of a disjunction"))
+        _("Choose in which order to study the two cases of a disjunction")),
+    'functionality.usr_jokers_available': (None, False,
+        _('Allow to use a joker as witness to prove an existential property'))
     # 'functionality.calculator_available': (None, True,
     #    _("Open the logical calculator to enter composite objects")),
 }
