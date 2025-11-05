@@ -475,7 +475,7 @@ def adapt_to_new_version():
         # Write new version nb in usr config.toml:
         log.debug("Setting new version nb in usr config file")
         cvars.set("others.usr_version_nb", cvars.get("others.version"))
-        cvars.save()
+        cvars.save_single_key("others.usr_version_nb")
 
 
 #################################################################
