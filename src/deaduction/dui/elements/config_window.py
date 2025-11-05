@@ -363,12 +363,13 @@ class ConfigMainWindow(QDialog):
         Store new settings in  cvars and save cvars in the config.toml file
         """
 
+        log.info("Saving new preferences in config.toml")
         # Store new settings in cvars
         for setting in self.modified_settings:
             cvars.set(setting, self.modified_settings[setting])
+            cvars.save_single_key(setting)
         # Save
-        log.info("Saving preferences in config.toml")
-        cvars.save()
+        # cvars.save()
 
     def apply(self):
         """
