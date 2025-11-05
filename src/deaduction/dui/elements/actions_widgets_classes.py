@@ -319,7 +319,7 @@ class ActionButton(QToolButton):
             self.menu().setActiveAction(None)
             await sleep(duration)
         self.menu().close()
-        menu_action.trigger()
+        # menu_action.trigger()
         return True
 
 # We wish to have an ActionButton class attribute called
