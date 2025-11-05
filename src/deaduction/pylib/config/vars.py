@@ -82,7 +82,11 @@ def get(k: str, default_value=None):
     """
     global __dict_factory
     global __dict_user
-    
+
+    # print("Factory:")
+    # print(__dict_factory)
+    # print("Usr:")
+    # print(__dict_user)
     # Try in user config
     try:
         return udict.dotget(__dict_user, k)

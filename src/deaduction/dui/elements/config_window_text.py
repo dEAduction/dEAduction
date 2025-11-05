@@ -99,7 +99,7 @@ PRETTY_NAMES = {
     'functionality.ask_to_prove_premises_of_implications':
         _("Ask to prove 'P' when 'P ⇒ Q' in context"),
     'functionality.calculator_available': _("Logical calculator"),
-    'functionality.usr_jokers_available': _('Allow jokers'),
+    'logic.usr_jokers_available': _('Allow jokers'),
     'logs.save_journal': _("Save journal"),
     'display.dubious_characters': replace_missing,
     'display.short_buttons_line': _('Split logic buttons into two lines'),

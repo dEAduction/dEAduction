@@ -132,7 +132,10 @@ CONFIGS["Logic"] = {
     "logic.usr_name_new_vars": (None, True,
         _("The user is asked to name new context variables")),
     "logic.use_bounded_quantification_notation": (None, True,
-        _("Display properties using bounded quantification"))}
+        _("Display properties using bounded quantification")),
+    'logic.usr_jokers_available': (None, False,
+       _('Allow to use a joker as witness to prove an existential property'))
+    }
 
 CONFIGS['Functionalities'] = {
     'functionality.allow_sorry': (None, True,
@@ -173,16 +176,14 @@ CONFIGS['Functionalities'] = {
     'functionality.choose_order_to_prove_conjunction': (None, True,
         _("Choose in which order to prove the two sub-goals of a conjunction")),
     'functionality.choose_order_to_use_disjunction': (None, True,
-        _("Choose in which order to study the two cases of a disjunction")),
-    'functionality.usr_jokers_available': (None, False,
-        _('Allow to use a joker as witness to prove an existential property'))
+        _("Choose in which order to study the two cases of a disjunction"))
     # 'functionality.calculator_available': (None, True,
     #    _("Open the logical calculator to enter composite objects")),
 }
 
 PRE_DEFINED['Functionalities'] = {
     'selected_level': 'functionality.default_functionality_level',
-    'Beginner': {'functionality.allow_proof_by_sorry': True,
+    'Beginner': {'functionality.allow_sorry': True,
                  'functionality.automatic_use_of_exists': True,
                  'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': False,
@@ -198,7 +199,7 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.choose_order_to_use_disjunction': False,
                  # 'functionality.calculator_available': False
                  },
-    'Intermediate': {'functionality.allow_proof_by_sorry': True,
+    'Intermediate': {'functionality.allow_sorry': True,
                      'functionality.automatic_use_of_exists': True,
                      'functionality.automatic_use_of_and': True,
                      'functionality.target_selected_by_default': True,
@@ -213,7 +214,7 @@ PRE_DEFINED['Functionalities'] = {
                      'functionality.choose_order_to_use_disjunction': False,
                      # 'functionality.calculator_available': True
                      },
-    'Advanced': {'functionality.allow_proof_by_sorry': True,
+    'Advanced': {'functionality.allow_sorry': True,
                  'functionality.automatic_use_of_exists': True,
                  'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,
@@ -229,7 +230,7 @@ PRE_DEFINED['Functionalities'] = {
                  'functionality.choose_order_to_use_disjunction': False,
                  # 'functionality.calculator_available': True
                  },
-    'Expert':   {'functionality.allow_proof_by_sorry': True,
+    'Expert':   {'functionality.allow_sorry': True,
                  'functionality.automatic_use_of_exists': True,
                  'functionality.automatic_use_of_and': True,
                  'functionality.target_selected_by_default': True,

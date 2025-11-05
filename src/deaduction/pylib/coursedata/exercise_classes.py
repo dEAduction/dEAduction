@@ -886,7 +886,7 @@ class Exercise(Theorem):
         Remove the prove_exists_joker button, unless
         usr_jokers_available = true.
         """
-        if not cvars.get('functionality.usr_jokers_available', False):
+        if not cvars.get('logic.usr_jokers_available', False):
             new_logic = [action for action in self.available_logic
                          if action.name != 'prove_exists_joker']
             # assert len(new_logic) == len(self.available_logic) - 1

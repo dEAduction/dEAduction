@@ -109,7 +109,10 @@ class ProofMethods:
                                   default_value=cls.ordered_list)
         local_methods = [m for m in proof_methods
                          if cvars.get('functionality.allow_' + m)]
-
+        print(f"Allow induction: {cvars.get('functionality.allow_induction')}")
+        print(cvars.get('functionality.allow_contradiction'))
+        print(f"Proof methods:{proof_methods}")
+        print(f"Local proof methods:{local_methods}")
         return local_methods
 
     @classmethod
