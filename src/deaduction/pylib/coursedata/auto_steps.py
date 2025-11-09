@@ -106,6 +106,8 @@ def recursive_display(user_input):
         return [recursive_display(item) for item in user_input]
     elif isinstance(user_input, MathObject):
         return user_input.to_display(format_='lean')
+    elif isinstance(user_input, int):
+        return user_input
     else:  # Probably a string
         return str(user_input)
 
@@ -140,6 +142,8 @@ class UserAction:
         self.button_name = button_name
         self.statement = statement
         self._statement_name = statement_name
+        if isinstance(user_input, str) and user_input.isdecimal():
+            user_input = int(user_input)
         self.user_input = user_input
         self.target_selected = target_selected
 
@@ -251,7 +255,8 @@ class AutoStep(UserAction):
     error_msg: str = ""
     success_msg: str = ""
 
-    error_dic = {0: '',
+    error_dic = {-1: '',
+                 0: '',
                  1: 'WrongUserInput',
                  2: 'FailedRequestError',
                  3: 'Timeout',
@@ -272,6 +277,16 @@ class AutoStep(UserAction):
         self.error_msg = error_msg
         self.success_msg = success_msg
 
+    def __repr__(self):
+        user_input = ("+".join([str(s) for s in self.user_input]) if
+                      self.user_input else "")
+        action = (self.button_name if self.button_name else
+                  self.statement_name if self.statement_name else "??")
+        msg = (self.error_msg if self.error_msg else self.success_msg if
+               self.success_msg else "??")
+
+        return user_input + " -> " + action + " : " + msg
+
     @classmethod
     def from_toml_data(cls, toml_data):
         """
@@ -281,23 +296,47 @@ class AutoStep(UserAction):
         MathObject (either placeholders or from Lean code)
         - decimal strings are replaced by integers.
         """
-        user_input = [[MathObject.place_holder() if new_item == '_'
-                       else MathObject.raw_lean_code(new_item)
-                       for new_item in item]
-                      if isinstance(item, list)
-                      else int(item) if item.isdecimal()
-                      else item
-                      for item in toml_data.get('user_input')]
 
-        return cls(selection=toml_data.get('selection'),
-                   button_name=toml_data.get('button'),
+        if toml_data.get('user_input'):
+            user_input = [[MathObject.place_holder() if new_item == '_'
+                           else MathObject.raw_lean_code(new_item)
+                           for new_item in item]
+                          if isinstance(item, list)
+                          else int(item) if (isinstance(item, str)
+                                             and item.isdecimal())
+                          else item
+                          for item in toml_data.get('user_input')]
+        else:
+            user_input = []
+        selection = toml_data.get('selection')
+        button_name = toml_data.get('button')
+        if button_name == "and":
+            button_name = "use_and" if selection else "prove_and"
+        elif button_name == "or":
+            button_name = "use_or" if selection else "prove_or"
+        elif button_name == "implies":
+            button_name = "use_implies" if selection else "prove_implies"
+        elif button_name == "forall":
+            button_name = "use_forall" if selection else "prove_forall"
+        elif button_name == "exists":
+            button_name = "use_exists" if selection else "prove_exists"
+        # print(toml_data)
+
+        error_msg = toml_data.get('error_msg')
+        if not error_msg:
+            error_msg = ""
+        success_msg = toml_data.get('success_msg')
+        if not success_msg:
+            success_msg = ""
+        return cls(selection=selection,
+                   button_name=button_name,
                    statement_name=toml_data.get('statement'),
                    user_input=user_input,
-                   target_selected=toml_data.get('target_selected'),
+                   target_selected=bool(toml_data.get('target_selected')),
                    raw_string='',
-                   error_type=-1,
-                   error_msg=toml_data.get('error_msg'),
-                   success_msg=toml_data.get('success_msg'))
+                   error_type=0,
+                   error_msg=error_msg,
+                   success_msg=success_msg)
 
     @classmethod
     def from_string(cls, string):
@@ -537,7 +576,7 @@ class AutoStep(UserAction):
 
         statement_name = self.statement_name
         statement_name = '.'.join(statement_name.split('.')[-2:])
-        self_dict = {'selection':  self.selection,
+        total_dict = {'selection':  self.selection,
                      'target_selected': self.target_selected,
                      'button': self.button_name,
                      'statement': statement_name,
@@ -545,6 +584,7 @@ class AutoStep(UserAction):
                      'error_msg': self.error_msg,
                      'success_msg': self.success_msg
                      }
+        self_dict = {key:value for key, value in total_dict.items() if value}
         return self_dict
 
 
