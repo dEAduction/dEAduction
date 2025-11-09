@@ -300,7 +300,8 @@ class ActionButton(QToolButton):
             await sleep(duration)
 
     async def simulate_sub_button(self, sub_button,
-                                  duration=0.3, winkle_nb=2) -> bool:
+                                  duration=0.3, winkle_nb=2,
+                                  trigger=True) -> bool:
         """
         Simulate usr click on the corresponding item in self.menu().
         """
@@ -319,7 +320,8 @@ class ActionButton(QToolButton):
             self.menu().setActiveAction(None)
             await sleep(duration)
         self.menu().close()
-        # menu_action.trigger()
+        if trigger:
+            menu_action.trigger()
         return True
 
 # We wish to have an ActionButton class attribute called
