@@ -319,7 +319,8 @@ class AutoStep(UserAction):
         elif button_name == "forall":
             button_name = "use_forall" if selection else "prove_forall"
         elif button_name == "exists":
-            button_name = "use_exists" if selection else "prove_exists"
+            button_name = ("use_exists" if (selection and len(selection) > 1)
+            else "prove_exists")
         # print(toml_data)
 
         error_msg = toml_data.get('error_msg')
