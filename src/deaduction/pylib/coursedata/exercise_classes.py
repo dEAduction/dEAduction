@@ -93,7 +93,7 @@ class StructuredContent:
         metadata_str = metadata_to_toml(self.raw_metadata)
 
         packed_metadata = '/- dEAduction\n' + metadata_str + '-/\n'
-        print(f"Exercise metadata: {packed_metadata}")
+        # print(f"Exercise metadata: {packed_metadata}")
         return packed_metadata
 
     @property
@@ -1526,8 +1526,35 @@ def metadata_to_str(metadata: Dict[str, str]):
 def metadata_to_toml(metadata: dict) -> str:
     if not metadata:
         return ""
-    print(metadata)
+    # print(metadata)
     toml = tomli_w.dumps(metadata)
+
+    # Compact selection data
+
+    lines = toml.split('\n')
+    # print("LINES2")
+    # print(lines)
+    # Remove blank lines and join selection
+    stripped_lines = []
+    complete_selection = ''
+    for line in lines:
+        if line == 'selection = [':
+            complete_selection = line
+        elif complete_selection:
+            if line == ']' and complete_selection.endswith(','):
+                complete_selection = complete_selection[:-1]
+            if line != ', ':
+                line = line.strip()
+                complete_selection += ' ' + line
+        elif line:
+            stripped_lines.append(line)
+        if complete_selection and line == ']':
+            stripped_lines.append(complete_selection)
+            complete_selection = ''
+    # print("LINES3")
+    # print(stripped_lines)
+    toml = '\n'.join(stripped_lines)
+
     return toml
 
 
