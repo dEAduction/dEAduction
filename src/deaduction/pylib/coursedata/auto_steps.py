@@ -274,7 +274,7 @@ class AutoStep(UserAction):
                             statement_name, user_input, target_selected)
         self.raw_string = raw_string
         self.error_type = error_type
-        self.error_msg = error_msg
+        self.error_msg = error_msg if error_type != 0 else ""
         self.success_msg = success_msg
 
     def __repr__(self):

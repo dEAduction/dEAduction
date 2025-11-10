@@ -1556,14 +1556,17 @@ def apply_substitute(proof_step,
 
     if len(selected_objects) == 1:  # Substitution on target
         if len(user_input) > 0:  # Choice of direction has been made
+            # print("user_input = 0 ou 1 ??:")
+            # print(user_input)
             if user_input[0] == 0:  # Direct substitution
                 more_code = code_for_substitution(heq,
                                                   left_display, right_display)
+                codes = codes.or_else(more_code)
             elif user_input[0] == 1:  # Reverse substitution
                 more_code = code_for_substitution(heq,
                                                   right_display, left_display,
                                                   reverse=True)
-            codes = codes.or_else(more_code)
+                codes = codes.or_else(more_code)
         else:  # Choice of substitution direction has not been made
             if goal.target.math_type.contains(left) and \
                     goal.target.math_type.contains(right):

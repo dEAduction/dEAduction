@@ -734,7 +734,7 @@ class CodeForLean:
 
     def raw_code(self) -> str:
         """
-        FOrmatted code string that could be sent to Lean, with no metavars
+        Formatted code string that could be sent to Lean, with no metavars
         checking, and no "EFFECTIVE CODE" messages. It can replace the
         code_for_request in the Lean file.
         """

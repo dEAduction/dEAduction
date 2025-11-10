@@ -1713,6 +1713,8 @@ class Coordinator(QObject):
             self.__process_error(error_type, lean_response.error_list)
             self.abort_process()
             return
+        # else:
+        #     self.proof_step.error_msg = ""
 
         # ─────── First step ─────── #
         if not self.server_task_started.is_set():
