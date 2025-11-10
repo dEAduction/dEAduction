@@ -296,7 +296,8 @@ class AutoStep(UserAction):
         MathObject (either placeholders or from Lean code)
         - decimal strings are replaced by integers.
         """
-
+        print("TOMLDATA:")
+        print(toml_data)
         if toml_data.get('user_input'):
             user_input = [[MathObject.place_holder() if new_item == '_'
                            else MathObject.raw_lean_code(new_item)
@@ -318,8 +319,9 @@ class AutoStep(UserAction):
             button_name = "use_implies" if selection else "prove_implies"
         elif button_name == "forall":
             button_name = "use_forall" if selection else "prove_forall"
-        elif button_name == "exists":
-            button_name = ("use_exists" if (selection and len(selection) > 1)
+        elif button_name == "exists":  # FIXME
+            # Could be prove_exists if selection is 1 object
+            button_name = ("use_exists" if (selection and len(selection) == 1)
             else "prove_exists")
         # print(toml_data)
 
@@ -335,7 +337,7 @@ class AutoStep(UserAction):
                    user_input=user_input,
                    target_selected=bool(toml_data.get('target_selected')),
                    raw_string='',
-                   error_type=0,
+                   error_type=toml_data.get('error_type', 0),
                    error_msg=error_msg,
                    success_msg=success_msg)
 

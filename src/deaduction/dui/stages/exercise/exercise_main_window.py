@@ -683,6 +683,7 @@ class ExerciseMainWindow(QMainWindow):
         """Turn an action encoded by a string, e.g. "forall", into a button.
         """
         for button in self.ecw.action_buttons:
+            # print(f"BN: {button.name}")
             if button.name == button_name:
                 return button
 
@@ -897,13 +898,19 @@ class ExerciseMainWindow(QMainWindow):
         action_button = self.action_button_from_name(button_name)
 
         if action_button:
+            # print(f"Found action button {button_name}")
             if action_button.isHidden():
+                # print("Hidden")
                 for button in self.ecw.action_buttons:
+                    # print(f"Trying button {button.name}")
                     for sub_button in button.sub_buttons:
+                        # print(f"Trying button {sub_button.name}")
                         if action_button is sub_button:
+                            # print("found")
                             self.ecw.freeze(False)
                             success = await button.simulate_sub_button(
-                                      sub_button, duration=duration)
+                                      sub_button, duration=duration,
+                                      trigger=True)
                             return success
 
             # Click button, even if hidden

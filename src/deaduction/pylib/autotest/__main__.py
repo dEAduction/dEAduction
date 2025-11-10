@@ -107,7 +107,8 @@ from deaduction.pylib.autotest import ( select_course,
 
 # log_domains = ['deaduction.pylib.autotest', 'deaduction.dui']
 log_domains = ['deaduction.pylib.autotest', 'deaduction.dui',
-               'ServerInterface', 'HighLevelServerRequest']
+               'ServerInterface', 'HighLevelServerRequest',
+               "deaduction"]
 
 logger.configure(domains=log_domains, display_level="debug")
 
@@ -265,6 +266,7 @@ def get_exercises_from_course(course: Optional[Course],
     # Case 2: course, no exercise --> test all exercises with AutoTest
     if course and not exercise:
         exercises = [exo for exo in course.exercises if exo.auto_test]
+        # print(f"Exercises to test: {[e.pretty_name for e in exercises]}")
         if not exercises:
             log.debug(f"No AutoTest found in course {course.title}")
             quit()
@@ -313,12 +315,12 @@ async def auto_test(wm: WindowManager):
     # proof_complete =False
 
     log.info(f"Testing exercise {exercise.pretty_name}")
-
+    # print(f"Testing exercise {exercise.pretty_name}")
     test_window.display(f"Testing exercise {exercise.pretty_name}",
                         color='blue')
     total_string = '    Steps:'
     for step in auto_steps:
-        total_string += ' ' + step.raw_string + ',\n'
+        total_string += ' ' + str(step) + ',\n'
     test_window.display(total_string)
     if test_window.raise_to_front_btn.isChecked():
         test_window.raise_()
@@ -360,9 +362,9 @@ async def auto_test(wm: WindowManager):
                     test_success = "Bad msgs"
                 # test_success = test_success and step_success
                 if not report:
-                    report = f'Success with {step.raw_string}'
+                    report = f'Success with {str(step)}'
                 else:
-                    report = f'{step.raw_string}' + report
+                    report = str(step) + report
 
                 report = f"Step {steps_counter}: " + report
                 if not emw.displayed_proof_step.success_msg \
@@ -463,15 +465,24 @@ async def main():
     # ─────────────── Choose exercises ─────────────── #
     exercises = None
     dir_, course, exercise, all_from_this_one = coex_from_argv()
+    print(f"dir: {dir_}")
+    if course:
+        print(f"Course: {course.title}")
+    if exercise:
+        print(exercise.pretty_name)
     if dir_:
         exercises = get_exercises_from_dir(dir_)
+        print(f"Exercises: {[ex.pretty_name for ex in exercises]}")
     elif course:
+        print("Getting exercises")
         exercises = get_exercises_from_course(course, exercise,
                                               all_from_this_one)
+        print("...got")
     elif exercise:
         exercises = [exercise]
 
     if not exercises:
+        print("No exercise found")
         quit()
     else:
         log.debug(f"Found {len(exercises)} with AutoTest metadata")
