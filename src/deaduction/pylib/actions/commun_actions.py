@@ -62,6 +62,7 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
     # selected_objects = proof_step.selection
     user_input = proof_step.user_input
     sub_goal = None
+    pretty_subgoal = None
     codes = CodeForLean()
 
     # (A) Sub-goal from selection
@@ -69,6 +70,7 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
     #     premise = selected_objects[0].premise()
     if premise:
         sub_goal = premise.to_display(format_='lean')
+        pretty_subgoal = premise.to_display(format_='utf8')
 
     # (B) User enter sub-goal
     elif len(user_input) == 1:
@@ -80,6 +82,7 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
         sub_goal = user_input[1][0]
         if isinstance(sub_goal, MathObject):
             sub_goal = sub_goal.to_display(format_='lean')
+            pretty_subgoal = sub_goal.to_display(format_='utf8')
 
     # (C) Code:
     if sub_goal:
@@ -88,7 +91,7 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
                                         f" ({sub_goal})")
         codes.add_success_msg(_("New target will be added to the context "
                                 "after being proved"))
-        codes.add_subgoal(sub_goal)
+        codes.add_subgoal(pretty_subgoal)
 
     return codes
 
