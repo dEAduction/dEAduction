@@ -66,7 +66,30 @@ def lean_application(mo):
 
 
 def display_name(mo):
-    return mo.display_name
+    """
+    Return display_name, but remove unnecessary parentheses.
+    """
+    name: str = mo.display_name
+    while  name.startswith("((") and name.endswith("))"):
+        name = name[1:-1]
+    return name
+
+
+def pretty_display_lean_code(mo):
+    """
+    Format Lean code to make it look acceptable to display for usr.
+    - remove surrounding parentheses
+    - try to remove type indications.
+    """
+    to_be_removed = [": @nat", ": @real", ": @int"]
+
+    name: str = mo.display_name
+    while name.startswith("(") and name.endswith(")"):
+        name = name[1:-1]
+
+    for tbr in to_be_removed:
+        name = name.replace(tbr, '')
+    return name
 
 
 def raw_display_name(mo):
@@ -247,7 +270,7 @@ class MathDisplay:
          "CLOSE_PARENTHESIS": (0, ')'),
          "GENERIC_NODE": (0, '¿', 1),
          "PLACE_HOLDER": (r'\place_holder',),
-         "RAW_LEAN_CODE": (display_name,),
+         "RAW_LEAN_CODE": (pretty_display_lean_code,),
          '*INEQUALITY': (_("some inequality"),),  # Is this useful?
          '*NUMBER_TYPES': (_("some number"),),
          '*INT_OR_NAT': (_("some integer"),),
@@ -292,7 +315,7 @@ class MathDisplay:
         "SET_COMPLEMENT": ('set.compl', ' ', '(', 1, ')'),
         # Type indication for numbers, otherwise '-1' --> 'has_neg nat ??'
         "NUMBER": (display_lean_value, ),
-        "RAW_LEAN_CODE": (display_name, ), # FIXME: parenthesis removed
+        "RAW_LEAN_CODE": (display_name, ),  # FIXME: parenthesis removed
         # Beware to be coherent with definition statement:
         # 'COMPOSITION': ('composition ', 0, ' ', 1),
         'COMPOSITION': ('function.comp ', 0, ' ', 1),
