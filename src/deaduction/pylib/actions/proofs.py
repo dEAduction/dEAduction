@@ -628,7 +628,10 @@ def complete_usr_joker(proof_step, joker_hypo) -> CodeForLean:
             raise WrongUserInput(_("Unexpected user input"))
 
     display_jkr_name = joker_var.display_name
-    display_jkr_completion = usr_jkr_completion.to_display(format_="utf8")
+
+    display_jkr_completion = (usr_jkr_completion
+                              if isinstance(usr_jkr_completion, str)
+                              else usr_jkr_completion.to_display(format_="utf8"))
 
     code = CodeForLean.use(usr_jkr_completion)
     replaced_code = code.code_for_usr_joker.get(joker_hidden_name)
