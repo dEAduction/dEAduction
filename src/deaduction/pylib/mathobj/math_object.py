@@ -965,7 +965,7 @@ class MathObject:
         """
         If return_msg is False, then the returned string will be empty.
         Otherwise, we use self.to_display() to return an error msg explaining
-        where other differs from self.
+        where other differs from self (for debugging only).
         (This method is used in to_display(), and thus we cannot
         use to_display() here with return_msg = True.)
         """
@@ -974,10 +974,17 @@ class MathObject:
         ##########################################################
         mo0 = self
         mo1 = other
+        # if return_msg:
+        #     oname, onode = ("", "None") if not other else (other, "STR!!") if (
+        #         isinstance(other, str)) else (other.name, other.node)
+        #     print(f"Comparing {self.try_to_display()} with"
+        #           f" {onode, oname}")
+
         if use_assigned_math_obj:
             if hasattr(self, 'assigned_math_object'):
                 if self.assigned_math_object:
                     mo0 = self.assigned_math_object
+                    # print(f"Assigned mo: {mo0.to_display(format_='utf8')}")
             if hasattr(other, 'assigned_math_object'):
                 if other.assigned_math_object:
                     mo1 = other.assigned_math_object
@@ -985,10 +992,14 @@ class MathObject:
         if remove_generic_paren:
             if mo0.node == "GENERIC_PARENTHESES":
                 mo0 = self.children[0]
+                # if return_msg:
+                #     print(f"--> replaced by {mo0.try_to_display()}")
             elif mo1.node == "GENERIC_PARENTHESES":
                 mo1 = other.children[0]
 
         if (mo0 is not self) or (mo1 is not other):
+            # if return_msg:
+            #     print(f"Assigned mo or parentheses: {mo0}")
             test = mo0.is_equal_to(mo1,
                                    remove_generic_paren=remove_generic_paren,
                                    use_assigned_math_obj=use_assigned_math_obj,
@@ -1012,6 +1023,8 @@ class MathObject:
             error_msg = ""
 
         if other is None or not isinstance(other, MathObject):
+            # if return_msg:
+            #     print(error_msg)
             return False, error_msg + ""  # str(other) BIG BUG!!
         if return_msg:
             error_msg += other.try_to_display()
@@ -1025,6 +1038,8 @@ class MathObject:
         ################################################
         if (self.node, self.is_bound_var, self.name, self.value) != \
                 (other.node, other.is_bound_var, other.name, other.value):
+            # if return_msg:
+            #     print(error_msg)
             return False, error_msg
 
         # Test math_types
@@ -1084,6 +1099,7 @@ class MathObject:
                     #     log.debug(f" in {self}")
                     equal = False
                     children_error_msg = msg
+                    break
 
             # Un-mark bound_vars
             if bound_var_1:
@@ -1096,14 +1112,18 @@ class MathObject:
               remove_generic_paren=False,
               use_assigned_math_obj=False) -> Union[int, bool]:
         """
-        True is self is in others, with the is_equal method instead of __eq__.
+        True is self equals one element of the list others,
+        with the is_equal method instead of __eq__.
         """
 
         idx = 0
         for other in others:
+            # print(f"Testing {other}")
             test, msg = self.is_equal_to(other,
                                     remove_generic_paren=remove_generic_paren,
-                                    use_assigned_math_obj=use_assigned_math_obj)
+                                    use_assigned_math_obj=use_assigned_math_obj,
+                                         return_msg=False)
+            # print(f"/Testing {other}")
             if test:
                 return idx
             idx += 1

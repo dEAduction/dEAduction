@@ -81,8 +81,8 @@ def introduce_new_subgoal(proof_step, premise=None) -> CodeForLean:
     elif len(user_input) == 2:
         sub_goal = user_input[1][0]
         if isinstance(sub_goal, MathObject):
-            sub_goal = sub_goal.to_display(format_='lean')
             pretty_subgoal = sub_goal.to_display(format_='utf8')
+            sub_goal = sub_goal.to_display(format_='lean')
 
     # (C) Code:
     if sub_goal:
@@ -264,7 +264,7 @@ def use_forall_with_ineq(proof_step, arguments,
     forall x, (some inex on x) ==> ...
 
     The inequality on x is the MathObject inequality.
-    - If inequality belongs to the context, we use the universal property
+    - If inequality belongs to the context, we apply the universal property
     to x and inequality
     - if not, we claim inequality, apply the universal property to it,
     and ask Lean to try to solve the inequality.
@@ -426,6 +426,8 @@ def use_forall(proof_step, arguments: [MathObject],
     universal_property = universal_property_or_statement.to_math_object()
 
     inequality = universal_property.bounded_quant(arguments[0])
+    # print(f"Ineq: {inequality.to_display(format_='utf8')}")
+
     # (Case 1) No inequality to solve
     auto_solve = cvars.get("functionality.auto_solve_inequalities_"
                            "in_bounded_quantification", False)

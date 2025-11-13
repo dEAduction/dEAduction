@@ -438,26 +438,41 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
 
     _math_cursor: MathCursor = None
 
-    def is_equal_to(self, other,
-                    remove_generic_paren=False,
-                    use_assigned_math_obj=False,
-                    return_msg=False) -> (bool, str):
-
-        # FIXME: this is odd
-        if hasattr(other, "is_metavar") and other.is_metavar:
-            if not other.assigned_math_object:
-                return True, ""
-            else:
-                other = other.assigned_math_object
-
-        mo = self.assigned_math_object
-        if not mo:
-            return True, ""
-
-        return mo.is_equal_to(other,
-                              remove_generic_paren=remove_generic_paren,
-                              use_assigned_math_obj=use_assigned_math_obj,
-                              return_msg=return_msg)
+    # This is not useful?? Case of assigned math object treated in MathObject
+    # def is_equal_to(self, other,
+    #                 remove_generic_paren=False,
+    #                 use_assigned_math_obj=False,
+    #                 return_msg=False) -> (bool, str):
+    #
+    #     if return_msg:
+    #         oname, onode = ("", "None") if not other else (other, "STR!!") if (
+    #             isinstance(other, str)) else (other.name, other.node)
+    #         print(f"(MPMO) Comparing {self.try_to_display()} with"
+    #               f" {onode, oname}")
+    #
+    #     # FIXME: this is odd
+    #     if hasattr(other, "is_metavar") and other.is_metavar:
+    #         if not other.assigned_math_object:
+    #             if return_msg:
+    #                 print("Other has no mo")
+    #             return True, ""
+    #         else:
+    #             other = other.assigned_math_object
+    #
+    #     if self.is_metavar:
+    #         mo = self.assigned_math_object
+    #         if not mo:
+    #             if return_msg:
+    #                 print("No mo")
+    #             return True, ""
+    #     else:
+    #         mo = self
+    #         print(f"From MPMO testing {mo}")
+    #     # FIXME: BUG recursive depth machinchose
+    #     return MathObject.is_equal_to(mo, other,
+    #                                   remove_generic_paren=remove_generic_paren,
+    #                                   use_assigned_math_obj=use_assigned_math_obj,
+    #                                   return_msg=return_msg)
 
     @classmethod
     def from_pattern_math_object(cls, pmo: PatternMathObject,
