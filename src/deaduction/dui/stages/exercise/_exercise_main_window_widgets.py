@@ -667,7 +667,7 @@ class ExerciseStatusBar(DeaductionStatusBar):
         if proof_step.is_error():
             tmp_msg = proof_step.error_msg
         else:
-            tmp_msg = proof_step.success_msg
+            tmp_msg = proof_step.html_success_msg()
 
         if proof_step.is_error():
             # log.debug("StatusBar: " + tmp_msg)

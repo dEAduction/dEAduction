@@ -468,6 +468,25 @@ class ProofStep:
     def success_msg(self, msg: str):
         self._success_msg = msg
 
+    @staticmethod
+    def html_msg(msg: str):
+        """
+        Try to format msg for display to usr, e.g.
+        - uses rich text for indices
+        """
+        while msg.find("_") != -1:
+            pos = msg.find("_")
+            end_pos = msg.find(" ", pos)  # Next space
+            if end_pos == -1 or end_pos == pos:
+                end_pos = pos+4
+            H_nb = msg[pos+1:end_pos]
+            msg = msg[:pos] + '<sub>' + H_nb + '</sub>' + msg[end_pos:]
+
+        return msg
+
+    def html_success_msg(self):
+        return self.html_msg(self.success_msg)
+
     @property
     def error_msg(self) -> str:
         if self._error_msg:
@@ -487,7 +506,8 @@ class ProofStep:
     @property
     def txt(self):
         if self.success_msg:
-            return str(self.history_nb+1) + _(": ") + self.success_msg
+            msg = self.success_msg
+            return str(self.history_nb+1) + _(": ") + msg
         else:
             return str(self.history_nb+1) + _(": ") + _("no message")
 
