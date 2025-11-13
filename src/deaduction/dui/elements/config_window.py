@@ -704,8 +704,15 @@ class ConfigWindow(QDialog):
             if setting_value != cvars.get(setting, default_value="none"):
                 self.modified_settings[setting] = setting_value
 
+            # try:
             self.set_value(setting, setting_list, setting_value,
                            predefined=bool(predefined))
+            # except KeyError:
+            #     print(f"Error while setting in {self.selected_level}")
+            #     print(self.settings)
+            #     print(self.modified_settings)
+            #     print(self.initial_settings)
+
             # widget = self.widgets[setting]
             # if predefined:
             #     widget.freeze()

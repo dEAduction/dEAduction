@@ -296,8 +296,8 @@ class AutoStep(UserAction):
         MathObject (either placeholders or from Lean code)
         - decimal strings are replaced by integers.
         """
-        print("TOMLDATA:")
-        print(toml_data)
+        # print("TOMLDATA:")
+        # print(toml_data)
         if toml_data.get('user_input'):
             user_input = [[MathObject.place_holder() if new_item == '_'
                            else MathObject.raw_lean_code(new_item)

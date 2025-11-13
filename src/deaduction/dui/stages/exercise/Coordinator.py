@@ -137,26 +137,36 @@ class Coordinator(QObject):
     close_server_task  = Signal()  # Send by self.closeEvent
     frozen             = Signal()
     unfrozen           = Signal()
-    cvars_for_history = {
-        'functionality.default_functionality_level': 'Free settings',
-        'functionality.allow_implicit_use_of_definitions': True,
-        'functionality.target_selected_by_default': True}
+    # forced_cvars_for_history = {
+    #     'functionality.default_functionality_level': 'Free settings',
+    #     'functionality.allow_implicit_use_of_definitions': True,
+    #     'functionality.target_selected_by_default': True}
+    saved_cvars_for_history = ['functionality.default_functionality_level',
+                               'functionality.automatic_use_of_exists',
+                               'functionality.automatic_use_of_and',
+                               'functionality.target_selected_by_default',
+                               'functionality.allow_implicit_use_of_definitions',
+                               'functionality.auto_solve_inequalities_in_bounded_quantification',
+                               'functionality.automatic_intro_of_variables_and_hypotheses',
+                               'functionality.choose_order_to_prove_conjunction',
+                               'functionality.choose_order_to_use_disjunction']
 
     MissingCalculatorOutput.MathObject = MathObject
 
     def __init__(self, exercise, servint, test_mode=False):
         super().__init__()
 
-        # Exercise
+        # ### Exercise ###
         self.exercise: Exercise       = exercise
+        # Update settings from exercise:
         self.__cvars_to_be_restored = exercise.update_cvars_from_metadata()
         self.exercise.check_prove_exists_joker()
-        # log.debug(f"Available logic: {[action.name for action in self.exercise.available_logic_prove + self.exercise.available_logic_use]}")
 
+        # ### Lean server  ###
         self.servint: ServerInterface = servint
         self.last_servint_task = None
 
-        # Exercise main window
+        # ### Exercise main window ###
         self.emw = ExerciseMainWindow(exercise)
         self.emw.statusBar.display_initializing_bar()
         self.emw.close_coordinator = self.closeEvent
@@ -220,45 +230,6 @@ class Coordinator(QObject):
             self.mode = CoordinatorMode.CompleteStatement
             self.emw.activate_complete_mode()
 
-    # def check_usr_jokers(self):
-    #     """
-    #     This should be called after each step which is not a history move,
-    #     before history_nb is increased.
-    #     - If the last action is a complete jokers action, it adds an entry in
-    #     the hidden_user_jokers dictionary, joker nb -> (history nb, value).
-    #     - In addition, it suppresses all entries in this dic whose history_nb is
-    #     more than the current one: indeed those entries correspond to steps
-    #     that have been deleted by the last proof step.
-    #
-    #     The dic is used in automatic_actions, to complete jokers
-    #     which have been completed in another branch of the proof.
-    #     """
-    #
-    #     proof_step = self.proof_step
-    #     button_name = proof_step.user_action.button_name
-    #     history_nb = proof_step.history_nb
-    #
-    #     for key, (nb, xxx) in self.usr_jokers_history_n_value.items():
-    #         if history_nb < nb:  # This joker has not been assigned yet
-    #             self.usr_jokers_history_n_value.pop(key)
-    #
-    #     if button_name == "COMPLETE":
-    #         user_input = proof_step.user_input
-    #
-    #         # Collect all usr jokers:
-    #         completed_usr_jokers = []
-    #         for mpmo in user_input[0]:
-    #             jokers = mpmo.search_in_name("USR_JOKER")
-    #             for joker in jokers:
-    #                 assigned_mo = joker.assigned_math_object
-    #                 if assigned_mo:
-    #                     completed_usr_jokers.append(joker)
-    #         # Store history_nb and value
-    #         for usr_jkr in completed_usr_jokers:
-    #             nb = usr_jkr.usr_jkr_nb()
-    #             value = usr_jkr.assigned_math_object
-    #             self.usr_jokers_history_n_value[nb] = (history_nb, value)
-
     def check_complete_mode(self):
         """
         This should be called at each step when exercise.is_complete_statement.
@@ -293,9 +264,13 @@ class Coordinator(QObject):
         #     print('--------------')
 
         # Save cvars and set special cvars values for history
-        self.__history_cvars = {key: cvars.get(key)
-                                for key in self.cvars_for_history}
-        cvars.update(self.cvars_for_history)
+        # This is obsolete: settings of history exercise are set in
+        #   self.__init__
+        # self.__history_cvars = {key: cvars.get(key)
+        #                         for key in self.saved_cvars_for_history}
+        # print("Saved cvars:")
+        # print(self.__history_cvars)
+        # cvars.update(self.saved_cvars_for_history)
 
         # Active outline_window
         outline_window = self.emw.proof_outline_window
@@ -306,7 +281,8 @@ class Coordinator(QObject):
     def __exit_history_mode(self):
         log.info("Exiting history mode")
         self.history_mode = False
-        cvars.update(self.__history_cvars)  # Restore cvars
+        # FIXME: do we want to restore cvars??
+        # cvars.update(self.__history_cvars)  # Restore cvars
         # IMPORTANT: Mark proof step as a history move
         self.proof_step.button_name = 'history_rewind'
         self.history_rewind()
@@ -1606,9 +1582,9 @@ class Coordinator(QObject):
 
     def save_history(self, save_history=None, all_goals_solved=None):
         """
-        If parameter yes is True or False, attribute value yes to cvars
+        If parameter save_history is True or False, attribute value yes to cvars
         functionality.
-        Save if yes=True or None.
+        Save if yes=True or False.
         The main task here is to compute additional metadata to be stored in
         the metadata of the saved exercise.
         """
@@ -1635,25 +1611,21 @@ class Coordinator(QObject):
         proof_steps = self.proof_tree.proof_steps()
         auto_steps = [step.auto_step.toml_repr() for step in proof_steps
                       if step is not None and step.auto_step is not None]
-
-        # auto_steps_str = ''
-        # for step in auto_steps:
-        #     auto_steps_str += '    ' + step.raw_string + ',\n'
-        #
-        # additional_metadata['auto_test'] = auto_steps_str
         additional_metadata['auto_test'] = auto_steps
 
         # (3) Metadata Settings
         # First remove default level to allow free settings
-        keys = self.cvars_for_history.keys()
         default_key = 'functionality.default_functionality_level'
-        default_level = cvars.get(default_key)
+        current_default_level = cvars.get(default_key)
         cvars.set(default_key, 'Free settings')
-        # settings = metadata_str_from_cvar_keys(keys)
-        settings = {key: cvars.get(key) for key in keys
+
+        # Then save all settings that matters
+        settings = {key: cvars.get(key) for key in self.saved_cvars_for_history
                     if cvars.get(key) is not None}
         if settings:
-            additional_metadata.update({'Settings': settings})
+            additional_metadata.update({'settings': settings})
+            # print("Saving settings:")
+            # print(settings)
 
         # (4) Negate statement?
         if self.exercise.negate_statement:
@@ -1673,7 +1645,7 @@ class Coordinator(QObject):
         # (7) Remove steps and restore default_level
         self.exercise.refined_auto_steps = None
         # Fixme: Remove negate statement??
-        cvars.set(default_key, default_level)
+        cvars.set(default_key, current_default_level)
 
     @Slot()
     def process_lean_response(self, lean_response):

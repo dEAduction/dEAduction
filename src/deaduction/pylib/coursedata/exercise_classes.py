@@ -45,7 +45,7 @@ import deaduction.pylib.actions.magic
 from deaduction.pylib.coursedata.utils     import (find_suffix,
                                                    substitute_macros,
                                                    extract_list)
-from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
+# from deaduction.pylib.coursedata.settings_parser import vars_from_metadata
 from deaduction.pylib.coursedata.auto_steps import AutoStep
 
 log = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class StructuredContent:
         # metadata_str = metadata_to_str(self.raw_metadata)
         metadata_str = metadata_to_toml(self.raw_metadata)
 
-        packed_metadata = '/- dEAduction\n' + metadata_str + '-/\n'
+        packed_metadata = '/- dEAduction\n' + metadata_str + '\n-/\n'
         # print(f"Exercise metadata: {packed_metadata}")
         return packed_metadata
 
@@ -849,7 +849,14 @@ class Exercise(Theorem):
         exercise = copy(self.original_exercise)
         exercise.auto_test = self.auto_test
         exercise.negate_statement = self.negate_statement
-        exercise.raw_metadata = self.raw_metadata
+        # print("History ex metadata:")
+        # print(self.metadata)
+        # print(self.settings)
+        exercise.info = self.info
+        exercise.settings = self.settings
+        # print("Copied:")
+        # print(exercise.metadata)
+        # print(exercise.settings)
         return exercise
 
     def update_cvars_from_metadata(self) -> dict:
@@ -866,10 +873,13 @@ class Exercise(Theorem):
         # more_vars.update(exercise_settings)
 
         more_vars = self.course.metadata.get('settings')
+        # print(f"Exercise {self.pretty_name} setting:")
+        # print(f"Date: {self.history_date()}")
         if more_vars is None:
             more_vars = dict()
         if self.settings:
             more_vars.update(self.settings)
+        # print(more_vars)
 
         if more_vars:
             # old_vars = {key: cvars.get(key)
@@ -877,6 +887,12 @@ class Exercise(Theorem):
             #             if key in more_vars.keys()
             #             and (cvars.get(key) != more_vars[key])}
             old_vars = cvars.recursive_update(more_vars)
+            # for (key, value) in old_vars.items():
+            #     print(f"key {key} updated from {value} to:")
+            #     print(more_vars.get(key))
+            #     print(f"cvars key:")
+            #     print(cvars.get(key))
+            #     print(cvars.get(key) == more_vars.get(key))
             return old_vars
         else:
             return dict()
@@ -1074,7 +1090,7 @@ class Exercise(Theorem):
             metadata_lines = [key + '\n' + additional_metadata[key]
                               for key in additional_metadata]
             metadata_lines = '\n'.join(metadata_lines)
-            metadata_lines = '/- dEAduction\n' + metadata_lines + '-/\n'
+            metadata_lines = '/- dEAduction\n' + metadata_lines + '\n-/\n'
         else:
             metadata_lines = ""
 
@@ -1524,6 +1540,15 @@ def metadata_to_str(metadata: Dict[str, str]):
 
 
 def metadata_to_toml(metadata: dict) -> str:
+    """
+    Return metadata dict in toml format.
+    This mainly makes use of tomli_w.dumps(), with the followinf modifications:
+    - selection, which is a list of lists, is put on one line
+    - inside the settings dict, quotation marks are removed around keys
+    e.g.
+    "functionality.default_functionality_level" = "Free settings"
+    --> functionality.default_functionality_level = "Free settings"
+    """
     if not metadata:
         return ""
     # print(metadata)
@@ -1537,7 +1562,9 @@ def metadata_to_toml(metadata: dict) -> str:
     # Remove blank lines and join selection
     stripped_lines = []
     complete_selection = ''
+    inside_settings = False
     for line in lines:
+        # Beginning of selection:
         if line == 'selection = [':
             complete_selection = line
         elif complete_selection:
@@ -1547,10 +1574,29 @@ def metadata_to_toml(metadata: dict) -> str:
                 line = line.strip()
                 complete_selection += ' ' + line
         elif line:
+            if inside_settings:  # Remove quotes from keys
+                key_value = line.split(' = ')
+                if len(key_value) == 2:
+                    [key, value] = key_value
+                    if key.startswith('"') and key.endswith('"'):
+                        key = key[1:-1]
+                        print(f"Old toml line: {line}")
+                        line = key + ' = ' + value
+                        print(f"New toml line: {line}")
+            # ### Add new line: ###
             stripped_lines.append(line)
+
+        # End of selection:
         if complete_selection and line == ']':
             stripped_lines.append(complete_selection)
             complete_selection = ''
+
+        # beginning and end of settings:
+        if line == "[settings]":
+            inside_settings = True
+        elif line.startswith('[') and line.endswith(']'):
+            inside_settings = False
+
     # print("LINES3")
     # print(stripped_lines)
     toml = '\n'.join(stripped_lines)
