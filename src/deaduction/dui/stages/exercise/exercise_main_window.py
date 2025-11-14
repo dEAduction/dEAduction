@@ -231,7 +231,7 @@ class ExerciseMainWindow(QMainWindow):
         # Proof tree visible: (this is a string!)
         proof_tree_is_visible = (settings.value("emw/ShowProofTree") == "true")
         ptv = settings.value("emw/ShowProofTree")
-        print(f"Proof tree was shown: {ptv}")
+        # print(f"Proof tree was shown: {ptv}")
         if not proof_tree_is_visible:
             # print("hide")
             self.proof_tree_window.hide()

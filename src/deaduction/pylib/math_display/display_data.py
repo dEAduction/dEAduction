@@ -245,7 +245,7 @@ class MathDisplay:
          "DIV": (0, r"/", 1),
          "INV": (0, "\inverse"),
          "MINUS": ("-", 0),
-         "POWER": ('', 0, [r'^', 1], ''),  # Paren for Calculator
+         "POWER": (0, [r'^', 1]),  # Paren for Calculator
          "SQRT": ('√', -1),
          ##################
          # GENERAL TYPES: #
