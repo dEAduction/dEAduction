@@ -66,7 +66,7 @@ if FACTORY_CONFIG_FILE_PATH.exists():
     # pprint(__dict_factory)
 else:
     # breakpoint()
-    print('path DOES NOT exist')
+    print('Config path DOES NOT exist!?')
 
 if USER_CONFIG_FILE_PATH.exists():
     # __dict_user.update(toml.load(str(USER_CONFIG_FILE_PATH)))
@@ -137,21 +137,39 @@ def restore(initial_cvars):
     __dict_user = initial_cvars
 
 
-def update(new_settings: dict):
+def update(new_settings: dict) -> dict:
     """
-    Adapted to dotted format.
+    Update user dict according to new_settings.
+    new_settings keys can be in dotted format or nested dict format (or mixed).
+    If value is a dict then its keys are added to key as suffixes.
+    """
+    # Obsolete docstring:
+    # Update cvars with new_settings, a dict where keys may refer to dict using
+    # the dot notation. Beware that if value is a dict then the dict will be
+    # replaced by value, not updated.
 
-    Update cvars with new_settings, a dict where keys may refer to dict using
-    the dot notation. Beware that if value is a dict then the dict will be
-    replaced by value, not updated.
-    """
+    modified_settings = dict()
+    dotted_settings = dict()  # Will be populated by nested dict
+
     if new_settings:
         for (key, value) in new_settings.items():
-            set(key, value)
+            print(f"{key}  --> {value}")
+            old_value = get(key)
+            if isinstance(value, dict) and isinstance(old_value, dict):
+                for subkey, subvalue in value.items():
+                    dotted_settings[key + '.' + subkey] = subvalue
+            elif old_value != value:
+                print(f"Modifying cvars key={key} {old_value} --> {value}")
+                set(key, value)
+                modified_settings[key] = old_value
+
+        more_modified = update(dotted_settings)
+        modified_settings.update(more_modified)
+    return modified_settings
 
 
-def recursive_update(new_settings: dict, original_dic=None,
-                     remove_id_values=True):
+def recursive_update(new_settings: dict, original_usr_dic=None,
+                     original_fact_dic=None, remove_id_values=True):
     """
     Adapted to format with nested dicts.
 
@@ -159,31 +177,51 @@ def recursive_update(new_settings: dict, original_dic=None,
     Return the part of cvar that have been modified.
 
     e.g.
-    original_dic = {'functionality': {'Lean_method: True, 'Toto': 0},
+    original_usr_dic = {'functionality': {'Lean_method: True, 'Toto': 0},
                     'others': 123}
     new_settings = {'functionality': {Lean_method': False, 'Jean-Pierre': 1},
                     'others': 123}
 
     -->
-    original_dic = {'functionality': {'Lean_method: False, 'Toto': 0,
+    original_usr_dic = {'functionality': {'Lean_method: False, 'Toto': 0,
                                         'Jean-Pierre': 1}
     return {'functionality': {Lean_method': True, 'Jean-Pierre': None}}
 
     """
+    # FIXME: not used anymore
     log.info("Update cvars")
+    print(f"From {original_usr_dic} to {new_settings}")
     global __dict_user
-    if not original_dic:
-        original_dic = __dict_user
+    if not original_usr_dic:
+        original_usr_dic = __dict_user
+    if not original_fact_dic:
+        original_fact_dic = __dict_factory
 
     modified_original_dict = dict()
     for key, value in new_settings.items():
-        if not isinstance(value, dict) or key not in original_dic.keys():
-            original_value = original_dic.get(key)
+        if not isinstance(value, dict) or key not in original_fact_dic.keys():
+            # if original_usr_dic is __dict_user:  # Also search in factory dict
+            #     original_value = get(key, "none")
+            #     if original_value == "none":
+            #         original_value = None
+            #         log.warning(f"Key {key} not found in cvars")
+            # else:
+            original_value = original_usr_dic.get(key)
+            if original_value is None:
+                original_value = original_fact_dic.get(key)
             if original_value != value:
+                print(f"Modifying cvars key={key} {original_value} --> {value}")
+                if value is None:
+                    log.warning("VALUE is NONE")
                 modified_original_dict[key] = original_value
-                original_dic[key] = value
+                original_usr_dic[key] = value
         else:
-            more_mod_dic = recursive_update(value, original_dic[key])
+            more_fact_dic = original_fact_dic[key]
+            more_usr_dic = original_usr_dic.get(key)
+            if not more_usr_dic:
+                more_usr_dic = dict()
+                original_usr_dic[key] = more_usr_dic
+            more_mod_dic = recursive_update(value, more_usr_dic, more_fact_dic)
             if more_mod_dic:
                 modified_original_dict[key] = more_mod_dic
 
