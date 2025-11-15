@@ -75,6 +75,7 @@ from deaduction.pylib.server                     import ServerInterface
 from deaduction.pylib.autotest import                   select_exercise
 from deaduction.pylib.math_display.pattern_data import *
 
+global _
 
 log = logging.getLogger(__name__)
 
@@ -621,11 +622,8 @@ class WindowManager(QObject):
     @Slot()
     def start_exercise(self, exercise):
         """
-        Just a front-end to the solve_exercise method.
+        Close previous windows. Then launch exercise window and connect signals.
         """
-
-        # TODO: might be merged with solve_exercise, no more async
-        #  but cf tests
 
         # Check course file
         if not self.check_course_file(exercise.course):
@@ -645,13 +643,13 @@ class WindowManager(QObject):
             except RuntimeError:
                 pass
 
-        # Do start exercise!
-        self.solve_exercise()
-
-    def solve_exercise(self):
-        """
-        Launch exercise window and connect signals.
-        """
+    #     # Do start exercise!
+    #     self.solve_exercise()
+    #
+    # def solve_exercise(self):
+    #     """
+    #     Launch exercise window and connect signals.
+    #     """
 
         log.debug(f"Starting exercise {self.exercise.pretty_name}")
 
