@@ -30,6 +30,8 @@ This file is part of d∃∀duction.
 #                                   ...)
 
 import logging
+import time
+
 import qtrio
 import trio
 from copy import copy, deepcopy
@@ -133,6 +135,8 @@ class Coordinator(QObject):
     For the moment, much info is passed through proof_step and lean_file.
     """
 
+    nb_of_instances = 0
+
     proof_step_updated = Signal()  # Listened by test_launcher (for testing)
     close_server_task  = Signal()  # Send by self.closeEvent
     frozen             = Signal()
@@ -141,6 +145,8 @@ class Coordinator(QObject):
     #     'functionality.default_functionality_level': 'Free settings',
     #     'functionality.allow_implicit_use_of_definitions': True,
     #     'functionality.target_selected_by_default': True}
+    # For a saved proof, the following settings must be identical
+    # TODO: more precise (dynamic) saving
     saved_cvars_for_history = ['functionality.default_functionality_level',
                                'functionality.automatic_use_of_exists',
                                'functionality.automatic_use_of_and',
@@ -155,6 +161,11 @@ class Coordinator(QObject):
 
     def __init__(self, exercise, servint, test_mode=False):
         super().__init__()
+        Coordinator.nb_of_instances += 1
+        if Coordinator.nb_of_instances > 1:
+            log.info(f"N°{Coordinator.nb_of_instances} - Waiting for previous "
+                     f"exercise to close...")
+            time.sleep(0.1)
 
         # ### Exercise ###
         self.exercise: Exercise       = exercise
@@ -492,13 +503,11 @@ class Coordinator(QObject):
         Called at closing, and when closing ExerciseMainWindow.
         """
         log.info("Closing Coordinator")
-        # continue_ = input("Closing Coordinator?"
+        # Restore default or course metadata over exercise metadata:
+        if self.__cvars_to_be_restored:
+            # print("Restoring cvars:")
+            cvars.update(self.__cvars_to_be_restored)
 
-        # try:
-        #     self.disconnect_signals()
-        # except RuntimeError:
-        #     # It seems that sometimes signals are already deleted
-        #     log.debug("(Impossible to disconnect signals)")
         MathObject.clear()
         self.__disconnect_signals()
 
@@ -511,9 +520,8 @@ class Coordinator(QObject):
         # log.debug("Closing server task")
         self.close_server_task.emit()
 
-        # Restore course metadata over exercise metadata:
-        if self.__cvars_to_be_restored:
-            cvars.update(self.__cvars_to_be_restored)
+        Coordinator.nb_of_instances -= 1
+        log.info(f"Nb of Coordinator instances: {Coordinator.nb_of_instances}")
 
     ##############
     # Properties #
