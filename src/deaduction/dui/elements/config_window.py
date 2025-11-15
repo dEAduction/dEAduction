@@ -257,7 +257,7 @@ CONFIGS["Advanced"] = {
     'logs.save_journal': (None, True, ""),  # checked, untested
     'logs.display_level': (['debug', 'info', 'warning'], True, ""),
     # 'functionality.save_solved_exercises_for_autotest': (None, True, ""),
-    'functionality.save_history_of_solved_exercises': (None, False, ""),
+    'functionality.save_history_of_solved_exercises': (None, True, ""),
     'functionality.calculator_available': (None, True,
        _("Open the logical calculator to enter composite objects")),
     'course.save_all_statements_to_text_file': (None, True,
@@ -517,10 +517,12 @@ class ConfigWindow(QDialog):
         Return the predefined level if any, e.g.'beginner'.
         """
         level_key = self.predefined_settings_dict.get('selected_level', False)
+        level = "Free settings"  # Default level
         if level_key:
-            return cvars.get(level_key, "Free settings")
-        else:
-            return "Free settings"
+            level = cvars.get(level_key, "Free settings")
+            if level is None:
+                log.warning(f"cvars[{level_key}] is None!?")
+        return level if level else "Free settings"
 
     def set_selected_level(self, level):
         level_key = self.predefined_settings_dict.get('selected_level')
@@ -626,6 +628,8 @@ class ConfigWindow(QDialog):
 
                 widget.textChanged.connect(self.line_edit_changed)
             else:
+                log.warning(f"Bad setting_initial_value "
+                            f"{setting_initial_value} for {setting}: {info}")
                 widget = None
 
             # print("Adding wdgt", widget)
@@ -636,6 +640,7 @@ class ConfigWindow(QDialog):
                     widget.setToolTip(tooltip)
                     title_wdg.setToolTip(tooltip)
                 self.layout.addRow(title_wdg, widget)
+
                 self.widgets[setting] = widget
 
         # Set initial values
@@ -646,6 +651,9 @@ class ConfigWindow(QDialog):
         """
         Set value corresponding to setting.
         """
+        if setting not in self.widgets.keys():
+            return
+
         widget = self.widgets[setting]
         widget.setEnabled(True)
 
@@ -679,10 +687,11 @@ class ConfigWindow(QDialog):
         """
         level = self.selected_level
         # Values are pre_defined?
-        predefined = ({} if level == "Free settings"
+        predefined = ({} if (level == "Free settings")
                       else self.predefined_settings_dict[level])
 
         for setting, info in self.settings.items():
+
             if len(info) == 2:
                 (setting_list, enabled) = info
             else:
@@ -704,14 +713,19 @@ class ConfigWindow(QDialog):
             if setting_value != cvars.get(setting, default_value="none"):
                 self.modified_settings[setting] = setting_value
 
-            # try:
-            self.set_value(setting, setting_list, setting_value,
-                           predefined=bool(predefined))
-            # except KeyError:
-            #     print(f"Error while setting in {self.selected_level}")
-            #     print(self.settings)
-            #     print(self.modified_settings)
-            #     print(self.initial_settings)
+            try:
+                self.set_value(setting, setting_list, setting_value,
+                               predefined=bool(predefined))
+            except KeyError as E:
+                msg = f"{setting} not in {self.widgets.keys()}\n"
+                msg += f"Error while setting in {self.selected_level}\n"
+                msg += str(self.settings)
+                msg += "\n"
+                msg += str(self.modified_settings)
+                msg += "\n"
+                msg += str(self.initial_settings)
+                # print(msg)
+                raise E
 
             # widget = self.widgets[setting]
             # if predefined:
