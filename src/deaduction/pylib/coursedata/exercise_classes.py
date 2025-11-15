@@ -863,7 +863,13 @@ class Exercise(Theorem):
         """
         Update cvars with entries in metadata['settings'], and return a
         (recursive) dictionary with the keys that have been replaced,
-        and their previous values.
+        and their previous values. More precisely,
+        1. First update cvars with course.metadata,
+        2. then with exercise.settings
+        3. and return the values tha have been affected by the second step,
+        so that updating cvars with this dict is supposed to make it back to
+        after step 1.
+
         """
 
         # raw_course_settings: str = self.course.metadata.get('settings')
@@ -872,21 +878,19 @@ class Exercise(Theorem):
         # exercise_settings: dict = vars_from_metadata(raw_exercise_settings)
         # more_vars.update(exercise_settings)
 
-        more_vars = self.course.metadata.get('settings')
-        # print(f"Exercise {self.pretty_name} setting:")
-        # print(f"Date: {self.history_date()}")
-        if more_vars is None:
-            more_vars = dict()
+        course_vars = self.course.metadata.get('settings')
+        # print(f"Settings for exercise {self.pretty_name}:")
+        if course_vars:
+            # print("Updating cvars with course settings:")
+            # print(course_vars)
+            cvars.update(course_vars)
         if self.settings:
-            more_vars.update(self.settings)
-        # print(more_vars)
+            # print("Updating cvars with exercise settings:")
+            # print(self.settings)
+            old_vars = cvars.update(self.settings)
+            # print("Dict to be restored:")
 
-        if more_vars:
-            # old_vars = {key: cvars.get(key)
-            #             for key in more_vars
-            #             if key in more_vars.keys()
-            #             and (cvars.get(key) != more_vars[key])}
-            old_vars = cvars.recursive_update(more_vars)
+            # print(old_vars)
             # for (key, value) in old_vars.items():
             #     print(f"key {key} updated from {value} to:")
             #     print(more_vars.get(key))
