@@ -36,7 +36,11 @@ default_available_proof = "NONE"
 default_available_magic = "Assumption"
 available_compute = "NONE"
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = false
 functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 ---------------------------------------------

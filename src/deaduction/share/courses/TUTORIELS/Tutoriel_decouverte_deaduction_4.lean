@@ -39,7 +39,11 @@ available_compute = "NONE"
 [display]
 estquotiententier = [ -2, " / ", -1, " est entier"]
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = false
 functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 ---------------------------------------------

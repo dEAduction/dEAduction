@@ -103,15 +103,15 @@ choose_order_to_use_disjunction = false
 [course]
 # Absolute path or relative to a Deaduction reference dir
 # (home, .deaduction, or lean_exercises_dir)
-preset_courses = ["Tutoriels/Tutoriel.lean",
-                  "Tutoriels/Tutoriel_decouverte_deaduction_1.lean",
-                  "Tutoriels/Tutoriel_decouverte_deaduction_2.lean",
-                  "Tutoriels/Tutoriel_decouverte_deaduction_3.lean",
-                  "Tutoriels/Tutoriel_decouverte_deaduction_4.lean",
+preset_courses = ["TUTORIELS/Tutoriel.lean",
+                  "TUTORIELS/Tutoriel_decouverte_deaduction_1.lean",
+                  "TUTORIELS/Tutoriel_decouverte_deaduction_2.lean",
+                  "TUTORIELS/Tutoriel_decouverte_deaduction_3.lean",
+                  "TUTORIELS/Tutoriel_decouverte_deaduction_4.lean",
                   "Arithmetique.lean",
-                  "Recurrence.lean",
-                  "Logique_et_inegalites.lean",
-                  "Ensembles_et_applications.lean",
+                  "LOGIQUE/Recurrence.lean",
+                  "LOGIQUE/Logique_et_inegalites.lean",
+                  "ENSEMBLES/Ensembles_et_applications.lean",
                   "Limite_et_continuite.lean"]
 #    "Logique_propositionnelle.lean",
 #    "Quantificateurs_et_nombres.lean",

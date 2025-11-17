@@ -34,6 +34,11 @@ Tutoriel d'utilisation du logiciel dans un contexte de manipulations des entiers
 available_exercises = "NONE"
 available_proof = "NONE"
 available_compute = "NONE"
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = false
+functionality.calculator_available = false
+others.Lean_request_method = "normal"
 -/
 
 ---------------------------------------------
