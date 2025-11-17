@@ -1392,6 +1392,7 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         corresponding to f(x).
         """
 
+        debug = True
         log.debug("Trying to insert an application with arg")
         mvar = self.marked_descendant()
         if not mvar:
@@ -1408,12 +1409,19 @@ class MarkedPatternMathObject(PatternMathObject, MarkedTree):
         f_type = function.math_type
         origin_type = f_type.children[0] if f_type.children else None
         seq_test = function.is_sequence() and arg_type.is_N
-        general_test = (origin_type == arg_type)
+        general_test, msg = MathObject.is_equal_to(origin_type,
+                                                   arg_type,
+                                                   return_msg=True)
         number_test = (origin_type
                        and
                        (origin_type.is_number() or origin_type.is_generic_number())
                        and
                        (arg_type.is_number() or arg_type.is_generic_number()))
+        if debug:
+            print(f"Origin: {origin_type}")
+            print(f"Arg: {arg_type}")
+            print(f"Match: {general_test}, {msg}")
+            print(f"Number? {number_test}")
 
         # origin_display = origin_type.to_display(format_='utf8') if (
         #     origin_type) else "None"

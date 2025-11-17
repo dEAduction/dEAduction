@@ -368,9 +368,9 @@ def process_file(filepath):
         s = f.read()
         new_s = find_replace(s)
     # Uncomment the next 3 lines to actually modify the files:
-    # new_filepath = filepath + 'new'  # Remove new to replace existing file
-    # with open(new_filepath, "w") as f:
-    #     f.write(new_s)
+    new_filepath = filepath  # + 'new'  # Remove new to replace existing file
+    with open(new_filepath, "w") as f:
+        f.write(new_s)
     print("------------------------------")
     print(new_s)
 
@@ -396,8 +396,9 @@ if __name__ == '__main__':
     #         "/autotests_new/autotest_buttons/test_proof_buttons.lean")
     # process_file(filepath=file)
     # directory = "/home/leroux/PycharmProjects/dEAduction/src/deaduction/share/courses"
-    # directory = "/home/leroux/VSCProjects/dEAduction-lean/src/exercises_deaduction_synchro"
-    directory = ("/home/leroux/PycharmProjects/dEAduction/src/deaduction/share"
-                 "/autotests_new/autotest_buttons")
+    directory = ("/home/leroux/VSCProjects/dEAduction-lean/src"
+                 "/exercises_deaduction_synchro/Isabelle-new")
+    # directory = ("/home/leroux/PycharmProjects/dEAduction/src/deaduction/share"
+    #              "/autotests_new/autotest_buttons")
     brose(directory)
 
