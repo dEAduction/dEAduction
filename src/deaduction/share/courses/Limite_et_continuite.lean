@@ -34,10 +34,11 @@ Des exercices sur les limites des suites
 et la continuité des fonctions
 """
 [settings]
+logic.usr_jokers_available = true
+logic.use_color_for_applied_properties = true
+functionality.allow_induction = false
 functionality.calculator_available = true
 others.Lean_request_method = "from_previous_proof_state"
-functionality.usr_jokers_available = true
-logic.use_color_for_applied_properties = true
 -/
 
 

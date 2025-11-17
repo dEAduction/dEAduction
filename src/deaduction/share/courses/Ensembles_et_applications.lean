@@ -45,8 +45,11 @@ UNTIL_NOW -image_directe_et_inclusion_II -image_reciproque_et_inclusion_II -imag
 available_definitions = "UNTIL_NOW -singleton -paire -identite -egalite_fonctions"
 available_theorems = "UNTIL_NOW -image_singleton -image_paire"
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
 functionality.allow_induction = false
 functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 ---------------------------------------------

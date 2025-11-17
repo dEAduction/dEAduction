@@ -31,6 +31,9 @@ institution = "Université de Lorraine"
 description = "Exercices sur la récurrence"
 available_exercises = "NONE"
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = true
 functionality.calculator_available = true
 others.Lean_request_method = "normal"
 -/

@@ -32,7 +32,11 @@ mais plutôt de voir comment l'interface fonctionne sur ces énoncés.
 available_proof = "NONE"
 available_compute = "NONE"
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = false
 functionality.calculator_available = false
+others.Lean_request_method = "normal"
 -/
 
 -- Use classical logic

@@ -28,6 +28,9 @@ description = "Premier essai d'arithmétique"
 prime = [-1, " est premier"]
 puissancede2 = [-1, " est une puissance de 2"]
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = true
 functionality.calculator_available = true
 others.Lean_request_method = "normal"
 -/

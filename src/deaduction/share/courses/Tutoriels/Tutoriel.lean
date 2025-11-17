@@ -41,8 +41,11 @@ default_available_logic = "ALL -not -exists -map -equal -iff"
 available_proof = "ALL -new_object"
 available_compute = "NONE"
 [settings]
+logic.usr_jokers_available = false
+logic.use_color_for_applied_properties = false
 functionality.allow_induction = false
 functionality.calculator_available = false
+others.Lean_request_method = "normal"
 -/
 
 /- Notes for exercise makers.

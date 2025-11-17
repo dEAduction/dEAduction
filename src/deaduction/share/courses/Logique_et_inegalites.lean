@@ -50,6 +50,12 @@ le but ou sa négation.
 open_question = true
 available_exercises = "NONE"
 available_logic = "ALL -not"
+[settings]
+logic.usr_jokers_available = true
+logic.use_color_for_applied_properties = false
+functionality.allow_induction = false
+functionality.calculator_available = true
+others.Lean_request_method = "normal"
 -/
 
 -- If OpenQuestion is True, DEAduction will ask the user if she wants to
