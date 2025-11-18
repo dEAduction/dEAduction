@@ -192,7 +192,7 @@ archive_type="tar"
 #########################
 [package.windows.mathlib]
 type="archive"
-# Windows is unable to reach $DEADUCTION_SHARE (use relative paths)
+# Lean on Windows is unable to reach $DEADUCTION_SHARE (use relative paths)
 path="$DEADUCTION_HOME/mathlib"
 
 archive_url="https://oleanstorage.azureedge.net/mathlib/158e84ae35cbed47282545f318fb33c0ed483761.tar.xz"

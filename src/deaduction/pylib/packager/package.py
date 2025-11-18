@@ -99,7 +99,7 @@ class Package:
             except:
                 log.warning(f"Unable to remove file {self._path}")
 
-        if self.alt_path.exists():
+        if self.alt_path and self.alt_path.exists():
             try:
                 shutil.rmtree(str(self.alt_path.resolve()))
             except:
