@@ -43,7 +43,6 @@ import logging
 from functools import partial
 from typing import Dict, Optional
 
-from pyside2uic.Compiler.qtproxies import QtCore, QtGui
 from trio import sleep
 
 from PySide2.QtGui     import ( QBrush,
