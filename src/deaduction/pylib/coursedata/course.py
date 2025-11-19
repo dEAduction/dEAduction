@@ -158,7 +158,7 @@ class Course:
             log.warning(f"No copy of original exercise {exercise.pretty_name}"
                         f"found in history file")
 
-    def saved_exercises_in_history_course(self, max_nb=100) -> list[Exercise]:
+    def saved_exercises_in_history_course(self, max_nb=100):
         """
         Provide list of exercises saved in history course. For each exercise,
         only the max last versions are provided.
