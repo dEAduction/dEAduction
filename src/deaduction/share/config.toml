@@ -150,7 +150,7 @@ copy_autotests_dir = false
 desirable_lean_rqst_fpps_method = false  # For internal use
 usr_version_nb = "-1"  # Do not modify!
 ## The Python package builder read the version nb from here: ##
-version = "0.3.9997n"
+version = "0.3.9998"
 os = ""  # Let this to "" except for debugging
 
 #########################
