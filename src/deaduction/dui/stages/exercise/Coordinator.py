@@ -160,12 +160,16 @@ class Coordinator(QObject):
     MissingCalculatorOutput.MathObject = MathObject
 
     def __init__(self, exercise, servint, test_mode=False):
+        # print(f"Nb of previous instances:{Coordinator.nb_of_instances}")
         super().__init__()
-        Coordinator.nb_of_instances += 1
+        Coordinator.nb_of_instances = Coordinator.nb_of_instances + 1
+        Coordinator.nb_of_instances = 14
+        # print(f"Openining Coordinator instance n°" f""
+        #          f"{Coordinator.nb_of_instances}")
         if Coordinator.nb_of_instances > 1:
-            log.info(f"N°{Coordinator.nb_of_instances} - Waiting for previous "
-                     f"exercise to close...")
-            time.sleep(0.1)
+            log.debug("Waiting for previous exercise to close...")
+            time.sleep(0.2)
+            log.debug('...done waiting')
 
         # ### Exercise ###
         self.exercise: Exercise       = exercise
@@ -519,9 +523,11 @@ class Coordinator(QObject):
 
         # log.debug("Closing server task")
         self.close_server_task.emit()
-
-        Coordinator.nb_of_instances -= 1
-        log.info(f"Nb of Coordinator instances: {Coordinator.nb_of_instances}")
+        log.debug(f"{Coordinator.nb_of_instances} instances of Coordinator, "
+                 f"closing 1")
+        Coordinator.nb_of_instances = Coordinator.nb_of_instances - 1
+        Coordinator.nb_of_instances = 0
+        log.debug(f"Nb of Coordinator instances: {Coordinator.nb_of_instances}")
 
     ##############
     # Properties #
@@ -1671,6 +1677,7 @@ class Coordinator(QObject):
         """
 
         log.debug("Lean response received")
+        # log.debug(f"Nb of Coordinator instances: {Coordinator.nb_of_instances}")
 
         # (1) Test Response corresponds to request
         if not self.__check_response_coherence(lean_response):
