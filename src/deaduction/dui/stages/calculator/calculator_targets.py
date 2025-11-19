@@ -467,7 +467,7 @@ class CalculatorTargets(QWidget):
         # Targets #
         ###########
         title_wdgs = []
-        self.target_wdgs: list[CalculatorTarget] = []
+        self.target_wdgs = []
         for title in titles:
             if title:
                 title_wdg = QLabel(title)

@@ -253,7 +253,7 @@ class CalculatorPatternLines:
             CalculatorPatternLines.marked_patterns.update(patterns)
 
     @classmethod
-    def from_context(cls, context_math_objects: list[ContextMathObject]):
+    def from_context(cls, context_math_objects):
         patterns = dict()
         btn_symbols = []
         latex_symbols = []
