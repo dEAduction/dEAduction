@@ -34,6 +34,7 @@ This file is part of dEAduction.
 from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
+from tomllib import TOMLDecodeError
 from typing import                          List, Dict
 import os
 import logging
@@ -141,8 +142,15 @@ class Course:
 
     def set_history_course(self):
         abs_path = self.abs_history_file_path
-        self.__history_course = (Course.from_file(abs_path)
-                                 if abs_path.exists() else None)
+        try:
+            self.__history_course = (Course.from_file(abs_path)
+                                     if abs_path.exists() else None)
+        except TOMLDecodeError as error:
+            log.error(f"Error while reading history file {str(abs_path)}")
+            log.error(f"Maybe this is a history file from an old version od "
+                      f"deaduction")
+            log.error(f"Try removing .deaduction/history/{str(abs_path)}")
+            raise error
 
     def original_version_in_history_file(self, exercise: Exercise) -> Exercise:
         """

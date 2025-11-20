@@ -432,7 +432,7 @@ class LeanCourseVisitor(NodeVisitor):
                       f"\n{node.text}at the following location:")
             log.error(str(error))
             log.error("Refer to toml syntax guide.")
-            quit()
+            raise error
 
         if "display" in toml_content:  # Turn lists into tuples
             display_dic = toml_content['display']
