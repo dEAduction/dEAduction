@@ -1053,7 +1053,7 @@ class CodeForLean:
         return code
 
     @classmethod
-    def simp_only(cls, lemmas=None, location=None):
+    def simp_only(cls, lemmas=None, location=None, eta_reduction=False):
         """
         Instruction "simp only [lemmas] at <location>".
         lemmas may be a list of strings or a single string.
@@ -1065,6 +1065,8 @@ class CodeForLean:
             lemmas = ' '.join(lemmas)
 
         instr = f"simp only [{lemmas}] {location}"
+        if not eta_reduction:
+            instr += "{eta := ff}"
         return cls(instr)
 
     def and_try_simp_only(self, lemmas=None, location=None):
