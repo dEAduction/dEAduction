@@ -1057,6 +1057,10 @@ class CodeForLean:
         """
         Instruction "simp only [lemmas] at <location>".
         lemmas may be a list of strings or a single string.
+        eta_reduction = False prevents from changing e.g.
+            exists l, limit u l
+        into
+            exists limit u
         """
         location = f"at {location}" if location else ""
         if not lemmas:
@@ -1069,11 +1073,13 @@ class CodeForLean:
             instr += "{eta := ff}"
         return cls(instr)
 
-    def and_try_simp_only(self, lemmas=None, location=None):
+    def and_try_simp_only(self, lemmas=None, location=None,
+                          eta_reduction=False):
         """
         Add try {norm_num [at <location>]} after self.
         """
-        simp = CodeForLean.simp_only(lemmas=lemmas, location=location)
+        simp = CodeForLean.simp_only(lemmas=lemmas, location=location,
+                                     eta_reduction=eta_reduction)
         code = self.and_then(simp.try_())
         return code
 

@@ -91,7 +91,9 @@ def rw_using_statement(goal,  # Goal,
     # Fixme: simp_only tends to suppress vars
     #  e.g. Exists l, limit u l --> Exists limit u
     #  lambda n, (-1)^n --> pow (-1) and then Lean error!
-    codes = codes.and_try_simp_only(location=arguments)
+    #  This should be fixed by eta_reduction = False
+    codes = codes.and_try_simp_only(location=arguments,
+                                    eta_reduction=False)
 
     return codes
 
