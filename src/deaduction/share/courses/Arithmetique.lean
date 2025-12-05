@@ -27,6 +27,7 @@ description = "Premier essai d'arithmétique"
 [display]
 prime = [-1, " est premier"]
 puissancede2 = [-1, " est une puissance de 2"]
+multiple = [-2, " est multiple de ", -1]
 [settings]
 logic.usr_jokers_available = false
 logic.use_color_for_applied_properties = false
@@ -101,6 +102,8 @@ def odd (a: IntegerSubGroup) := ∃ (b: IntegerSubGroup), a = 2*b + 1
 
 def divides (a b: IntegerSubGroup) := ∃ c, b = a * c
 
+def multiple (a b: IntegerSubGroup) := ∃ c, a = b * c
+
 -- lemma auxiliary_theorem.nat_even {a:ℕ} : (even a) ↔ ∃ b, a = 2*b :=
 -- begin
 --   todo
@@ -167,9 +170,18 @@ begin
 end
 
 
-lemma definition.divides {a b : IntegerSubGroup} : (divides a b) ↔ (∃ (c: IntegerSubGroup), b = a * c) :=
+lemma definition.divides {a b : IntegerSubGroup} : (divides a b) ↔ (∃ c: IntegerSubGroup, b = a * c) :=
 /- dEAduction
 pretty_name = "Divise"
+implicit_use = true
+-/
+begin
+  refl
+end
+
+lemma definition.multiple {a b : IntegerSubGroup} : (multiple a b) ↔ (∃ c, a = b * c) :=
+/- dEAduction
+pretty_name = "Multiple"
 implicit_use = true
 -/
 begin
@@ -326,7 +338,7 @@ end implications
 --------------------------------
 namespace preuves_universelles
 /- dEAduction
-pretty_name = "Preuves d'énoncés universels"
+pretty_name = "Enoncés universels"
 -/
 
 lemma exercise.carre_pair1 :
@@ -354,37 +366,27 @@ end
 
 end preuves_universelles
 
---------------------------------
-namespace intervertion_quantificateurs
+-----------------------------
+namespace equivalence_logique_1
 /- dEAduction
-pretty_name = "Intervertion de quantificateurs"
+pretty_name = "Equivalence logique I"
 -/
 
-lemma exercise.pour_tout_il_existe   :
-∀ n:ℤ, ∃  m:ℤ, m=n+5
-:=
+lemma exercise.difference_carres {n : ℤ} : (odd n) ↔ (∃m, n=(m+1)^2 - m^2) :=
 /- dEAduction
-pretty_name = "Pour tout suivi de Il existe"
-open_question = true
--/
-begin
-  todo
-end
-
-
--- exo 10 page 55
-lemma exercise.il_existe_pour_tout :
- ∃  m:ℤ, ∀ n:ℤ, m=n+5
- :=
-/- dEAduction
-pretty_name = "Il existe suivi de Pour tout"
-open_question = true
+pretty_name = "Différence de deux carrés consécutifs"
+description = """
+Un nombre peut s'écrire comme une différence de deux carrés consécutifs
+si et seulement si il est impair.
+"""
 -/
 begin
   todo
 end
 
-end intervertion_quantificateurs
+end equivalence_logique_1
+
+
 
 --------------------------------
 namespace preuve_par_cas
@@ -445,6 +447,17 @@ begin
   todo
 end
 
+lemma exercise.somme_et_produit {a b : ℤ}:
+(even (a*b) ∧ even (a+b)) → (even a ∧ even b)
+:=
+/- dEAduction
+pretty_name = "Somme et produit"
+description = "Ici, la contrapposée va nous conduire à une preuve par cas."
+-/
+begin
+  todo
+end
+
 lemma exercise.parite3 {a b : ℤ} :
 (odd (a^2*(b^2-2*b))) → (odd a ∧ odd b) :=
 /- dEAduction
@@ -475,18 +488,24 @@ begin
   todo
 end
 
-lemma exercise.somme_et_produit {a b : ℤ}:
-(even (a*b) ∧ even (a+b)) → (even a ∧ even b)
-:=
+end preuves_par_contrapposee
+
+-----------------------------
+namespace equivalence_logique_2
 /- dEAduction
-pretty_name = "Somme et produit"
-description = "Ici, la contrapposée va nous conduire à une preuve par cas."
+pretty_name = "Equivalence logique II"
+-/
+
+lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
+/- dEAduction
+pretty_name = "Pair ssi carré pair"
+description = "Un nombre est pair si et seulement si son carré est pair."
 -/
 begin
   todo
 end
 
-end preuves_par_contrapposee
+end equivalence_logique_2
 
 --------------------------
 namespace preuve_par_absurde
@@ -501,38 +520,22 @@ pretty_name = "Non égal à deux"
 description = "Par l'absurde, montrer d'abord que a² doit être pair, en introduisant un but intermédiaire."
 -/
 begin
-  todo
+--   by_contradiction H_0,
+-- push_neg_once at H_0, trace "EFFECTIVE CODE n°19.1",
+-- have H_1: (even (a ^ 2)),
+-- use ((1: @int) + ((2: @int) * b)),
+-- solve1 {trace "EFFECTIVE CODE n°47.1", compute_n 10 }, trace "EFFECTIVE CODE n°43.3", trace "EFFECTIVE CODE n°41.3",
+-- have H_2 := preuves_par_contrapposee.exercise.carre_pair H_1, trace "EFFECTIVE CODE n°62.0",
+-- rw definitions.definition.even at H_2,
+-- cases H_2 with c H_3,
+-- rw H_3 at H_0,
+-- have H_4: (divides (4) 2),
+-- rw definitions.definition.divides,
+-- use (c*c-b),  --> Fail because Lean is looking for a natural number.
+  todo,
 end
 
 end preuve_par_absurde
-
-
------------------------------
-namespace equivalence_logique
-
-lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
-/- dEAduction
-pretty_name = "Pair ssi carré pair"
-description = "Un nombre est pair si et seulement si son carré est pair."
--/
-begin
-  todo
-end
-
-lemma exercise.difference_carres {n : ℤ} : (odd n) ↔ (∃m, n=(m+1)^2 - m^2) :=
-/- dEAduction
-pretty_name = "Différence de deux carrés consécutifs"
-description = """
-Un nombre peut s'écrire comme une différence de deux carrés consécutifs
-si et seulement si il est impair.
-"""
--/
-begin
-  todo
-end
-
-end equivalence_logique
-
 
 -------------------------------
 namespace preuve_par_recurrence
@@ -574,6 +577,8 @@ end
 end preuve_par_recurrence
 
 
+
+
 namespace contre_exemples
 /- dEAduction
 pretty_name = "Contre-exemples"
@@ -588,6 +593,53 @@ begin
 end
 
 end contre_exemples
+
+
+--------------------------------
+namespace intervertion_quantificateurs
+/- dEAduction
+pretty_name = "Intervertion de quantificateurs"
+-/
+
+lemma exercise.pour_tout_il_existe   :
+∀ n:ℤ, ∃  m:ℤ, m=n+5
+:=
+/- dEAduction
+pretty_name = "Pour tout suivi de Il existe"
+open_question = true
+-/
+begin
+  todo
+end
+
+
+-- exo 10 page 55
+lemma exercise.il_existe_pour_tout :
+ ∃  m:ℤ, ∀ n:ℤ, m=n+5
+ :=
+/- dEAduction
+pretty_name = "Il existe suivi de Pour tout"
+open_question = true
+-/
+begin
+  todo
+end
+
+end intervertion_quantificateurs
+
+namespace Multiples
+/- dEAduction
+pretty_name = "Multiples ?"
+description = "Tout nombre qui est multiple de 2 et de 3 est multiple de 5"
+-/
+
+lemma exercise.multiples :
+∀a b: ℤ, (multiple a 2 and multiple b 3) → multiple (a+b) 5 :=
+begin
+  todo,
+end
+
+end Multiples
 
 -- namespace autres_exercices
 

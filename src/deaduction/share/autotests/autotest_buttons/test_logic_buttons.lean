@@ -151,11 +151,11 @@ begin
     assumption,
 end
 
-example (x y:X) (H : x ≠ y) : y ≠ x :=
+example (x y:X) (H : x ≠ y) : y ≠ x :=  
 begin
     apply ne.symm, assumption,
 end
-
+ 
 end generalites
 
 ---------------------------
@@ -554,7 +554,7 @@ begin
 end
 
 lemma exercise.test_apply_implies_to_hyp3
-(P Q : Prop)
+(P Q : Prop) 
 (H1: (P → Q) ↔ (¬ P ∨ Q))
 (H2: P → Q) :
 (¬ P ∨ Q) :=
@@ -572,7 +572,7 @@ button = "assumption"
 begin
   todo
 end
-
+ 
 
 lemma exercise.test_apply_implies_to_hyp_2
 (X: Type) (P Q: X × X → Prop) (x y: X)
@@ -592,7 +592,7 @@ button = "assumption"
 begin
   todo
 end
-
+ 
 
 
 lemma exercise.test_apply_iff_mp_to_hyp
@@ -843,7 +843,7 @@ end
 
 lemma exercise.test_construct_iff_on_hyp
 (P Q : Prop) (H1: P → Q) (H2: Q → P):
-P ↔ Q
+P ↔ Q 
 :=
 /- dEAduction
 [[auto_test]]
@@ -1048,7 +1048,7 @@ button = "assumption"
 -/
 begin
   todo
-end
+end  
 end test_exists
 
 namespace test_equality
