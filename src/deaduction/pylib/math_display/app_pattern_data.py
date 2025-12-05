@@ -192,7 +192,7 @@ class PatternMathDisplay:
                        'paire', 'impaire', 'croissante', 'decroissante',
                        'increasing', 'decreasing', 's_croissante',
                        's_decroissante',
-                       'prime']
+                       'prime', "puissancede2"]
 
     # Dicts
     constants_pretty_names = {'converging_seq': _("converging"),
@@ -229,6 +229,7 @@ class PatternMathDisplay:
                               'segment': _("segment"),
                               'prime': _('prime'),
                               'rel_prime': _('relatively prime'),
+                              'puissancede2': _('a power of 2'),
                               }
 
     # NB: int will be turned to tuples
@@ -255,6 +256,8 @@ class PatternMathDisplay:
                             "bit0": (-1, " + ", -1),
                             "rel_prime": (-2, " " + _("and") + " ", -1, " " + _(
                                 "relatively prime")),
+                            'multiple': (-2, r'\text_is', _(' multiple of '),
+                                         -1)
                             }
 
     # TODO: add a "special_patterns" if both pattern and shape are special??

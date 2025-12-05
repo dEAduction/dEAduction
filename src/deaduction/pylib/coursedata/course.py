@@ -355,10 +355,16 @@ class Course:
         ex_counter = 0
         for exercise in self.exercises:
             ex_counter += 1
-            txt += _(f"Exercise {ex_counter}: ") + exercise.pretty_name
-            txt += '\n'
-            txt += exercise.statement_to_text(text_format)
-            txt += '\n\n'
+            ex_txt = ""
+            title = _(f"Exercise {ex_counter}: ") + exercise.pretty_name
+            if text_format == "latex":
+                title = r"\paragraph{" + title + "}"
+            ex_txt += title
+            ex_txt += '\n\n'
+            ex_txt += exercise.statement_to_text(text_format,
+                                                 with_description=True)
+            ex_txt += '\n\n'
+            txt += ex_txt
         return txt
 
     @property

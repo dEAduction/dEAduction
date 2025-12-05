@@ -24,10 +24,6 @@ title = "Arithmétique"
 author = "Frédéric Le Roux"
 institution = "Université du monde"
 description = "Premier essai d'arithmétique"
-[display]
-prime = [-1, " est premier"]
-puissancede2 = [-1, " est une puissance de 2"]
-multiple = [-2, " est multiple de ", -1]
 [settings]
 logic.usr_jokers_available = false
 logic.use_color_for_applied_properties = false
@@ -35,6 +31,13 @@ functionality.allow_induction = true
 functionality.calculator_available = true
 others.Lean_request_method = "normal"
 -/
+
+
+-- Old:
+-- [display]
+-- prime = [-1, " est premier"]
+-- puissancede2 = [-1, " est une puissance de 2"]
+-- multiple = [-2, " est multiple de ", -1]
 
 ---------------------------------------------
 -- global parameters = implicit variables --
@@ -233,7 +236,7 @@ II - Utilisation des symboles
 
 II - Types de preuves
   - Par cas ; utilisation du ∨ ; wlog
-  - Contrapposée
+  - Contraposée
   - Absurde
 -/
 
@@ -314,15 +317,6 @@ begin
   todo
 end
 
-lemma exercise.produit_pairs (n m:ℤ) :
-(even n ∧ even m) → even (n*m) :=
-/- dEAduction
-pretty_name = "Pair fois pair"
--/
-begin
-  todo
-end
-
 lemma exercise.produit_impairs (n m:ℤ) :
 (odd n ∧ odd m) → odd (n*m) :=
 /- dEAduction
@@ -391,6 +385,16 @@ end equivalence_logique_1
 --------------------------------
 namespace preuve_par_cas
 
+lemma exercise.produit_pair (n m:ℤ) :
+(even n or even m) → even (n*m) :=
+/- dEAduction
+pretty_name = "Pair fois un entier"
+-/
+begin
+  todo
+end
+
+
 lemma exercise.multiple_de_quatre (n:ℕ) :
 divides 4 (1+((-1:ℤ))^n*(2*n-1)) :=
 /- dEAduction
@@ -414,16 +418,16 @@ end preuve_par_cas
 
 
 --------------------------------
-namespace preuves_par_contrapposee
+namespace preuves_par_contraposee
 /- dEAduction
-pretty_name = "Preuves par contrapposée"
+pretty_name = "Preuves par contraposée"
 -/
 
 lemma exercise.pair_impair {n : ℤ} :
 (even (n^2 - 6*n + 5)) → (odd n) :=
 /- dEAduction
 pretty_name = "Pair et impair"
-description = "Essayer la preuve directe... puis la contrapposée !"
+description = "Essayer la preuve directe... puis la contraposée !"
 -/
 begin
   todo
@@ -452,7 +456,7 @@ lemma exercise.somme_et_produit {a b : ℤ}:
 :=
 /- dEAduction
 pretty_name = "Somme et produit"
-description = "Ici, la contrapposée va nous conduire à une preuve par cas."
+description = "Ici, la contraposée va nous conduire à une preuve par cas."
 -/
 begin
   todo
@@ -488,7 +492,7 @@ begin
   todo
 end
 
-end preuves_par_contrapposee
+end preuves_par_contraposee
 
 -----------------------------
 namespace equivalence_logique_2
@@ -499,7 +503,9 @@ pretty_name = "Equivalence logique II"
 lemma exercise.carre_pair {n : ℤ} : (even n) ↔ (even (n^2)) :=
 /- dEAduction
 pretty_name = "Pair ssi carré pair"
-description = "Un nombre est pair si et seulement si son carré est pair."
+description = """
+Un nombre est pair si et seulement si son carré est pair.
+Pensez à utiliser les exercices précédents..."""
 -/
 begin
   todo
@@ -525,7 +531,7 @@ begin
 -- have H_1: (even (a ^ 2)),
 -- use ((1: @int) + ((2: @int) * b)),
 -- solve1 {trace "EFFECTIVE CODE n°47.1", compute_n 10 }, trace "EFFECTIVE CODE n°43.3", trace "EFFECTIVE CODE n°41.3",
--- have H_2 := preuves_par_contrapposee.exercise.carre_pair H_1, trace "EFFECTIVE CODE n°62.0",
+-- have H_2 := preuves_par_contraposee.exercise.carre_pair H_1, trace "EFFECTIVE CODE n°62.0",
 -- rw definitions.definition.even at H_2,
 -- cases H_2 with c H_3,
 -- rw H_3 at H_0,

@@ -353,7 +353,8 @@ class Statement:
         """
         return '.'.join(self.lean_name.split('.')[-2:])
 
-    def statement_to_text(self, text_format='utf8'):
+    def statement_to_text(self, text_format='utf8',
+                          with_description = False):
         """
         if self has attribute 'initial_proof_state', then return a string
         with a text version of initial goal. E.g.
@@ -373,6 +374,12 @@ class Statement:
             content = initial_goal.goal_to_text(to_prove=to_prove,
                                                 open_problem=open_pb,
                                                 format_=text_format)
+            if with_description:
+                description = self.description
+                if description:
+                    if text_format == "latex":
+                        description = r"\emph{" + description + "}"
+                    content = description + "\n\n" + content
         else:
             content = ""
         return content
