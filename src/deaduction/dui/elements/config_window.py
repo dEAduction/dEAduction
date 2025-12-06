@@ -562,7 +562,7 @@ class ConfigWindow(QDialog):
         if not OK:
             log.info(f"Selected level changed from {self.selected_level} to "
                      f"Free settings")
-        self.set_selected_level("Free settings")
+            self.set_selected_level("Free settings")
 
         # Pre-defined level widgets
         for setting in self.predefined_settings_dict:
