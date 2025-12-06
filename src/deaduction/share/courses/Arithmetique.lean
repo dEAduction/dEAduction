@@ -641,6 +641,14 @@ description = "Tout nombre qui est multiple de 2 et de 3 est multiple de 5"
 
 lemma exercise.multiples :
 ∀a b: ℤ, (multiple a 2 and multiple b 3) → multiple (a+b) 5 :=
+/- dEAduction
+pretty_name = "Propriétés existentielles : multiples et somme"
+description = """
+Utilisez une propriété existentielle avec le bouton "Utiliser ∃".
+"""
+[settings]
+functionality.automatic_use_of_exists = true
+-/
 begin
   todo,
 end
