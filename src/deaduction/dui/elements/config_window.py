@@ -516,13 +516,27 @@ class ConfigWindow(QDialog):
         """
         Return the predefined level if any, e.g.'beginner'.
         """
-        level_key = self.predefined_settings_dict.get('selected_level', False)
+        # This should be "default_functionality_level"
+        level_key = self.predefined_settings_dict.get('selected_level', "")
         level = "Free settings"  # Default level
         if level_key:
             level = cvars.get(level_key, "Free settings")
             if level is None:
                 log.warning(f"cvars[{level_key}] is None!?")
+
         return level if level else "Free settings"
+
+    def check_level(self, level):
+        vars_dict = self.predefined_settings_dict.get(level, {})
+        OK = True
+        for key, value in vars_dict.items():
+            cvars_value = cvars.get(key)
+            if value != cvars_value:
+                OK = False
+                msg = (f"Level is set to {level} but key {key} does not "
+                       f"match: {value} != {cvars.get(key)}")
+                log.debug(msg)
+        return OK
 
     def set_selected_level(self, level):
         level_key = self.predefined_settings_dict.get('selected_level')
@@ -535,11 +549,20 @@ class ConfigWindow(QDialog):
         to some level, e.g. 'beginner'.
         The selected level is in cvars(key) where
             key = self.predefined_settings_dict['selected_level']
+        If this level corresponds to cvars values, then it is selected,
+        otherwise this is ignored and "Free settings" is selected instead.
         """
         if not self.predefined_settings_dict:
             return
 
         pre_defined_lyt = QHBoxLayout()
+
+        # Check level
+        OK = self.check_level(self.selected_level)
+        if not OK:
+            log.info(f"Selected level changed from {self.selected_level} to "
+                     f"Free settings")
+        self.set_selected_level("Free settings")
 
         # Pre-defined level widgets
         for setting in self.predefined_settings_dict:
