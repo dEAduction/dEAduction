@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-12-05 12:12+0100\n"
-"PO-Revision-Date: 2025-12-05 12:12+0100\n"
+"POT-Creation-Date: 2025-12-07 15:03+0100\n"
+"PO-Revision-Date: 2025-12-07 15:05+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -93,7 +93,7 @@ msgid "Button"
 msgstr "Bouton"
 
 #: dui/elements/actions_widgets_classes.py:214
-#: dui/elements/config_window.py:584
+#: dui/elements/config_window.py:607
 #: dui/elements/proof_tree/proof_tree_primitives.py:633
 #: dui/primitives/disclosure_dict.py:82
 #: dui/stages/missing_dependencies/missing_dependencies_dialogs.py:131
@@ -296,15 +296,15 @@ msgstr "Appliquer"
 msgid "Wrong settings!"
 msgstr "Valeurs incorrectes !"
 
-#: dui/elements/config_window.py:555
+#: dui/elements/config_window.py:578
 msgid "Free settings"
 msgstr "Choix libres"
 
-#: dui/elements/config_window.py:588
+#: dui/elements/config_window.py:611
 msgid "Browse directories"
 msgstr "Choisir un dossier"
 
-#: dui/elements/config_window.py:830
+#: dui/elements/config_window.py:853
 #, python-brace-format
 msgid "Missing characters: Enter exactly {} strings separated by commas"
 msgstr ""
@@ -775,29 +775,39 @@ msgstr "Propriétés"
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:807
+#: dui/stages/calculator/calculator.py:812
 msgid ""
 "<div>Use the Logical Calculator to fill-in the form.<br> </div><div>Please "
 "note the green selection: when you click a calculator button, the "
 "corresponding operator will apply to the selection.<br> </div><div>Use the "
-"Enlarge and Shrink arrows to modify the selection.</div>"
+"Enlarge (up) and Shrink (down) arrows to modify the selection.</div>"
 msgstr ""
 "<div>Utilisez la Calculatrice Logique pour remplir le formulaire.<br> </"
 "div><div>Notez la sélection en vert : quand vous cliquez sur un bouton de la "
 "calculatrice, l'opérateur correspondant s'applique à la sélection.<br> </"
-"div><div>Utilisez les flèches \"Elargir\" et \"Réduire\" pour modifier la "
-"sélection.</div>"
+"div><div>Utilisez les flèches haut (\"Elargir\") et bas (\"Réduire\") pour "
+"modifier la sélection.</div>"
 
-#: dui/stages/calculator/calculator.py:1199
+#: dui/stages/calculator/calculator.py:827
+msgid ""
+"<div>Use the Logical Calculator to enter a property.<br></div><div>The proof "
+"will successively examines the case when the property is verified, and the "
+"case when it is not.<br> </div>"
+msgstr ""
+"<div>Utilisez la calculatrice logique pour entrer une propriété.<br></"
+"div><div>La preuve examinera successivement le cas où la propriété est "
+"vérifiée, et le cas où elle ne l'est pas.<br> </div>"
+
+#: dui/stages/calculator/calculator.py:1217
 #, python-brace-format
 msgid "Enter {}"
 msgstr "Entrer {}"
 
-#: dui/stages/calculator/calculator.py:1201
+#: dui/stages/calculator/calculator.py:1219
 msgid "(No help available)"
 msgstr "(Pas d'aide disponible)"
 
-#: dui/stages/calculator/calculator.py:1560
+#: dui/stages/calculator/calculator.py:1578
 #, python-brace-format
 msgid "Cannot insert {} here"
 msgstr "Impossible d'insérer {} ici"
@@ -2333,7 +2343,7 @@ msgid "Context"
 msgstr "Contexte"
 
 #: pylib/math_display/app_pattern_data.py:75
-#: pylib/math_display/app_pattern_data.py:257
+#: pylib/math_display/app_pattern_data.py:259
 #: pylib/math_display/display_data.py:485
 msgid "and"
 msgstr "et"
@@ -2401,7 +2411,7 @@ msgid "a Cauchy sequence"
 msgstr "une suite de Cauchy"
 
 #: pylib/math_display/app_pattern_data.py:217
-#: pylib/math_display/app_pattern_data.py:241
+#: pylib/math_display/app_pattern_data.py:243
 msgid "continuous at"
 msgstr "continue au point"
 
@@ -2448,7 +2458,7 @@ msgid "prime"
 msgstr "premier"
 
 #: pylib/math_display/app_pattern_data.py:231
-#: pylib/math_display/app_pattern_data.py:258
+#: pylib/math_display/app_pattern_data.py:260
 msgid "relatively prime"
 msgstr "premiers entre eux"
 
@@ -2456,7 +2466,7 @@ msgstr "premiers entre eux"
 msgid "a power of 2"
 msgstr "une puissance de 2"
 
-#: pylib/math_display/app_pattern_data.py:259
+#: pylib/math_display/app_pattern_data.py:261
 msgid " multiple of "
 msgstr " multiple de "
 

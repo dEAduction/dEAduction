@@ -802,6 +802,11 @@ class CalculatorController:
         return all(t_type and t_type.is_number() for t_type in all_types)
 
     def __show_intro(self):
+        """
+        Show a dialog help window:
+        - 1st time, about the calculator
+        - Else 1st case based reasonning.
+        """
         cname = "dialogs.calculator_intro"
         if cvars.get(cname):
             text = _("<div>Use the Logical Calculator to fill-in the "
@@ -809,8 +814,21 @@ class CalculatorController:
                      "<div>Please note the green selection: when you click a "
                      "calculator button, the corresponding operator will "
                      "apply to the selection.<br> </div>"
-                     "<div>Use the Enlarge and Shrink arrows to modify the "
-                     "selection.</div>")
+                     "<div>Use the Enlarge (up) and Shrink (down) arrows to "
+                     "modify the selection.</div>")
+            calc_intro_box = DeaductionTutorialDialog(config_name=cname,
+                                                      text=text,
+                                                      parent=self.main_window)
+            calc_intro_box.exec()
+            return
+
+        cname = "dialogs.case_based"
+        if cvars.get(cname):
+            text = _("<div>Use the Logical Calculator to enter a property.<br>"
+                     "</div>"
+                     "<div>The proof will successively examines the case "
+                     "when the property is verified, and the case "
+                     "when it is not.<br> </div>")
             calc_intro_box = DeaductionTutorialDialog(config_name=cname,
                                                       text=text,
                                                       parent=self.main_window)
