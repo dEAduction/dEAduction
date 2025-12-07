@@ -232,6 +232,8 @@ class PatternMathDisplay:
                               'puissancede2': _('a power of 2'),
                               }
 
+    # TODO: text infix, e.g. multiple, majorant de, etc.
+
     # NB: int will be turned to tuples
     special_latex_shapes = {"abs": ('|', -1, '|'),  # FIXME: does not work ???
                             "limit": ("\lim ", -2, " = ", -1),
@@ -415,17 +417,21 @@ class PatternMathDisplay:
     @classmethod
     def latex_negation_shape_for_predicate(cls, name):
         """
-        e.g.   "converging_seq": ((-1, ), r'\text_is_not', _(" converging")).
+        Special shape of negation when shape contains "\text_is".
+        e.g.   "converging_seq": ((-1, ), r'\text_is', _(" converging")).
+        --> ((0,-1), r'\text_is_not', _(" converging")).
         """
 
         display = cls.usr_n_special_latex_shapes().get(name)
         if display:
             if r'\text_is' in display:
                 display_not = [r'\text_is_not' if item == r'\text_is'
+                               else (0,) + item if isinstance(item, tuple)
                                else item for item in display]
                 return display_not
             if r'\text_are' in display:
                 display_not = [r'\text_are_not' if item == r'\text_are'
+                               else (0,) + item if isinstance(item, tuple)
                                else item for item in display]
                 return display_not
             else:
@@ -498,12 +504,13 @@ class PatternMathDisplay:
             key_not = cls.not_pattern_from_cst_name(name)
             value = cls.latex_shape_for_app_of_cst(name)
             value_not = cls.latex_negation_shape_for_predicate(name)
-            # print(value)
             lean_value = cls.lean_shape_for_app_of_cst(name)
             if value:
                 cls.latex_from_app_constant_patterns[key] = value
             if value_not:
                 cls.latex_from_app_constant_patterns[key_not] = value_not
+                # if key.find("multiple") != -1:
+                #     print(f"{key_not}: {value_not}")
             if lean_value:
                 cls.lean_from_app_constant_patterns[key] = lean_value
 

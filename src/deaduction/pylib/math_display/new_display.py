@@ -822,6 +822,10 @@ class MathList(list, MathDescendant):
         for dic in dicts:
             for pattern, pre_shape, metavars in dic:
                 if pattern.match(math_object):
+                    # if any(item.find("multiple") != -1 for item in pre_shape
+                    #        if isinstance(item, str)):
+                    #     print((pattern, pre_shape))
+                    #     print((math_object.node, math_object.children[-1].node))
                     # Now metavars are matched
                     # log.debug(f"Matching pattern --> {pre_shape}")
                     shape = tuple(substitute_metavars(item, metavars, pattern)

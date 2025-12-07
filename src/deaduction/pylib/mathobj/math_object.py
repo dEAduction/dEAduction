@@ -173,6 +173,7 @@ class MathObject:
     last_used_implicit_definition = None
     last_rw_object                = None
 
+    # NB: all of these should be binary relations
     INEQUALITIES = ("PROP_<", "PROP_>", "PROP_≤", "PROP_≥", "PROP_EQUAL_NOT")
     BOUNDED_QUANT_OPERATORS = ("PROP_BELONGS", "PROP_INCLUDED",
                                "PROP_EQUAL_NOT", "PROP_NOT_BELONGS") \
