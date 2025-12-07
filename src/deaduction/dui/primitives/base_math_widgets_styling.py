@@ -295,7 +295,9 @@ class ExerciseStatementWindow(QDialog):
             lyt.addWidget(title_wgt)
         if description:
             description_wgt = QLabel(description)
-            description_wgt.setStyleSheet('font-size:   15pt;')
+            description_wgt.setStyleSheet('font-size: 15pt;'
+                                          'font:      italic;'
+                                          'color:     blue;')
             description_wgt.setWordWrap(True)
             description_wgt.setTextFormat(Qt.PlainText)
             lyt.addWidget(description_wgt)
