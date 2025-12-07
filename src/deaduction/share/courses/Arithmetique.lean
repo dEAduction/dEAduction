@@ -644,8 +644,11 @@ lemma exercise.multiples :
 /- dEAduction
 pretty_name = "Propriétés existentielles : multiples et somme"
 description = """
+VRAI ou FAUX : la somme d'un multiple de 2 et d'un mulitple de 3
+est un multiple de 5.
 Utilisez une propriété existentielle avec le bouton "Utiliser ∃".
 """
+open_question = true
 [settings]
 functionality.automatic_use_of_exists = true
 -/

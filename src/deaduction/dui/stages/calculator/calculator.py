@@ -69,6 +69,7 @@ from PySide2.QtWidgets import (QApplication, QWidget,
 import deaduction.pylib.config.dirs as cdirs
 import deaduction.pylib.config.vars as cvars
 from deaduction.pylib.actions import MissingCalculatorOutput
+from deaduction.pylib.actions.exceptions import CalculatorRequest
 
 from deaduction.pylib.math_display import MathDisplay
 from deaduction.pylib.math_display.nodes import (Node, LogicalNode,
@@ -820,7 +821,9 @@ class CalculatorController:
                                                       text=text,
                                                       parent=self.main_window)
             calc_intro_box.exec()
-            return
+
+    @classmethod
+    def __show_by_cases(self):
 
         cname = "dialogs.case_based"
         if cvars.get(cname):
@@ -830,8 +833,7 @@ class CalculatorController:
                      "when the property is verified, and the case "
                      "when it is not.<br> </div>")
             calc_intro_box = DeaductionTutorialDialog(config_name=cname,
-                                                      text=text,
-                                                      parent=self.main_window)
+                                                      text=text)
             calc_intro_box.exec()
 
     @classmethod
@@ -848,6 +850,9 @@ class CalculatorController:
         statement = missing_output.statement
         task_goal = statement.goal() if statement else None
         prop = missing_output.explicit_math_type_of_prop
+
+        if missing_output.request_type is CalculatorRequest.ProofByCases:
+            cls.__show_by_cases()
 
         log.debug(f"Calculator with target types")
         cc = cls(targets=targets,
