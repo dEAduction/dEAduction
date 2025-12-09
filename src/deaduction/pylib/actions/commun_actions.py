@@ -472,6 +472,7 @@ def provide_name_for_new_vars(proof_step,
         if len(user_input) > user_input_nb:
             # Check last given name
             name = pre_process_lean_code(user_input[-1])
+            # print(f"{user_input[-1]} --> {name}")
             names = [obj.display_name for obj in goal.context]
             if name in names:
                 user_input.pop()
