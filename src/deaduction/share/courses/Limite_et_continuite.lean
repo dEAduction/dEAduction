@@ -36,6 +36,7 @@ et la continuité des fonctions
 [settings]
 logic.usr_jokers_available = true
 logic.use_color_for_applied_properties = true
+logic.usr_name_new_vars = true
 functionality.allow_induction = false
 functionality.calculator_available = true
 others.Lean_request_method = "from_previous_proof_state"
@@ -474,11 +475,7 @@ lemma exercise.limit_constante
 converging_seq u :=
 /- dEAduction
 pretty_name = "La limite d'une suite constante !"
-description = """
-Dans ce premier exercice,
-il s'agit de démontrer, dans un cas très simple,
-l'existence d'une limite.
-"""
+description = "Démontrer, dans un cas très simple, l'existence d'une limite."
 -/
 begin
   todo
@@ -509,17 +506,23 @@ end
 --   todo,
 -- end
 -- end exemples
-
+lemma exercise.infini_non_majoree
+(u: ℕ → ℝ) (H1: limit_plus_infinity u):
+not (bounded_above u) :=
+/- dEAduction
+pretty_name = "Une suite qui tend vers plus l'infini n'est pas majorée"
+description = "Utiliser une hypothèse de limite (infinie)."
+-/
+begin
+  todo
+end
 
 lemma exercise.croissante_non_majoree
 (u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
 limit_plus_infinity u :=
 /- dEAduction
 pretty_name = "Une suite croissante non majorée tend vers plus l'infini"
-description = """
-Dans ce deuxième exercice,
-il s'agit à nouveau de démontrer une limite, mais infinie.
-"""
+description = "Démontrer une propriété de limite infinie."
 -/
 begin
   todo,
@@ -565,11 +568,28 @@ end
 end exercices_suites_I
 
 
-
 namespace exercices_suites_II
 /- dEAduction
 pretty_name = "Exercices sur les suites II"
 -/
+
+lemma exercise.Difference_infinie
+(u v: ℕ → ℝ)  (H : limit_plus_infinity u)
+(H' : bounded_above v) :
+limit_plus_infinity (λn, u n - v n)
+:=
+/- dEAduction
+pretty_name = "Différence d'une suite divergeant vers +∞ et d'une suite majorée"
+description = """
+Nous avons maintenant une limite dans les hypothèses,
+et une limite dans la conclusion !
+"""
+-/
+begin
+  todo,
+end
+
+
 
 lemma exercise.couper_epsilon_en_deux
 (u : ℕ → ℝ) (l : ℝ) :

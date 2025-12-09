@@ -411,8 +411,8 @@ lemma exercise.definitions_croissante (u: ℕ→ ℝ):
 ( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))
 :=
 /- dEAduction
-pretty_name = "Deux définitions équivalente de suites croissance"
-description = """Quelle méthode de preuve voulez-vous utiliser ?"""
+pretty_name = "Deux définitions de suites croissance"
+description = """Choisissez la bonne Méthode de preuve..."""
 -/
 begin
 -- split,
@@ -430,6 +430,17 @@ begin
 -- intro m, 
 -- apply @induction.simple_induction (λ (n : ℕ), u m ≤ u (m + n)),
 -- apply induction.simple_induction,
+  todo
+end
+
+lemma exercise.definitions_croissante_reciproque (u: ℕ→ ℝ):
+ ( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))→ 
+(∀ n, u n ≤ u (n+1))
+:=
+/- dEAduction
+pretty_name = "Réciproque"
+-/
+begin
   todo
 end
 
@@ -522,7 +533,7 @@ begin
     todo
 end
 
-end suites_et_fonctions
+end fonctions
 
 end course
 
