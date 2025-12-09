@@ -194,12 +194,14 @@ end tactic.interactive
 TESTS.
 -/
 
-example (a b: ℝ) (H: 1 < abs(a - b ) +2 ) : 1 < abs a + abs b + 2 :=
-begin
-  -- smart_triang_ineq_on_target with H1,
-  -- linarith
-  todo
-end
+-- example (a b: ℝ) (H: 1 < abs(a - b ) +2 ) : 1 < abs a + abs b + 2 :=
+-- begin
+--   -- smart_triang_ineq_on_target with H1,
+--   -- linarith
+--   -- let x0 := (-12: ℤ) ,
+--   -- have H := triangular_inequality a (-12),
+--   -- todo
+-- end
 
 -- example (a b: ℝ) (H: abs a + abs b < 1 ) : abs(a + b) < 1 :=
 -- begin

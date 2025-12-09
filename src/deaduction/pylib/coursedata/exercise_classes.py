@@ -36,8 +36,8 @@ import tomli_w
 import deaduction.pylib.config.vars             as cvars
 
 from deaduction.pylib.text                  import (logic_buttons_line_1,
-                                                    logic_buttons_line_2,
-                                                    compute_buttons_line)
+                                                    logic_buttons_line_2)
+                                                    # compute_buttons_line)
 import deaduction.pylib.text.text as text
 
 from deaduction.pylib.actions.actiondef     import Action

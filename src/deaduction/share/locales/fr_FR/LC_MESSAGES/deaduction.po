@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-12-07 15:03+0100\n"
-"PO-Revision-Date: 2025-12-07 15:05+0100\n"
+"POT-Creation-Date: 2025-12-09 20:15+0100\n"
+"PO-Revision-Date: 2025-12-09 20:17+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -665,7 +665,7 @@ msgstr "CQFD !!"
 
 #: dui/elements/proof_tree/proof_tree_widget.py:363
 #: pylib/coursedata/course_metadata_translations.py:32
-#: pylib/text/tooltips.py:195 pylib/text/tooltips.py:202
+#: pylib/text/tooltips.py:197 pylib/text/tooltips.py:206
 msgid "Goal!"
 msgstr "But !"
 
@@ -709,73 +709,73 @@ msgstr "Oui ou non ? — d∃∀duction"
 msgid "Do not show again"
 msgstr "Ne plus montrer"
 
-#: dui/stages/calculator/calculator.py:130
+#: dui/stages/calculator/calculator.py:131
 #: dui/stages/calculator/calculator_targets.py:67
 msgid "Undo all"
 msgstr "Tout annuler"
 
-#: dui/stages/calculator/calculator.py:133
+#: dui/stages/calculator/calculator.py:134
 #: dui/stages/calculator/calculator_targets.py:70
 msgid "Undo"
 msgstr "Annuler"
 
-#: dui/stages/calculator/calculator.py:136
+#: dui/stages/calculator/calculator.py:137
 #: dui/stages/calculator/calculator_targets.py:73
 msgid "Redo"
 msgstr "Rétablir"
 
-#: dui/stages/calculator/calculator.py:139
+#: dui/stages/calculator/calculator.py:140
 #: dui/stages/calculator/calculator_targets.py:76
 msgid "Redo all"
 msgstr "Tout rétablir"
 
-#: dui/stages/calculator/calculator.py:172
+#: dui/stages/calculator/calculator.py:173
 #: dui/stages/calculator/calculator_targets.py:109
 msgid "Go to beginning"
 msgstr "Aller au début"
 
-#: dui/stages/calculator/calculator.py:176
+#: dui/stages/calculator/calculator.py:177
 #: dui/stages/calculator/calculator_targets.py:115
 msgid "Move left"
 msgstr "Aller à gauche"
 
-#: dui/stages/calculator/calculator.py:179
+#: dui/stages/calculator/calculator.py:180
 msgid "Expand selection"
 msgstr "Etendre la sélection"
 
-#: dui/stages/calculator/calculator.py:182
+#: dui/stages/calculator/calculator.py:183
 #: dui/stages/calculator/calculator_targets.py:119
 msgid "Shrink selection"
 msgstr "Réduire la sélection"
 
-#: dui/stages/calculator/calculator.py:186
+#: dui/stages/calculator/calculator.py:187
 #: dui/stages/calculator/calculator_targets.py:113
 msgid "Move right"
 msgstr "Aller à droite"
 
-#: dui/stages/calculator/calculator.py:189
+#: dui/stages/calculator/calculator.py:190
 #: dui/stages/calculator/calculator_targets.py:111
 msgid "Go to end"
 msgstr "Aller à la fin"
 
-#: dui/stages/calculator/calculator.py:193
+#: dui/stages/calculator/calculator.py:194
 #: dui/stages/calculator/calculator_targets.py:121
 msgid "Delete selected block"
 msgstr "Effacer la sélection"
 
-#: dui/stages/calculator/calculator.py:424
+#: dui/stages/calculator/calculator.py:425
 msgid "Number mode"
 msgstr "Nombres"
 
-#: dui/stages/calculator/calculator.py:425
+#: dui/stages/calculator/calculator.py:426
 msgid "Full mode"
 msgstr "Propriétés"
 
-#: dui/stages/calculator/calculator.py:470
+#: dui/stages/calculator/calculator.py:471
 msgid "Logical Calculator"
 msgstr "Calculatrice logique"
 
-#: dui/stages/calculator/calculator.py:812
+#: dui/stages/calculator/calculator.py:813
 msgid ""
 "<div>Use the Logical Calculator to fill-in the form.<br> </div><div>Please "
 "note the green selection: when you click a calculator button, the "
@@ -788,7 +788,7 @@ msgstr ""
 "div><div>Utilisez les flèches haut (\"Elargir\") et bas (\"Réduire\") pour "
 "modifier la sélection.</div>"
 
-#: dui/stages/calculator/calculator.py:827
+#: dui/stages/calculator/calculator.py:830
 msgid ""
 "<div>Use the Logical Calculator to enter a property.<br></div><div>The proof "
 "will successively examines the case when the property is verified, and the "
@@ -798,16 +798,16 @@ msgstr ""
 "div><div>La preuve examinera successivement le cas où la propriété est "
 "vérifiée, et le cas où elle ne l'est pas.<br> </div>"
 
-#: dui/stages/calculator/calculator.py:1217
+#: dui/stages/calculator/calculator.py:1222
 #, python-brace-format
 msgid "Enter {}"
 msgstr "Entrer {}"
 
-#: dui/stages/calculator/calculator.py:1219
+#: dui/stages/calculator/calculator.py:1224
 msgid "(No help available)"
 msgstr "(Pas d'aide disponible)"
 
-#: dui/stages/calculator/calculator.py:1578
+#: dui/stages/calculator/calculator.py:1583
 #, python-brace-format
 msgid "Cannot insert {} here"
 msgstr "Impossible d'insérer {} ici"
@@ -1268,103 +1268,126 @@ msgstr "La propriété {} sera ajoutée au contexte"
 msgid " after we check {}"
 msgstr " après avoir vérifié {}"
 
-#: pylib/actions/commun_actions.py:481
+#: pylib/actions/commun_actions.py:482
 msgid "This name already exists in the context, please give a new name for "
 msgstr "Ce nom existe déjà dans le contexte, choisissez un nouveau nom pour "
 
-#: pylib/actions/commun_actions.py:484 pylib/actions/commun_actions.py:494
+#: pylib/actions/commun_actions.py:485 pylib/actions/commun_actions.py:495
 #: pylib/actions/proofs.py:440
 #: pylib/coursedata/course_metadata_translations.py:35
 msgid "New object"
 msgstr "Nouvel Objet"
 
-#: pylib/actions/commun_actions.py:492
+#: pylib/actions/commun_actions.py:493
 msgid "choose a name for"
 msgstr "Choisissez un nom pour"
 
-#: pylib/actions/compute.py:68
+#: pylib/actions/compute.py:62
 msgid "Select inequalities, equalities or numbers from the context to add them"
 msgstr ""
 "Choisissez deux inégalités, égalités ou nombres du contexte pour les ajouter"
 
-#: pylib/actions/compute.py:98
+#: pylib/actions/compute.py:92
 #, python-brace-format
 msgid "Adding {} to {} to get {}"
 msgstr "On additionne {} et {} pour obtenir {}"
 
-#: pylib/actions/compute.py:100
+#: pylib/actions/compute.py:94
 #, python-brace-format
 msgid "I cannot add {} to {}"
 msgstr "Je ne sais pas additionner {} et {}"
 
-#: pylib/actions/compute.py:117
+#: pylib/actions/compute.py:111
 #, python-brace-format
 msgid "I cannot add {} and {}"
 msgstr "Je ne sais pas additionner {} et {}"
 
-#: pylib/actions/compute.py:193
+#: pylib/actions/compute.py:118 pylib/actions/compute.py:171
+msgid "Select just one or two inequalities, equalities or numbers"
+msgstr ""
+"Choisissez au plus deux inégalités, égalités ou nombres du contexte pour "
+"soustraire ou prendre l'opposé"
+
+#: pylib/actions/compute.py:134
+msgid ""
+"Select inequalities, equalities or numbers from the context to substract them"
+msgstr ""
+"Choisissez une ou deux inégalités, égalités ou nombres du contexte pour les "
+"soustraire ou prendre leur opposé"
+
+#: pylib/actions/compute.py:145
+#, python-brace-format
+msgid "I cannot take the opposite of {}"
+msgstr "Je ne sais pas prendre l'opposé de {}"
+
+#: pylib/actions/compute.py:164
+#, python-brace-format
+msgid "I cannot substract {} and {}"
+msgstr "Je ne sais pas soustraire {} et {}"
+
+#: pylib/actions/compute.py:241
 #, python-brace-format
 msgid "I cannot chain {} and {}"
 msgstr "Je ne sais pas enchainer {} et {}"
 
-#: pylib/actions/compute.py:213
+#: pylib/actions/compute.py:261
 msgid "Apply commutation on target"
 msgstr "Commutativité appliquée au but"
 
-#: pylib/actions/compute.py:221
+#: pylib/actions/compute.py:269
 #, python-brace-format
 msgid "Apply commutation on {}"
 msgstr "Commutativité appliquée à {}"
 
-#: pylib/actions/compute.py:223
+#: pylib/actions/compute.py:271
 msgid "I don't know how to apply commutation."
 msgstr "Je ne sais pas comment appliquer la commutativité"
 
-#: pylib/actions/compute.py:245
+#: pylib/actions/compute.py:293
 msgid "Apply associativity on target"
 msgstr "Associativité appliquée au but"
 
-#: pylib/actions/compute.py:247 pylib/actions/compute.py:256
+#: pylib/actions/compute.py:295 pylib/actions/compute.py:304
 msgid "I don't know how to apply associativity."
 msgstr "Je ne sais pas comment appliquer l'associativité"
 
-#: pylib/actions/compute.py:254
+#: pylib/actions/compute.py:302
 #, python-brace-format
 msgid "Apply associativity on {}"
 msgstr "Associativité appliquée à {}"
 
-#: pylib/actions/compute.py:283
+#: pylib/actions/compute.py:333
 msgid "Select only one object"
 msgstr "Sélectionner un seul objet"
 
-#: pylib/actions/compute.py:298
+#: pylib/actions/compute.py:348
 #, python-brace-format
 msgid "Triangular inequality {} added to the context"
 msgstr "Inégalité triangulaire {} ajoutée au contexte"
 
-#: pylib/actions/compute.py:301 pylib/actions/logic.py:1499
+#: pylib/actions/compute.py:351 pylib/actions/logic.py:1499
 msgid "the target"
 msgstr "le but"
 
-#: pylib/actions/compute.py:302
+#: pylib/actions/compute.py:352
 #, python-brace-format
 msgid "No absolute value found in {}"
 msgstr "Je n'ai pas trouvé de valeur absolue dans {}"
 
-#: pylib/actions/compute.py:324
+#: pylib/actions/compute.py:374
 msgid "Select only one object at a time"
 msgstr "Sélectionner un seul objet à la fois"
 
-#: pylib/actions/compute.py:333
+#: pylib/actions/compute.py:383
 msgid "Target simplified"
 msgstr "Le but a été simplifié"
 
-#: pylib/actions/compute.py:334
+#: pylib/actions/compute.py:384
 #, python-brace-format
 msgid "Property {} simplified"
 msgstr "La propriété {} a été simplifiée"
 
-#: pylib/actions/compute.py:336
+#: pylib/actions/compute.py:386
 msgid "Unable to simplify"
 msgstr "Je ne sais pas simplifier ceci"
 
@@ -2192,7 +2215,7 @@ msgstr "Compléter l'égalité pour remplacer le joker"
 
 #: pylib/actions/proofs.py:628
 msgid "Unexpected user input"
-msgstr ""
+msgstr "Entrée utilisateur inattendue"
 
 #: pylib/actions/proofs.py:644
 msgid "Let us try "
@@ -2258,7 +2281,7 @@ msgstr "Impossible d’obtenir la valeur du fichier de configuration :"
 msgid "Saving configuration file"
 msgstr "Sauvegarde du fichier de configuration"
 
-#: pylib/coursedata/auto_steps.py:411 pylib/coursedata/auto_steps.py:420
+#: pylib/coursedata/auto_steps.py:412 pylib/coursedata/auto_steps.py:421
 msgid "target"
 msgstr "But"
 
@@ -3962,183 +3985,191 @@ msgid "Add equalities or inequalities"
 msgstr "Ajouter des égalités ou des inégalités"
 
 #: pylib/text/tooltips.py:140
+msgid "Substract or take the opposite of equalities or inequalities"
+msgstr "Soustraire ou prendre l'opposé d'égalités ou d'inégalités"
+
+#: pylib/text/tooltips.py:142
 msgid ""
 "Obtain a triangular inequality adapted to a selected equality or inequality"
 msgstr ""
 "Obtenir une inégalité triangulaire adaptée à l'égalité ou l'inégalité "
 "sélectionnée"
 
-#: pylib/text/tooltips.py:143
+#: pylib/text/tooltips.py:145
 msgid "Try to simplify expression"
 msgstr "Essaie de simplifier une expression"
 
-#: pylib/text/tooltips.py:144
+#: pylib/text/tooltips.py:146
 msgid "Use a commutativity rule"
 msgstr "Appliquer une règle de commutativité"
 
-#: pylib/text/tooltips.py:145
+#: pylib/text/tooltips.py:147
 msgid "Use an associativity rule"
 msgstr "Appliquer une règle d'associativité"
 
-#: pylib/text/tooltips.py:146
+#: pylib/text/tooltips.py:148
 msgid "Use a transitivity rule, e.g. for chaining inequalities"
 msgstr ""
 "Appliquer une règle de transitivité, par exemple pour enchainer des "
 "inégalités"
 
-#: pylib/text/tooltips.py:148
+#: pylib/text/tooltips.py:150
 msgid "Replace \"...\" in object, property or goal by a suitable formula"
 msgstr "Remplacer \"...\" dans un objet ou dans le but par ce qui convient"
 
-#: pylib/text/tooltips.py:150
+#: pylib/text/tooltips.py:152
 msgid "Use a joker as your witness"
 msgstr "Utiliser un joker comme témoin"
 
-#: pylib/text/tooltips.py:167
+#: pylib/text/tooltips.py:169
 msgid "FORALL"
 msgstr "POUR TOUT"
 
-#: pylib/text/tooltips.py:167
+#: pylib/text/tooltips.py:169
 msgid "EXISTS"
 msgstr "EXISTE"
 
-#: pylib/text/tooltips.py:167
+#: pylib/text/tooltips.py:169
 msgid "IMPLIES"
 msgstr "IMPLIQUE"
 
-#: pylib/text/tooltips.py:167
+#: pylib/text/tooltips.py:169
 msgid "AND"
 msgstr "ET"
 
-#: pylib/text/tooltips.py:167
+#: pylib/text/tooltips.py:169
 msgid "OR"
 msgstr "OU"
 
-#: pylib/text/tooltips.py:168
+#: pylib/text/tooltips.py:170
 msgid "PROVE FORALL"
 msgstr "DEMONTRE POUR TOUT"
 
-#: pylib/text/tooltips.py:168
+#: pylib/text/tooltips.py:170
 msgid "PROVE EXISTS"
 msgstr "DEMONTRE EXISTE"
 
-#: pylib/text/tooltips.py:168
+#: pylib/text/tooltips.py:170
 msgid "PROVE IMPLIES"
 msgstr "DEMONTRE IMPLIQUE"
 
-#: pylib/text/tooltips.py:168
+#: pylib/text/tooltips.py:170
 msgid "PROVE AND"
 msgstr "DEMONTRE ET"
 
-#: pylib/text/tooltips.py:169
+#: pylib/text/tooltips.py:171
 msgid "PROVE OR"
 msgstr "DEMONTRE OU"
 
-#: pylib/text/tooltips.py:170
+#: pylib/text/tooltips.py:172
 msgid "USE FORALL"
 msgstr "UTILISE POUR TOUT"
 
-#: pylib/text/tooltips.py:170
+#: pylib/text/tooltips.py:172
 msgid "USE EXISTS"
 msgstr "UTILISE EXISTE"
 
-#: pylib/text/tooltips.py:170
+#: pylib/text/tooltips.py:172
 msgid "USE IMPLIES"
 msgstr "UTILISE IMPLIQUE"
 
-#: pylib/text/tooltips.py:170
+#: pylib/text/tooltips.py:172
 msgid "USE AND"
 msgstr "UTILISE ET"
 
-#: pylib/text/tooltips.py:171
+#: pylib/text/tooltips.py:173
 msgid "USE OR"
 msgstr "UTILISE OU"
 
-#: pylib/text/tooltips.py:172
+#: pylib/text/tooltips.py:174
 msgid "NOT"
 msgstr "NON"
 
-#: pylib/text/tooltips.py:172
+#: pylib/text/tooltips.py:174
 msgid "IFF"
 msgstr "SSI"
 
-#: pylib/text/tooltips.py:172
+#: pylib/text/tooltips.py:174
 msgid "EQUAL"
 msgstr "ÉGAL"
 
-#: pylib/text/tooltips.py:172
+#: pylib/text/tooltips.py:174
 msgid "MAP"
 msgstr "APPLICATION"
 
-#: pylib/text/tooltips.py:173
+#: pylib/text/tooltips.py:175
 msgid "NEW OBJECT"
 msgstr "NOUVEL OBJET"
 
-#: pylib/text/tooltips.py:173
+#: pylib/text/tooltips.py:175
 msgid "PROOF METHODS"
 msgstr "METHODES DE PREUVES"
 
-#: pylib/text/tooltips.py:173
+#: pylib/text/tooltips.py:175
 msgid "ASSUMPTION"
 msgstr "BUT"
 
-#: pylib/text/tooltips.py:174
+#: pylib/text/tooltips.py:176
 msgid "SUM"
-msgstr "SOMME"
+msgstr "PLUS"
 
-#: pylib/text/tooltips.py:174
+#: pylib/text/tooltips.py:176
+msgid "MINUS"
+msgstr "MOINS"
+
+#: pylib/text/tooltips.py:176
 msgid "TRANSITIVITY"
 msgstr "TRANSITIVITÉ"
 
-#: pylib/text/tooltips.py:174
+#: pylib/text/tooltips.py:176
 msgid "ASSOCIATIVITY"
 msgstr "ASSOCIATIVITÉ"
 
-#: pylib/text/tooltips.py:174
+#: pylib/text/tooltips.py:176
 msgid "COMMUTE"
 msgstr "COMMUTATIVITÉ"
 
-#: pylib/text/tooltips.py:175
+#: pylib/text/tooltips.py:177
 msgid "TRIANGULAR INEQUALITY"
 msgstr "INÉGALITÉ TRIANGULAIRE"
 
-#: pylib/text/tooltips.py:175
+#: pylib/text/tooltips.py:177
 msgid "SIMPLIFY"
 msgstr "SIMPLIFIER"
 
-#: pylib/text/tooltips.py:175
+#: pylib/text/tooltips.py:177
 msgid "COMPLETE"
 msgstr "COMPLETER"
 
-#: pylib/text/tooltips.py:175
+#: pylib/text/tooltips.py:177
 msgid "JOKER"
 msgstr "JOKER"
 
-#: pylib/text/tooltips.py:191
+#: pylib/text/tooltips.py:193
 msgid "Joker"
 msgstr "Joker"
 
-#: pylib/text/tooltips.py:192
+#: pylib/text/tooltips.py:194
 msgid "Proof methods..."
 msgstr "Méthodes de preuve…"
 
-#: pylib/text/tooltips.py:193
+#: pylib/text/tooltips.py:195
 msgid "New object..."
 msgstr "Nouvel Objet…"
 
-#: pylib/text/tooltips.py:196
+#: pylib/text/tooltips.py:198
 msgid "Compute"
 msgstr "Calculer"
 
-#: pylib/text/tooltips.py:197
+#: pylib/text/tooltips.py:199
 msgid "Simp"
 msgstr "Simp"
 
-#: pylib/text/tooltips.py:227
+#: pylib/text/tooltips.py:231
 msgid "prove"
 msgstr "démontrer"
 
-#: pylib/text/tooltips.py:228
+#: pylib/text/tooltips.py:232
 msgid "use"
 msgstr "utiliser"
 

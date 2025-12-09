@@ -136,6 +136,8 @@ __tooltips = {
     #        "numbers")],
     'sum':
         [_('Add equalities or inequalities')],
+    'minus':
+        [_('Substract or take the opposite of equalities or inequalities')],
     'triangular_inequality':
         [_('Obtain a triangular inequality adapted to a selected equality or '
            'inequality')],
@@ -161,7 +163,7 @@ __buttons_symbols = dict()
 logic_buttons_line_1 = ["forall", "exists", "exists_joker", "implies", "and",
                         "or"]
 logic_buttons_line_2 = ["not", "iff", "equal", "map"]
-compute_buttons_line = ["sum"]
+# compute_buttons_line = ["sum"]
 
 __logic_translation =\
     [_('FORALL'), _('EXISTS'), _('IMPLIES'), _('AND'), _('OR'),
@@ -171,7 +173,7 @@ __logic_translation =\
      _('USE OR'),
      _('NOT'), _('IFF'), _('EQUAL'), _('MAP'),
      _('NEW OBJECT'), _('PROOF METHODS'), _('ASSUMPTION'),
-     _('SUM'), _('TRANSITIVITY'), _('ASSOCIATIVITY'), _('COMMUTE'),
+     _('SUM'), _('MINUS'), _('TRANSITIVITY'), _('ASSOCIATIVITY'), _('COMMUTE'),
      _('TRIANGULAR INEQUALITY'), _('SIMPLIFY'), _('COMPLETE'), _('JOKER')]
 
 
@@ -196,6 +198,8 @@ def __compute_buttons_symbols_dict():
         'compute': _('Compute'),
         'simplify': _("Simp"),
         'triangular_inequality': "△",
+        'sum': '+',
+        'minus': '-',
         'commute': "↔",
         "associativity": "()",
         "transitivity": "<<",

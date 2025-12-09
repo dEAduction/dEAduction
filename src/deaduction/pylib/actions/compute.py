@@ -57,12 +57,6 @@ def action_sum(proof_step) -> CodeForLean:
 
     selected_objects = proof_step.selection
     user_input = proof_step.user_input
-    # TODO: if len(selected_objects) == 1:
-    #  MissingParam --> user rentre un nb à ajouter.
-    #   e.g.
-    #     let a := 2,
-    #     have Haux0: a = 2, refl,
-    #     smart_add H1_lt a with H, rw Haux0 at H, clear Haux0, clear a,
 
     if not selected_objects:
         raise WrongUserInput(_("Select inequalities, equalities or numbers "
@@ -120,7 +114,62 @@ def action_sum(proof_step) -> CodeForLean:
         # code.add_error_msg(f"Use the + button for inequalities")
         return code
 
-    # TODO: add one ine to a number
+    else:
+        raise WrongUserInput(_("Select just one or two inequalities, "
+                               "equalities or numbers"))
+
+
+@action()
+def action_minus(proof_step) -> CodeForLean:
+    """
+    Try several substracting lemmas, by calling the custom tactics
+    smart_neg and smart_sub:
+    - subtract two selected equalities/inequalities (strict or not),
+    """
+
+    selected_objects = proof_step.selection
+    user_input = proof_step.user_input
+
+    if not selected_objects:
+        raise WrongUserInput(_("Select inequalities, equalities or numbers "
+                               "from the context to substract them"))
+
+    if len(selected_objects) == 1:
+        pass  # TODO
+        H0 = selected_objects[0]
+        new_hypo_name = get_new_hyp(proof_step)
+        code = CodeForLean.from_string(
+            f"smart_neg {H0} with {new_hypo_name}")
+        code.add_success_msg(_(f"Taking the opposite of {H0} to get"
+                               f" {new_hypo_name}"))
+        error_msg = _("I cannot take the opposite of {}").format(H0)
+        code.add_error_msg(error_msg)
+        code.add_used_properties(selected_objects)
+        # code.add_error_msg(f"Use the + button for inequalities")
+        return code
+
+    if len(selected_objects) == 2:
+
+        H0 = selected_objects[0]
+        H1 = selected_objects[1]
+        # TODO: accept H0=nb, H1=ineq to add H0 on the left instead of the right
+        if not H0.math_type.is_prop() and H1.math_type.is_prop():
+            # smart_add accept an inequality (first pos) and a number
+            H0, H1 = H1, H0
+        new_hypo_name = get_new_hyp(proof_step)
+        code = CodeForLean.from_string(
+            f"smart_sub {H0} {H1} with {new_hypo_name}")
+        code.add_success_msg(_(f"Substracting {H1} from {H0} to get"
+                               f" {new_hypo_name}"))
+        error_msg = _("I cannot substract {} and {}").format(H1, H0)
+        code.add_error_msg(error_msg)
+        code.add_used_properties(selected_objects)
+        # code.add_error_msg(f"Use the + button for inequalities")
+        return code
+
+    else:
+        raise WrongUserInput(_("Select just one or two inequalities, "
+                               "equalities or numbers"))
 
 
 # TODO: select pertinent mul lemmas ??
@@ -158,7 +207,6 @@ def action_sum(proof_step) -> CodeForLean:
 #         # code.add_error_msg(f"Use the + button for inequalities")
 #         return code
 #
-#     # TODO: add one ineg to a number
 
 # @action()
 # def action_factorize(proof_step) -> CodeForLean:
@@ -175,7 +223,7 @@ def action_sum(proof_step) -> CodeForLean:
 @action()
 def action_transitivity(proof_step) -> CodeForLean:
     """
-    Try several transitivity lemma (the 'smart_trans' tactic), in particular
+    Try some transitivity lemma (the 'smart_trans' tactic), in particular
     chaining inequalities. This is a symmetric tactic.
     """
 
@@ -272,6 +320,8 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     # TODO:
     #  - apply to two selected context numbers
     #  - if nothing is selected, open Calculator to specify x and y
+    #  have H := triangular_inequality x y,
+    #  or better : triangular_inequality_minus a b' if b = (-b')
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 

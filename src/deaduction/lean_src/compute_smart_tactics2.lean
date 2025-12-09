@@ -149,7 +149,7 @@ nams ←  get_all_theorems_whose_name_starts_with subname,
 nams.mmap (λ nam, tactic.trace (to_string nam))
 
 
--- run_cmd trace_theorems "assoc"
+-- run_cmd trace_theorems "sub"
 -- #check mul_lt_mul_of_pos_left
 
 
@@ -165,6 +165,11 @@ do
 p ← resolve_name lemma_name, -- trace "lemma found",
  «have» new_name none ``(%%p %%e1 %%e2) -- <|> fail "have failed"
 
+meta def have_with_name1 (lemma_name: name) (e1 : expr) 
+(new_name: name): tactic unit :=
+do 
+p ← resolve_name lemma_name, -- trace "lemma found",
+ «have» new_name none ``(%%p %%e1) -- <|> fail "have failed"
 /-
 Successively try to apply all the theorems with name in list <names> to expr e1 and e2,
 and name the resulting property h. Stop at first success.
@@ -176,6 +181,16 @@ do
 have_with_name nam e1 e2 new_name, no_meta_vars,
 tactic.trace ("Try this: have " ++ to_string new_name ++ " := "
 ++ to_string nam ++ " " ++ to_string e1 ++ " " ++ to_string e2))
+names
+
+-- Variation with only 1 arg
+meta def try_thm1 (names: list name) (e1 : expr)  (new_name: name)
+: tactic unit :=
+list.mfirst (λ nam,
+do
+have_with_name1 nam e1 new_name, no_meta_vars,
+tactic.trace ("Try this: have " ++ to_string new_name ++ " := "
+++ to_string nam ++ " " ++ to_string e1))
 names
 
 -- variation with strings
@@ -211,6 +226,18 @@ do names ←  get_all_theorems_whose_name_starts_with "mul",
    e2 ← get_local h2,
     try_thm names e1 e2 h
 
+meta def smart_neg (h1 : parse ident)
+(h : parse (tk "with" *> ident)) : tactic unit :=
+do names ←  get_all_theorems_whose_name_starts_with "neg",
+   e1 ← get_local h1,
+    try_thm1 names e1 h
+
+meta def smart_sub (h1 : parse ident) (h2 : parse ident)
+(h : parse (tk "with" *> ident)) : tactic unit :=
+do names ←  get_all_theorems_whose_name_starts_with "sub",
+   e1 ← get_local h1,
+   e2 ← get_local h2,
+    try_thm names e1 e2 h
 
 /-
 Test and examples
@@ -219,15 +246,20 @@ Test and examples
 -- variables x y z t: real
 -- example -- (H1_lt: x < y) (H2_lt: t < z)
 -- -- (H1_lte: x ≤ y) 
--- (H2_lte: t ≤ z)
--- (H1_e: x = y) -- (H2_e: t = z)
+-- (H2_lte: t ≤  z)
+-- (H1_lt: x <  y) -- (H2_e: t = z)
 -- :
--- x + t ≤ y + z :=
+-- x+2 < y +2 :=
 -- begin
---     -- let a := 2,
---     -- have Haux0: a = 2, refl,
---     -- smart_add H1_lt a with H, rw Haux0 at H, clear Haux0, clear a,
---     library_search,
+--   smart_neg H1_lt with H,
+-- end
+-- begin
+--   -- have H:= add_lt_eq H1_lt (@rfl _ 2),
+--   -- smart_add H1_lt (rfl 2) with H
+--     -- let a := 2+t,
+--     -- have Haux0: a = 2+t, refl,
+--     -- smart_add_bis H1_lt (2+t)  with H,
+--     -- library_search,
 -- end
 -- --   have H3 := add_lt_add_of_lt_of_le H1 H2,
 --     -- smart_add H1_lt H2_lt with H100, -- add_lt_add
@@ -557,9 +589,6 @@ do names ←  get_all_theorems_whose_name_ends_with "assoc",
 
 
 /-conv.smart_comm-/
-
-
-
 
 end tactic.interactive
 
