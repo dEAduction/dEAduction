@@ -153,13 +153,13 @@ end definitions
 ---------------
 namespace exercices
 
+-- description = "Voici un premier exercice !"
 lemma exercise.intersection_inclus_ensemble
 (A B : set X) :
 A ∩ B ⊆ A
 :=
 /- dEAduction
 pretty_name = "Un ensemble contient son intersection avec un autre"
-description = "Voici un premier exercice !"
 -/
 begin
     todo,
@@ -172,7 +172,6 @@ lemma exercise.inclus_dans_les_deux_implique_dans_lintersection
 :=
 /- dEAduction
 pretty_name = "Inclus dans les deux implique inclus dans l'intersection"
-description = "Voici un deuxième exercice !"
 -/
 begin
     todo,
@@ -184,7 +183,6 @@ lemma exercise.inclusion_transitive
 :=
 /- dEAduction
 pretty_name = "Transitivité de l'inclusion"
-description = "Voici un troisième exercice !"
 -/
 begin
     todo,
