@@ -73,6 +73,23 @@ begin
   congr, exact H1, exact H2,
 end
 
+lemma neg_eq {X: Type} [has_neg X] {a b: X} (H1: a=b) : 
+-a = -b :=
+begin
+  congr, exact H1,
+end
+
+lemma sub_eq1 {X: Type} [has_sub X] {a b: X} (H1: a=b) (c: X): 
+a - c = b - c :=
+begin
+  congr, exact H1,
+end
+
+lemma sub_eq2 {X: Type} [has_sub X] {a b c d: X} (H1: a=b) (H2: c=d): 
+a - c = b - d :=
+begin
+  congr, exact H1, exact H2,
+end
 lemma add_eq_lt {X: Type} [ordered_add_comm_monoid X] {a b c d: X} (H1: a=b) (H2: c < d): 
 a + c < b + d :=
 begin
@@ -535,6 +552,17 @@ do names ←  get_all_theorems_whose_name_ends_with "assoc",
 
 
 -- variables (x y z t : ℝ)
+-- example (H: x=y): (-x=-y):=
+-- begin
+--   smart_neg H with H', exact H'
+-- end
+
+-- example (H: x=y) (H': z = 2*t): (z-x=2*t-y):=
+-- begin
+--   smart_sub H' H with H'', exact H'',
+-- end
+
+
 -- example (H: (x*y)*z =0): (y*z)=(z*y) :=
 -- begin
 --     -- rw commute.right_comm at H,
