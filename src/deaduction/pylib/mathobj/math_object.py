@@ -1535,6 +1535,11 @@ class MathObject:
                 or self.is_exists(is_math_type=True, implicit=True)):
             return self.last_rw_object
 
+    def var_of_explicit_quant(self):
+        quant = self.explicit_quant()
+        if quant:
+            return quant.children[1]
+
     def type_of_explicit_quant(self):
         quant = self.explicit_quant()
         if quant:

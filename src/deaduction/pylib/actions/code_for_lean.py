@@ -1084,8 +1084,12 @@ class CodeForLean:
         return code
 
     @classmethod
-    def induction(cls, var_name):
-        ins = SingleCode.apply_statement("induction.simple_induction")
+    def induction(cls, var_name, explicit=False, prop: str = ""):
+        if not explicit:
+            ins = SingleCode.apply_statement("induction.simple_induction")
+        else:
+            ins = SingleCode.apply_statement("@induction.simple_induction (" +
+                                             prop + ")")
         code = cls(instructions=[ins])
         code.add_success_msg(_(f"Proof by induction on {var_name}"))
         code.outcome_operator = _("Principle of induction")

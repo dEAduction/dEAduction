@@ -38,7 +38,8 @@ from deaduction.pylib.text        import tooltips
 import deaduction.pylib.config.vars as cvars
 
 from deaduction.pylib.actions.utils import pre_process_lean_code
-from deaduction.pylib.actions.commun_actions import introduce_new_subgoal
+from deaduction.pylib.actions.commun_actions import introduce_new_subgoal, \
+    have_new_property
 from deaduction.pylib.actions import (InputType,
                                       MissingParametersError,
                                       MissingCalculatorOutput,
@@ -346,7 +347,6 @@ def method_induction(proof_step,
     var_name = proof_step.goal.provide_good_name(math_type,
                                                  var.preferred_letter())
 
-    code = CodeForLean.empty_code()
     if len(user_input) < 2:
         choices = [('1', _('Base case')), ('2', _('Induction step'))]
         raise MissingParametersError(
@@ -354,11 +354,16 @@ def method_induction(proof_step,
             choices,
             title=_("Proof by induction"),
             output=_("Which property to prove first?"))
-    elif user_input[1] == 0:
+    else:  # Try induction, or induction with explicit property (from goal)
         code = CodeForLean.induction(var_name)
-    elif user_input[1] == 1:
-        code = CodeForLean.induction(var_name).and_then('rotate')
+        lam = MathObject.lambda_(var, body, math_type)
+        prop = lam.to_display(format_='lean')
+        code2 = CodeForLean.induction(var_name, explicit=True, prop=prop)
+        code = code.or_else(code2)
+    if user_input[1] == 1:
+        code = code.and_then('rotate')
 
+    print(code.raw_code())
     return code
 
 
