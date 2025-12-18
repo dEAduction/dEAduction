@@ -28,6 +28,7 @@ This file is part of dEAduction.
 
 import logging
 
+from .generic import apply_theorem, action_theorem
 from .utils import get_fresh_name
 from deaduction.pylib.actions     import (action,
                                           InputType,
@@ -40,6 +41,8 @@ from deaduction.pylib.actions     import (action,
                                           CodeForLean)
 
 from deaduction.pylib.give_name import get_new_hyp
+from ..mathobj import MathObject
+from ..proof_state import Goal, ProofState
 
 log = logging.getLogger(__name__)
 
@@ -310,6 +313,57 @@ def action_associativity(proof_step) -> CodeForLean:
         raise WrongUseModeInput("Select one object at a time")
 
 
+# def triangular_ineq():
+#     """
+#     Construct the MathObject corresponding to the statement of the triangular ineq.
+#     """
+#
+#     cls = MathObject
+#     type_  = cls(node = 'TYPE', info={}, children=[],
+#                  math_type=cls.NO_MATH_TYPE)
+#     R = cls.constant('ℝ', math_type=type_)
+#
+#     x = cls.local_constant(name='x', math_type=R)
+#     y = cls.local_constant(name='x', math_type=R)
+#     abs = cls.constant('abs')
+#     sum = cls(node='SUM', info={},
+#                      children=[x,y],
+#                      math_type=R)
+#     abs_sum = cls.application(function=abs,
+#                                      var=sum)
+#     abs_x = cls.application(function=abs,
+#                                      var=x)
+#     abs_y = cls.application(function=abs,
+#                                      var=y)
+#     sum_abs = cls(node='SUM', info={},
+#                          children=[abs_x,abs_y],
+#                          math_type=R)
+#     ineq = cls(node='PROP_≤', info={},
+#                       children=[abs_sum,sum_abs],
+#                       math_type='PROP')
+#     forall_y = cls(node="QUANT_∀",
+#                    info={},
+#                    children=[R, y, ineq],
+#                    math_type=cls.PROP)
+#     forall_x = cls(node="QUANT_∀",
+#                    info={},
+#                    children=[R, x, forall_y],
+#                    math_type=cls.PROP)
+#
+#     return forall_x
+
+def triangular_inequality_from_exercise(exercise):
+    """
+    Look  into exercise list of statements for a triangular inequality,
+    and return it.
+    """
+    # print([s.lean_name for s in exercise.available_statements])
+    statements = [item for item in exercise.available_statements
+                  if item.lean_name.find("triangular_inequality") != -1
+                  or item.lean_name.find("inegalite_triangulaire") != -1]
+    return statements
+
+
 @action()
 def action_triangular_inequality(proof_step) -> CodeForLean:
     """
@@ -325,14 +379,26 @@ def action_triangular_inequality(proof_step) -> CodeForLean:
     selected_objects = proof_step.selection
     target_selected = proof_step.target_selected
 
-    test_selection(selected_objects, target_selected, exclusive=True)
+    # test_selection(selected_objects, target_selected, exclusive=True)
 
-    if len(selected_objects) == 1:  # no selection : simplify everything??
+    if len(selected_objects) == 1:
         selected_name = selected_objects[0].name
-    elif len(selected_objects) > 1:
-        raise WrongUseModeInput(_("Select only one object"))
-    elif not selected_objects:
-        target_selected = True
+    elif len(selected_objects) == 2:
+        return apply_theorem(proof_step)
+    elif len(selected_objects) > 2:
+        raise WrongUseModeInput(_("Select one property or two numbers"))
+    elif not selected_objects and not target_selected:
+        # Try to call Calculator for user input
+        statements = triangular_inequality_from_exercise(proof_step.exercise)
+        if statements:
+            statement = statements[0]
+            proof_step.statement = statement
+            return action_theorem(proof_step)
+            # raise MissingCalculatorOutput(CalculatorRequest.ApplyStatement,
+            #                               proof_step=proof_step,
+            #                               statement=statement)
+        else:
+            target_selected = True  # Try smart triangular ineq from target
 
     new_hyp = get_new_hyp(proof_step)
     code1 = CodeForLean("norm_num").try_()  # To normalise inequalities

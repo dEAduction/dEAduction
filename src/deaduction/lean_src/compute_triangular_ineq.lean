@@ -2,6 +2,7 @@ import data.real.basic
 import tactic
 import utils
 import compute_smart_tactics2
+-- import structures2
 
 open lean.parser tactic interactive
 open interactive (loc.ns)
@@ -12,7 +13,7 @@ open expr
 /-
 Triangular inequality lemmas.
 -/
-
+ 
 universe u
 variables {X: Type u} [decidable_linear_ordered_comm_ring X]
 
@@ -20,6 +21,7 @@ lemma triangular_inequality :
 ∀ x y : X, abs (x + y) ≤ abs x + abs y
 := 
 begin
+  -- targets_analysis,
   exact abs_add,
 end
 
