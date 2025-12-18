@@ -434,14 +434,23 @@ def action_simplify(proof_step) -> CodeForLean:
                    select_default_target=True)
 
     selected_name = ""
+
+    nb_selec = int(target_selected) + len(selected_objects)
+    if nb_selec > 1:
+        raise WrongUseModeInput(_("Select only one object at a time"))
+    elif nb_selec == 0:
+        raise WrongUseModeInput(_("Select one object to simplify"))
+
     if len(selected_objects) == 1:  # no selection : simplify everything??
         selected_name = selected_objects[0].name
-    elif len(selected_objects) > 1:
-        raise WrongUseModeInput(_("Select only one object at a time"))
+        location = " at " + selected_name
+    else:
+        location = ""
+    # elif len(selected_objects) > 1:
+    #     raise WrongUseModeInput(_("Select only one object at a time"))
+    # location = "" if target_selected else " at " + selected_name
 
-    location = "" if target_selected else " at " + selected_name
-
-    code1 = CodeForLean("norm_num")
+    code1 = CodeForLean(f"norm_num {location}")
     simp2 = f"simp only [] with simp_arith {location}"
     code2 = CodeForLean(simp2)
     code = ((code1.and_then(code2)).or_else(code2)).or_else(code1)
