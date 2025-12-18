@@ -172,6 +172,26 @@ end
 Simplifier lemmas for min, max, abs
 ----------------------------------------------------
 -/
+variables [decidable_linear_ordered_comm_ring u]
+@[simp_arith]
+lemma abs_neg2 :
+∀ x :u, abs (-x) =  abs x
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue de l'opposé"
+-/
+begin
+  todo,
+end
+
+
+
+
+
+
+
+
+
 
 open lean.parser tactic interactive
 -- open interactive (loc.ns)
