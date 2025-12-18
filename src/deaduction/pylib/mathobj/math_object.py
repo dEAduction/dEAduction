@@ -558,6 +558,36 @@ class MathObject:
 # Some particular instantiations #
 ##################################
     @classmethod
+    def local_constant(cls, name, math_type):
+        """
+        Construct a local constant.
+        math_type can be a MathObject or a string,
+        e.g. math_type = 'ℝ'.
+        """
+        if isinstance(math_type, str):
+            math_type = cls(node='CONSTANT',
+                            info={'name': math_type},
+                            children=[],
+                            math_type=cls.NO_MATH_TYPE)
+        return cls(node="LOCAL CONSTANT",
+                   info={'name': name},
+                   children=[],
+                   math_type=math_type)
+
+    @classmethod
+    def constant(cls, name, math_type=None):
+        """
+        Construct a constant.
+        """
+        if not math_type:
+            math_type = cls.NO_MATH_TYPE
+
+        return cls(node="CONSTANT",
+                   info={'name': name},
+                   children=[],
+                   math_type=math_type)
+
+    @classmethod
     def application(cls, function, var):
         """
         Construct a MathObject obtained by applying function to var.
