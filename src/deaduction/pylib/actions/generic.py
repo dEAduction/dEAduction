@@ -27,6 +27,8 @@ This file is part of dEAduction.
     with dEAduction.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
+
 from deaduction.pylib.actions import MissingCalculatorOutput, CalculatorRequest
 from deaduction.pylib.actions import CodeForLean, test_selection
 from deaduction.pylib.give_name.get_new_hyp import get_new_hyp
@@ -35,6 +37,7 @@ from deaduction.pylib.actions.commun_actions import use_forall, \
 
 # from deaduction.pylib.proof_state import Goal
 
+log = logging.getLogger("generic")
 global _
 
 
@@ -143,7 +146,8 @@ def action_definition(proof_step) -> CodeForLean:
 
 def apply_theorem(proof_step) -> CodeForLean:
     """
-    Apply theorem on selected objects (assumed to be non empty).
+    Apply theorem (or definition) on selected objects (assumed to be non empty).
+    If theorem can be used for substitution, then call rw_using_statement().
     """
 
     target_selected = proof_step.target_selected
@@ -241,6 +245,7 @@ def action_theorem(proof_step) -> CodeForLean:
     if goal:
         theorem_as_math_object = goal.to_math_object()
     else:
+        log.info(f"No goal found in theorem {theorem.lean_name}")
         # FIXME:
         #  We should raise an error indicating theorem's goal is not available
         #  (User should wait and try again)
@@ -248,6 +253,7 @@ def action_theorem(proof_step) -> CodeForLean:
 
     # If all vars are implicit, do not call Calculator!
     if not theorem_as_math_object.is_for_all(is_math_type=True):
+        log.info(f"Theorem {theorem.lean_name} is not a universal property")
         # or not theorem_as_math_object.types_n_vars_of_univ_prop()):
         # proof_step.target_selected = True  # Cheating a little bit
         # TODO: consider other operators
