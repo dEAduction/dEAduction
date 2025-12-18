@@ -213,7 +213,8 @@ class PatternMathDisplay:
                               'bounded': _("bounded"),  # FIXME: bounded_func
                               'limit': "lim",
                               'limit_function': "lim",
-                              'limit_plus_infinity': "lim ∞",
+                              'limit_plus_infinity': "lim +∞",
+                              'limit_minus_infinity': "lim -∞",
                               'continuous_at': _('continuous at'),
 
                               'relation_equivalence': _('an equivalence '
@@ -251,6 +252,8 @@ class PatternMathDisplay:
                             "borne_inf": ("Inf ", -2, " = ", -1),
                             "limit_plus_infinity": ("\lim", " ", -1, " = ",
                                                     "+", "\infty"),
+                            "limit_minus_infinity": ("\lim", " ", -1, " = ",
+                                                    "-", "\infty"),
                             "limit_function": ("\lim", ['_', (-2,)], (-3,),
                                                " = ", (-1,)),
                             # "sqrt":  ("√", -1),
