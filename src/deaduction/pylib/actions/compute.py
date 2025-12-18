@@ -29,6 +29,7 @@ This file is part of dEAduction.
 import logging
 
 from .generic import apply_theorem, action_theorem
+from .proofs import ask_for_name, introduce_new_object, pre_process_lean_code
 from .utils import get_fresh_name
 from deaduction.pylib.actions     import (action,
                                           InputType,
@@ -49,6 +50,47 @@ log = logging.getLogger(__name__)
 global _
 
 
+def new_sum_object(proof_step):
+    """
+    Introduce a new object which is a sum of two objects.
+    """
+
+    name = ""
+    user_input = proof_step.user_input
+    selected_objects = proof_step.selection
+
+    if not user_input:  # Ask for name
+        ask_for_name(proof_step)
+    else:
+        name = pre_process_lean_code(user_input[0])
+        if len(user_input) == 1:  # Contains name
+            # Check name does not already exist
+            ask_for_name(proof_step, name)
+
+    # From now on name is a good name
+    x0 = ""
+    x1 = ""
+    if len(selected_objects) == 1:
+        if len(user_input) == 1:  # Ask for other object to add
+            mc = MissingCalculatorOutput
+            math_object = selected_objects[0]
+            raise mc(CalculatorRequest.EnterObject, proof_step,
+                     object_of_requested_math_type=math_object)
+        else:
+            x0 = selected_objects[0].to_display(format_='lean')
+            x1 = user_input[1][0].to_display(format_='lean')
+    elif len(selected_objects) == 2:
+            x0 = selected_objects[0].to_display(format_='lean')
+            x1 = selected_objects[1].to_display(format_='lean')
+    else:
+        raise WrongUserInput("Select one or two objects to add")
+
+    if x0 and x1:
+        new_math_object = x0 + ' + ' + x1
+        code = introduce_new_object(proof_step, name, new_math_object)
+        return code
+
+
 @action()
 def action_sum(proof_step) -> CodeForLean:
     """
@@ -66,7 +108,10 @@ def action_sum(proof_step) -> CodeForLean:
                                "from the context to add them"))
 
     if len(selected_objects) == 1:
-        if not user_input:
+        if not selected_objects[0].math_type.is_prop():
+            return new_sum_object(proof_step)
+
+        elif not user_input:
             eq_or_ineq = selected_objects[0].math_type
             if eq_or_ineq.children:
                 math_object = eq_or_ineq.children[0]
@@ -75,7 +120,8 @@ def action_sum(proof_step) -> CodeForLean:
             mc = MissingCalculatorOutput
             raise mc(CalculatorRequest.EnterObject, proof_step,
                      object_of_requested_math_type=math_object)
-        else:
+
+        else:  # We assume selected object is an equality or inequality
             ineq_name = selected_objects[0].display_name
             x0 = get_fresh_name(context=proof_step.goal.context)
             H0 = get_fresh_name('H', proof_step.goal.context)
@@ -107,15 +153,19 @@ def action_sum(proof_step) -> CodeForLean:
         if not H0.math_type.is_prop() and H1.math_type.is_prop():
             # smart_add accept an inequality (first pos) and a number
             H0, H1 = H1, H0
-        new_hypo_name = get_new_hyp(proof_step)
-        code = CodeForLean.from_string(
-            f"smart_add {H0} {H1} with {new_hypo_name}")
-        code.add_success_msg(_(f"Adding {H0} and {H1} to get {new_hypo_name}"))
-        error_msg = _("I cannot add {} and {}").format(H0, H1)
-        code.add_error_msg(error_msg)
-        code.add_used_properties(selected_objects)
+
+        if H0.math_type.is_prop() or H1.math_type.is_prop():
+            new_hypo_name = get_new_hyp(proof_step)
+            code = CodeForLean.from_string(
+                f"smart_add {H0} {H1} with {new_hypo_name}")
+            code.add_success_msg(_(f"Adding {H0} and {H1} to get {new_hypo_name}"))
+            error_msg = _("I cannot add {} and {}").format(H0, H1)
+            code.add_error_msg(error_msg)
+            code.add_used_properties(selected_objects)
         # code.add_error_msg(f"Use the + button for inequalities")
-        return code
+            return code
+        else:
+            return new_sum_object(proof_step)
 
     else:
         raise WrongUserInput(_("Select just one or two inequalities, "

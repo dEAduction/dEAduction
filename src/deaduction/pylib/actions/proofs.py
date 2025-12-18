@@ -421,6 +421,47 @@ def introduce_fun(proof_step, selected_objects: [MathObject]) -> CodeForLean:
     raise WrongUserInput(error)
 
 
+def introduce_new_object(proof_step, name, math_object):
+    """
+    return the Lean code to introduce a new object.
+    math_object can be either MathObject or str (lean code).
+    """
+
+    new_hypo_name = get_new_hyp(proof_step, prefix='Def')
+
+    if isinstance(math_object, MathObject):
+        new_object = math_object.to_display(format_='lean')
+    elif isinstance(math_object, str):
+        new_object = math_object
+
+    codes = CodeForLean.from_string(f"let {name} := {new_object}")
+    codes = codes.and_then(f"have {new_hypo_name} : {name} = "
+                           f"{new_object}")
+    codes = codes.and_then("refl")
+    codes.add_success_msg(_("New object {} added to the context").
+                          format(name))
+
+    return codes
+
+
+def ask_for_name(proof_step, name=None):
+    goal = proof_step.goal
+    user_input = proof_step.user_input
+    if not name:
+        raise MissingParametersError(InputType.Text,
+                                     title=_("New notation"),
+                                     output=_("Choose a notation for your "
+                                              "new object:"))
+    else:
+        names = [obj.display_name for obj in goal.context]
+        if name in names:
+            user_input.pop()
+            output = _("This name already exists, please give a new name:")
+            raise MissingParametersError(InputType.Text,
+                                         title="New object",
+                                         output=output)
+
+
 @action()
 def action_new_object(proof_step) -> CodeForLean:
     """
@@ -447,40 +488,39 @@ def action_new_object(proof_step) -> CodeForLean:
     # (1) Choice = new object
     if user_input[0] == 0:
         if len(user_input) == 1:  # Ask for name
-            raise MissingParametersError(InputType.Text,
-                                         title=_("New notation"),
-                                         output=_("Choose a notation for your "
-                                                  "new object:"))
+            ask_for_name(proof_step)
+            # raise MissingParametersError(InputType.Text,
+            #                              title=_("New notation"),
+            #                              output=_("Choose a notation for your "
+            #                                       "new object:"))
         elif len(user_input) == 2:
             # Check name does not already exist
             name = pre_process_lean_code(user_input[1])
-            names = [obj.display_name for obj in goal.context]
-            if name in names:
-                user_input.pop()
-                output = _("This name already exists, please give a new name:")
-                raise MissingParametersError(InputType.Text,
-                                             title="New object",
-                                             output=output)
-            else:  # Ask for new object
-                # output = new_objects
-                new_name = user_input[1]
-                raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
-                                              new_name=new_name,
-                                              proof_step=proof_step)
+            ask_for_name(proof_step, name)
+            # names = [obj.display_name for obj in goal.context]
+            # if name in names:
+            #     user_input.pop()
+            #     output = _("This name already exists, please give a new name:")
+            #     raise MissingParametersError(InputType.Text,
+            #                                  title="New object",
+            #                                  output=output)
+            # else:
+            # Ask for new object
+            # output = new_objects
+            # new_name = user_input[1]
+            raise MissingCalculatorOutput(CalculatorRequest.DefineObject,
+                                          new_name=name,
+                                          proof_step=proof_step)
         else:  # Send code
             name = pre_process_lean_code(user_input[1])
-            new_hypo_name = get_new_hyp(proof_step, prefix='Def')
+            # new_hypo_name = get_new_hyp(proof_step, prefix='Def')
 
             # Process object from auto_step or from Calculator:
             math_object = user_input[2][0]
+            codes = introduce_new_object(proof_step,
+                                         name,
+                                         math_object)
 
-            new_object = math_object.to_display(format_='lean')
-            codes = CodeForLean.from_string(f"let {name} := {new_object}")
-            codes = codes.and_then(f"have {new_hypo_name} : {name} = "
-                                                     f"{new_object}")
-            codes = codes.and_then("refl")
-            codes.add_success_msg(_("New object {} added to the context").
-                                  format(name))
             if goal.target.is_for_all():
                 # User might want to prove a universal property "∀x..."
                 # and mistake "new object" for introduction of the relevant x.
