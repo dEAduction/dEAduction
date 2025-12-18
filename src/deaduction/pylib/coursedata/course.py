@@ -34,7 +34,10 @@ This file is part of dEAduction.
 from collections import                     OrderedDict
 from dataclasses import                     dataclass
 from pathlib import                         Path
-from tomllib import TOMLDecodeError
+try:  # From Python 3.11
+    from tomllib import TOMLDecodeError
+except ModuleNotFoundError:  # For previous versions
+    from tomli import TOMLDecodeError
 from typing import                          List, Dict
 import os
 import logging
