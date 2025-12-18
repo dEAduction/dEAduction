@@ -569,6 +569,15 @@ class Statement:
         elif self.is_exercise():
             return _('exercise')
 
+    @property
+    def the_type(self):
+        if self.is_definition():
+            return _('the definition')
+        elif self.is_theorem():
+            return _('the theorem')
+        elif self.is_exercise():
+            return _('the exercise')
+
     def goal(self):
         ips = self.initial_proof_state
         if ips:

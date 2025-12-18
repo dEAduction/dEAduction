@@ -528,12 +528,6 @@ class ExerciseMainWindow(QMainWindow):
         """
         Boolean, True iff target is selected.
         """
-        # Fixme: obsolete
-        # if not self.target_selected_by_default:
-        #     return self._target_selected
-        # else:
-        #     # Target is selected by default if current_selection is empty
-        #     return not self.current_selection
         return self._target_selected
 
     @target_selected.setter

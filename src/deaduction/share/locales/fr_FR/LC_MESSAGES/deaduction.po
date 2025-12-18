@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"POT-Creation-Date: 2025-12-09 20:15+0100\n"
-"PO-Revision-Date: 2025-12-09 20:17+0100\n"
+"POT-Creation-Date: 2025-12-13 18:11+0100\n"
+"PO-Revision-Date: 2025-12-13 18:12+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_FR\n"
@@ -288,7 +288,7 @@ msgstr "Sauvegarder les préférences"
 msgid "Ok"
 msgstr "Ok"
 
-#: dui/elements/config_window.py:337
+#: dui/elements/config_window.py:337 pylib/actions/exceptions.py:193
 msgid "Apply"
 msgstr "Appliquer"
 
@@ -1041,16 +1041,16 @@ msgstr "Exercice"
 msgid "Exercise history"
 msgstr "Historique de l’exercice"
 
-#: dui/stages/exercise/exercise_main_window.py:1030
+#: dui/stages/exercise/exercise_main_window.py:1024
 msgid "Current target solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:1032
+#: dui/stages/exercise/exercise_main_window.py:1026
 #: pylib/proof_step/proof_step.py:809
 msgid "Current goal solved"
 msgstr "But en cours atteint"
 
-#: dui/stages/exercise/exercise_main_window.py:1035
+#: dui/stages/exercise/exercise_main_window.py:1029
 msgid "goals solved!"
 msgstr "buts atteints !"
 
@@ -1234,11 +1234,11 @@ msgstr "Etape suivante"
 msgid "Scroll to end"
 msgstr "Défiler en bas"
 
-#: pylib/actions/code_for_lean.py:1091
+#: pylib/actions/code_for_lean.py:1095
 msgid "Principle of induction"
 msgstr "Principe de récurrence"
 
-#: pylib/actions/code_for_lean.py:1159 pylib/actions/commun_actions.py:251
+#: pylib/actions/code_for_lean.py:1163 pylib/actions/commun_actions.py:251
 #: pylib/actions/commun_actions.py:368 pylib/actions/commun_actions.py:380
 #: pylib/actions/logic.py:553 pylib/actions/logic.py:1067
 #: pylib/actions/logic.py:1139
@@ -1246,7 +1246,7 @@ msgstr "Principe de récurrence"
 msgid "Property {} added to the context"
 msgstr "Propriété {} ajoutée au contexte"
 
-#: pylib/actions/code_for_lean.py:1163
+#: pylib/actions/code_for_lean.py:1167
 msgid "Unable to apply the selected property"
 msgstr "La propriété sélectionnée n’a pas pu être appliqué"
 
@@ -1273,7 +1273,7 @@ msgid "This name already exists in the context, please give a new name for "
 msgstr "Ce nom existe déjà dans le contexte, choisissez un nouveau nom pour "
 
 #: pylib/actions/commun_actions.py:485 pylib/actions/commun_actions.py:495
-#: pylib/actions/proofs.py:440
+#: pylib/actions/proofs.py:445
 #: pylib/coursedata/course_metadata_translations.py:35
 msgid "New object"
 msgstr "Nouvel Objet"
@@ -1282,328 +1282,330 @@ msgstr "Nouvel Objet"
 msgid "choose a name for"
 msgstr "Choisissez un nom pour"
 
-#: pylib/actions/compute.py:62
+#: pylib/actions/compute.py:65
 msgid "Select inequalities, equalities or numbers from the context to add them"
 msgstr ""
 "Choisissez deux inégalités, égalités ou nombres du contexte pour les ajouter"
 
-#: pylib/actions/compute.py:92
+#: pylib/actions/compute.py:95
 #, python-brace-format
 msgid "Adding {} to {} to get {}"
 msgstr "On additionne {} et {} pour obtenir {}"
 
-#: pylib/actions/compute.py:94
+#: pylib/actions/compute.py:97
 #, python-brace-format
 msgid "I cannot add {} to {}"
 msgstr "Je ne sais pas additionner {} et {}"
 
-#: pylib/actions/compute.py:111
+#: pylib/actions/compute.py:114
 #, python-brace-format
 msgid "I cannot add {} and {}"
 msgstr "Je ne sais pas additionner {} et {}"
 
-#: pylib/actions/compute.py:118 pylib/actions/compute.py:171
+#: pylib/actions/compute.py:121 pylib/actions/compute.py:174
 msgid "Select just one or two inequalities, equalities or numbers"
 msgstr ""
 "Choisissez au plus deux inégalités, égalités ou nombres du contexte pour "
 "soustraire ou prendre l'opposé"
 
-#: pylib/actions/compute.py:134
+#: pylib/actions/compute.py:137
 msgid ""
 "Select inequalities, equalities or numbers from the context to substract them"
 msgstr ""
 "Choisissez une ou deux inégalités, égalités ou nombres du contexte pour les "
 "soustraire ou prendre leur opposé"
 
-#: pylib/actions/compute.py:145
+#: pylib/actions/compute.py:148
 #, python-brace-format
 msgid "I cannot take the opposite of {}"
 msgstr "Je ne sais pas prendre l'opposé de {}"
 
-#: pylib/actions/compute.py:164
+#: pylib/actions/compute.py:167
 #, python-brace-format
 msgid "I cannot substract {} and {}"
 msgstr "Je ne sais pas soustraire {} et {}"
 
-#: pylib/actions/compute.py:241
+#: pylib/actions/compute.py:244
 #, python-brace-format
 msgid "I cannot chain {} and {}"
 msgstr "Je ne sais pas enchainer {} et {}"
 
-#: pylib/actions/compute.py:261
+#: pylib/actions/compute.py:264
 msgid "Apply commutation on target"
 msgstr "Commutativité appliquée au but"
 
-#: pylib/actions/compute.py:269
+#: pylib/actions/compute.py:272
 #, python-brace-format
 msgid "Apply commutation on {}"
 msgstr "Commutativité appliquée à {}"
 
-#: pylib/actions/compute.py:271
+#: pylib/actions/compute.py:274
 msgid "I don't know how to apply commutation."
 msgstr "Je ne sais pas comment appliquer la commutativité"
 
-#: pylib/actions/compute.py:293
+#: pylib/actions/compute.py:296
 msgid "Apply associativity on target"
 msgstr "Associativité appliquée au but"
 
-#: pylib/actions/compute.py:295 pylib/actions/compute.py:304
+#: pylib/actions/compute.py:298 pylib/actions/compute.py:307
 msgid "I don't know how to apply associativity."
 msgstr "Je ne sais pas comment appliquer l'associativité"
 
-#: pylib/actions/compute.py:302
+#: pylib/actions/compute.py:305
 #, python-brace-format
 msgid "Apply associativity on {}"
 msgstr "Associativité appliquée à {}"
 
-#: pylib/actions/compute.py:333
-msgid "Select only one object"
-msgstr "Sélectionner un seul objet"
+#: pylib/actions/compute.py:389
+msgid "Select one property or two numbers"
+msgstr "Sélectionner une propriété ou deux nombres"
 
-#: pylib/actions/compute.py:348
+#: pylib/actions/compute.py:414
 #, python-brace-format
 msgid "Triangular inequality {} added to the context"
 msgstr "Inégalité triangulaire {} ajoutée au contexte"
 
-#: pylib/actions/compute.py:351 pylib/actions/logic.py:1499
+#: pylib/actions/compute.py:417 pylib/actions/logic.py:1499
 msgid "the target"
 msgstr "le but"
 
-#: pylib/actions/compute.py:352
+#: pylib/actions/compute.py:418
 #, python-brace-format
 msgid "No absolute value found in {}"
 msgstr "Je n'ai pas trouvé de valeur absolue dans {}"
 
-#: pylib/actions/compute.py:374
+#: pylib/actions/compute.py:440
 msgid "Select only one object at a time"
 msgstr "Sélectionner un seul objet à la fois"
 
-#: pylib/actions/compute.py:383
+#: pylib/actions/compute.py:449
 msgid "Target simplified"
 msgstr "Le but a été simplifié"
 
-#: pylib/actions/compute.py:384
+#: pylib/actions/compute.py:450
 #, python-brace-format
 msgid "Property {} simplified"
 msgstr "La propriété {} a été simplifiée"
 
-#: pylib/actions/compute.py:386
+#: pylib/actions/compute.py:452
 msgid "Unable to simplify"
 msgstr "Je ne sais pas simplifier ceci"
 
-#: pylib/actions/exceptions.py:136
+#: pylib/actions/exceptions.py:137
 msgid "Missing selection"
 msgstr "Sélection manquante"
 
-#: pylib/actions/exceptions.py:137
+#: pylib/actions/exceptions.py:138
 msgid "(the logical calculator is not activated)"
 msgstr "(la calculatrice logique n'est pas activée)"
 
-#: pylib/actions/exceptions.py:147
-msgid "Apply a universal context property"
+#: pylib/actions/exceptions.py:148
+#, fuzzy
+#| msgid "Apply a universal context property"
+msgid "Apply a context universal property"
 msgstr "Appliquer une propriété universelle du contexte"
 
 #: pylib/actions/exceptions.py:150
 msgid "Apply a universal statement"
 msgstr "Appliquer un énoncé universel"
 
-#: pylib/actions/exceptions.py:153
+#: pylib/actions/exceptions.py:159
 msgid "Provide a witness for an existential property"
 msgstr "Fournir un témoin pour une propriété existentielle"
 
-#: pylib/actions/exceptions.py:156
+#: pylib/actions/exceptions.py:162
 #, python-brace-format
 msgid "Introduce the new object {}"
 msgstr "Introduire le nouvel objet {}"
 
-#: pylib/actions/exceptions.py:158
+#: pylib/actions/exceptions.py:164
 msgid "Introduce a new sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/exceptions.py:160
+#: pylib/actions/exceptions.py:166
 msgid "Enter a property"
 msgstr "Entrez une propriété"
 
-#: pylib/actions/exceptions.py:162 pylib/actions/logic.py:1043
-#: pylib/actions/proofs.py:250
+#: pylib/actions/exceptions.py:168 pylib/actions/logic.py:1043
+#: pylib/actions/proofs.py:251
 msgid "Proof by cases"
 msgstr "Preuve par cas"
 
-#: pylib/actions/exceptions.py:164
+#: pylib/actions/exceptions.py:170
 msgid "Define an object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/exceptions.py:166
+#: pylib/actions/exceptions.py:172
 msgid "Apply a function"
 msgstr "Appliquer une fonction"
 
-#: pylib/actions/exceptions.py:170
+#: pylib/actions/exceptions.py:176
 msgid "Complete hypothesis and goal"
 msgstr "Compléter l'hypothèse et le but"
 
-#: pylib/actions/exceptions.py:172 pylib/actions/exceptions.py:359
-#: pylib/actions/exceptions.py:383
+#: pylib/actions/exceptions.py:178 pylib/actions/exceptions.py:373
+#: pylib/actions/exceptions.py:397
 msgid "Complete goal"
 msgstr "Compléter le but"
 
-#: pylib/actions/exceptions.py:174
+#: pylib/actions/exceptions.py:180
 msgid "Complete hypothesis"
 msgstr "Compléter l'hypothèse"
 
-#: pylib/actions/exceptions.py:178
+#: pylib/actions/exceptions.py:184
 msgid "Apply the universal context property:"
 msgstr "Appliquer la propriété universelle du contexte :"
 
-#: pylib/actions/exceptions.py:180
+#: pylib/actions/exceptions.py:187
 msgid "Apply the universal statement:"
 msgstr "Appliquer l'énoncé universel :"
 
-#: pylib/actions/exceptions.py:182
+#: pylib/actions/exceptions.py:196
 msgid "Provide a witness for the existential property:"
 msgstr "Fournir un témoin pour la propriété existentielle :"
 
-#: pylib/actions/exceptions.py:184
+#: pylib/actions/exceptions.py:198
 msgid "State a new sub-goal:"
 msgstr "Introduire un but intermédiaire :"
 
-#: pylib/actions/exceptions.py:186
+#: pylib/actions/exceptions.py:200
 #, python-brace-format
 msgid "Enter the element of {} on which the function will be applied:"
 msgstr "Entrer l’élément de {} sur lequel la fonction sera appliquée :"
 
-#: pylib/actions/exceptions.py:192
+#: pylib/actions/exceptions.py:206
 msgid "Enter a property:"
 msgstr "Entrez une propriété :"
 
-#: pylib/actions/exceptions.py:194
+#: pylib/actions/exceptions.py:208
 #, python-brace-format
 msgid "Introduce a new object: {} = ?"
 msgstr "Introduire un nouvel objet : {} = ?"
 
-#: pylib/actions/exceptions.py:200
+#: pylib/actions/exceptions.py:214
 #, python-brace-format
 msgid "Enter {}:"
 msgstr "Entrer {} :"
 
-#: pylib/actions/exceptions.py:202
+#: pylib/actions/exceptions.py:216
 msgid "Enter an object:"
 msgstr "Entrer un objet"
 
-#: pylib/actions/exceptions.py:305 pylib/actions/exceptions.py:316
+#: pylib/actions/exceptions.py:319 pylib/actions/exceptions.py:330
 #, python-brace-format
 msgid "Which object plays the role of {}?"
 msgstr "Quel objet joue le rôle de {} ?"
 
-#: pylib/actions/exceptions.py:307
+#: pylib/actions/exceptions.py:321
 msgid "To which object shall we apply this property?"
 msgstr "A quel objet allons-nous appliquer cette propriété ?"
 
-#: pylib/actions/exceptions.py:360 pylib/actions/exceptions.py:384
+#: pylib/actions/exceptions.py:374 pylib/actions/exceptions.py:398
 #, python-brace-format
 msgid "Complete hypothesis {}"
 msgstr "Compléter l'hypothèse {}"
 
-#: pylib/actions/exceptions.py:376
+#: pylib/actions/exceptions.py:390
 msgid "Complete your joker"
 msgstr "Compléter votre joker"
 
-#: pylib/actions/exceptions.py:400
+#: pylib/actions/exceptions.py:414
 msgid "a property"
 msgstr "une propriété"
 
-#: pylib/actions/exceptions.py:403
+#: pylib/actions/exceptions.py:417
 #, python-brace-format
 msgid "Go into 'use mode' to make use of {} of the context"
 msgstr "Passer en 'Mode Utiliser' pour utiliser {} du contexte"
 
-#: pylib/actions/exceptions.py:406
+#: pylib/actions/exceptions.py:420
 #, python-brace-format
 msgid "Press the 'use' button to make use of {} of the context"
 msgstr "Appuyer sur le bouton 'Utiliser' pour utiliser {} du contexte"
 
-#: pylib/actions/exceptions.py:415
+#: pylib/actions/exceptions.py:429
 msgid "the goal"
 msgstr "le but"
 
-#: pylib/actions/exceptions.py:418
+#: pylib/actions/exceptions.py:432
 #, python-brace-format
 msgid "Go into 'prove mode' to prove {}"
 msgstr "Passer en 'Mode Démontrer' pour démontrer {}"
 
-#: pylib/actions/exceptions.py:420
+#: pylib/actions/exceptions.py:434
 #, python-brace-format
 msgid "Press the 'prove' button to prove {}"
 msgstr "Appuyer sur le bouton 'Démontrer' pour démontrer {}"
 
-#: pylib/actions/exceptions.py:448
+#: pylib/actions/exceptions.py:462
 msgid "Select at least one object, one property or the target"
 msgstr "Sélectionner au moins un objet, une propriété ou bien le but"
 
-#: pylib/actions/exceptions.py:452
+#: pylib/actions/exceptions.py:466
 msgid "I do not know what to do with this selection"
 msgstr "Je n’ai pas compris ce que vous voulez faire :-("
 
-#: pylib/actions/generic.py:56
+#: pylib/actions/generic.py:59
 msgid "Definition applied to target"
 msgstr "Définition appliquée au but"
 
-#: pylib/actions/generic.py:57
+#: pylib/actions/generic.py:60
 msgid "Definition applied to"
 msgstr "Définition appliquée à"
 
-#: pylib/actions/generic.py:59
+#: pylib/actions/generic.py:62
 msgid "Theorem applied to target"
 msgstr "Théorème appliqué au but"
 
-#: pylib/actions/generic.py:60
+#: pylib/actions/generic.py:63
 msgid "Theorem applied to"
 msgstr "Théorème appliqué à"
 
-#: pylib/actions/generic.py:62
+#: pylib/actions/generic.py:65
 msgid "Exercise applied to target"
 msgstr "Exercice appliqué au but"
 
-#: pylib/actions/generic.py:63
+#: pylib/actions/generic.py:66
 msgid "Exercise applied to"
 msgstr "Exercice appliqué à"
 
-#: pylib/actions/generic.py:107
+#: pylib/actions/generic.py:110
 msgid "Definition added to the context"
 msgstr "Définition ajoutée au contexte"
 
-#: pylib/actions/generic.py:109
+#: pylib/actions/generic.py:112
 msgid "Theorem added to the context"
 msgstr "Théorème ajouté au contexte"
 
-#: pylib/actions/generic.py:111
+#: pylib/actions/generic.py:114
 msgid "Exercise added to the context"
 msgstr "Exercice ajouté au contexte"
 
-#: pylib/actions/generic.py:140
+#: pylib/actions/generic.py:143
 msgid "Unable to apply definition"
 msgstr "La définition n’a pas pu être appliquée"
 
-#: pylib/actions/generic.py:179
+#: pylib/actions/generic.py:183
 msgid "Target replaced by applying theorem"
 msgstr "Le but a été remplacé en appliquant le théorème"
 
-#: pylib/actions/generic.py:191
+#: pylib/actions/generic.py:195
 msgid "Target replaced by applying theorem to "
 msgstr "Le but a été remplacé en appliquant le théorème à "
 
-#: pylib/actions/generic.py:197
+#: pylib/actions/generic.py:201
 msgid "Theorem"
 msgstr "Théorème"
 
-#: pylib/actions/generic.py:197
+#: pylib/actions/generic.py:201
 msgid "applied to"
 msgstr "appliqué à"
 
-#: pylib/actions/generic.py:209
+#: pylib/actions/generic.py:213
 msgid "Unable to apply theorem"
 msgstr "Le théorème n’a pas pu être appliqué"
 
-#: pylib/actions/generic.py:259
+#: pylib/actions/generic.py:269
 msgid "Select at least one property"
 msgstr "Sélectionner au moins une propriété"
 
@@ -2035,78 +2037,78 @@ msgstr "On ne peut pas conclure tant qu'il reste des jokers dans le but"
 msgid "I don't know how to conclude"
 msgstr "Je ne sais pas comment conclure"
 
-#: pylib/actions/proofs.py:96
+#: pylib/actions/proofs.py:97
 msgid "Case-based reasoning"
 msgstr "Raisonnement par cas"
 
-#: pylib/actions/proofs.py:97
+#: pylib/actions/proofs.py:98
 msgid "Proof by contraposition"
 msgstr "Preuve par contraposée"
 
-#: pylib/actions/proofs.py:98 pylib/proof_tree/proof_tree.py:565
+#: pylib/actions/proofs.py:99 pylib/proof_tree/proof_tree.py:565
 msgid "Proof by contradiction"
 msgstr "Preuve par l’absurde"
 
-#: pylib/actions/proofs.py:99 pylib/actions/proofs.py:355
+#: pylib/actions/proofs.py:100 pylib/actions/proofs.py:355
 msgid "Proof by induction"
 msgstr "Preuve par récurrence"
 
-#: pylib/actions/proofs.py:100
+#: pylib/actions/proofs.py:101
 msgid "Admit current sub-goal!"
 msgstr "Admettre le but en cours !"
 
-#: pylib/actions/proofs.py:192
+#: pylib/actions/proofs.py:193
 #: pylib/coursedata/course_metadata_translations.py:34
 msgid "Proof methods"
 msgstr "Méthodes de preuve…"
 
-#: pylib/actions/proofs.py:193
+#: pylib/actions/proofs.py:194
 msgid "Which proof method?"
 msgstr "Quelle méthode de preuve ?"
 
-#: pylib/actions/proofs.py:255
+#: pylib/actions/proofs.py:256
 msgid "Selected property is not a disjunction"
 msgstr "La propriété sélectionnée n’est pas une disjonction ‘P OU Q’"
 
-#: pylib/actions/proofs.py:278
+#: pylib/actions/proofs.py:279
 msgid "Target replaced by contrapositive"
 msgstr "Le but est remplacé par sa contraposée"
 
-#: pylib/actions/proofs.py:281
+#: pylib/actions/proofs.py:282
 msgid "Proof by contraposition only applies when target is an implication"
 msgstr ""
 "La preuve par contraposée n’est pas possible, le but n’est pas une "
 "implication"
 
-#: pylib/actions/proofs.py:289
+#: pylib/actions/proofs.py:290
 #, python-brace-format
 msgid "Proof by contraposition with hypothesis {}"
 msgstr "Preuve par contraposée avec l’hypothèse {}"
 
-#: pylib/actions/proofs.py:293
+#: pylib/actions/proofs.py:294
 msgid "Selected object should be a property"
 msgstr "L’objet sélectionné devrait être une propriété"
 
-#: pylib/actions/proofs.py:296
+#: pylib/actions/proofs.py:297
 msgid "There should be at most one selected property"
 msgstr "Il devrait y avoir au plus une propriété selctionnée"
 
-#: pylib/actions/proofs.py:310
+#: pylib/actions/proofs.py:311
 msgid "Negation of target added to the context"
 msgstr "La négation du but est ajoutée au contexte"
 
-#: pylib/actions/proofs.py:313
+#: pylib/actions/proofs.py:314
 msgid "Proof by contradiction only applies to target"
 msgstr "La preuve par l’absurde ne s’applique qu’au but"
 
-#: pylib/actions/proofs.py:328
+#: pylib/actions/proofs.py:329
 msgid ""
 "Proof by induction only applies to prove a universal property '∀n∈ℕ, P(n)'"
 msgstr ""
 "La preuve par récurrence ne peut démontrer qu'une propriété universelle "
 "'∀n∈ℕ, P(n)'"
 
-#: pylib/actions/proofs.py:343
+#: pylib/actions/proofs.py:344
 msgid "proof by induction does not apply"
 msgstr "Impossible de faire une preuve par récurrence"
 
@@ -2118,76 +2120,76 @@ msgstr "Initialisation"
 msgid "Induction step"
 msgstr "Hérédité"
 
-#: pylib/actions/proofs.py:375
+#: pylib/actions/proofs.py:380
 msgid "This is pertinent only when there are several targets"
 msgstr "Cette méthode est utile seulement lorsqu'il y a plusieurs buts"
 
-#: pylib/actions/proofs.py:388
+#: pylib/actions/proofs.py:393
 msgid "Select a property \"∀ x, ∃ y, P(x,y)\" to get a function"
 msgstr ""
 "Sélectionner une propriété du type « ∀ x, ∃ y, P(x,y) » pour obtenir une "
 "fonction"
 
-#: pylib/actions/proofs.py:389
+#: pylib/actions/proofs.py:394
 #, python-brace-format
 msgid "Function {} and property {} added to the context"
 msgstr "La fonction {} et la propriété {} sont ajoutées au contexte"
 
-#: pylib/actions/proofs.py:435
+#: pylib/actions/proofs.py:440
 msgid "Object"
 msgstr "Objet"
 
-#: pylib/actions/proofs.py:435
+#: pylib/actions/proofs.py:440
 msgid "Introduce a new object"
 msgstr "Introduire un nouvel objet"
 
-#: pylib/actions/proofs.py:436
+#: pylib/actions/proofs.py:441
 msgid "Goal"
 msgstr "But"
 
-#: pylib/actions/proofs.py:436
+#: pylib/actions/proofs.py:441
 msgid "Introduce a new intermediate sub-goal"
 msgstr "Introduire un but intermédiaire"
 
-#: pylib/actions/proofs.py:438
+#: pylib/actions/proofs.py:443
 msgid "Function"
 msgstr "Fonction"
 
-#: pylib/actions/proofs.py:438
+#: pylib/actions/proofs.py:443
 msgid "Introduce a new function"
 msgstr "Introduire une nouvelle fonction"
 
-#: pylib/actions/proofs.py:441
+#: pylib/actions/proofs.py:446
 msgid "Choose what to introduce:"
 msgstr "Choisissez :"
 
-#: pylib/actions/proofs.py:446
+#: pylib/actions/proofs.py:451
 msgid "New notation"
 msgstr "Nouvelle notation"
 
-#: pylib/actions/proofs.py:447
+#: pylib/actions/proofs.py:452
 msgid "Choose a notation for your new object:"
 msgstr "Choisissez une notation pour votre nouvel objet :"
 
-#: pylib/actions/proofs.py:455
+#: pylib/actions/proofs.py:460
 msgid "This name already exists, please give a new name:"
 msgstr "Ce nom existe déjà, choisissez un nouveau nom:"
 
-#: pylib/actions/proofs.py:477
+#: pylib/actions/proofs.py:482
 #, python-brace-format
 msgid "New object {} added to the context"
 msgstr "Nouvel objet {} ajouté au contexte"
 
-#: pylib/actions/proofs.py:482
+#: pylib/actions/proofs.py:487
 msgid "You might try the ∀ button..."
 msgstr "Vous pouvez essayer le bouton ‘∀’…"
 
-#: pylib/actions/proofs.py:570
+#: pylib/actions/proofs.py:575
 #, python-brace-format
 msgid "You cannot use {} to define {}!"
 msgstr "On ne peut pas utiliser {} pour définir {} !"
 
-#: pylib/actions/proofs.py:577
+#: pylib/actions/proofs.py:582
 #, python-brace-format
 msgid ""
 "You cannot use variable {} to define {}, since it did not exist when {} was "
@@ -2196,7 +2198,7 @@ msgstr ""
 "impossible d'utiliser la variable {} pour définir {}, puisqu'elle a été "
 "introduite après la création de {}"
 
-#: pylib/actions/proofs.py:580
+#: pylib/actions/proofs.py:585
 #, python-brace-format
 msgid ""
 "You cannot use variables {} to define {}, since they did not exist when {} "
@@ -2205,44 +2207,44 @@ msgstr ""
 "impossible d'utiliser les variables {} pour définir {}, puisqu'elles ont été "
 "introduites après la création de {}"
 
-#: pylib/actions/proofs.py:601 pylib/actions/proofs.py:729
+#: pylib/actions/proofs.py:606 pylib/actions/proofs.py:734
 msgid "There is nothing to complete"
 msgstr "Il n'y a rien à compléter"
 
-#: pylib/actions/proofs.py:620
+#: pylib/actions/proofs.py:625
 msgid "Complete the equality to replace the joker"
 msgstr "Compléter l'égalité pour remplacer le joker"
 
-#: pylib/actions/proofs.py:628
+#: pylib/actions/proofs.py:633
 msgid "Unexpected user input"
 msgstr "Entrée utilisateur inattendue"
 
-#: pylib/actions/proofs.py:644
+#: pylib/actions/proofs.py:649
 msgid "Let us try "
 msgstr "Essayons "
 
-#: pylib/actions/proofs.py:750
+#: pylib/actions/proofs.py:755
 msgid "No joker completed"
 msgstr "Aucun joker n'a été complété"
 
-#: pylib/actions/proofs.py:919
+#: pylib/actions/proofs.py:924
 msgid "Your proposal is correct!"
 msgstr "Votre proposition est correcte !"
 
-#: pylib/actions/proofs.py:922
+#: pylib/actions/proofs.py:927
 msgid "Everything you entered is correct!"
 msgstr "Tout ce que vous avez proposé est correct!"
 
-#: pylib/actions/proofs.py:956
+#: pylib/actions/proofs.py:961
 msgid "There is no syntax error but I suspect it is not correct"
 msgstr ""
 "Il n'y a pas d'erreur de syntaxe mais je soupçonne que ça n'est pas correct"
 
-#: pylib/actions/proofs.py:958 pylib/actions/proofs.py:981
+#: pylib/actions/proofs.py:963 pylib/actions/proofs.py:986
 msgid "Error: "
 msgstr "Erreur : "
 
-#: pylib/actions/proofs.py:979 pylib/actions/proofs.py:985
+#: pylib/actions/proofs.py:984 pylib/actions/proofs.py:990
 msgid "I do not understand your proposal, maybe a syntax error?"
 msgstr ""
 "Je ne comprends pas votre proposition, peut-être une erreur de syntaxe ?"
@@ -2356,6 +2358,18 @@ msgstr "théorème"
 #: pylib/coursedata/exercise_classes.py:570
 msgid "exercise"
 msgstr "exercice"
+
+#: pylib/coursedata/exercise_classes.py:575
+msgid "the definition"
+msgstr "la définition"
+
+#: pylib/coursedata/exercise_classes.py:577
+msgid "the theorem"
+msgstr "le théorème"
+
+#: pylib/coursedata/exercise_classes.py:579
+msgid "the exercise"
+msgstr "l'exercice"
 
 #: pylib/marked_pattern_math_object/calculator_pattern_strings.py:203
 msgid "Bound variables"
@@ -4235,6 +4249,9 @@ msgstr "d∃∀duction"
 #: share/applications/deaduction.desktop:4
 msgid "Run dEAduction"
 msgstr "Démarrer d∃∀duction"
+
+#~ msgid "Select only one object"
+#~ msgstr "Sélectionner un seul objet"
 
 #~ msgid "for the goal"
 #~ msgstr "pour le but"

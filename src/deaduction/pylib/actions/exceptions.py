@@ -76,6 +76,7 @@ class CalculatorRequest(IntEnum):
 
     ApplyProperty = 0
     ApplyStatement = 10
+    ApplyTriangularInequality = 11
     ProveExists = 20
 
     # Prop entry
@@ -144,10 +145,15 @@ class MissingCalculatorOutput(MissingParametersError):
 
         if self.request_type is CalculatorRequest.ApplyProperty:
             # self.prop = prop
-            self.title = _("Apply a universal context property")
+            self.title = _("Apply a context universal property")
         elif self.request_type is CalculatorRequest.ApplyStatement:
-            # self.statement = statement
             self.title = _("Apply a universal statement")
+            # statement = self.statement
+            # if statement:
+            #     name = statement.pretty_name
+            #     if name:
+            #         the_type = statement.the_type
+            #         self.title = _("Apply") + " " + the_type + " " + name
         elif self.request_type is CalculatorRequest.ProveExists:
             self.prop = prop if prop else proof_step.goal.target.math_type
             self.title = _("Provide a witness for an existential property")
@@ -177,7 +183,15 @@ class MissingCalculatorOutput(MissingParametersError):
         if self.request_type is CalculatorRequest.ApplyProperty:
             title = _("Apply the universal context property:")
         elif self.request_type is CalculatorRequest.ApplyStatement:
+            # Default title:
             title = _("Apply the universal statement:")
+            statement = self.statement
+            if statement:
+                name = statement.pretty_name
+                if name:
+                    the_type = statement.the_type
+                    title = _("Apply") + " " + the_type + " " + name
+
         elif self.request_type is CalculatorRequest.ProveExists:
             title = _("Provide a witness for the existential property:")
         elif self.request_type is CalculatorRequest.StateSubGoal:
