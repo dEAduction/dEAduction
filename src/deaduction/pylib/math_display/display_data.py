@@ -286,7 +286,7 @@ class MathDisplay:
     lean_from_node = {
         # "PLACE_HOLDER": (r'__',),
         # "GENERIC_PARENTHESES": ('(', 0, ')'),
-        "COE": ("↥", 0,),
+        "COE": ("↑", 0,),
         "LOCAL_CONSTANT": (display_name,),
         "CONSTANT": ("@", display_name),  # e.g. @composition
         "QUANT_∀": (r"\forall", 1, ": ", 0, ", ", 2),
