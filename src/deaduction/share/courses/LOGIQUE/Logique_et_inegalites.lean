@@ -50,7 +50,9 @@ le but ou sa négation.
 open_question = true
 available_exercises = "NONE"
 available_logic = "ALL -not"
+available_statements = "ALL - definition.even definition.odd theorem.not_even_is_odd"
 [settings]
+logic.usr_name_new_vars = true
 logic.usr_jokers_available = true
 logic.use_color_for_applied_properties = false
 functionality.allow_induction = false
@@ -182,11 +184,54 @@ end
 
 end negation
 
+
+namespace parite
+
+def even (a: ℕ) := ∃ b, a = 2*b 
+
+def odd (a: ℕ) := ∃ b, a = 2*b + 1 
+
+lemma definition.even {a: ℕ} : (even a) ↔ ∃ b, a = 2*b :=
+/- dEAduction
+pretty_name = "Pair"
+implicit_use = true
+-/
+begin
+  refl
+end
+
+-- lemma auxiliary_theorem.nat_odd {a: IntegerSubGroup} : (odd a) ↔ ∃ b, a = 2*b + 1:=
+-- begin
+--   todo
+-- end
+
+lemma definition.odd {a: ℕ} : (odd a) ↔ ∃ b, a = 2*b + 1 :=
+/- dEAduction
+pretty_name = "Impair"
+implicit_use = true
+auxiliary_definitions = "auxiliary_theorem.nat_odd"
+-/
+begin
+  refl
+end
+
+lemma theorem.not_even_is_odd {a: ℕ} :
+(not (even a)) ↔ odd a :=
+/- dEAduction
+pretty_name = "Pair et impair"
+-/
+begin
+  todo
+end
+
+
+end parite
+
 namespace exercices
 /- dEAduction
 pretty_name = "Exercices"
 -/
-
+open parite
 
 
 lemma exercise.zero_ou_un : ∀ n:ℕ, (n ≠ 0 or n ≠ 1)
@@ -228,17 +273,6 @@ begin
 end
 
 
-lemma exercise.positif :
-(∀x:ℝ, ∃y:ℝ, x+y >0)
-:=
-/- dEAduction
-pretty_name = "Positif"
--/
-begin
-    todo
-end
-
-
 
 lemma exercise.egalite : ∀ n:ℕ, ∃ m:ℕ, m=n
 :=
@@ -259,6 +293,18 @@ pretty_name = "Egaux à tous !"
 begin
     todo
 end
+
+lemma exercise.grand_paire :
+∀ n_0:ℕ, ∃ n ≥ n_0, ∃ p, n= 2*p
+:=
+/- dEAduction
+pretty_name = "Grands pairs"
+available_statements = "ALL"
+-/
+begin
+    todo
+end
+
 
 -- Marche bien par l'absurde, ou directement
 lemma exercise.tres_petit :
@@ -289,12 +335,13 @@ lemma exercise.tres_petit_3 :
 ∀ a ≥ (0:ℝ), ((∀ ε > (0:ℝ), a ≤ ε) → a = 0)
 :=
 /- dEAduction
-pretty_name = "Trop compliqué !"
+pretty_name = "Trop compliqué ?"
 -/
 begin
     todo
 end
 
+namespace RAB
 
 lemma exercise.entre_deux_entiers :
 ∀x:ℤ, ∀y:ℤ, (x<y → (∃z:ℤ, x < z and z < y))
@@ -316,6 +363,19 @@ pretty_name = "Entre deux réels"
 begin
     todo
 end
+
+
+lemma exercise.positif :
+(∀x:ℝ, ∃y:ℝ, x+y >0)
+:=
+/- dEAduction
+pretty_name = "Somme ositive"
+-/
+begin
+    todo
+end
+
+end RAB
 
 end exercices
 

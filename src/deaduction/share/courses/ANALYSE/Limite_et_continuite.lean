@@ -34,10 +34,10 @@ Des exercices sur les limites des suites
 et la continuité des fonctions
 """
 [settings]
+logic.usr_name_new_vars = true
 logic.usr_jokers_available = true
 logic.use_color_for_applied_properties = true
-logic.usr_name_new_vars = true
-functionality.allow_induction = false
+functionality.allow_induction = true
 functionality.calculator_available = true
 others.Lean_request_method = "from_previous_proof_state"
 -/
@@ -52,6 +52,9 @@ definition converging_seq (u : ℕ → ℝ) : Prop :=
 
 definition limit_plus_infinity (u : ℕ → ℝ) : Prop :=
 ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M
+
+definition limit_minus_infinity (u : ℕ → ℝ) : Prop :=
+∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≤ M
 
 definition increasing_seq (u : ℕ → ℝ) : Prop :=
 ∀ p q , p ≤ q → u p ≤ u q
@@ -223,6 +226,71 @@ begin
   exact abs_of_nonpos,
 end
 
+-- NB: this is used by the corresponding compute button
+-- Lean name should contain "triangular_inequality"
+lemma theorem.triangular_inequality
+(x y : RealSubGroup):
+|x + y| ≤ |x| + |y|
+:= 
+/- dEAduction
+pretty_name = "Inégalité triangulaire"
+-/
+begin
+  exact abs_add x y 
+end
+
+lemma theorem.valeur_absolue_zero :
+∀ x : RealSubGroup,  |x| = 0 ↔ x = 0
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue nulle"
+-/
+begin
+  intro x,
+  exact abs_eq_zero,
+end
+
+lemma theorem.valeur_absolue_positive :
+∀ x : RealSubGroup,  0 ≤ |x|
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue positive"
+-/
+begin
+  exact abs_nonneg
+end
+
+lemma theorem.valeur_absolue_strictement_positive :
+∀ x : RealSubGroup,  (x ≠ 0 →  0 < |x|)
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue strictement positive"
+-/
+begin
+  intro a,
+  exact abs_pos_iff.mpr,
+end
+
+lemma theorem.valeur_absolue_neg :
+∀ x : RealSubGroup, |(-x)| = |x|
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue de l'opposé"
+-/
+begin
+  exact abs_neg,
+end
+
+lemma theorem.valeur_absolue_produit :
+∀ x y : RealSubGroup,  |x * y| = |x| * |y|
+:= 
+/- dEAduction
+pretty_name = "Valeur absolue d'un produit"
+-/
+begin
+  exact abs_mul,
+end
+
 lemma theorem.majoration_valeur_absolue
 (x r : RealSubGroup):
 (abs x < r) ↔ ((-r < x) ∧ (x < r))
@@ -234,26 +302,19 @@ begin
   exact abs_lt
 end
 
-
-lemma theorem.inegalite_triangulaire
-(x y : RealSubGroup):
-|x + y| ≤ |x| + |y|
+lemma theorem.minoration_valeur_absolue
+(x : RealSubGroup):
+(x ≤ abs x)
 := 
 /- dEAduction
-pretty_name = "Inégalité triangulaire"
+pretty_name = "Minoration d'une valeur absolue"
 -/
 begin
-  exact abs_add x y 
-end
-
-lemma theorem.valeur_absolue_produit :
-∀ x y : RealSubGroup,  |x * y| = |x| * |y|
-:= 
-/- dEAduction
-pretty_name = "Valeur absolue d'un produit"
--/
-begin
-  intros x y, exact abs_mul x y 
+  -- by_cases (x≥0),
+  -- rewrite theorem.valeur_absolue_de_positif, assumption,
+  -- rewrite theorem.valeur_absolue_de_negatif,
+  -- push_neg at h, 
+  todo,
 end
 
 end valeur_absolue
@@ -295,6 +356,17 @@ end
 lemma definition.limit_plus_infinity
 {u : ℕ → ℝ} :
 (limit_plus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≥ M := 
+/- dEAduction
+pretty_name = "Limite infinie d'une suite"
+implicit_use = true
+-/
+begin
+  refl
+end
+
+lemma definition.limit_minus_infinity
+{u : ℕ → ℝ} :
+(limit_minus_infinity u) ↔ ∀ M:ℝ, ∃ N:ℕ, ∀ n ≥ N, u n ≤ M := 
 /- dEAduction
 pretty_name = "Limite infinie d'une suite"
 implicit_use = true
@@ -475,7 +547,6 @@ lemma exercise.limit_constante
 converging_seq u :=
 /- dEAduction
 pretty_name = "La limite d'une suite constante !"
-description = "Démontrer, dans un cas très simple, l'existence d'une limite."
 -/
 begin
   todo
@@ -506,28 +577,6 @@ end
 --   todo,
 -- end
 -- end exemples
-lemma exercise.infini_non_majoree
-(u: ℕ → ℝ) (H1: limit_plus_infinity u):
-not (bounded_above u) :=
-/- dEAduction
-pretty_name = "Une suite qui tend vers plus l'infini n'est pas majorée"
-description = "Utiliser une hypothèse de limite (infinie)."
--/
-begin
-  todo
-end
-
-lemma exercise.croissante_non_majoree
-(u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
-limit_plus_infinity u :=
-/- dEAduction
-pretty_name = "Une suite croissante non majorée tend vers plus l'infini"
-description = "Démontrer une propriété de limite infinie."
--/
-begin
-  todo,
-end
-
 
 lemma exercise.limite_positive
 (u : ℕ → ℝ) (l : ℝ) (H : limit u l)
@@ -536,10 +585,6 @@ lemma exercise.limite_positive
 :=
 /- dEAduction
 pretty_name = "Suite dont la limite est strictement positive"
-description = """
-Dans ce troisième exercice,
-il s'agit d'utiliser une hypothèse de limite.
-"""
 -/
 begin
   -- have W := exercise.limit_constante,
@@ -547,6 +592,39 @@ begin
   todo,
 end
 
+lemma exercise.infinie_pas_majoree
+(u: ℕ → ℝ):
+(limit_plus_infinity u → not (bounded_above u))
+or
+((not bounded_above u) → limit_plus_infinity u)
+:=
+/- dEAduction
+pretty_name = "Tendre vers plus l'infini et ne pas être majorée"
+-/
+begin
+  todo,
+end
+
+-- Variante sans la disjonction
+-- lemma exercise.infini_non_majoree
+-- (u: ℕ → ℝ) (H1: limit_plus_infinity u):
+-- not (bounded_above u) :=
+-- /- dEAduction
+-- pretty_name = "Une suite qui tend vers plus l'infini n'est pas majorée"
+-- -/
+-- begin
+--   todo
+-- end
+
+lemma exercise.croissante_non_majoree
+(u: ℕ → ℝ) (H1: increasing_seq u) (H2: not (bounded_above u)) :
+limit_plus_infinity u :=
+/- dEAduction
+pretty_name = "Une suite croissante non majorée tend vers plus l'infini"
+-/
+begin
+  todo,
+end
 
 lemma exercise.limite_inegalites
 (u v: ℕ → ℝ) (l l' : ℝ) (H : limit u l)
@@ -573,6 +651,29 @@ namespace exercices_suites_II
 pretty_name = "Exercices sur les suites II"
 -/
 
+lemma exercise.comparaison_infini
+(u v: ℕ → ℝ) (n_0: ℕ)  (H : limit_plus_infinity u)
+(H' : ∀ n ≥ n_0, u n ≤ v n) :
+limit_plus_infinity v
+:=
+/- dEAduction
+pretty_name = "Comparaison avec une suite qui tend vers l'infini"
+-/
+begin
+  todo,
+end
+
+lemma exercise.plus_ou_moins_infini
+(u: ℕ → ℝ) (n_0: ℕ)  (H : limit_plus_infinity u):
+limit_minus_infinity (λ n, -u n)
+:=
+/- dEAduction
+pretty_name = "L'opposé d'une suite qui tend vers l'infini"
+-/
+begin
+  todo,
+end
+
 lemma exercise.Difference_infinie
 (u v: ℕ → ℝ)  (H : limit_plus_infinity u)
 (H' : bounded_above v) :
@@ -580,16 +681,22 @@ limit_plus_infinity (λn, u n - v n)
 :=
 /- dEAduction
 pretty_name = "Différence d'une suite divergeant vers +∞ et d'une suite majorée"
-description = """
-Nous avons maintenant une limite dans les hypothèses,
-et une limite dans la conclusion !
-"""
 -/
 begin
   todo,
 end
 
-
+lemma exercise.limite_infinie_pas_finie
+(u : ℕ → ℝ):
+limit_plus_infinity u → not (converging_seq u)
+:=
+/- dEAduction
+pretty_name = "Limite infinie et convergence"
+-/
+begin
+--  `[ `[ rw definitions.suites.definition.converging_seq, trace "EFFECTIVE CODE n°1.0"] <|> `[ simp_rw definitions.suites.definition.converging_seq, trace "EFFECTIVE CODE n°1.1"] <|> `[ rw <- definitions.suites.definition.converging_seq, trace "EFFECTIVE CODE n°1.2"] <|> `[ simp_rw <- definitions.suites.definition.converging_seq, trace "EFFECTIVE CODE n°1.3"], `[ simp only [] , trace "EFFECTIVE CODE n°2.0"] <|> `[ skip, trace "EFFECTIVE CODE n°2.1"], all_goals_no_meta_vars, trace "EFFECTIVE CODE n°0.0"] <|> `[ apply_with definitions.suites.definition.converging_seq {md:=reducible}, all_goals_no_meta_vars, trace "EFFECTIVE CODE n°0.1"],
+  todo,
+end
 
 lemma exercise.couper_epsilon_en_deux
 (u : ℕ → ℝ) (l : ℝ) :
@@ -598,10 +705,6 @@ lemma exercise.couper_epsilon_en_deux
 :=
 /- dEAduction
 pretty_name = "Couper les epsilons en deux"
-description = """
-Nous avons maintenant une limite dans les hypothèses,
-et une limite dans la conclusion !
-"""
 -/
 begin
   todo,
@@ -632,8 +735,7 @@ limit (λn, u n + v n) (l+l')
 /- dEAduction
 pretty_name = "Limite d'une somme"
 description = """
-Aide : il peut être judicieux d'utiliser le résultat
-d'un exercice précédent...
+Il peut être judicieux d'utiliser le résultat d'un exercice précédent...
 """
 -/
 
@@ -650,7 +752,7 @@ l = l'
 pretty_name = "Unicité de la limite (*)"
 description = """
 Ici il peut être judicieux de raisonner par l'absurde,
-et de traiter séparément les cas l < l' et l' < l
+et éventuellement de traiter séparément les cas l < l' et l' < l
 """
 -/
 begin

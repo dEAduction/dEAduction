@@ -16,7 +16,7 @@ import deaduction_all_tactics
 import set_definitions
 
 /- dEAduction
-title = "Feuille 1 : quantificateur universel"
+title = "Propriétés universelles, suites croissantes"
 author = "Frédéric Le Roux"
 institution = "Sorbonne Université"
 description = ""
@@ -130,7 +130,7 @@ end
 
 end definitions_suites
 
-namespace lemme_de_calcul
+namespace lemmes_de_calcul
 
 lemma theorem.puissance_somme :
 ∀ a:ℝ, ∀b c: ℕ, a^(b+c) = a^b * a^c :=
@@ -151,23 +151,23 @@ begin
 end
 
 lemma theorem.signe_parite_pair  :
-∀ n:ℕ, ((even n) → ((-1:ℤ)^n = 1 ))
+∀ n:ℕ, ((even n) → ((-1:ℝ)^n = 1 ))
 := 
 /- dEAduction
 pretty_name = "(-1) puissance pair"
 -/
 begin
-   todo
+   todo,
 end
 
 lemma theorem.signe_parite_impair  :
-∀ n:ℕ, ((odd n) → ((-1:ℤ)^n = -1 ))
+∀ n:ℕ, ((odd n) → ((-1:ℝ)^n = -1 ))
 := 
 /- dEAduction
 pretty_name = "(-1) puissance impair"
 -/
 begin
-   todo
+   todo,
 end
 
 lemma theorem.pair_ou_impair :
@@ -184,12 +184,48 @@ begin
    todo
 end
 
+lemma auxiliary_theorem.prod_ineg_var1 (a b c: ℝ) (H: b ≤ c ):
+ (0 < a) → (a*b ≤ a*c)
+:=
+begin
+    intro H1,
+    exact mul_le_mul_of_nonneg_left H (le_of_lt H1),
+end
+
+lemma theorem.prod_ineg (a b c : ℝ) (H: b ≤ c):
+ (0 ≤ a) → (a*b ≤ a*c)
+:=
+/- dEAduction
+pretty_name = "Multiplier une inégalité par un nombre positif"
+auxiliary_definitions = "lemmes_de_calcul.auxiliary_theorem.prod_ineg_var1"
+-/
+begin
+    exact mul_le_mul_of_nonneg_left H,
+end
+
+lemma auxiliary_theorem.prod_ineg2_var1 (a b c: ℝ) (H: b ≤ c ):
+ (a < 0) → (a*c ≤ a*b)
+:=
+begin
+    intro H1,
+    exact mul_le_mul_of_nonpos_left H (le_of_lt H1),
+end
+lemma theorem.prod_ineg_2 (a b c : ℝ) (H: b ≤ c):
+ (a ≤ 0) → (a*c ≤ a*b)
+:=
+/- dEAduction
+pretty_name = "Multiplier une inégalité par un nombre négatif"
+auxiliary_definitions = "lemmes_de_calcul.auxiliary_theorem.prod_ineg2_var1"
+-/
+begin
+    todo
+end
+
 lemma theorem.prodpos (a:ℝ) (b:ℝ) :
  (( 0 ≤ a ) and (0 ≤ b )) → (0 ≤  a*b )
 :=
 /- dEAduction
 pretty_name = "Produit nombres positifs"
-implicit_use = true
 -/
 begin
     todo
@@ -200,7 +236,6 @@ lemma theorem.sompos (a:ℝ) (b:ℝ) :
 :=
 /- dEAduction
 pretty_name = "Somme nombres positifs"
-implicit_use = true
 -/
 begin
     todo
@@ -211,8 +246,14 @@ lemma theorem.carrepos  :
 :=
 /- dEAduction
 pretty_name = "Carrés positifs"
-implicit_use = true
 -/
+begin
+    todo
+end
+
+lemma auxiliary_theorem.ineg_nat (m n:ℕ):
+ m ≤ n ↔  (0 ≤ n-m)
+:=
 begin
     todo
 end
@@ -222,24 +263,33 @@ lemma theorem.ineg (a:ℝ) (b:ℝ) :
 :=
 /- dEAduction
 pretty_name = "Inégalité"
-implicit_use = true
+auxiliary_definitions = "auxiliary_theorem.ineg_nat"
 -/
 begin
     todo
 end
 
-lemma theorem.identite :
-∀ a:ℝ, ∀ b:ℝ,  a^3 - b^3 = (a-b)*(a^2 +a*b +b^2)
+lemma theorem.identite2 :
+∀ a:ℝ, ∀ b:ℝ,  a^2 - b^2 = (a-b)*(a+b)
 :=
 /- dEAduction
-pretty_name = "Différence de deux cubes"
+pretty_name = "Différence de deux carrés"
 -/
 begin
   todo
 end
 
-end lemme_de_calcul
+-- lemma theorem.identite3 :
+-- ∀ a:ℝ, ∀ b:ℝ,  a^3 - b^3 = (a-b)*(a^2 +a*b +b^2)
+-- :=
+-- /- dEAduction
+-- pretty_name = "Différence de deux cubes"
+-- -/
+-- begin
+--   todo
+-- end
 
+end lemmes_de_calcul
 
 namespace utiliser_pour_tout
 /- dEAduction
@@ -317,6 +367,8 @@ begin
     todo
 end
 
+-- pb here: (-1)^2 = 1 succeeds in rewriting only if (-1:real), not (-1:int).
+set_option trace.simplify false
 lemma exercise.periodique (u: ℕ → ℝ) (H: ∀n, u n =  (-1) ^n):
 periodique u 2
 :=
@@ -324,42 +376,55 @@ periodique u 2
 pretty_name = "Démontrer qu'une suite est periodique"
 -/
 begin
---     rw definitions_suites.definition.suite_periodique, intro n,
--- rw H, trace "EFFECTIVE CODE n°1.0", trace "EFFECTIVE CODE n°0.0", no_meta_vars,
--- rw H, trace "EFFECTIVE CODE n°4.0", trace "EFFECTIVE CODE n°3.0", no_meta_vars,
--- rw lemme_de_calcul.theorem.puissance_somme, trace "EFFECTIVE CODE n°7.0", trace "EFFECTIVE CODE n°8.1", trace "EFFECTIVE CODE n°6.0",
--- have H_0 := @lemme_de_calcul.theorem.signe_parite_pair ((2: @nat)),
--- have H_1: (even (2: @nat)),
--- apply_with lemme_de_calcul.theorem.deux_est_pair {md:=reducible},
--- have H_2 := H_0 H_1, trace "EFFECTIVE CODE n°13.0",
--- `[ `[ rw H_2, trace "EFFECTIVE CODE n°15.0"] <|> `[ simp_rw H_2, trace "EFFECTIVE CODE n°15.1"], trace "EFFECTIVE CODE n°14.0"] <|> `[ `[ rw <- H_2, trace "EFFECTIVE CODE n°16.0"] <|> `[ simp_rw <- H_2, trace "EFFECTIVE CODE n°16.1"], trace "EFFECTIVE CODE n°14.1"],
-  todo
+    -- rw definitions_suites.definition.suite_periodique, trace "EFFECTIVE CODE n°103.0", trace "EFFECTIVE CODE n°104.1", trace "EFFECTIVE CODE n°102.0",
+    -- simp_rw H, trace "EFFECTIVE CODE n°106.1", trace "EFFECTIVE CODE n°105.0", no_meta_vars,
+    -- intro n,
+    -- rw lemmes_de_calcul.theorem.puissance_somme, trace "EFFECTIVE CODE n°120.0", trace "EFFECTIVE CODE n°121.1", trace "EFFECTIVE CODE n°119.0",
+    -- have H_0 := @lemmes_de_calcul.theorem.signe_parite_pair ((2: @nat)),
+    -- have H_1: (even (2: @nat)),
+    -- apply_with lemmes_de_calcul.theorem.deux_est_pair {md:=reducible},
+    -- have H_2 := H_0 H_1, trace "EFFECTIVE CODE n°133.0",
+    -- have H_2b : (-1:ℝ)^2 = 1, rotate,
+    -- rw H_2,
+    todo,
 end
 
 -- Faut-il ajouter des lemmes de calcul pour celui-ci ?
-lemma exercise.monotoneaffine  :
-∀ a:ℝ, ∀ b:ℝ,
-croissante (λ n , a*n+b) or decroissante (λ n, a*n + b)
-:=
-/- dEAduction
-pretty_name = "Les fonctions affines sont croissantes ou décroissantes"
-description = """Distinguez deux cas à l'aide du bouton Méthodes de Preuves.
-Et utilisez le bouton ∨ ("ou") pour démontrer une disjonction."""
--/
-begin
-    todo 
-end
+-- lemma exercise.monotoneaffine  :
+-- ∀ a:ℝ, ∀ b:ℝ,
+-- croissante (λ n , a*n+b) or decroissante (λ n, a*n + b)
+-- :=
+-- /- dEAduction
+-- pretty_name = "Les fonctions affines sont croissantes ou décroissantes"
+-- description = """Distinguez deux cas à l'aide du bouton Méthodes de Preuves.
+-- Et utilisez le bouton ∨ ("ou") pour démontrer une disjonction."""
+-- -/
+-- begin
+-- -- intro a,
+-- -- intro b,
+-- -- cases (classical.em ((0: @real) ≤ a)) with H_0 H_1,
+-- -- left,
+-- -- rw definitions_suites.definition.suite_croissante2,
+-- -- intro n,
+-- -- intro p,
+-- -- intro H_1,
+-- -- -- have H_2 := @lemmes_de_calcul.theorem.prod_ineg (a) (n) (p),
+-- -- -- have H_3 := H_2 H_0,
+-- --     norm_num at H_2 H_3, norm_num,
+-- --     compute_n 10,
 
-lemma exercise.croissantecube   (u : ℕ → ℝ ) (H : ∀ n, u n = n^3 ) :
-croissante u
-:=
-/- dEAduction
-pretty_name = "(*) La fonction cube est croissante"
-description = "Utiliser les énoncés fournis pour démontrer l'inégalité recherchée"
--/
-begin
-    todo
-end
+-- end
+
+-- lemma exercise.croissantecube   (u : ℕ → ℝ ) (H : ∀ n, u n = n^3 ) :
+-- croissante u
+-- :=
+-- /- dEAduction
+-- pretty_name = "(*) La fonction cube est croissante"
+-- description = "Utiliser les énoncés fournis pour démontrer l'inégalité recherchée"
+-- -/
+-- begin
+--     todo
+-- end
 
 end demontrer_pour_tout
 
@@ -407,12 +472,11 @@ begin
 end
 
 lemma exercise.definitions_croissante (u: ℕ→ ℝ):
-(∀ n, u n ≤ u (n+1)) ↔ 
-( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))
+ ( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))→ 
+(∀ n, u n ≤ u (n+1))
 :=
 /- dEAduction
-pretty_name = "Deux définitions de suites croissance"
-description = """Choisissez la bonne Méthode de preuve..."""
+pretty_name = "Deux définitions équivalentes de suites croissance, I"
 -/
 begin
 -- split,
@@ -434,17 +498,43 @@ begin
 end
 
 lemma exercise.definitions_croissante_reciproque (u: ℕ→ ℝ):
- ( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))→ 
-(∀ n, u n ≤ u (n+1))
+(∀ n, u n ≤ u (n+1)) → 
+( ∀ m:ℕ, (∀ n, ( u m ≤ u (m+n) )))
 :=
 /- dEAduction
-pretty_name = "Réciproque"
+pretty_name = "Deux définitions équivalentes de suites croissance, II"
+description = "Choisissez la bonne Méthode de preuve..."
 -/
 begin
   todo
 end
 
 end utiliser_et_demontrer
+
+namespace utiliser_des_lemmes_de_calcul
+
+-- Ca marche, mais est-ce utile ?
+lemma exercise.croissante_n_carre (u: ℕ → ℝ) (H: ∀n, u n = n^2):
+croissante u
+:=
+/- dEAduction
+pretty_name = "Démontrer qu'une suite est croissante"
+description = "Ici, il va falloir utiliser les lemmes de calcul pour décomposer le problème"
+-/
+begin
+--     rw definitions_suites.definition.suite_croissante1, trace "EFFECTIVE CODE n°1.0", trace "EFFECTIVE CODE n°2.1", trace "EFFECTIVE CODE n°0.0",
+-- intro n,
+-- rw H, trace "EFFECTIVE CODE n°4.0", trace "EFFECTIVE CODE n°3.0", no_meta_vars,
+-- rw H, trace "EFFECTIVE CODE n°7.0", trace "EFFECTIVE CODE n°6.0", no_meta_vars,
+-- rw lemmes_de_calcul.theorem.ineg, trace "EFFECTIVE CODE n°15.0", trace "EFFECTIVE CODE n°16.1", trace "EFFECTIVE CODE n°14.0",
+-- rw lemmes_de_calcul.theorem.identite2,
+-- apply lemmes_de_calcul.theorem.prodpos, split,
+-- norm_num,
+-- ????
+    todo,
+end
+
+end utiliser_des_lemmes_de_calcul
 
 namespace definitions_fonctions
 /- dEAduction
@@ -460,7 +550,7 @@ end
 
 def croissante_f ( f : ℝ → ℝ )  := ∀ x : ℝ, ∀ y : ℝ, ( x ≤ y) → (f x ≤ f y )
 
-lemma definition.croissante ( f : ℝ → ℝ ) :
+lemma definition.croissante_f ( f : ℝ → ℝ ) :
 croissante_f f ↔ ∀ x : ℝ, ∀ y : ℝ, ( x ≤ y) → (f x ≤ f y )
 :=
 /- dEAduction
@@ -473,7 +563,7 @@ end
 
 def decroissante_f ( f : ℝ → ℝ )  := ∀ x : ℝ, ∀ y : ℝ, ( x ≤ y) → (f y ≤ f x )
 
-lemma definition.decroissante ( f : ℝ → ℝ ) :
+lemma definition.decroissante_f ( f : ℝ → ℝ ) :
 decroissante_f f ↔ ∀ x : ℝ, ∀ y : ℝ, ( x ≤ y) → (f y ≤ f x )
 :=
 /- dEAduction
@@ -493,9 +583,23 @@ pretty_name = "Fonctions croissantes et décroissantes"
 -/
 open definitions_fonctions
 
+lemma exercise.monotoneaffine  :
+∀ a:ℝ, ∀ b:ℝ,
+croissante_f (λ x , a*x+b) or decroissante_f (λ x, a*x + b)
+:=
+/- dEAduction
+pretty_name = "Les fonctions affines sont croissantes ou décroissantes"
+description = """Distinguez deux cas à l'aide du bouton Méthodes de Preuves.
+Et utilisez le bouton ∨ ("ou") pour démontrer une disjonction."""
+-/
+begin
+    todo,
+end
+
+
 lemma exercise.croissante_croissante  ( f g: ℝ → ℝ )
 (H: croissante_f f) (H': croissante_f g) :
-croissante_f (f ∘ g)
+croissante_f (g ∘ f)
 :=
 /- dEAduction
 pretty_name = "Croissance et composition"
@@ -506,7 +610,7 @@ end
 
 lemma exercise.decroissante_decroissante  ( f : ℝ → ℝ ) ( g : ℝ → ℝ )
 (H : croissante_f f) (H_1: decroissante_f g) :
-decroissante_f (function.comp g f : ℝ → ℝ)
+decroissante_f (g ∘ f)
 :=
 /- dEAduction
 pretty_name = "Croissance, décroissance et composition"
@@ -518,8 +622,8 @@ end
 lemma exercise.decroissante_croissante  ( f : ℝ → ℝ ) ( g : ℝ → ℝ )
 (H : croissante_f f or decroissante_f f)
 (H': croissante_f g or decroissante_f g) :
-(croissante_f (function.comp g f : ℝ → ℝ)
-or croissante_f (function.comp g f : ℝ → ℝ))
+(croissante_f (g ∘ f)
+or decroissante_f (g ∘ f))
 :=
 /- dEAduction
 pretty_name = "Composition de fonctions monotones"
