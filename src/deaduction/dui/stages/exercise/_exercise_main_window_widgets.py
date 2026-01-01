@@ -558,6 +558,8 @@ class ExerciseCentralWidget(QWidget):
     def __show__shaded_tutorial(self):
         cname = "dialogs.used_in_proof_intro"
         cname_exo = cname + "_exo"
+        if not cvars.get("logic.use_color_for_applied_properties"):
+            return
         if cvars.get(cname) and cvars.get(cname_exo, True):
             text = _("<div>The properties that have already been used in the "
                      "proof are shaded in the context.<br> </div>"
