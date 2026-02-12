@@ -358,12 +358,12 @@ namespace definitions_equivalentes
 pretty_name = "Définitions équivalentes"
 -/
 
-lemma exercise.implication1
+lemma exercise.implication7
 (u : ℕ → ℝ)  :
-(∀ n, u n = u 0)  → (∃ c : ℝ, ∀ n: ℕ,  (u n = c))
+(∃ c : ℝ, ∀ n: ℕ,  (u n = c))  → (∀ m n, u m = u n)
 :=
 /- dEAduction
-pretty_name = "C implique A"
+pretty_name = "A implique B"
 -/
 begin
   todo,
@@ -380,62 +380,12 @@ begin
   todo,
 end
 
-
-
-lemma exercise.implication3
+lemma exercise.implication9
 (u : ℕ → ℝ)  :
-(∀ n, u n = u 0)  → (∀ m n, u m = u n)
+(∃ c : ℝ, ∀ n: ℕ,  (u n = c))  → (∃ m: ℕ, ∀ n: ℕ, u n = u m)
 :=
 /- dEAduction
-pretty_name = "C implique B"
--/
-begin
-  todo,
-end
-
-lemma exercise.implication4
-(u : ℕ → ℝ)  :
- (∀ m n, u m = u n) → (∀ n, u n = u 0) 
-:=
-/- dEAduction
-pretty_name = "B implique C"
--/
-begin
-  todo,
-end
-
-
-
-
-
-lemma exercise.implication5
-(u : ℕ → ℝ)  :
-(∀ n, u n = u 0)  → (∃ m: ℕ, ∀ n: ℕ, u m = u n)
-:=
-/- dEAduction
-pretty_name = "C implique D"
--/
-begin
-  todo,
-end
-
-lemma exercise.implication6
-(u : ℕ → ℝ)  :
- (∃ m: ℕ, ∀ n: ℕ, u m = u n) → (∀ n, u n = u 0) 
-:=
-/- dEAduction
-pretty_name = "D implique C"
--/
-begin
-  todo,
-end
-
-lemma exercise.implication7
-(u : ℕ → ℝ)  :
-(∃ c : ℝ, ∀ n: ℕ,  (u n = c))  → (∀ m n, u m = u n)
-:=
-/- dEAduction
-pretty_name = "A implique B"
+pretty_name = "A implique D"
 -/
 begin
   todo,
@@ -452,12 +402,56 @@ begin
   todo,
 end
 
-lemma exercise.implication9
+lemma exercise.implication4
 (u : ℕ → ℝ)  :
-(∃ c : ℝ, ∀ n: ℕ,  (u n = c))  → (∃ n: ℕ, ∀ m: ℕ, u n = u m)
+ (∀ m n, u m = u n) → (∀ n, u n = u 0) 
 :=
 /- dEAduction
-pretty_name = "A implique D"
+pretty_name = "B implique C"
+-/
+begin
+  todo,
+end
+
+lemma exercise.implication8b
+(u : ℕ → ℝ)  :
+ (∀ m n, u m = u n) → (∃ m: ℕ, ∀ n: ℕ, u n = u m)
+:=
+/- dEAduction
+pretty_name = "B implique D"
+-/
+begin
+  todo,
+end
+
+lemma exercise.implication1
+(u : ℕ → ℝ)  :
+(∀ n, u n = u 0)  → (∃ c : ℝ, ∀ n: ℕ,  (u n = c))
+:=
+/- dEAduction
+pretty_name = "C implique A"
+-/
+begin
+  todo,
+end
+
+lemma exercise.implication3
+(u : ℕ → ℝ)  :
+(∀ n, u n = u 0)  → (∀ m n, u m = u n)
+:=
+/- dEAduction
+pretty_name = "C implique B"
+-/
+begin
+  todo,
+end
+
+lemma exercise.implication5
+(u : ℕ → ℝ)  :
+(∀ n, u n = u 0)  → (∃ m: ℕ, ∀ n: ℕ, u n = u m)
+:=
+/- dEAduction
+pretty_name = "C implique D"
 -/
 begin
   todo,
@@ -465,7 +459,7 @@ end
 
 lemma exercise.implication10
 (u : ℕ → ℝ)  :
- (∃ m: ℕ, ∀ n: ℕ, u m = u n) → (∃ c : ℝ, ∀ n: ℕ,  (u n = c))
+ (∃ m: ℕ, ∀ n: ℕ, u n = u m) → (∃ c : ℝ, ∀ n: ℕ,  (u n = c))
 :=
 /- dEAduction
 pretty_name = "D implique A"
@@ -474,13 +468,35 @@ begin
   todo,
 end
 
-lemma exercise_equivalence
+lemma exercise.implication10b
 (u : ℕ → ℝ)  :
-(∃ c, ∀ n: ℕ, u n = c) ↔ (∀ n: ℕ,  (u n = u (n+1)))
+ (∃ m: ℕ, ∀ n: ℕ, u n = u m) → (∀ m n, u m = u n)
 :=
+/- dEAduction
+pretty_name = "D implique B"
+-/
 begin
   todo,
 end
+
+lemma exercise.implication6
+(u : ℕ → ℝ)  :
+ (∃ m: ℕ, ∀ n: ℕ, u n = u m) → (∀ n, u n = u 0) 
+:=
+/- dEAduction
+pretty_name = "D implique C"
+-/
+begin
+  todo,
+end
+
+-- lemma exercise_equivalence
+-- (u : ℕ → ℝ)  :
+-- (∃ c, ∀ n: ℕ, u n = c) ↔ (∀ n: ℕ,  (u n = u (n+1)))
+-- :=
+-- begin
+--   todo,
+-- end
 
 end definitions_equivalentes
 
