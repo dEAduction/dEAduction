@@ -36,7 +36,7 @@ Merci à Renaud Chorlay !
 """
 [settings]
 logic.usr_jokers_available = false
-logic.usr_name_new_vars = true
+logic.usr_name_new_vars = false
 logic.use_color_for_applied_properties = true
 functionality.allow_induction = true
 functionality.calculator_available = true
